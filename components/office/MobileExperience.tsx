@@ -27,9 +27,9 @@ const IMG_W = 863
 const IMG_H = 1822
 
 const FASE_SPAWN: Record<string, { x: number; y: number }> = {
-  entrada:      { x: 432, y: 1680 },
+  entrada:      { x: 432, y: 1750 },
   espera:       { x: 690, y: 1310 },
-  qualificacao: { x: 680, y: 500  },
+  qualificacao: { x: 660, y: 520  },
   apresentacao: { x: 430, y: 960  },
   negociacao:   { x: 680, y: 960  },
   fechamento:   { x: 680, y: 960  },
@@ -213,10 +213,13 @@ export default function MobileExperience() {
 
   // Scroll para o final da imagem ao abrir aba Escritório
   useEffect(() => {
-    if (aba === 1 && escritorioRef.current) {
-      setTimeout(() => {
-        escritorioRef.current!.scrollTo({ top: escritorioRef.current!.scrollHeight, behavior: 'instant' })
-      }, 150)
+    if (aba === 1) {
+      const el = document.getElementById('escritorio-scroll')
+      if (el) {
+        setTimeout(() => {
+          el.scrollTop = el.scrollHeight
+        }, 200)
+      }
     }
   }, [aba])
 
@@ -419,7 +422,7 @@ export default function MobileExperience() {
 
         {/* ABA 1 — ESCRITÓRIO */}
         {aba === 1 && (
-          <div ref={escritorioRef} style={{ height: '100%', overflowY: 'auto', position: 'relative' }}>
+          <div id="escritorio-scroll" style={{ height: '100%', overflowY: 'auto', position: 'relative' }}>
             <div style={{ position: 'relative', width: '100%' }}>
               <img
                 ref={imgRef}
@@ -475,7 +478,7 @@ export default function MobileExperience() {
                 const offsetY = row * 28
                 const pos = toScreen(spawn.x + offsetX, spawn.y + offsetY)
                 const cor = COR_STATUS[lead.status_visual] || '#6b7280'
-                const tamanho = calcTamanho(lead)
+                const tamanho = lead.numero_visual === 5 ? 44 : calcTamanho(lead)
                 return (
                   <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{
                     position: 'absolute', left: pos.x, top: pos.y,
