@@ -194,7 +194,7 @@ export default function MobileExperience() {
   }, [aba])
 
   useEffect(() => {
-    if (aba !== 3) { setMostrarAriane(false); return }
+    if (aba !== 4) { setMostrarAriane(false); return }
     setMostrarAriane(true)
     let idx = 0
     const interval = setInterval(() => {
@@ -272,8 +272,8 @@ export default function MobileExperience() {
     { icone: '📊', label: 'Pulso' },
     { icone: '🏢', label: 'Escritório' },
     { icone: '💬', label: 'Atendimento' },
+    { icone: '🎯', label: 'Comando' },
     { icone: '📣', label: 'Marketing' },
-    { icone: '⚡', label: 'Feed' },
   ]
 
   const alertaPrincipal = alertas[0]
@@ -563,8 +563,139 @@ export default function MobileExperience() {
           </div>
         )}
 
-        {/* ═══ ABA 3 — MARKETING ═══ */}
+        {/* ═══ ABA 3 — COMANDO ═══ */}
         {aba === 3 && (
+          <div style={{ height: '100%', overflowY: 'auto', padding: '14px 16px 100px' }}>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center' }}>
+              Briefing Executivo · Tempo Real
+            </div>
+
+            {/* CEO */}
+            <div style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.05))', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #f97316, #ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>👑</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>CEO</div>
+                  <div style={{ fontSize: 11, color: '#f97316', fontWeight: 600 }}>Visão Geral do Negócio</div>
+                </div>
+                <div style={{ marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                {[
+                  { label: 'Leads Ativos', value: leads.length, cor: '#fff' },
+                  { label: 'Receita em Jogo', value: `R$${(leads.reduce((a,l)=>a+(l.valor_estimado||0),0)/1000).toFixed(0)}k`, cor: '#f97316' },
+                  { label: 'Críticos', value: leads.filter(l=>l.status_visual==='critico').length, cor: leads.filter(l=>l.status_visual==='critico').length > 0 ? '#ef4444' : '#10b981' },
+                  { label: 'IA Ativa', value: `${leads.filter(l=>l.ia_ativa).length}/${leads.length}`, cor: '#3b82f6' },
+                ].map(kpi => (
+                  <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>{kpi.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: kpi.cor, letterSpacing: '-0.5px' }}>{kpi.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px' }}>
+                {leads.filter(l=>l.status_visual==='critico').length > 0
+                  ? `⚠ ${leads.filter(l=>l.status_visual==='critico').length} lead crítico sem resposta. R$${(leads.reduce((a,l)=>a+(l.valor_estimado||0),0)/1000).toFixed(0)}k em jogo. Ação imediata necessária.`
+                  : `✅ Operação estável. ${leads.length} leads no funil. R$${(leads.reduce((a,l)=>a+(l.valor_estimado||0),0)/1000).toFixed(0)}k em negociação.`
+                }
+              </div>
+            </div>
+
+            {/* ARIANE — Dir. Marketing */}
+            <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <img src="/avatars/ariane/apresentando.png" alt="Ariane" style={{ width: 44, height: 62, objectFit: 'contain', flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Ariane</div>
+                  <div style={{ fontSize: 11, color: '#8b5cf6', fontWeight: 600 }}>Diretora de Marketing</div>
+                </div>
+                <div style={{ marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 6px #8b5cf6' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                {[
+                  { label: 'CPL Médio', value: 'R$76', cor: '#ef4444', sub: 'meta R$60' },
+                  { label: 'Leads/Dia', value: '62', cor: '#10b981', sub: '+24% hoje' },
+                  { label: 'Taxa Qualif.', value: '38%', cor: '#f59e0b', sub: 'meta 45%' },
+                  { label: 'ROAS Médio', value: '2.4x', cor: '#f59e0b', sub: 'meta 3x' },
+                ].map(kpi => (
+                  <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>{kpi.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: kpi.cor, letterSpacing: '-0.5px' }}>{kpi.value}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>{kpi.sub}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px' }}>
+                ⚠ CPL acima da meta. Budget Meta Ads 85% utilizado. Revisando conjunto B. Copy Black Friday em revisão final.
+              </div>
+            </div>
+
+            {/* DIR. COMERCIAL */}
+            <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(59,130,246,0.2)', border: '2px solid #3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>💼</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Dir. Comercial</div>
+                  <div style={{ fontSize: 11, color: '#3b82f6', fontWeight: 600 }}>Diretora Comercial</div>
+                </div>
+                <div style={{ marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 6px #3b82f6' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                {[
+                  { label: 'Pipeline', value: `R$${(leads.reduce((a,l)=>a+(l.valor_estimado||0),0)/1000).toFixed(0)}k`, cor: '#3b82f6' },
+                  { label: 'Match Rate', value: '87%', cor: '#10b981' },
+                  { label: 'Tempo Resp.', value: '8min', cor: '#f59e0b' },
+                  { label: 'Fechamentos', value: '1', cor: '#10b981' },
+                ].map(kpi => (
+                  <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>{kpi.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: kpi.cor, letterSpacing: '-0.5px' }}>{kpi.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px' }}>
+                {leads.filter(l=>l.status_visual==='critico').length > 0
+                  ? `🔴 Roberto Alves crítico — SLA violado há 2h. R$45k em risco. Match com parceiro realizado para Lead #2.`
+                  : `✅ Pipeline saudável. Match rate 87%. Tempo de resposta dentro da meta.`
+                }
+              </div>
+            </div>
+
+            {/* GER. ATENDIMENTO */}
+            <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', border: '2px solid #10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🎯</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Ger. Atendimento</div>
+                  <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>Gerente de Atendimento</div>
+                </div>
+                <div style={{ marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                {[
+                  { label: 'SLA Médio', value: '8min', cor: '#ef4444', sub: 'meta 5min' },
+                  { label: 'NPS', value: '8.2', cor: '#10b981', sub: 'meta 7.0' },
+                  { label: 'Qualificação', value: '38%', cor: '#f59e0b', sub: 'meta 45%' },
+                  { label: 'Contato', value: '93%', cor: '#10b981', sub: 'meta 90%' },
+                ].map(kpi => (
+                  <div key={kpi.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>{kpi.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: kpi.cor, letterSpacing: '-0.5px' }}>{kpi.value}</div>
+                    {kpi.sub && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>{kpi.sub}</div>}
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px' }}>
+                ⚠ SLA acima da meta. Monitorando Roberto Alves — 2h sem resposta. NPS 8.2 acima da meta. Qualificação abaixo do esperado.
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ═══ ABA 4 — MARKETING ═══ */}
+        {aba === 4 && (
           <div style={{ height: '100%', overflowY: 'auto', padding: '14px 16px 100px' }}>
 
             {/* ARIANE */}
@@ -650,32 +781,6 @@ export default function MobileExperience() {
           </div>
         )}
 
-        {/* ═══ ABA 4 — FEED ═══ */}
-        {aba === 4 && (
-          <div style={{ height: '100%', overflowY: 'auto', padding: '14px 16px 100px' }}>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 14, textAlign: 'center' }}>Eventos em tempo real</div>
-            {[
-              ...alertas.map(a => ({ ...a, icone: a.tipo === 'CRÍTICO' ? '🚨' : a.tipo === 'SLA' ? '⏱️' : a.tipo === 'ATENÇÃO' ? '⚠️' : 'ℹ️' })),
-              { id: 'f1', tipo: 'MATCH', texto: 'Lead #2 — match realizado com parceiro', tempo: '1min', cor: '#10b981', icone: '🤝' },
-              { id: 'f2', tipo: 'COPY', texto: 'Copy Black Friday aprovada pela equipe', tempo: '5min', cor: '#8b5cf6', icone: '✅' },
-              { id: 'f3', tipo: 'CRIATIVO', texto: 'Arte Stories Imobiliário publicada', tempo: '10min', cor: '#3b82f6', icone: '🎨' },
-              { id: 'f4', tipo: 'CAMPANHA', texto: 'Google Imobiliário — ROAS 3.1x acima da meta', tempo: '15min', cor: '#10b981', icone: '📈' },
-              { id: 'f5', tipo: 'LEAD', texto: 'Paulo Rodrigues chegou pela entrada', tempo: '18min', cor: '#6b7280', icone: '👤' },
-            ].map((ev, i, arr) => (
-              <div key={ev.id} style={{ display: 'flex', gap: 14, paddingBottom: 20, marginBottom: 20, borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: `${ev.cor}20`, border: `2px solid ${ev.cor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{ev.icone}</div>
-                  {i < arr.length-1 && <div style={{ flex: 1, width: 1, background: 'rgba(255,255,255,0.06)', marginTop: 8 }} />}
-                </div>
-                <div style={{ paddingTop: 6 }}>
-                  <div style={{ fontSize: 10, color: ev.cor, fontWeight: 700, marginBottom: 4 }}>{ev.tipo}</div>
-                  <div style={{ fontSize: 15, color: '#fff', fontWeight: 500, lineHeight: 1.4, marginBottom: 4 }}>{ev.texto}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{ev.tempo}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* DRAWER DO LEAD */}
