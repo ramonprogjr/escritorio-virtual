@@ -48,6 +48,18 @@ const SALAS = [
   { id: 'closing_room', label: 'Fechamento', icone: '✅' },
 ]
 
+function leadsNaSala(leads: Lead[], salaId: string): Lead[] {
+  const mapa: Record<string, string> = {
+    main_entrance: 'entrada',
+    waiting_area: 'espera',
+    qualification_room: 'qualificacao',
+    presentation_room: 'apresentacao',
+    negotiation_room: 'negociacao',
+    closing_room: 'fechamento',
+  }
+  return leads.filter(l => l.fase === mapa[salaId])
+}
+
 export default function MobileExperience() {
   const [aba, setAba] = useState(0)
   const [leads, setLeads] = useState<Lead[]>([])
@@ -110,15 +122,7 @@ export default function MobileExperience() {
 
   const salaGroups = SALAS.map(sala => ({
     ...sala,
-    leads: leads.filter(l => {
-      if (sala.id === 'main_entrance') return l.fase === 'entrada'
-      if (sala.id === 'waiting_area') return l.fase === 'espera'
-      if (sala.id === 'qualification_room') return l.fase === 'qualificacao'
-      if (sala.id === 'presentation_room') return l.fase === 'apresentacao'
-      if (sala.id === 'negotiation_room') return l.fase === 'negociacao'
-      if (sala.id === 'closing_room') return l.fase === 'fechamento'
-      return false
-    })
+    leads: leadsNaSala(leads, sala.id),
   }))
 
   return (
