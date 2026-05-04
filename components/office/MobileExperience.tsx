@@ -108,16 +108,17 @@ export default function MobileExperience() {
   const valorTotal = leads.reduce((a, l) => a + (l.valor_estimado || 0), 0)
   const iaAtiva = leads.filter(l => l.ia_ativa).length
 
-  const salaGroups = SALAS.map(s => ({
-    ...s,
-    leads: leads.filter(l => l.sala_canvas === s.id ||
-      (s.id === 'main_entrance' && l.fase === 'entrada') ||
-      (s.id === 'waiting_area' && l.fase === 'espera') ||
-      (s.id === 'qualification_room' && l.fase === 'qualificacao') ||
-      (s.id === 'presentation_room' && l.fase === 'apresentacao') ||
-      (s.id === 'negotiation_room' && l.fase === 'negociacao') ||
-      (s.id === 'closing_room' && l.fase === 'fechamento')
-    )
+  const salaGroups = SALAS.map(sala => ({
+    ...sala,
+    leads: leads.filter(l => {
+      if (sala.id === 'main_entrance') return l.fase === 'entrada'
+      if (sala.id === 'waiting_area') return l.fase === 'espera'
+      if (sala.id === 'qualification_room') return l.fase === 'qualificacao'
+      if (sala.id === 'presentation_room') return l.fase === 'apresentacao'
+      if (sala.id === 'negotiation_room') return l.fase === 'negociacao'
+      if (sala.id === 'closing_room') return l.fase === 'fechamento'
+      return false
+    })
   }))
 
   return (

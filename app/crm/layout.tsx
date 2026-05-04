@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -9,12 +9,56 @@ const nav = [
   { href: '/crm/atendimento', label: 'Atendimento', icon: '💬' },
   { href: '/crm/parceiros', label: 'Parceiros', icon: '🤝' },
   { href: '/crm/relatorios', label: 'Relatórios', icon: '📊' },
-  { href: '/crm/configuracoes', label: 'Configurações', icon: '⚙️' },
+  { href: '/crm/configuracoes', label: 'Config', icon: '⚙️' },
 ]
 
 export default function CRMLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    function check() { setIsMobile(window.innerWidth < 768) }
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#080810', color: '#fff', fontFamily: 'var(--font-geist-sans, system-ui)' }}>
+        <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </main>
+        {/* Bottom nav */}
+        <nav style={{
+          display: 'flex', alignItems: 'center',
+          background: 'linear-gradient(0deg, #0d0d1a 0%, #0a0a14 100%)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          flexShrink: 0, zIndex: 50,
+        }}>
+          {nav.map(item => {
+            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+            return (
+              <Link key={item.href} href={item.href} style={{ textDecoration: 'none', flex: 1 }}>
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  padding: '10px 4px',
+                  color: active ? '#f97316' : 'rgba(255,255,255,0.35)',
+                  borderTop: active ? '2px solid #f97316' : '2px solid transparent',
+                  transition: 'all 0.15s',
+                }}>
+                  <span style={{ fontSize: 18, lineHeight: 1 }}>{item.icon}</span>
+                  <span style={{ fontSize: 10, marginTop: 4, fontWeight: active ? 700 : 400 }}>{item.label}</span>
+                </div>
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', height: '100dvh', background: '#080810', color: '#fff', overflow: 'hidden', fontFamily: 'var(--font-geist-sans, system-ui)' }}>
