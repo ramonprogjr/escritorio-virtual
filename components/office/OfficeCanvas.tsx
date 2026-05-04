@@ -525,7 +525,7 @@ export function OfficeCanvas({
           ctx.fillStyle = haloGradient;
           ctx.fill();
 
-          // 2. PARTÍCULAS DE BRILHO ao redor do halo
+          // 2. PARTÍCULAS ao redor do halo
           const tempo = Date.now() / 800;
           for (let i = 0; i < 6; i++) {
             const angle = (i / 6) * Math.PI * 2 + tempo;
@@ -538,34 +538,34 @@ export function OfficeCanvas({
             ctx.fill();
           }
 
-          // 3. SOMBRA SUAVE do personagem
+          // 3. SOMBRA DO PERSONAGEM
           ctx.shadowColor = 'rgba(139,92,246,0.5)';
           ctx.shadowBlur = 16 * S;
 
-          // 4. DESENHA O AVATAR DA ARIANE maior e centralizado
+          // 4. AVATAR — maior, SEM clippath, por cima do canvas
           ctx.drawImage(
             arianeImgRef.current,
             ax - imgW / 2,
-            ay - imgH + 10 * S,
+            ay - imgH + 12 * S,
             imgW,
             imgH
           );
 
           ctx.restore();
 
-          // 5. NOME TAG elegante
+          // 5. NOME TAG elegante abaixo
           ctx.save();
           const tagW = 52 * S;
           const tagH = 14 * S;
           const tagX = ax - tagW / 2;
-          const tagY = ay + 12 * S;
+          const tagY = ay + 14 * S;
 
-          ctx.fillStyle = 'rgba(8,8,16,0.8)';
+          ctx.fillStyle = 'rgba(8,8,16,0.85)';
           ctx.beginPath();
           roundRect(ctx, tagX, tagY, tagW, tagH, 4 * S);
           ctx.fill();
 
-          ctx.strokeStyle = 'rgba(139,92,246,0.6)';
+          ctx.strokeStyle = 'rgba(139,92,246,0.7)';
           ctx.lineWidth = 1 * S;
           ctx.stroke();
 
