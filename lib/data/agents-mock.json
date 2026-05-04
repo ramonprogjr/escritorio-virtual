@@ -424,6 +424,23 @@
       "meta_diaria": { "sla_medio_meta": 5, "taxa_qualificacao_meta": 45, "taxa_contato_meta": 90, "nps_meta": 8 },
       "currentActivity": "Monitorando qualidade do atendimento", "lastMessage": "", "lastMessageTime": "", "lastMessageFrom": "",
       "needsUserDecision": false, "decisionDescription": "", "conversationHistory": []
+    },
+    {
+      "id": "ag-026", "nome": "Marina Costa", "avatar": "MA",
+      "funcao": "Gerente de Marketing", "cargo_curto": "Ger. Mkt",
+      "area": "Marketing", "sala": "Estratégia & Planejamento", "andar": "departamentos",
+      "nivel_hierarquico": 3,
+      "posicao": { "x": 190, "y": 210 },
+      "sala_id": "strategy_planning",
+      "perfil": { "humor": "Empático", "personalidade": "Estratégico", "tom_comunicacao": "Compreensivo, visionário, planejador", "estilo_trabalho": "Equilibra dados com intuição humana" },
+      "status": { "online": true, "modo": "ativo" },
+      "tarefas": { "ativas": 3, "concluidas_hoje": 8 },
+      "governanca": { "nivel": "verde", "score": 91 },
+      "pode_aprovar": ["ag-003","ag-004","ag-005","ag-006","ag-007","ag-008","ag-009","ag-011"],
+      "precisa_aprovacao_de": ["ag-001"],
+      "meta_diaria": { "campanhas_revisadas": 3, "briefings_aprovados": 2, "reunioes_coordenadas": 2 },
+      "currentActivity": "Coordenando equipe de marketing", "lastMessage": "", "lastMessageTime": "", "lastMessageFrom": "",
+      "needsUserDecision": false, "decisionDescription": "", "conversationHistory": []
     }
   ]
 }

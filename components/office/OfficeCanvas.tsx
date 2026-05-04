@@ -201,6 +201,7 @@ export function OfficeCanvas({
   const canvasRef        = useRef<HTMLCanvasElement>(null);
   const containerRef     = useRef<HTMLDivElement>(null);
   const bgRef            = useRef<HTMLImageElement | null>(null);
+  const arianeImgRef     = useRef<HTMLImageElement | null>(null);
   const avatarImgsRef    = useRef<Map<string, HTMLImageElement>>(new Map());
   const hoveredId        = useRef<string | null>(null);
   const hoveredRoomRef   = useRef<Room | null>(null);
@@ -222,6 +223,13 @@ export function OfficeCanvas({
     const img = new Image();
     img.src = "/sprites/office-bg.png";
     img.onload = () => { bgRef.current = img; };
+  }, []);
+
+  /* load Ariane avatar */
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => { arianeImgRef.current = img; };
+    img.src = '/avatars/ariane/normal.png';
   }, []);
 
   /* pre-load image avatars */
@@ -501,32 +509,54 @@ export function OfficeCanvas({
         ctx.stroke();
 
         /* filled circle + avatar (image or initials) */
-        const avatarImg = avatarImgsRef.current.get(agent.id);
-        if (agent.avatar.startsWith('/') && avatarImg?.complete && avatarImg.naturalWidth > 0) {
+        if (agent.nome === 'Ariane' && arianeImgRef.current) {
           const imgH = 48 * S;
-          const imgW = imgH * (avatarImg.naturalWidth / avatarImg.naturalHeight);
+          const imgW = imgH * (arianeImgRef.current.naturalWidth / arianeImgRef.current.naturalHeight);
           ctx.save();
-          ctx.drawImage(avatarImg, ax - imgW / 2, ay - imgH * 0.92, imgW, imgH);
+          ctx.shadowColor = '#8b5cf6';
+          ctx.shadowBlur  = 20 * S;
+          ctx.drawImage(arianeImgRef.current, ax - imgW / 2, ay - imgH * 0.92, imgW, imgH);
           ctx.restore();
-        } else {
-          ctx.save();
-          ctx.shadowColor   = "rgba(0,0,0,0.6)";
-          ctx.shadowBlur    = 10 * S;
-          ctx.shadowOffsetY = 3  * S;
+          /* purple name tag */
+          const tagW = 44 * S;
+          const tagH = 12 * S;
+          ctx.fillStyle = 'rgba(139,92,246,0.9)';
           ctx.beginPath();
-          ctx.arc(ax, ay, fR, 0, Math.PI * 2);
-          const grd2 = ctx.createRadialGradient(ax - fR * 0.3, ay - fR * 0.3, 0, ax, ay, fR);
-          grd2.addColorStop(0, colorDark);
-          grd2.addColorStop(1, "#060d1c");
-          ctx.fillStyle = grd2;
+          roundRect(ctx, ax - tagW / 2, ay + 2 * S, tagW, tagH, 2 * S);
           ctx.fill();
-          ctx.restore();
-          const ifs = Math.max(6, Math.min(9, fR * 0.56));
-          ctx.font         = `bold ${ifs}px monospace`;
-          ctx.textAlign    = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle    = "#ffffff";
-          ctx.fillText(agent.avatar, ax, ay);
+          ctx.font         = `bold ${Math.max(6, 7 * S)}px sans-serif`;
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle    = '#ffffff';
+          ctx.fillText('ARIANE', ax, ay + 8 * S);
+        } else {
+          const avatarImg = avatarImgsRef.current.get(agent.id);
+          if (agent.avatar.startsWith('/') && avatarImg?.complete && avatarImg.naturalWidth > 0) {
+            const imgH = 48 * S;
+            const imgW = imgH * (avatarImg.naturalWidth / avatarImg.naturalHeight);
+            ctx.save();
+            ctx.drawImage(avatarImg, ax - imgW / 2, ay - imgH * 0.92, imgW, imgH);
+            ctx.restore();
+          } else {
+            ctx.save();
+            ctx.shadowColor   = "rgba(0,0,0,0.6)";
+            ctx.shadowBlur    = 10 * S;
+            ctx.shadowOffsetY = 3  * S;
+            ctx.beginPath();
+            ctx.arc(ax, ay, fR, 0, Math.PI * 2);
+            const grd2 = ctx.createRadialGradient(ax - fR * 0.3, ay - fR * 0.3, 0, ax, ay, fR);
+            grd2.addColorStop(0, colorDark);
+            grd2.addColorStop(1, "#060d1c");
+            ctx.fillStyle = grd2;
+            ctx.fill();
+            ctx.restore();
+            const ifs = Math.max(6, Math.min(9, fR * 0.56));
+            ctx.font         = `bold ${ifs}px monospace`;
+            ctx.textAlign    = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle    = "#ffffff";
+            ctx.fillText(agent.avatar, ax, ay);
+          }
         }
 
         /* online dot */
