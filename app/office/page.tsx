@@ -301,7 +301,7 @@ function OfficePageInner() {
         </div>
 
         {/* Right: DecisionPanel (288px) */}
-        <div className="w-72 flex-shrink-0 border-l border-gray-800 overflow-hidden">
+        <div className="w-72 flex-shrink-0 overflow-hidden" style={{ borderLeft: "1px solid #e0ddd6" }}>
           <DecisionPanel />
         </div>
 

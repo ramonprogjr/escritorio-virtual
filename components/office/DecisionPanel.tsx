@@ -1,6 +1,25 @@
 "use client";
 import { useState } from "react";
 
+// ─── Brand palette ────────────────────────────────────────────────────────────
+const C = {
+  bg:        "#f7f4ec",
+  green:     "#003b26",
+  greenSoft: "#12382b",
+  gold:      "#c9a24a",
+  goldSoft:  "rgba(201,162,74,0.14)",
+  goldBg:    "rgba(201,162,74,0.08)",
+  red:       "#b3261e",
+  redSoft:   "rgba(179,38,30,0.10)",
+  text:      "#1a1a1a",
+  muted:     "#7a786c",
+  line:      "#e0ddd6",
+  white:     "#ffffff",
+  greenMoney:"#16a34a",
+};
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
 type Tab = "decisoes" | "crm" | "aprovacoes" | "gargalos" | "alertas";
 
 interface DecisaoItem {
@@ -21,10 +40,10 @@ const DECISOES: DecisaoItem[] = [
 ];
 
 const CRM_ITEMS = [
-  { id: "l1", nome: "Carlos Mendes", fase: "Qualificação", valor: 120000, tempo: "8min", status: "quente" as const },
-  { id: "l2", nome: "Ana Ferreira", fase: "Proposta", valor: 280000, tempo: "2h", status: "normal" as const },
-  { id: "l3", nome: "Roberto Silva", fase: "Entrada", valor: 45000, tempo: "22min", status: "frio" as const },
-  { id: "l4", nome: "Marina Costa", fase: "Negociação", valor: 650000, tempo: "5min", status: "quente" as const },
+  { id: "l1", nome: "Carlos Mendes", fase: "Qualificação", valor: 120000, tempo: "8min", status: "quente" as const, origem: "WhatsApp" },
+  { id: "l2", nome: "Ana Ferreira", fase: "Proposta", valor: 280000, tempo: "2h", status: "normal" as const, origem: "Indicação" },
+  { id: "l3", nome: "Roberto Silva", fase: "Entrada", valor: 45000, tempo: "22min", status: "frio" as const, origem: "Meta Ads" },
+  { id: "l4", nome: "Marina Costa", fase: "Negociação", valor: 650000, tempo: "5min", status: "quente" as const, origem: "Google" },
 ];
 
 const APROVACOES = [
@@ -45,157 +64,342 @@ const ALERTAS = [
   { id: "al4", msg: "Novo lead alto valor: Construtora ABC R$1.2M", tipo: "info" as const },
 ];
 
-const STATUS_COR = { quente: "#ef4444", normal: "#f59e0b", frio: "#60a5fa" };
+const ORIGEM_COR: Record<string, string> = {
+  "WhatsApp": "#22c55e",
+  "Indicação": C.gold,
+  "Meta Ads":  "#818cf8",
+  "Google":    "#f59e0b",
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function DecisionPanel() {
-  const [tab, setTab] = useState<Tab>("decisoes");
+  const [tab, setTab]         = useState<Tab>("decisoes");
   const [ignorados, setIgnorados] = useState<Set<string>>(new Set());
 
-  const TABS: { id: Tab; label: string; count?: number }[] = [
-    { id: "decisoes", label: "Decisões", count: DECISOES.length },
-    { id: "crm", label: "CRM", count: CRM_ITEMS.length },
-    { id: "aprovacoes", label: "Aprovações", count: APROVACOES.length },
-    { id: "gargalos", label: "Gargalos", count: GARGALOS.length },
-    { id: "alertas", label: "Alertas", count: ALERTAS.length },
+  const TABS: { id: Tab; label: string; count: number; hasUrgent?: boolean }[] = [
+    { id: "decisoes",  label: "Decisões",  count: DECISOES.length,   hasUrgent: DECISOES.some(d => d.tipo === "urgente") },
+    { id: "crm",       label: "CRM",       count: CRM_ITEMS.length },
+    { id: "aprovacoes",label: "Aprovações",count: APROVACOES.length },
+    { id: "gargalos",  label: "Gargalos",  count: GARGALOS.length,   hasUrgent: GARGALOS.some(g => g.impacto === "alto") },
+    { id: "alertas",   label: "Alertas",   count: ALERTAS.length,    hasUrgent: ALERTAS.some(a => a.tipo === "critico") },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-950 overflow-hidden">
-      {/* Tab bar */}
-      <div className="flex border-b border-gray-800 flex-shrink-0 overflow-x-auto">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 text-[11px] font-medium transition-colors border-b-2 ${
-              tab === t.id
-                ? "text-orange-400 border-orange-500"
-                : "text-gray-500 border-transparent hover:text-gray-300"
-            }`}
-          >
-            {t.label}
-            {t.count !== undefined && (
-              <span className={`text-[10px] rounded-full px-1 py-0.5 min-w-[16px] text-center font-bold ${
-                tab === t.id ? "bg-orange-500/20 text-orange-400" : "bg-gray-800 text-gray-500"
-              }`}>
-                {t.count}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: C.bg, overflow: "hidden" }}>
+
+      {/* ── Tab bar (verde escuro, sem scrollbar) ─── */}
+      <div style={{ display: "flex", background: C.green, flexShrink: 0, overflow: "hidden" }}>
+        {TABS.map(t => {
+          const active = tab === t.id;
+          const badgeBg = active ? C.gold : t.hasUrgent ? C.red : "rgba(255,255,255,0.14)";
+          const badgeColor = active ? C.green : "#fff";
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", gap: 3, padding: "8px 2px 6px",
+                background: "transparent", border: "none",
+                borderBottom: `2px solid ${active ? C.gold : "transparent"}`,
+                cursor: "pointer", transition: "border-color 150ms", minWidth: 0,
+              }}
+            >
+              <span style={{
+                fontSize: 8.5, fontWeight: active ? 700 : 500,
+                color: active ? C.gold : "rgba(255,255,255,0.55)",
+                lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden",
+                textOverflow: "ellipsis", maxWidth: "100%", padding: "0 3px",
+                letterSpacing: "0.01em",
+              }}>
+                {t.label}
               </span>
-            )}
-          </button>
-        ))}
+              {t.count > 0 && (
+                <span style={{
+                  fontSize: 8, fontWeight: 700, minWidth: 14, textAlign: "center",
+                  padding: "1px 4px", borderRadius: 10,
+                  background: badgeBg, color: badgeColor, lineHeight: 1.5,
+                }}>
+                  {t.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* ── Content ─── */}
+      <div className="scrollbar-soft" style={{ flex: 1, overflowY: "auto" }}>
+
+        {/* DECISÕES */}
         {tab === "decisoes" && (
           <div>
-            {DECISOES.filter(d => !ignorados.has(d.id)).map(d => (
-              <div key={d.id} className="px-4 py-3 border-b border-gray-800/50 last:border-0">
-                <div className="flex items-start gap-2 mb-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${d.tipo === "urgente" ? "bg-red-500 animate-pulse" : "bg-yellow-500"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-xs font-medium leading-tight">{d.titulo}</div>
-                    <div className="text-gray-400 text-[11px] mt-0.5 leading-relaxed">{d.descricao}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      {d.agente && <span className="text-gray-500 text-[10px]">{d.agente}</span>}
-                      <span className="text-gray-600 text-[10px]">·</span>
-                      <span className="text-gray-500 text-[10px]">{d.tempo}</span>
-                      {d.valor && <span className="text-orange-400 text-[10px] font-medium ml-auto">R${(d.valor/1000).toFixed(0)}k</span>}
+            {DECISOES.filter(d => !ignorados.has(d.id)).map(d => {
+              const borderCol = d.tipo === "urgente" ? C.red : d.tipo === "normal" ? C.gold : C.greenMoney;
+              return (
+                <div key={d.id} style={{
+                  margin: "10px 10px 0",
+                  background: C.white,
+                  borderRadius: 10,
+                  borderLeft: `3px solid ${borderCol}`,
+                  boxShadow: "0 1px 4px rgba(0,40,26,0.07)",
+                  overflow: "hidden",
+                }}>
+                  {/* Card header */}
+                  <div style={{ padding: "10px 12px 6px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 4 }}>
+                      {d.tipo === "urgente" && (
+                        <span style={{
+                          fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+                          background: C.redSoft, color: C.red, flexShrink: 0, marginTop: 2, letterSpacing: "0.04em",
+                        }}>
+                          URGENTE
+                        </span>
+                      )}
+                      <span style={{ fontSize: 11, fontWeight: 700, color: C.green, lineHeight: 1.3 }}>
+                        {d.titulo}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 10.5, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                      {d.descricao}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
+                      {d.agente && (
+                        <span style={{ fontSize: 9.5, color: C.muted }}>{d.agente}</span>
+                      )}
+                      <span style={{ fontSize: 9, color: C.line }}>·</span>
+                      <span style={{ fontSize: 9.5, color: C.muted }}>{d.tempo}</span>
+                      {d.valor && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, color: C.gold,
+                          marginLeft: "auto", letterSpacing: "-0.01em",
+                        }}>
+                          R${d.valor >= 1000 ? `${(d.valor / 1000).toFixed(0)}k` : d.valor.toLocaleString("pt-BR")}
+                        </span>
+                      )}
                     </div>
                   </div>
+                  {/* Actions */}
+                  <div style={{
+                    display: "flex", gap: 6, padding: "8px 10px",
+                    borderTop: `1px solid ${C.line}`, background: "rgba(247,244,236,0.6)",
+                  }}>
+                    <button style={{
+                      flex: 1, padding: "5px 0", borderRadius: 6,
+                      background: C.green, border: "none", color: "#fff",
+                      fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "opacity 150ms",
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+                    onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                    >
+                      Aprovar
+                    </button>
+                    <button style={{
+                      flex: 1, padding: "5px 0", borderRadius: 6,
+                      background: "transparent", border: `1px solid ${C.line}`,
+                      color: C.muted, fontSize: 10, fontWeight: 600, cursor: "pointer",
+                      transition: "border-color 150ms",
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.borderColor = C.gold)}
+                    onMouseOut={e => (e.currentTarget.style.borderColor = C.line)}
+                    >
+                      Ver análise
+                    </button>
+                    <button
+                      onClick={() => setIgnorados(s => new Set([...s, d.id]))}
+                      style={{
+                        padding: "5px 8px", borderRadius: 6,
+                        background: "transparent", border: "none",
+                        color: C.muted, fontSize: 10, cursor: "pointer", opacity: 0.7,
+                        transition: "opacity 150ms",
+                      }}
+                      onMouseOver={e => (e.currentTarget.style.opacity = "1")}
+                      onMouseOut={e => (e.currentTarget.style.opacity = "0.7")}
+                    >
+                      Ignorar
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="flex-1 bg-green-600/20 hover:bg-green-600/40 border border-green-600/30 text-green-400 text-[10px] font-medium rounded py-1 transition-colors">
-                    Aprovar
-                  </button>
-                  <button
-                    onClick={() => setIgnorados(s => new Set([...s, d.id]))}
-                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-400 text-[10px] rounded py-1 transition-colors"
-                  >
-                    Ignorar
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {DECISOES.filter(d => !ignorados.has(d.id)).length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-600">
-                <div className="text-2xl mb-2">✓</div>
-                <div className="text-xs">Tudo resolvido</div>
+              <div style={{ padding: "48px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>✓</div>
+                <div style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>Tudo resolvido</div>
+                <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>Operação saudável</div>
               </div>
             )}
+            <div style={{ height: 10 }} />
           </div>
         )}
 
+        {/* CRM */}
         {tab === "crm" && (
           <div>
-            {CRM_ITEMS.map(l => (
-              <div key={l.id} className="px-4 py-3 border-b border-gray-800/50 last:border-0 hover:bg-gray-900/50 cursor-pointer transition-colors">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-white text-xs font-medium">{l.nome}</span>
-                  <div className="w-2 h-2 rounded-full" style={{ background: STATUS_COR[l.status] }} />
+            {CRM_ITEMS.map(l => {
+              const isCritico = l.status === "quente" && l.tempo.includes("min") && parseInt(l.tempo) < 10;
+              const tempoColor = l.status === "quente" && !l.tempo.includes("h") && parseInt(l.tempo) < 10
+                ? C.red : C.muted;
+              return (
+                <div key={l.id} style={{
+                  margin: "10px 10px 0",
+                  background: C.white,
+                  borderRadius: 10,
+                  borderLeft: `3px solid ${l.status === "quente" ? C.red : l.status === "normal" ? C.gold : C.line}`,
+                  boxShadow: "0 1px 4px rgba(0,40,26,0.07)",
+                  padding: "10px 12px",
+                  cursor: "pointer",
+                  transition: "box-shadow 150ms",
+                }}
+                onMouseOver={e => (e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,40,26,0.13)")}
+                onMouseOut={e => (e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,40,26,0.07)")}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: C.green }}>{l.nome}</span>
+                    <span style={{
+                      fontSize: 12, fontWeight: 800, color: C.greenMoney, letterSpacing: "-0.01em",
+                    }}>
+                      R${(l.valor / 1000).toFixed(0)}k
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 4,
+                      background: `${ORIGEM_COR[l.origem] ?? C.gold}18`,
+                      color: ORIGEM_COR[l.origem] ?? C.gold, flexShrink: 0,
+                    }}>
+                      {l.origem}
+                    </span>
+                    <span style={{ fontSize: 9.5, color: C.muted }}>{l.fase}</span>
+                    <span style={{ fontSize: 9.5, color: tempoColor, marginLeft: "auto", fontWeight: isCritico ? 700 : 400 }}>
+                      {isCritico ? "⚠ " : ""}{l.tempo}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-[11px]">{l.fase}</span>
-                  <span className="text-gray-600 text-[10px]">·</span>
-                  <span className="text-orange-400 text-[11px] font-medium">R${(l.valor/1000).toFixed(0)}k</span>
-                  <span className="text-gray-600 text-[10px] ml-auto">{l.tempo}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
+            <div style={{ height: 10 }} />
           </div>
         )}
 
+        {/* APROVAÇÕES */}
         {tab === "aprovacoes" && (
           <div>
             {APROVACOES.map(a => (
-              <div key={a.id} className="px-4 py-3 border-b border-gray-800/50 last:border-0">
-                <div className="text-white text-xs font-medium mb-0.5">{a.item}</div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-gray-400 text-[11px]">{a.solicitante}</span>
-                  <span className="bg-gray-800 text-gray-400 text-[10px] rounded px-1.5 py-0.5">{a.tipo}</span>
-                  <span className="text-gray-600 text-[10px] ml-auto">{a.tempo}</span>
+              <div key={a.id} style={{
+                margin: "10px 10px 0",
+                background: C.white,
+                borderRadius: 10,
+                borderLeft: `3px solid ${C.gold}`,
+                boxShadow: "0 1px 4px rgba(0,40,26,0.07)",
+                overflow: "hidden",
+              }}>
+                <div style={{ padding: "10px 12px 8px" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.green, marginBottom: 4 }}>{a.item}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 9.5, color: C.muted }}>{a.solicitante}</span>
+                    <span style={{
+                      fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 4,
+                      background: C.goldBg, color: C.gold,
+                    }}>
+                      {a.tipo}
+                    </span>
+                    <span style={{ fontSize: 9.5, color: C.muted, marginLeft: "auto" }}>{a.tempo}</span>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="flex-1 bg-green-600/20 hover:bg-green-600/40 border border-green-600/30 text-green-400 text-[10px] font-medium rounded py-1 transition-colors">
+                <div style={{
+                  display: "flex", gap: 6, padding: "8px 10px",
+                  borderTop: `1px solid ${C.line}`, background: "rgba(247,244,236,0.6)",
+                }}>
+                  <button style={{
+                    flex: 1, padding: "5px 0", borderRadius: 6,
+                    background: C.green, border: "none", color: "#fff",
+                    fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "opacity 150ms",
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+                  onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                  >
                     Aprovar
                   </button>
-                  <button className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-400 text-[10px] rounded py-1 transition-colors">
+                  <button style={{
+                    flex: 1, padding: "5px 0", borderRadius: 6,
+                    background: "transparent", border: `1px solid ${C.line}`,
+                    color: C.red, fontSize: 10, fontWeight: 600, cursor: "pointer",
+                    transition: "border-color 150ms",
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.borderColor = C.red)}
+                  onMouseOut={e => (e.currentTarget.style.borderColor = C.line)}
+                  >
                     Reprovar
                   </button>
                 </div>
               </div>
             ))}
+            <div style={{ height: 10 }} />
           </div>
         )}
 
+        {/* GARGALOS */}
         {tab === "gargalos" && (
           <div>
             {GARGALOS.map(g => (
-              <div key={g.id} className="px-4 py-3 border-b border-gray-800/50 last:border-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${g.impacto === "alto" ? "bg-red-500" : "bg-yellow-500"}`} />
-                  <span className="text-white text-xs font-medium">{g.titulo}</span>
+              <div key={g.id} style={{
+                margin: "10px 10px 0",
+                background: C.white,
+                borderRadius: 10,
+                borderLeft: `3px solid ${g.impacto === "alto" ? C.red : C.gold}`,
+                boxShadow: "0 1px 4px rgba(0,40,26,0.07)",
+                padding: "10px 12px",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 4,
+                    background: g.impacto === "alto" ? C.redSoft : C.goldBg,
+                    color: g.impacto === "alto" ? C.red : C.gold,
+                  }}>
+                    {g.impacto === "alto" ? "ALTO" : "MÉDIO"}
+                  </span>
+                  <span style={{ fontSize: 9.5, color: C.muted }}>{g.area}</span>
                 </div>
-                <div className="text-gray-400 text-[11px] mb-1">{g.descricao}</div>
-                <span className="bg-gray-800 text-gray-400 text-[10px] rounded px-1.5 py-0.5">{g.area}</span>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.green, marginBottom: 3 }}>{g.titulo}</div>
+                <div style={{ fontSize: 10.5, color: C.muted, lineHeight: 1.5 }}>{g.descricao}</div>
               </div>
             ))}
+            <div style={{ height: 10 }} />
           </div>
         )}
 
+        {/* ALERTAS */}
         {tab === "alertas" && (
           <div>
-            {ALERTAS.map(a => (
-              <div key={a.id} className="px-4 py-3 border-b border-gray-800/50 last:border-0 flex items-start gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
-                  a.tipo === "critico" ? "bg-red-500 animate-pulse" :
-                  a.tipo === "atencao" ? "bg-yellow-500" : "bg-blue-500"
-                }`} />
-                <span className="text-gray-300 text-[11px] leading-relaxed">{a.msg}</span>
-              </div>
-            ))}
+            {ALERTAS.map(a => {
+              const dotColor = a.tipo === "critico" ? C.red : a.tipo === "atencao" ? C.gold : C.green;
+              const bgColor  = a.tipo === "critico" ? C.redSoft : a.tipo === "atencao" ? C.goldBg : "rgba(22,163,74,0.08)";
+              return (
+                <div key={a.id} style={{
+                  margin: "10px 10px 0",
+                  background: bgColor,
+                  borderRadius: 10,
+                  borderLeft: `3px solid ${dotColor}`,
+                  padding: "10px 12px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                }}>
+                  <div style={{
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: dotColor, flexShrink: 0, marginTop: 3,
+                    ...(a.tipo === "critico" ? { animation: "pulse 1.4s ease-in-out infinite" } : {}),
+                  }} />
+                  <span style={{ fontSize: 11, color: C.text, lineHeight: 1.55 }}>{a.msg}</span>
+                </div>
+              );
+            })}
+            <div style={{ height: 10 }} />
           </div>
         )}
+
       </div>
     </div>
   );
