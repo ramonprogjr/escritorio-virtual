@@ -1,0 +1,32 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+function db() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
+export async function GET() {
+  const { data, error } = await db()
+    .from("hub_leads_crm")
+    .select("id, nome, telefone, origem, estagio, score, valor_estimado, agente_responsavel, humano_responsavel, criado_em, atualizado_em")
+    .not("estagio", "in", "(perdido,ganho)")
+    .order("score", { ascending: false })
+    .limit(20);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data ?? []);
+}
+
+export async function PATCH(request: NextRequest) {
+  const body = await request.json() as Record<string, unknown>;
+  const { id, ...updates } = body;
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  updates.atualizado_em = new Date().toISOString();
+  const { error } = await db().from("hub_leads_crm").update(updates).eq("id", id as string);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
