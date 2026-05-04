@@ -38,7 +38,7 @@ const FASE_SPAWN: Record<string, { x: number; y: number }> = {
 }
 
 const AGENTES = [
-  { id: 1,  nome: 'Dir. Marketing', iniciais: 'DM', x: 167, y: 185, cor: '#8b5cf6', atividades: ['Revisando estratégia...','Aprovando campanha...','Em reunião...'] },
+  { id: 1,  nome: 'Ariane', iniciais: 'AR', x: 167, y: 185, cor: '#8b5cf6', atividades: ['Revisando estratégia...','Aprovando campanha...','Analisando CPL...','Definindo metas...','Alinhando com comercial...'] },
   { id: 2,  nome: 'CEO',            iniciais: 'CE', x: 432, y: 185, cor: '#f97316', atividades: ['Analisando KPIs...','Tomando decisão...','Revisando metas...'] },
   { id: 3,  nome: 'Dir. Comercial', iniciais: 'DC', x: 700, y: 185, cor: '#3b82f6', atividades: ['Monitorando funil...','Aprovando proposta...','Revisando pipeline...'] },
   { id: 4,  nome: 'Ger. Marketing', iniciais: 'GM', x: 100, y: 480, cor: '#8b5cf6', atividades: ['Criando briefing...','Revisando copy...','Planejando campanha...'] },
@@ -392,6 +392,28 @@ export default function MobileExperience() {
               {imgSize.w > 100 && AGENTES.map(ag => {
                 const pos = toScreen(ag.x, ag.y)
                 const temBolha = bolhaAtiva === ag.id
+
+                if (ag.nome === 'Ariane') {
+                  return (
+                    <div key={ag.id} onClick={() => setAgenteDrawer(ag)} style={{ position: 'absolute', left: pos.x, top: pos.y, transform: 'translate(-50%, -100%)', zIndex: 15, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {temBolha && (
+                        <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', background: 'rgba(8,8,16,0.92)', border: '1px solid rgba(139,92,246,0.6)', borderRadius: 6, padding: '3px 8px', whiteSpace: 'nowrap', fontSize: 9, color: '#fff', marginBottom: 4, zIndex: 30, fontWeight: 600 }}>
+                          {bolhaTexto}
+                        </div>
+                      )}
+                      <img
+                        src="/avatars/ariane/normal.png"
+                        alt="Ariane"
+                        style={{ width: 36, height: 50, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(139,92,246,0.8))' }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                      <div style={{ fontSize: 8, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 4, padding: '1px 5px', marginTop: 2, whiteSpace: 'nowrap' }}>
+                        ARIANE
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
                   <div key={ag.id} onClick={() => setAgenteDrawer(ag)} style={{ position: 'absolute', left: pos.x, top: pos.y, transform: 'translate(-50%, -50%)', zIndex: 5, cursor: 'pointer' }}>
                     {temBolha && (
@@ -700,10 +722,19 @@ export default function MobileExperience() {
           <div style={{ width: '100%', background: '#0d0d1a', borderRadius: '20px 20px 0 0', padding: '24px 20px 36px', border: '1px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '0 auto 20px' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: `${agenteDrawer.cor}25`, border: `2px solid ${agenteDrawer.cor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff' }}>{agenteDrawer.iniciais}</div>
+              {agenteDrawer.nome === 'Ariane' ? (
+                <img src="/avatars/ariane/apresentando.png" alt="Ariane" style={{ width: 60, height: 84, objectFit: 'contain', flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              ) : (
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: `${agenteDrawer.cor}25`, border: `2px solid ${agenteDrawer.cor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff' }}>{agenteDrawer.iniciais}</div>
+              )}
               <div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{agenteDrawer.nome}</div>
-                <div style={{ fontSize: 12, color: agenteDrawer.cor, marginTop: 2, fontWeight: 600 }}>{agenteDrawer.atividades[0]}</div>
+                <div style={{ fontSize: 12, color: agenteDrawer.cor, marginTop: 2, fontWeight: 600 }}>
+                  {agenteDrawer.nome === 'Ariane' ? 'Diretora de Marketing' : agenteDrawer.atividades[0]}
+                </div>
+                {agenteDrawer.nome === 'Ariane' && (
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>CPL Meta em R$89 — revisando estratégia</div>
+                )}
               </div>
             </div>
           </div>

@@ -18,7 +18,6 @@ import { useAlerts } from "@/hooks/useAlerts";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useSupabaseLeads, type LeadComPessoa } from "@/hooks/useSupabaseLeads";
 import LiveCrmPanel from "@/components/office/LiveCrmPanel";
-import { Ariane } from "@/components/office/Ariane";
 import { type LiveLead } from "@/lib/data/live-leads";
 import { DECISIONS_MOCK } from "@/lib/data/decisions-mock";
 import { getLeadById } from "@/lib/data/leads-mock";
@@ -370,20 +369,6 @@ function OfficePageInner() {
           {hoveredAgent && !selectedAgent && (
             <AgentBubble agent={hoveredAgent} state={hoveredState} x={mousePos.x} y={mousePos.y} />
           )}
-          {/* Ariane — Diretora de Marketing — posicionada na sala dela */}
-          <div style={{
-            position: 'absolute',
-            bottom: 16,
-            left: 16,
-            zIndex: 10,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            gap: 6,
-            pointerEvents: 'none',
-          }}>
-            <Ariane tamanho={72} />
-          </div>
         </div>
 
         {/* Direita — CRM / Decisões (300px) */}

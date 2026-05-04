@@ -1,8 +1,8 @@
 {
   "agents": [
     {
-      "id": "ag-001", "nome": "Marina Costa", "avatar": "MC",
-      "funcao": "Gerente de Marketing", "cargo_curto": "Dir. Marketing",
+      "id": "ag-001", "nome": "Ariane", "avatar": "/avatars/ariane/normal.png",
+      "funcao": "Diretora de Marketing", "cargo_curto": "Dir. Marketing",
       "area": "Marketing", "sala": "Diretoria Executiva", "andar": "executivo",
       "nivel_hierarquico": 2,
       "posicao": { "x": 250, "y": 86 },

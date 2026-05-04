@@ -199,6 +199,7 @@ export function OfficeCanvas({
   const canvasRef        = useRef<HTMLCanvasElement>(null);
   const containerRef     = useRef<HTMLDivElement>(null);
   const bgRef            = useRef<HTMLImageElement | null>(null);
+  const avatarImgsRef    = useRef<Map<string, HTMLImageElement>>(new Map());
   const hoveredId        = useRef<string | null>(null);
   const hoveredRoomRef   = useRef<Room | null>(null);
   const animRef          = useRef<number>(0);
@@ -218,6 +219,17 @@ export function OfficeCanvas({
     img.src = "/sprites/office-bg.png";
     img.onload = () => { bgRef.current = img; };
   }, []);
+
+  /* pre-load image avatars */
+  useEffect(() => {
+    agents.forEach(agent => {
+      if (agent.avatar.startsWith('/') && !avatarImgsRef.current.has(agent.id)) {
+        const img = new Image();
+        img.src = agent.avatar;
+        avatarImgsRef.current.set(agent.id, img);
+      }
+    });
+  }, [agents]);
 
   /* lead arrivals */
   useEffect(() => {
@@ -465,27 +477,34 @@ export function OfficeCanvas({
         ctx.lineWidth   = (selectedRef.current === agent.id ? 3 : 2.2) * S;
         ctx.stroke();
 
-        /* filled circle */
-        ctx.save();
-        ctx.shadowColor   = "rgba(0,0,0,0.6)";
-        ctx.shadowBlur    = 10 * S;
-        ctx.shadowOffsetY = 3  * S;
-        ctx.beginPath();
-        ctx.arc(ax, ay, fR, 0, Math.PI * 2);
-        const grd2 = ctx.createRadialGradient(ax - fR * 0.3, ay - fR * 0.3, 0, ax, ay, fR);
-        grd2.addColorStop(0, colorDark);
-        grd2.addColorStop(1, "#060d1c");
-        ctx.fillStyle = grd2;
-        ctx.fill();
-        ctx.restore();
-
-        /* initials / avatar placeholder */
-        const ifs = Math.max(6, Math.min(9, fR * 0.56));
-        ctx.font         = `bold ${ifs}px monospace`;
-        ctx.textAlign    = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle    = "#ffffff";
-        ctx.fillText(agent.avatar, ax, ay);
+        /* filled circle + avatar (image or initials) */
+        const avatarImg = avatarImgsRef.current.get(agent.id);
+        if (agent.avatar.startsWith('/') && avatarImg?.complete && avatarImg.naturalWidth > 0) {
+          const imgH = 48 * S;
+          const imgW = imgH * (avatarImg.naturalWidth / avatarImg.naturalHeight);
+          ctx.save();
+          ctx.drawImage(avatarImg, ax - imgW / 2, ay - imgH * 0.92, imgW, imgH);
+          ctx.restore();
+        } else {
+          ctx.save();
+          ctx.shadowColor   = "rgba(0,0,0,0.6)";
+          ctx.shadowBlur    = 10 * S;
+          ctx.shadowOffsetY = 3  * S;
+          ctx.beginPath();
+          ctx.arc(ax, ay, fR, 0, Math.PI * 2);
+          const grd2 = ctx.createRadialGradient(ax - fR * 0.3, ay - fR * 0.3, 0, ax, ay, fR);
+          grd2.addColorStop(0, colorDark);
+          grd2.addColorStop(1, "#060d1c");
+          ctx.fillStyle = grd2;
+          ctx.fill();
+          ctx.restore();
+          const ifs = Math.max(6, Math.min(9, fR * 0.56));
+          ctx.font         = `bold ${ifs}px monospace`;
+          ctx.textAlign    = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle    = "#ffffff";
+          ctx.fillText(agent.avatar, ax, ay);
+        }
 
         /* online dot */
         const dotAngle = -Math.PI / 4;
