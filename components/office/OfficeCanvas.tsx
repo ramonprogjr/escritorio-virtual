@@ -510,25 +510,43 @@ export function OfficeCanvas({
 
         /* filled circle + avatar (image or initials) */
         if (agent.nome === 'Ariane' && arianeImgRef.current) {
-          const imgH = 48 * S;
-          const imgW = imgH * (arianeImgRef.current.naturalWidth / arianeImgRef.current.naturalHeight);
+          // 1. Círculo padrão (igual aos outros agentes)
           ctx.save();
-          ctx.shadowColor = '#8b5cf6';
-          ctx.shadowBlur  = 20 * S;
-          ctx.drawImage(arianeImgRef.current, ax - imgW / 2, ay - imgH * 0.92, imgW, imgH);
-          ctx.restore();
-          /* purple name tag */
-          const tagW = 44 * S;
-          const tagH = 12 * S;
-          ctx.fillStyle = 'rgba(139,92,246,0.9)';
           ctx.beginPath();
-          roundRect(ctx, ax - tagW / 2, ay + 2 * S, tagW, tagH, 2 * S);
+          ctx.arc(ax, ay, fR, 0, Math.PI * 2);
+          ctx.fillStyle = '#1a0a2e';
           ctx.fill();
-          ctx.font         = `bold ${Math.max(6, 7 * S)}px sans-serif`;
-          ctx.textAlign    = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle    = '#ffffff';
-          ctx.fillText('ARIANE', ax, ay + 8 * S);
+          ctx.strokeStyle = '#8b5cf6';
+          ctx.lineWidth = 2.5 * S;
+          ctx.stroke();
+
+          // 2. Clip circular para foto ficar redonda
+          ctx.beginPath();
+          ctx.arc(ax, ay, fR - 2 * S, 0, Math.PI * 2);
+          ctx.clip();
+
+          // 3. Foto da Ariane dentro do círculo
+          const r = fR - 2 * S;
+          ctx.drawImage(arianeImgRef.current, ax - r, ay - r * 1.4, r * 2, r * 2.8);
+          ctx.restore();
+
+          // 4. Glow roxo sutil
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(ax, ay, fR + 4 * S, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(139,92,246,0.5)';
+          ctx.lineWidth = 2 * S;
+          ctx.shadowColor = '#8b5cf6';
+          ctx.shadowBlur = 12 * S;
+          ctx.stroke();
+          ctx.restore();
+
+          // 5. Nome tag
+          ctx.fillStyle = 'rgba(139,92,246,0.9)';
+          ctx.font = `bold ${Math.max(6, 8 * S)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText('Ariane', ax, ay + fR + 12 * S);
         } else {
           const avatarImg = avatarImgsRef.current.get(agent.id);
           if (agent.avatar.startsWith('/') && avatarImg?.complete && avatarImg.naturalWidth > 0) {

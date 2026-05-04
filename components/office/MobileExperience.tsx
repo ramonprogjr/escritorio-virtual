@@ -38,7 +38,7 @@ const FASE_SPAWN: Record<string, { x: number; y: number }> = {
 }
 
 const AGENTES = [
-  { id: 1,  nome: 'Ariane', iniciais: 'AR', x: 167, y: 185, cor: '#8b5cf6', atividades: ['Revisando estratégia...','Aprovando campanha...','Analisando CPL...','Definindo metas...','Alinhando com comercial...'] },
+  { id: 1,  nome: 'Ariane', iniciais: 'AR', x: 167, y: 220, cor: '#8b5cf6', atividades: ['Revisando estratégia...','Aprovando campanha...','Analisando CPL...','Definindo metas...','Alinhando com comercial...'] },
   { id: 2,  nome: 'CEO',            iniciais: 'CE', x: 432, y: 185, cor: '#f97316', atividades: ['Analisando KPIs...','Tomando decisão...','Revisando metas...'] },
   { id: 3,  nome: 'Dir. Comercial', iniciais: 'DC', x: 700, y: 185, cor: '#3b82f6', atividades: ['Monitorando funil...','Aprovando proposta...','Revisando pipeline...'] },
   { id: 4,  nome: 'Ger. Marketing', iniciais: 'GM', x: 100, y: 480, cor: '#8b5cf6', atividades: ['Criando briefing...','Revisando copy...','Planejando campanha...'] },
@@ -395,7 +395,7 @@ export default function MobileExperience() {
 
                 if (ag.nome === 'Ariane') {
                   return (
-                    <div key={ag.id} onClick={() => setAgenteDrawer(ag)} style={{ position: 'absolute', left: pos.x, top: pos.y, transform: 'translate(-50%, -100%)', zIndex: 15, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div key={ag.id} onClick={() => setAgenteDrawer(ag)} style={{ position: 'absolute', left: pos.x, top: pos.y, transform: 'translate(-50%, -80%)', zIndex: 15, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       {temBolha && (
                         <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', background: 'rgba(8,8,16,0.92)', border: '1px solid rgba(139,92,246,0.6)', borderRadius: 6, padding: '3px 8px', whiteSpace: 'nowrap', fontSize: 9, color: '#fff', marginBottom: 4, zIndex: 30, fontWeight: 600 }}>
                           {bolhaTexto}
