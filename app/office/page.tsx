@@ -74,6 +74,8 @@ function OfficePageInner() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("inbox");
   const [rightPanel, setRightPanel] = useState<"crm" | "inbox">("crm");
   const [selectedLiveLead, setSelectedLiveLead] = useState<LiveLead | null>(null);
+  const [showOnlinePanel, setShowOnlinePanel] = useState(false);
+  const [agenteDestaque, setAgenteDestaque] = useState<string | null>(null);
   const bp = useBreakpoint();
   const { leads: supaLeads, loading: leadsLoading, avancarFase: avancarFaseDB } = useSupabaseLeads();
 
@@ -293,11 +295,15 @@ function OfficePageInner() {
 
         {/* Zona direita */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, zIndex: 1 }}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 5,
-            padding: "3px 10px", borderRadius: 20,
-            background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
-          }}>
+          <div
+            onClick={() => setShowOnlinePanel(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "3px 10px", borderRadius: 20,
+              background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
+              cursor: "pointer",
+            }}
+          >
             <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", animation: "pulse 2s infinite" }} />
             <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>{ONLINE_COUNT} online</span>
           </div>
@@ -365,6 +371,7 @@ function OfficePageInner() {
             connectionsRef={connectionsRef}
             liveLeads={leads}
             onLeadClick={setSelectedLiveLead}
+            selectedAgentId={agenteDestaque ?? undefined}
           />
           {hoveredAgent && !selectedAgent && (
             <AgentBubble agent={hoveredAgent} state={hoveredState} x={mousePos.x} y={mousePos.y} />
@@ -414,6 +421,78 @@ function OfficePageInner() {
       </div>
 
       {sharedOverlays}
+
+      {/* PAINEL AGENTES ONLINE */}
+      {showOnlinePanel && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "flex-end" }}
+          onClick={() => { setShowOnlinePanel(false); setAgenteDestaque(null); }}
+        >
+          <div
+            style={{ width: 340, height: "100vh", background: "#0d0d1a", borderLeft: "1px solid rgba(255,255,255,0.08)", overflowY: "auto", padding: "20px 16px" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>Equipe Online</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{agents.filter(a => a.status?.online).length} agentes ativos agora</div>
+              </div>
+              <button onClick={() => { setShowOnlinePanel(false); setAgenteDestaque(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "6px 10px", fontSize: 13 }}>✕</button>
+            </div>
+
+            {agents.map(agent => {
+              const isOnline = agent.status?.online;
+              const isDestaque = agenteDestaque === agent.id;
+              const isAriane = agent.avatar?.startsWith("/");
+              const AREA_COR: Record<string, string> = { "Marketing": "#22c55e", "Executivo": "#f59e0b", "Estratégia": "#60a5fa", "Conteúdo": "#a78bfa", "Design": "#f472b6", "Performance": "#34d399", "Atendimento": "#06b6d4", "Comercial": "#fb923c" };
+              const cor = AREA_COR[agent.area] ?? "#6b7280";
+              return (
+                <div
+                  key={agent.id}
+                  onClick={() => setAgenteDestaque(isDestaque ? null : agent.id)}
+                  style={{
+                    background: isDestaque ? "rgba(249,115,22,0.12)" : "rgba(255,255,255,0.03)",
+                    border: isDestaque ? "1px solid rgba(249,115,22,0.4)" : "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 12, padding: "12px 14px", marginBottom: 8,
+                    cursor: "pointer", transition: "all 0.2s ease",
+                    opacity: isOnline ? 1 : 0.45,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {isAriane ? (
+                      <img src={agent.avatar} alt={agent.nome} style={{ width: 36, height: 50, objectFit: "contain", flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: `${cor}25`, border: `2px solid ${isOnline ? cor : "#6b7280"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#fff" }}>
+                        {agent.avatar}
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{agent.nome}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>{agent.funcao}</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: isOnline ? "#10b981" : "#6b7280", boxShadow: isOnline ? "0 0 6px #10b981" : "none" }} />
+                      <div style={{ fontSize: 9, color: isOnline ? "#10b981" : "rgba(255,255,255,0.3)", fontWeight: 600 }}>{isOnline ? "ONLINE" : "OFFLINE"}</div>
+                    </div>
+                  </div>
+
+                  {isDestaque && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>Status atual</div>
+                      <div style={{ fontSize: 13, color: "#fff", lineHeight: 1.5, marginBottom: 10 }}>
+                        {agent.currentActivity || "✅ Operando normalmente"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "6px 10px" }}>
+                        {agent.area} · {agent.sala}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
     </div>
   );

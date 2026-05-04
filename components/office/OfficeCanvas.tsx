@@ -179,6 +179,7 @@ interface Props {
   onAgentLeave?: () => void;
   liveLeads?: LiveLead[];
   onLeadClick?: (lead: LiveLead) => void;
+  selectedAgentId?: string;
 }
 
 export function OfficeCanvas({
@@ -195,6 +196,7 @@ export function OfficeCanvas({
   onAgentLeave,
   liveLeads,
   onLeadClick,
+  selectedAgentId,
 }: Props) {
   const canvasRef        = useRef<HTMLCanvasElement>(null);
   const containerRef     = useRef<HTMLDivElement>(null);
@@ -202,16 +204,18 @@ export function OfficeCanvas({
   const avatarImgsRef    = useRef<Map<string, HTMLImageElement>>(new Map());
   const hoveredId        = useRef<string | null>(null);
   const hoveredRoomRef   = useRef<Room | null>(null);
-  const animRef          = useRef<number>(0);
-  const agentsRef        = useRef(agents);
-  const selectedRef      = useRef(selectedId);
+  const animRef             = useRef<number>(0);
+  const agentsRef           = useRef(agents);
+  const selectedRef         = useRef(selectedId);
+  const selectedAgentIdRef  = useRef(selectedAgentId);
   const speechBubblesRef = useRef<Array<{ agentId: string; text: string; born: number }>>([]);
   const lastBubbleAddRef = useRef(0);
   const leadsRef         = useRef<LeadAnim[]>([]);
   let   leadIdCounter    = 0;
 
-  useEffect(() => { agentsRef.current  = agents;      }, [agents]);
-  useEffect(() => { selectedRef.current = selectedId; }, [selectedId]);
+  useEffect(() => { agentsRef.current         = agents;          }, [agents]);
+  useEffect(() => { selectedRef.current       = selectedId;      }, [selectedId]);
+  useEffect(() => { selectedAgentIdRef.current = selectedAgentId; }, [selectedAgentId]);
 
   /* load background */
   useEffect(() => {
@@ -420,6 +424,12 @@ export function OfficeCanvas({
           baseX += Math.sin(ts * 0.05) * 2;
         }
 
+        /* panel highlight bounce */
+        const isHighlighted = !!selectedAgentIdRef.current && agent.id === selectedAgentIdRef.current;
+        if (isHighlighted) {
+          baseY -= Math.sin(ts * 0.005) * 6;
+        }
+
         const ax  = baseX * S;
         const ay  = baseY * S + bob * S;
 
@@ -436,6 +446,19 @@ export function OfficeCanvas({
         const fR = fillR * hoverSc * scaleMod;
 
         const pulse = (Math.sin(ts * 0.0024 + phase) + 1) / 2;
+
+        /* panel highlight ring */
+        if (isHighlighted) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(ax, ay, rR + 12 * S, 0, Math.PI * 2);
+          ctx.strokeStyle = "#f97316";
+          ctx.lineWidth = 3 * S;
+          ctx.shadowColor = "#f97316";
+          ctx.shadowBlur = 20 * S;
+          ctx.stroke();
+          ctx.restore();
+        }
 
         /* glow */
         if (agent.status.online) {
