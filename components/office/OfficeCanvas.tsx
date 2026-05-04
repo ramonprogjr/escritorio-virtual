@@ -510,43 +510,71 @@ export function OfficeCanvas({
 
         /* filled circle + avatar (image or initials) */
         if (agent.nome === 'Ariane' && arianeImgRef.current) {
-          // 1. Círculo padrão (igual aos outros agentes)
+          const imgW = 52 * S;
+          const imgH = 72 * S;
+
           ctx.save();
+
+          // 1. HALO NO CHÃO — elipse roxa embaixo dos pés
           ctx.beginPath();
-          ctx.arc(ax, ay, fR, 0, Math.PI * 2);
-          ctx.fillStyle = '#1a0a2e';
+          ctx.ellipse(ax, ay + 8 * S, 28 * S, 10 * S, 0, 0, Math.PI * 2);
+          const haloGradient = ctx.createRadialGradient(ax, ay + 8 * S, 0, ax, ay + 8 * S, 28 * S);
+          haloGradient.addColorStop(0, 'rgba(139,92,246,0.6)');
+          haloGradient.addColorStop(0.6, 'rgba(139,92,246,0.25)');
+          haloGradient.addColorStop(1, 'rgba(139,92,246,0)');
+          ctx.fillStyle = haloGradient;
           ctx.fill();
-          ctx.strokeStyle = '#8b5cf6';
-          ctx.lineWidth = 2.5 * S;
-          ctx.stroke();
 
-          // 2. Clip circular para foto ficar redonda
-          ctx.beginPath();
-          ctx.arc(ax, ay, fR - 2 * S, 0, Math.PI * 2);
-          ctx.clip();
+          // 2. PARTÍCULAS DE BRILHO ao redor do halo
+          const tempo = Date.now() / 800;
+          for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + tempo;
+            const px = ax + Math.cos(angle) * 22 * S;
+            const py = ay + 8 * S + Math.sin(angle) * 7 * S;
+            const pulso = 0.4 + Math.sin(tempo * 2 + i) * 0.3;
+            ctx.beginPath();
+            ctx.arc(px, py, 1.5 * S, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(139,92,246,${pulso})`;
+            ctx.fill();
+          }
 
-          // 3. Foto da Ariane dentro do círculo
-          const r = fR - 2 * S;
-          ctx.drawImage(arianeImgRef.current, ax - r, ay - r * 1.4, r * 2, r * 2.8);
+          // 3. SOMBRA SUAVE do personagem
+          ctx.shadowColor = 'rgba(139,92,246,0.5)';
+          ctx.shadowBlur = 16 * S;
+
+          // 4. DESENHA O AVATAR DA ARIANE maior e centralizado
+          ctx.drawImage(
+            arianeImgRef.current,
+            ax - imgW / 2,
+            ay - imgH + 10 * S,
+            imgW,
+            imgH
+          );
+
           ctx.restore();
 
-          // 4. Glow roxo sutil
+          // 5. NOME TAG elegante
           ctx.save();
-          ctx.beginPath();
-          ctx.arc(ax, ay, fR + 4 * S, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(139,92,246,0.5)';
-          ctx.lineWidth = 2 * S;
-          ctx.shadowColor = '#8b5cf6';
-          ctx.shadowBlur = 12 * S;
-          ctx.stroke();
-          ctx.restore();
+          const tagW = 52 * S;
+          const tagH = 14 * S;
+          const tagX = ax - tagW / 2;
+          const tagY = ay + 12 * S;
 
-          // 5. Nome tag
-          ctx.fillStyle = 'rgba(139,92,246,0.9)';
-          ctx.font = `bold ${Math.max(6, 8 * S)}px sans-serif`;
+          ctx.fillStyle = 'rgba(8,8,16,0.8)';
+          ctx.beginPath();
+          roundRect(ctx, tagX, tagY, tagW, tagH, 4 * S);
+          ctx.fill();
+
+          ctx.strokeStyle = 'rgba(139,92,246,0.6)';
+          ctx.lineWidth = 1 * S;
+          ctx.stroke();
+
+          ctx.fillStyle = '#c4b5fd';
+          ctx.font = `bold ${Math.max(6, 7.5 * S)}px sans-serif`;
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'top';
-          ctx.fillText('Ariane', ax, ay + fR + 12 * S);
+          ctx.textBaseline = 'middle';
+          ctx.fillText('ARIANE ✦', ax, tagY + tagH / 2);
+          ctx.restore();
         } else {
           const avatarImg = avatarImgsRef.current.get(agent.id);
           if (agent.avatar.startsWith('/') && avatarImg?.complete && avatarImg.naturalWidth > 0) {
