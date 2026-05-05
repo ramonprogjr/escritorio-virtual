@@ -12,6 +12,8 @@ const NAV = [
   { href: "/crm/parceiros",    label: "Parceiros",   icon: "🤝" },
   { href: "/crm/relatorios",   label: "Relatórios",  icon: "📋" },
   { href: "/crm/ciclos",       label: "Ciclos IA",   icon: "⚡" },
+  { href: "/crm/trafego",      label: "Tráfego",     icon: "📡" },
+  { href: "/crm/conteudo",     label: "Conteúdo",    icon: "✏️" },
   { href: "/crm/configuracoes",label: "Config",      icon: "⚙️" },
 ];
 

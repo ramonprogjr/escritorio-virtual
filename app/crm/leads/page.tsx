@@ -126,6 +126,8 @@ export default function LeadsPage() {
   const [confirmandoPerda, setConfirmandoPerda] = useState(false);
   const [form, setForm] = useState({ nome: "", telefone: "", origem: "whatsapp", valor_estimado: "", estagio: "novo" });
   const [salvando, setSalvando] = useState(false);
+  const [leadDragId, setLeadDragId] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     const { data } = await sb.from("hub_leads_crm").select("*").order("criado_em", { ascending: false });
@@ -274,11 +276,19 @@ export default function LeadsPage() {
                     {total > 0 && <p className="text-xs mt-0.5 font-bold" style={{ color: est.color }}>{moeda(total)}</p>}
                   </div>
                   {/* Cards */}
-                  <div className="flex-1 bg-gray-900/40 rounded-b-xl border border-t-0 border-gray-800 p-2 space-y-2 overflow-y-auto" style={{ minHeight: 80 }}>
+                  <div className="flex-1 bg-gray-900/40 rounded-b-xl border border-t-0 border-gray-800 p-2 space-y-2 overflow-y-auto transition-colors"
+                    style={{ minHeight: 80, backgroundColor: dragOver === est.id ? est.color + "12" : undefined }}
+                    onDragOver={e => { e.preventDefault(); setDragOver(est.id); }}
+                    onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null); }}
+                    onDrop={e => { e.preventDefault(); const lid = e.dataTransfer.getData("leadId"); if (lid) moverEstagio(lid, est.id); setLeadDragId(null); setDragOver(null); }}>
                     {col.map(lead => (
-                      <div key={lead.id} onClick={() => router.push(`/crm/leads/${lead.id}`)}
-                        className="bg-gray-900 rounded-xl p-3 cursor-pointer hover:bg-gray-800 transition-all"
-                        style={{ borderWidth: 1, borderStyle: "solid", borderColor: "#374151", borderLeftWidth: 3, borderLeftColor: borderColor(lead.atualizado_em) }}>
+                      <div key={lead.id}
+                        draggable
+                        onDragStart={e => { e.dataTransfer.setData("leadId", lead.id); setLeadDragId(lead.id); }}
+                        onDragEnd={() => { setLeadDragId(null); setDragOver(null); }}
+                        onClick={() => router.push(`/crm/leads/${lead.id}`)}
+                        className="bg-gray-900 rounded-xl p-3 cursor-grab active:cursor-grabbing hover:bg-gray-800 transition-all"
+                        style={{ borderWidth: 1, borderStyle: "solid", borderColor: "#374151", borderLeftWidth: 3, borderLeftColor: borderColor(lead.atualizado_em), opacity: leadDragId === lead.id ? 0.5 : 1 }}>
                         <p className="text-white text-xs font-bold truncate leading-tight">{lead.nome}</p>
                         {lead.valor_estimado > 0 && <p className="text-xs font-bold mt-1" style={{ color: "#22C55E" }}>{moeda(lead.valor_estimado)}</p>}
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap">

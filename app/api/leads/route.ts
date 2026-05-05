@@ -20,6 +20,26 @@ export async function GET() {
   return NextResponse.json(data ?? []);
 }
 
+export async function POST(request: NextRequest) {
+  const body = await request.json() as Record<string, unknown>;
+  if (!body.nome) return NextResponse.json({ error: "nome required" }, { status: 400 });
+
+  const { data, error } = await db().from("hub_leads_crm").insert({
+    nome: body.nome,
+    telefone: body.telefone ?? null,
+    email: body.email ?? null,
+    origem: body.origem ?? "outro",
+    campanha: body.campanha ?? null,
+    estagio: body.estagio ?? "novo",
+    valor_estimado: body.valor_estimado ?? 0,
+    score: body.score ?? 50,
+    tags: body.tags ?? [],
+  }).select().single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
+}
+
 export async function PATCH(request: NextRequest) {
   const body = await request.json() as Record<string, unknown>;
   const { id, ...updates } = body;
