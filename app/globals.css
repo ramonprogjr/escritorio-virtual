@@ -262,3 +262,105 @@ body {
   0% { transform: translateY(20px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
+
+/* ═══ FFT VISUAL SYSTEM ═══ */
+
+@keyframes aura-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes aura-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes aura-critical {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(179,38,30,0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 12px rgba(179,38,30,0); }
+}
+
+@keyframes lead-pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,162,74,0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(201,162,74,0); }
+}
+
+@keyframes lead-pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(179,38,30,0.6); }
+  50% { box-shadow: 0 0 0 12px rgba(179,38,30,0); }
+}
+
+@keyframes particle-up {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(0); opacity: 0; }
+}
+
+@keyframes battle-log-enter {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes levelup-ring {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes selector-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes vignette-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes analytics-enter {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes office-enter {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes number-tick {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.agent-sdr { --agent-color: #60a5fa; --agent-glow: rgba(96,165,250,0.4); }
+.agent-atendente { --agent-color: #c9a24a; --agent-glow: rgba(201,162,74,0.4); }
+.agent-gerente { --agent-color: #c0c0c0; --agent-glow: rgba(192,192,192,0.4); }
+.agent-diretor { --agent-color: #a78bfa; --agent-glow: rgba(167,139,250,0.4); }
+
+.fft-panel {
+  position: relative;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+}
+
+.fft-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, #c9a24a44, transparent 40%, transparent 60%, #c9a24a22);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.hex-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill='none' stroke='%23c9a24a' stroke-opacity='0.03' stroke-width='1'%3E%3Cpath d='M14 0 L28 8 L28 24 L14 32 L0 24 L0 8 Z'/%3E%3Cpath d='M14 17 L28 25 L28 41 L14 49 L0 41 L0 25 Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.canvas-vignette {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(13,17,23,0.8) 100%);
+  pointer-events: none;
+}
