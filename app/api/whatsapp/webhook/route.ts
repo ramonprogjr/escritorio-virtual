@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { identificarMercado } from "@/lib/ia/agentes-config";
 
+const IA_ATIVA = process.env.ANTHROPIC_API_KEY ? true : false;
+
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -222,6 +224,52 @@ export async function POST(request: NextRequest) {
         .from("hub_leads_crm")
         .update({ agente_responsavel: agente.agente_slug })
         .eq("id", lead.id);
+    }
+
+    if (IA_ATIVA && agente) {
+      try {
+        const { construirPrompt } = await import("@/lib/ia/prompt-builder");
+        const promptData = await construirPrompt({
+          agenteSlug: agente.agente_slug,
+          leadId: lead.id,
+          mercado,
+          mensagemAtual: mensagemFinal,
+        });
+
+        if (promptData) {
+          const Anthropic = (await import("@anthropic-ai/sdk")).default;
+          const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+          const response = await client.messages.create({
+            model: promptData.modelo,
+            max_tokens: 1024,
+            system: promptData.systemPrompt,
+            messages: [{ role: "user", content: mensagemFinal }],
+          });
+
+          const respostaTexto = response.content[0].type === "text" ? response.content[0].text : "";
+
+          await supabase.from("hub_fila_mensagens").insert({
+            lead_id: lead.id,
+            agente_id: agente.agente_slug,
+            canal: "whatsapp",
+            direcao: "saida",
+            conteudo: respostaTexto,
+            status: "pendente_envio",
+            metadata: { feito_por: "ia", modelo: promptData.modelo, tokens: response.usage },
+          });
+
+          try {
+            await fetch(`${process.env.EVOLUTION_API_URL}/message/sendText/obra10plus`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "apikey": process.env.EVOLUTION_API_KEY! },
+              body: JSON.stringify({ number: telefone, text: respostaTexto }),
+            });
+          } catch (e) { console.error("[WEBHOOK] Erro ao enviar via Evolution:", e); }
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] Erro IA:", e);
+      }
     }
 
     return NextResponse.json({

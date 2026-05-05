@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { OfficeCanvas, Agent } from "@/components/office/OfficeCanvas";
 import { AgentBubble } from "@/components/office/AgentBubble";
 import { AgentLogPanel } from "@/components/office/AgentLogPanel";
@@ -20,10 +20,12 @@ import Partner360Drawer from "@/components/office/Partner360Drawer";
 import CriticalActionModal, { type CriticalActionModalProps } from "@/components/office/CriticalActionModal";
 import MobileExperience from "@/components/office/MobileExperience";
 import LiveMessageFeed from "@/components/office/LiveMessageFeed";
-import Link from "next/link";
 import { useOfficeLife } from "@/hooks/useOfficeLife";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useMetricas } from "@/hooks/useMetricas";
+import ContextSlidePanel from "@/components/office/ContextSlidePanel";
+import { SidebarPanel } from "@/components/office/SidebarPanel";
 import { useSupabaseLeads, type LeadComPessoa } from "@/hooks/useSupabaseLeads";
 import { type LiveLead } from "@/lib/data/live-leads";
 import { getLeadById } from "@/lib/data/leads-mock";
@@ -55,6 +57,22 @@ function NotificationToast({ message }: { message: string }) {
   );
 }
 
+function getTituloDoPainel(painel: string): { titulo: string; subtitulo: string; cor: string } {
+  const map: Record<string, { titulo: string; subtitulo: string; cor: string }> = {
+    funil_leads: { titulo: "Funil de Leads", subtitulo: "Entradas de hoje", cor: "#22c55e" },
+    pipeline_crm: { titulo: "Pipeline CRM", subtitulo: "Leads ativos", cor: "#60a5fa" },
+    fila_whatsapp: { titulo: "Aguardando Resposta", subtitulo: "Leads sem atendimento humano", cor: "#c9a24a" },
+    conversas_ativas: { titulo: "Conversas Ativas", subtitulo: "Atendimentos em andamento", cor: "#22c55e" },
+    sla_monitor: { titulo: "SLA Monitor", subtitulo: "Tempos de resposta", cor: "#a78bfa" },
+    aprovacoes_pendentes: { titulo: "Aprovações Pendentes", subtitulo: "Decisões aguardando você", cor: "#ef4444" },
+    ias_ativas: { titulo: "Equipe Online", subtitulo: "Agentes em operação", cor: "#34d399" },
+    equipe_online: { titulo: "Equipe Online", subtitulo: "Agentes em operação", cor: "#34d399" },
+    logs_decisao: { titulo: "Histórico", subtitulo: "Registro de decisões", cor: "#8b949e" },
+    custos_ia: { titulo: "Custos IA", subtitulo: "Consumo e gastos", cor: "#f59e0b" },
+  };
+  return map[painel] ?? { titulo: painel.replace(/_/g, " "), subtitulo: "", cor: "#c9a24a" };
+}
+
 function OfficePageInner() {
   const searchParams = useSearchParams();
   const isTvMode = searchParams.get("mode") === "tv";
@@ -75,6 +93,9 @@ function OfficePageInner() {
   const [selectedLiveLead, setSelectedLiveLead] = useState<LiveLead | null>(null);
 
   const bp = useBreakpoint();
+  const router = useRouter();
+  const metricas = useMetricas();
+  const [painelAtivo, setPainelAtivo] = useState<string | null>(null);
   const { leads: supaLeads, avancarFase: avancarFaseDB } = useSupabaseLeads();
 
   const HUB_FASE_TO_CANVAS: Record<string, LiveLead["fase"]> = {
@@ -267,14 +288,14 @@ function OfficePageInner() {
       <CriticalStrip />
 
       {/* DynamicKpis */}
-      <DynamicKpis visao={visao} />
+      <DynamicKpis metricas={metricas} onNavegar={(href) => router.push(href)} />
 
       {/* Body: 3 columns */}
       <div className="flex flex-1 overflow-hidden min-h-0">
 
         {/* Left: ContextMenu (208px) */}
         <div className="w-52 flex-shrink-0 overflow-hidden">
-          <ContextMenu visao={visao} onVisaoChange={setVisao} />
+          <ContextMenu metricas={metricas} onNavegar={(href) => router.push(href)} onItemClick={setPainelAtivo} />
         </div>
 
         {/* Center: Canvas + Filters */}
@@ -319,23 +340,12 @@ function OfficePageInner() {
         }}
       />
 
-      {/* CRM NAV — fixed top-right */}
-      <div className="fixed top-3 right-4 z-40 flex items-center gap-2">
-        <Link href="/crm/leads" className="text-xs px-3 py-1.5 rounded-full font-bold transition-colors"
-          style={{ background: "rgba(201,162,74,0.15)", color: "#c9a24a", border: "1px solid rgba(201,162,74,0.3)" }}>
-          Pipeline
-        </Link>
-        <Link href="/crm/atendimento" className="text-xs px-3 py-1.5 rounded-full font-bold transition-colors"
-          style={{ background: "rgba(0,59,38,0.4)", color: "#34d399", border: "1px solid rgba(0,59,38,0.6)" }}>
-          Atendimento
-        </Link>
-        <Link href="/crm/aprovacoes" className="text-xs px-3 py-1.5 rounded-full font-bold transition-colors"
-          style={{ background: "rgba(179,38,30,0.15)", color: "#f87171", border: "1px solid rgba(179,38,30,0.3)" }}>
-          Aprovações
-        </Link>
-      </div>
-
       <LiveMessageFeed />
+      {painelAtivo && (
+        <ContextSlidePanel aberto={true} onFechar={() => setPainelAtivo(null)} {...getTituloDoPainel(painelAtivo)}>
+          <SidebarPanel painel={painelAtivo} metricas={metricas} />
+        </ContextSlidePanel>
+      )}
       {sharedOverlays}
     </div>
   );

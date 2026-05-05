@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { useMetricas } from "@/hooks/useMetricas";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -458,31 +459,17 @@ export default function MobileExperience() {
   const [popups, setPopups] = useState<Popup[]>([]);
   const [menuVisivel, setMenuVisivel] = useState(true);
   const [conversaAberta, setConversaAberta] = useState<Conversa | null>(null);
-  const [metricas, setMetricas] = useState({ criticos: 0, conversas: 0, aprovacoes: 0, leads: 0, online: 18 });
+  const hookMetricas = useMetricas();
+  const metricas = {
+    criticos: hookMetricas.leadsAguardando,
+    conversas: hookMetricas.conversasAtivas,
+    aprovacoes: hookMetricas.aprovacoesPendentes,
+    leads: hookMetricas.leadsHoje,
+    online: hookMetricas.agentesAtivos || 18,
+  };
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastScrollY = useRef(0);
   const popupCounter = useRef(0);
-
-  const carregarMetricas = useCallback(async () => {
-    const [aprovs, leads, msgs] = await Promise.all([
-      supabase.from("hub_aprovacoes").select("id", { count: "exact" }).eq("status", "pendente"),
-      supabase.from("hub_leads_crm").select("id", { count: "exact" }).not("estagio", "in", '("ganho","perdido")'),
-      supabase.from("hub_fila_mensagens").select("id, criado_em").eq("status", "pendente").eq("direcao", "entrada"),
-    ]);
-
-    const criticos = (msgs.data || []).filter(m => {
-      const mins = (Date.now() - new Date(m.criado_em).getTime()) / 1000 / 60;
-      return mins > 15;
-    }).length;
-
-    setMetricas({
-      criticos,
-      conversas: msgs.data?.length || 0,
-      aprovacoes: aprovs.count || 0,
-      leads: leads.count || 0,
-      online: 18,
-    });
-  }, []);
 
   const addPopup = useCallback((popup: Omit<Popup, "id">) => {
     const id = `popup_${++popupCounter.current}_${Date.now()}`;
@@ -490,8 +477,6 @@ export default function MobileExperience() {
   }, []);
 
   useEffect(() => {
-    carregarMetricas();
-
     const subMsg = supabase
       .channel("mobile-mensagens")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "hub_fila_mensagens" }, async (payload) => {
@@ -513,8 +498,6 @@ export default function MobileExperience() {
           autoRemove: 10000,
           dados: { mercado },
         });
-
-        carregarMetricas();
       })
       .subscribe();
 
@@ -532,7 +515,6 @@ export default function MobileExperience() {
           aprovacaoId: ap.id as string,
           dados: ap,
         });
-        carregarMetricas();
       })
       .subscribe();
 
@@ -561,7 +543,6 @@ export default function MobileExperience() {
         });
       }
 
-      carregarMetricas();
     }, 30000);
 
     return () => {
@@ -569,7 +550,7 @@ export default function MobileExperience() {
       supabase.removeChannel(subAprov);
       clearInterval(interval);
     };
-  }, [addPopup, carregarMetricas]);
+  }, [addPopup]);
 
   useEffect(() => {
     function handleScroll() {
@@ -625,14 +606,12 @@ export default function MobileExperience() {
         aprovado_por: "wendel",
         aprovado_em: new Date().toISOString(),
       }).eq("id", popup.aprovacaoId);
-      carregarMetricas();
     }
 
     if (acao === "rejeitar" && popup.aprovacaoId) {
       await supabase.from("hub_aprovacoes").update({
         status: "rejeitado",
       }).eq("id", popup.aprovacaoId);
-      carregarMetricas();
     }
   }
 
@@ -704,7 +683,7 @@ export default function MobileExperience() {
         <BottomSheetConversa
           conversa={conversaAberta}
           onFechar={() => setConversaAberta(null)}
-          onAssumir={() => carregarMetricas()}
+          onAssumir={() => {}}
         />
       )}
     </div>

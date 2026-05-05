@@ -1,147 +1,133 @@
 "use client";
-import type { ReactNode } from "react";
 
-type Visao = "geral" | "atendimento" | "trafego" | "conteudo" | "sites" | "agentes" | "governanca" | "relatorios";
+import { type Metricas } from "@/hooks/useMetricas";
 
-interface NavItem {
-  id: Visao;
+interface MenuItem {
   label: string;
-  icon: string;
+  key?: string;
+  href?: string;
   badge?: number;
   badgeColor?: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "geral", label: "Geral", icon: "⚡" },
-  { id: "atendimento", label: "Atendimento", icon: "💬", badge: 18, badgeColor: "#22c55e" },
-  { id: "trafego", label: "Tráfego", icon: "📡", badge: 2, badgeColor: "#ef4444" },
-  { id: "conteudo", label: "Conteúdo", icon: "✍️", badge: 5, badgeColor: "#f59e0b" },
-  { id: "sites", label: "Sites", icon: "🌐" },
-  { id: "agentes", label: "Agentes", icon: "🤖", badge: 18, badgeColor: "#60a5fa" },
-  { id: "governanca", label: "Governança", icon: "⚖️", badge: 3, badgeColor: "#ef4444" },
-  { id: "relatorios", label: "Relatórios", icon: "📊" },
-];
-
-const CONTEXT_CONTENT: Record<Visao, ReactNode> = {
-  geral: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Visão Geral</div>
-      <div className="space-y-1.5">
-        {["Funil de Leads", "Pipeline CRM", "ROI Campanhas", "Equipe Online"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  atendimento: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Atendimento</div>
-      <div className="space-y-1.5">
-        {["Fila WhatsApp", "Conversas Ativas", "SLA Monitor", "Scripts IA", "Ariane"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  trafego: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Tráfego Pago</div>
-      <div className="space-y-1.5">
-        {["Meta Ads", "Google Ads", "CPL Monitor", "Criativos", "Budget"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  conteudo: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Conteúdo</div>
-      <div className="space-y-1.5">
-        {["Fila de Produção", "Aguardando Aprovação", "Publicados Hoje", "Templates", "Calendário"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  sites: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Sites & Dev</div>
-      <div className="space-y-1.5">
-        {["Status Sites", "Deploys", "Bugs Abertos", "Landing Pages", "Analytics"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  agentes: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Agentes IA</div>
-      <div className="space-y-1.5">
-        {["Todos os Agentes", "IAs Ativas", "Humanos", "Configurar", "Logs"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  governanca: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Governança</div>
-      <div className="space-y-1.5">
-        {["Aprovações Pendentes", "Logs de Decisão", "Custos IA", "Compliance", "Auditoria"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-  relatorios: (
-    <div className="space-y-3">
-      <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Relatórios</div>
-      <div className="space-y-1.5">
-        {["Resumo Diário", "Relatório Semanal", "Metas do Mês", "Exportar CSV", "Dashboard"].map(item => (
-          <button key={item} className="w-full text-left text-gray-300 text-xs px-2 py-1.5 rounded hover:bg-gray-800 transition-colors">{item}</button>
-        ))}
-      </div>
-    </div>
-  ),
-};
-
-interface ContextMenuProps {
-  visao: Visao;
-  onVisaoChange: (v: Visao) => void;
+interface Section {
+  title: string;
+  items: MenuItem[];
 }
 
-export function ContextMenu({ visao, onVisaoChange }: ContextMenuProps) {
-  return (
-    <div className="flex flex-col h-full bg-gray-950 border-r border-gray-800">
-      {/* Nav icons */}
-      <nav className="flex flex-col gap-0.5 p-2 border-b border-gray-800">
-        {NAV_ITEMS.map(item => (
-          <button
-            key={item.id}
-            onClick={() => onVisaoChange(item.id)}
-            className={`relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group ${
-              visao === item.id
-                ? "bg-orange-500/15 text-orange-400"
-                : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
-            }`}
-          >
-            <span className="text-sm flex-shrink-0">{item.icon}</span>
-            <span className="text-xs font-medium truncate">{item.label}</span>
-            {item.badge !== undefined && (
-              <span
-                className="absolute right-2 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center"
-                style={{ background: `${item.badgeColor}25`, color: item.badgeColor, border: `1px solid ${item.badgeColor}40` }}
-              >
-                {item.badge > 9 ? "9+" : item.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
+interface ContextMenuProps {
+  metricas: Metricas;
+  onNavegar?: (href: string) => void;
+  onItemClick?: (key: string) => void;
+}
 
-      {/* Context content */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {CONTEXT_CONTENT[visao]}
+export function ContextMenu({ metricas, onNavegar, onItemClick }: ContextMenuProps) {
+  const sections: Section[] = [
+    {
+      title: "Visão Geral",
+      items: [
+        { label: "Dashboard", href: "/crm" },
+        { label: "Pipeline", href: "/crm/leads" },
+        { label: "Equipe", key: "ias_ativas" },
+      ],
+    },
+    {
+      title: "Atendimento",
+      items: [
+        {
+          label: "Aguardando resposta",
+          key: "fila_whatsapp",
+          badge: metricas.leadsAguardando || undefined,
+          badgeColor: "#c9a24a",
+        },
+        {
+          label: "Conversas ativas",
+          href: "/crm/atendimento",
+          badge: metricas.conversasAtivas || undefined,
+          badgeColor: "#22c55e",
+        },
+        { label: "SLA crítico", key: "sla_monitor" },
+      ],
+    },
+    {
+      title: "Decisões",
+      items: [
+        {
+          label: "Aprovações",
+          href: "/crm/aprovacoes",
+          badge: metricas.aprovacoesPendentes || undefined,
+          badgeColor: "#ef4444",
+        },
+        { label: "Histórico", key: "logs_decisao" },
+      ],
+    },
+    {
+      title: "Configuração",
+      items: [
+        { label: "Agentes", href: "/crm/agentes" },
+        { label: "Novo agente", href: "/crm/agentes/novo" },
+        { label: "Integrações", href: "/crm/integracoes" },
+      ],
+    },
+  ];
+
+  function handleClick(item: MenuItem) {
+    if (item.href && onNavegar) onNavegar(item.href);
+    else if (item.key && onItemClick) onItemClick(item.key);
+  }
+
+  return (
+    <div
+      className="flex flex-col h-full border-r overflow-y-auto"
+      style={{ background: "var(--obra-dark, #0d1117)", borderColor: "var(--obra-borda, #30363d)" }}
+    >
+      {/* Logo */}
+      <div style={{ padding: "12px 12px 8px", borderBottom: "1px solid var(--obra-borda, #30363d)" }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "var(--obra-dourado, #c9a24a)", letterSpacing: "0.04em" }}>OBRA10+</div>
+        <div style={{ fontSize: 9, color: "var(--obra-texto-3, #484f58)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Escritório Virtual</div>
+      </div>
+
+      {/* Sections */}
+      <div style={{ padding: "8px 6px", flex: 1 }}>
+        {sections.map(section => (
+          <div key={section.title} style={{ marginBottom: 16 }}>
+            <div style={{
+              fontSize: 9, fontWeight: 700,
+              color: "var(--obra-texto-3, #484f58)",
+              textTransform: "uppercase", letterSpacing: "0.1em",
+              padding: "0 6px", marginBottom: 4,
+            }}>
+              {section.title}
+            </div>
+            {section.items.map(item => (
+              <button
+                key={item.label}
+                onClick={() => handleClick(item)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", padding: "7px 8px", borderRadius: 8,
+                  background: "transparent", border: "none", cursor: "pointer",
+                  textAlign: "left", marginBottom: 1, transition: "background 120ms",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <span style={{ fontSize: 12, color: "var(--obra-texto-2, #8b949e)" }}>{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, minWidth: 18, height: 18,
+                    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    background: `${item.badgeColor || "#c9a24a"}25`,
+                    color: item.badgeColor || "#c9a24a",
+                    border: `1px solid ${item.badgeColor || "#c9a24a"}40`,
+                  }}>
+                    {(item.badge || 0) > 9 ? "9+" : item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
