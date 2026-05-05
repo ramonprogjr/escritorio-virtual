@@ -43,6 +43,17 @@ interface Aprovacao {
   criado_em: string;
 }
 
+interface Alerta {
+  id: string;
+  tipo: string;
+  agente_slug: string;
+  titulo: string;
+  mensagem: string;
+  dados: Record<string, unknown>;
+  lead_id?: string;
+  criado_em: string;
+}
+
 function ConversaInline({ lead, onFechar }: { lead: Lead; onFechar: () => void }) {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [texto, setTexto] = useState("");
@@ -147,23 +158,27 @@ function ConversaInline({ lead, onFechar }: { lead: Lead; onFechar: () => void }
 
 export default function DecisionPanel() {
   const router = useRouter();
-  const [aba, setAba] = useState<"leads" | "aprovacoes">("leads");
+  const [aba, setAba] = useState<"leads" | "aprovacoes" | "alertas">("leads");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [aprovacoes, setAprovacoes] = useState<Aprovacao[]>([]);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [conversaAberta, setConversaAberta] = useState<Lead | null>(null);
   const [processando, setProcessando] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const carregar = useCallback(async () => {
-    const [l, a] = await Promise.all([
+    const [l, a, al] = await Promise.all([
       supabase.from("hub_leads_crm").select("*")
         .not("estagio", "in", '("ganho","perdido")')
         .order("atualizado_em", { ascending: false }).limit(15),
       supabase.from("hub_aprovacoes").select("*")
         .eq("status", "pendente").order("criado_em", { ascending: false }).limit(10),
+      supabase.from("hub_alertas").select("*")
+        .eq("resolvido", false).order("criado_em", { ascending: false }).limit(15),
     ]);
     if (l.data) setLeads(l.data as Lead[]);
     if (a.data) setAprovacoes(a.data as Aprovacao[]);
+    if (al.data) setAlertas(al.data as Alerta[]);
     setLoading(false);
   }, []);
 
@@ -172,6 +187,7 @@ export default function DecisionPanel() {
     const sub = supabase.channel("panel-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "hub_leads_crm" }, carregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "hub_aprovacoes" }, carregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "hub_alertas" }, carregar)
       .subscribe();
     return () => { supabase.removeChannel(sub); };
   }, [carregar]);
@@ -186,6 +202,13 @@ export default function DecisionPanel() {
   async function rejeitar(id: string) {
     setProcessando(id);
     await supabase.from("hub_aprovacoes").update({ status: "rejeitado" }).eq("id", id);
+    await carregar();
+    setProcessando(null);
+  }
+
+  async function resolver(id: string) {
+    setProcessando(id);
+    await supabase.from("hub_alertas").update({ resolvido: true, resolvido_em: new Date().toISOString() }).eq("id", id);
     await carregar();
     setProcessando(null);
   }
@@ -209,6 +232,15 @@ export default function DecisionPanel() {
     site: "🌐", ajuste_agente: "🤖", critico: "🚨",
   };
 
+  const ALERTA_COR: Record<string, string> = {
+    critico: "#b3261e",
+    importante: "#c9a24a",
+    sugestao: "#003b26",
+    info: "#8b949e",
+  };
+
+  const criticos = alertas.filter(a => a.tipo === "critico").length;
+
   if (conversaAberta) {
     return (
       <div className="flex flex-col h-full" style={{ background: "#0d1117" }}>
@@ -229,22 +261,24 @@ export default function DecisionPanel() {
       {/* TABS */}
       <div className="flex flex-shrink-0" style={{ borderBottom: "1px solid #30363d" }}>
         {[
-          { id: "leads" as const, label: "Leads", badge: leads.length },
-          { id: "aprovacoes" as const, label: "Aprovações", badge: aprovacoes.length },
+          { id: "leads" as const, label: "Leads", badge: leads.length, badgeCor: "#003b26" },
+          { id: "aprovacoes" as const, label: "Aprovações", badge: aprovacoes.length, badgeCor: "#b3261e" },
+          { id: "alertas" as const, label: "Alertas", badge: alertas.length, badgeCor: criticos > 0 ? "#b3261e" : "#c9a24a" },
         ].map(t => (
           <button key={t.id} onClick={() => setAba(t.id)}
             className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors"
             style={{
               color: aba === t.id ? "#c9a24a" : "#8b949e",
-              borderBottom: aba === t.id ? "2px solid #c9a24a" : "2px solid transparent",
-              background: "none", border: aba === t.id ? undefined : "none", cursor: "pointer",
+              borderBottom: `2px solid ${aba === t.id ? "#c9a24a" : "transparent"}`,
+              background: "none", border: "none",
               borderBottomColor: aba === t.id ? "#c9a24a" : "transparent",
               borderBottomStyle: "solid", borderBottomWidth: "2px",
+              cursor: "pointer",
             }}>
             {t.label}
             {t.badge > 0 && (
               <span className="w-5 h-5 rounded-full text-white flex items-center justify-center font-black"
-                style={{ background: t.id === "aprovacoes" ? "#b3261e" : "#003b26", fontSize: "9px" }}>
+                style={{ background: t.badgeCor, fontSize: "9px" }}>
                 {t.badge > 9 ? "9+" : t.badge}
               </span>
             )}
@@ -355,6 +389,55 @@ export default function DecisionPanel() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ABA ALERTAS */}
+            {aba === "alertas" && (
+              <div className="p-3" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {alertas.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-2xl mb-2">✓</p>
+                    <p className="font-bold" style={{ color: "#e6edf3" }}>Nenhum alerta</p>
+                    <p className="text-xs mt-1" style={{ color: "#484f58" }}>Operação saudável</p>
+                  </div>
+                ) : alertas.map(al => {
+                  const c = ALERTA_COR[al.tipo] || "#8b949e";
+                  return (
+                    <div key={al.id} className="rounded-xl p-3"
+                      style={{ background: "#161b22", border: `1px solid ${c}33`, borderLeft: `3px solid ${c}` }}>
+                      <div className="flex items-start justify-between mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                              style={{ background: `${c}22`, color: c }}>{al.tipo}</span>
+                            <span className="text-xs" style={{ color: "#484f58" }}>{al.agente_slug}</span>
+                          </div>
+                          <p className="text-white font-bold text-sm">{al.titulo}</p>
+                          <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "#8b949e" }}>{al.mensagem}</p>
+                        </div>
+                        <button onClick={() => resolver(al.id)} disabled={processando === al.id}
+                          className="ml-2 text-xs px-2 py-1 rounded-lg flex-shrink-0"
+                          style={{ background: "#21262d", color: "#c9a24a", border: "none", cursor: "pointer", opacity: processando === al.id ? 0.5 : 1 }}>
+                          {processando === al.id ? "..." : "Resolver"}
+                        </button>
+                      </div>
+                      <p className="text-xs" style={{ color: "#484f58" }}>{tempo(al.criado_em)}</p>
+                      {al.lead_id && (
+                        <button onClick={() => router.push(`/crm/leads/${al.lead_id}`)}
+                          className="mt-1.5 text-xs px-2 py-1 rounded-lg"
+                          style={{ background: "#003b2622", color: "#c9a24a", border: "none", cursor: "pointer" }}>
+                          Ver lead →
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                <button onClick={() => router.push("/crm/ciclos")}
+                  className="w-full py-2 rounded-xl text-xs font-bold"
+                  style={{ background: "#21262d", color: "#c9a24a", border: "none", cursor: "pointer" }}>
+                  Central de Ciclos →
+                </button>
               </div>
             )}
           </>

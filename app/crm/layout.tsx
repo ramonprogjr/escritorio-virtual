@@ -11,6 +11,7 @@ const NAV = [
   { href: "/crm/kpis",         label: "KPIs",        icon: "📈" },
   { href: "/crm/parceiros",    label: "Parceiros",   icon: "🤝" },
   { href: "/crm/relatorios",   label: "Relatórios",  icon: "📋" },
+  { href: "/crm/ciclos",       label: "Ciclos IA",   icon: "⚡" },
   { href: "/crm/configuracoes",label: "Config",      icon: "⚙️" },
 ];
 
@@ -19,8 +20,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--obra-dark, #0d1117)" }}>
-      {/* SIDEBAR */}
-      <div className="w-16 flex-shrink-0 flex flex-col items-center py-4 gap-1" style={{ background: "var(--obra-dark-2, #161b22)", borderRight: "1px solid var(--obra-borda, #30363d)" }}>
+      {/* SIDEBAR — hidden on mobile */}
+      <div className="hidden md:flex w-16 flex-shrink-0 flex-col items-center py-4 gap-1" style={{ background: "var(--obra-dark-2, #161b22)", borderRight: "1px solid var(--obra-borda, #30363d)" }}>
         <Link href="/office"
           className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs mb-4 transition-colors"
           style={{ background: "var(--obra-verde, #003b26)" }}

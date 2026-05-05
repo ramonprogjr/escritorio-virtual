@@ -1,6 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Playfair_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
+import MobileDetector from "@/components/mobile/MobileDetector";
+import PWAProvider from "@/components/PWAProvider";
+import IOSInstallBanner from "@/components/IOSInstallBanner";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -24,17 +27,37 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Escritório Virtual — Obra10+",
-  description: "Plataforma de agentes IA da Obra10+",
+  title: "Obra10+ Escritório Virtual",
+  description: "Central de operações da Obra10+ — leads, agentes e campanhas em tempo real",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Obra10+",
   },
-  other: {
-    "theme-color": "#c9a24a",
+  icons: {
+    icon: [
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "Obra10+",
+    "msapplication-TileColor": "#003b26",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#003b26",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -47,7 +70,11 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${poppins.variable} ${playfair.variable} ${spaceMono.variable} h-full antialiased`}
     >
-      <body className={`${poppins.className} min-h-full flex flex-col`}>{children}</body>
+      <body className={`${poppins.className} min-h-full flex flex-col`}>
+        <MobileDetector>{children}</MobileDetector>
+        <PWAProvider />
+        <IOSInstallBanner />
+      </body>
     </html>
   );
 }

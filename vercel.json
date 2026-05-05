@@ -1,0 +1,32 @@
+{
+  "crons": [
+    {
+      "path": "/api/ciclos/atendente?ciclo=followup",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/ciclos/atendente?ciclo=sla",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/ciclos/gerente?ciclo=relatorio_manha",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/ciclos/gerente?ciclo=supervisao",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/ciclos/diretor?ciclo=analise_manha",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/ciclos/diretor?ciclo=analise_noite",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/ciclos/diretor?ciclo=trafego",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}

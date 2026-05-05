@@ -1,0 +1,220 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+const CRON_SECRET = process.env.CRON_SECRET || "obra10plus_cron_2026";
+
+async function gerarAlerta(tipo: string, agente: string, titulo: string, mensagem: string, dados: Record<string, unknown> = {}, leadId?: string) {
+  await supabase.from("hub_alertas").insert({
+    tipo, agente_slug: agente, titulo, mensagem, dados,
+    lead_id: leadId || null,
+  });
+
+  if (tipo === "critico") {
+    const { data: contatos } = await supabase
+      .from("hub_contatos_notificacao")
+      .select("*")
+      .eq("ativo", true)
+      .eq("notificar_critico", true);
+
+    if (contatos && process.env.EVOLUTION_API_URL) {
+      for (const c of contatos) {
+        if (c.tipo === "whatsapp") {
+          try {
+            await fetch(`${process.env.EVOLUTION_API_URL}/message/sendText/obra10plus`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "apikey": process.env.EVOLUTION_API_KEY! },
+              body: JSON.stringify({ number: c.valor, text: `🔴 *CRÍTICO — Obra10+*\n\n${titulo}\n\n${mensagem}` }),
+            });
+          } catch (e) { console.error("Erro notificação:", e); }
+        }
+      }
+    }
+  }
+}
+
+async function cicloFollowup() {
+  const agora = new Date();
+  const acoes: string[] = [];
+
+  const { data: leads } = await supabase
+    .from("hub_leads_crm")
+    .select("id, nome, telefone, estagio, followup_passo, followup_pausado, ultimo_followup, atualizado_em, metadata")
+    .not("estagio", "in", '("ganho","perdido","arquivado")')
+    .eq("followup_pausado", false)
+    .is("humano_responsavel", null);
+
+  if (!leads || leads.length === 0) return { acoes, total: 0 };
+
+  for (const lead of leads) {
+    const mercado = (lead.metadata as Record<string, unknown>)?.mercado as string || "geral";
+    const passo = (lead.followup_passo || 0) + 1;
+
+    const { data: config } = await supabase
+      .from("hub_followup_config")
+      .select("*")
+      .or(`mercado.eq.${mercado},mercado.eq.geral`)
+      .eq("passo", passo)
+      .eq("ativo", true)
+      .order("mercado", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!config) continue;
+
+    const ultimoContato = lead.ultimo_followup
+      ? new Date(lead.ultimo_followup)
+      : new Date(lead.atualizado_em);
+    const horasPassadas = (agora.getTime() - ultimoContato.getTime()) / 3600000;
+
+    if (horasPassadas < config.horas_espera) continue;
+
+    if (passo > 3 && horasPassadas > 168) {
+      await supabase
+        .from("hub_leads_crm")
+        .update({ estagio: "arquivado", followup_pausado: true })
+        .eq("id", lead.id);
+      acoes.push(`Lead ${lead.nome} arquivado após 7 dias sem resposta`);
+      continue;
+    }
+
+    const nome = lead.nome.split(" ")[0];
+    const mensagem = config.mensagem_template
+      .replace("{nome}", nome)
+      .replace("{mercado}", mercado);
+
+    await supabase.from("hub_fila_mensagens").insert({
+      lead_id: lead.id,
+      agente_id: "atendente",
+      canal: "whatsapp",
+      direcao: "saida",
+      conteudo: mensagem,
+      status: "pendente_envio",
+      metadata: { tipo: "followup", passo, mercado },
+    });
+
+    if (lead.telefone && process.env.EVOLUTION_API_URL) {
+      try {
+        await fetch(`${process.env.EVOLUTION_API_URL}/message/sendText/obra10plus`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": process.env.EVOLUTION_API_KEY! },
+          body: JSON.stringify({ number: lead.telefone, text: mensagem }),
+        });
+      } catch (e) { console.error("Erro envio follow-up:", e); }
+    }
+
+    await supabase
+      .from("hub_leads_crm")
+      .update({
+        followup_passo: passo,
+        ultimo_followup: agora.toISOString(),
+        proximo_followup: new Date(agora.getTime() + (config.horas_espera * 3600000 * 2)).toISOString(),
+      })
+      .eq("id", lead.id);
+
+    acoes.push(`Follow-up passo ${passo} enviado para ${lead.nome}`);
+  }
+
+  return { acoes, total: acoes.length };
+}
+
+async function cicloSLA() {
+  const alertas: string[] = [];
+  const limite15min = new Date(Date.now() - 15 * 60000).toISOString();
+
+  const { data: msgs15 } = await supabase
+    .from("hub_fila_mensagens")
+    .select("*, lead:hub_leads_crm(nome, telefone)")
+    .eq("direcao", "entrada")
+    .eq("status", "pendente")
+    .lt("criado_em", limite15min);
+
+  for (const msg of msgs15 || []) {
+    const lead = msg.lead as Record<string, unknown>;
+    const mins = Math.round((Date.now() - new Date(msg.criado_em).getTime()) / 60000);
+
+    const { data: alertaExiste } = await supabase
+      .from("hub_alertas")
+      .select("id")
+      .eq("lead_id", msg.lead_id)
+      .eq("tipo", "critico")
+      .eq("resolvido", false)
+      .gte("criado_em", new Date(Date.now() - 30 * 60000).toISOString())
+      .single();
+
+    if (alertaExiste) continue;
+
+    await gerarAlerta(
+      mins > 30 ? "critico" : "importante",
+      "gerente_atendimento",
+      `Lead sem resposta há ${mins} minutos`,
+      `${lead?.nome || "Lead"} enviou mensagem e aguarda resposta há ${mins} min.\n"${(msg.conteudo as string)?.slice(0, 80)}"`,
+      { lead_id: msg.lead_id, minutos: mins },
+      msg.lead_id
+    );
+
+    alertas.push(`Alerta SLA: ${lead?.nome} — ${mins}min`);
+  }
+
+  return { alertas, total: alertas.length };
+}
+
+export async function GET(request: NextRequest) {
+  const ciclo = request.nextUrl.searchParams.get("ciclo") || "followup";
+  const secret = request.headers.get("x-cron-secret") || request.nextUrl.searchParams.get("secret");
+
+  if (secret !== CRON_SECRET && process.env.NODE_ENV === "production") {
+    return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
+  }
+
+  const inicio = Date.now();
+
+  const { data: cicloConfig } = await supabase
+    .from("hub_ciclos_ia")
+    .select("id")
+    .eq("agente_slug", "atendente")
+    .eq("tipo", "programado")
+    .ilike("nome", `%${ciclo === "followup" ? "Follow-up" : "SLA"}%`)
+    .single();
+
+  const logRes = await supabase.from("hub_ciclos_log").insert({
+    ciclo_id: cicloConfig?.id,
+    agente_slug: "atendente",
+    status: "rodando",
+  }).select("id").single();
+
+  try {
+    let resultado;
+    if (ciclo === "followup") resultado = await cicloFollowup();
+    else if (ciclo === "sla") resultado = await cicloSLA();
+    else resultado = { acoes: [], total: 0 };
+
+    const status = resultado.total > 0 ? "sucesso" : "sem_acao";
+
+    if (logRes.data) {
+      const res = resultado as Record<string, unknown>;
+      await supabase.from("hub_ciclos_log").update({
+        status,
+        finalizado_em: new Date().toISOString(),
+        acoes_tomadas: res.acoes || [],
+        alertas_gerados: res.alertas || [],
+      }).eq("id", logRes.data.id);
+    }
+
+    await supabase.from("hub_ciclos_ia")
+      .update({ ultimo_ciclo: new Date().toISOString(), ultimo_status: status })
+      .eq("agente_slug", "atendente");
+
+    return NextResponse.json({ ok: true, ciclo, duracao_ms: Date.now() - inicio, ...resultado });
+  } catch (erro) {
+    const msg = erro instanceof Error ? erro.message : "Erro desconhecido";
+    if (logRes.data) await supabase.from("hub_ciclos_log").update({ status: "erro", erro: msg, finalizado_em: new Date().toISOString() }).eq("id", logRes.data.id);
+    return NextResponse.json({ ok: false, erro: msg }, { status: 500 });
+  }
+}
+
+export const POST = GET;
