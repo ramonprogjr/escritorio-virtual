@@ -7,7 +7,7 @@ const NAV = [
   { href: "/crm/leads",        label: "Leads",       icon: "👥" },
   { href: "/crm/atendimento",  label: "Atendimento", icon: "💬" },
   { href: "/crm/aprovacoes",   label: "Aprovações",  icon: "✅" },
-  { href: "/crm/agentes",      label: "Agentes",     icon: "🤖" },
+  { href: "/crm/agentes",      label: "Agentes",     icon: "🤖", extra: { href: "/crm/agentes/novo", label: "Novo Agente", icon: "+" } },
   { href: "/crm/kpis",         label: "KPIs",        icon: "📈" },
   { href: "/crm/parceiros",    label: "Parceiros",   icon: "🤝" },
   { href: "/crm/relatorios",   label: "Relatórios",  icon: "📋" },
@@ -29,10 +29,18 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         {NAV.map(item => {
           const active = item.href === "/crm" ? pathname === "/crm" : pathname.startsWith(item.href);
           return (
-            <Link key={item.href} href={item.href} title={item.label}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors ${active ? "bg-gray-700 text-white" : "text-gray-500 hover:bg-gray-800 hover:text-white"}`}>
-              {item.icon}
-            </Link>
+            <div key={item.href} className="relative group">
+              <Link href={item.href} title={item.label}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors ${active ? "bg-gray-700 text-white" : "text-gray-500 hover:bg-gray-800 hover:text-white"}`}>
+                {item.icon}
+              </Link>
+              {"extra" in item && item.extra && (
+                <Link href={item.extra.href} title={item.extra.label}
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#c9a24a] flex items-center justify-center text-[9px] font-black text-[#003b26] opacity-0 group-hover:opacity-100 transition-opacity">
+                  {item.extra.icon}
+                </Link>
+              )}
+            </div>
           );
         })}
       </div>

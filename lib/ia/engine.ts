@@ -8,6 +8,7 @@ import { receberDemanda, escalarDemanda, verificarAutonomia, type Demanda } from
 import { criarAprovacao } from "./aprovacoes";
 import { salvarConversa } from "./storage";
 import { FLUXO_IMOBILIARIO, FLUXO_ARQUITETURA, MARI_CONFIG, identificarMercado, gerarSystemPromptCompleto } from "./agentes-config";
+import { construirPrompt } from "./prompt-builder";
 
 function supabase() {
   return createClient(
@@ -123,11 +124,21 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
       .order("criado_em", { ascending: false })
       .limit(5);
 
-    // ETAPA 6: Monta o system prompt completo com cache
-    const systemPrompt = obterPromptCacheado(
-      `${agente.slug}_${ctx.segmento || "geral"}`,
-      () => montarPromptCompleto(agente, memorias || [], agente.regras || [])
-    );
+    // ETAPA 6: Monta o system prompt completo via banco
+    const promptData = await construirPrompt({
+      agenteSlug: agente.slug,
+      leadId: ctx.leadId,
+      mercado: ctx.segmento,
+      etapaFluxo: ctx.metadata?.etapa as string,
+      mensagemAtual: ctx.mensagem,
+    });
+
+    if (!promptData) {
+      return { sucesso: false, erro: "Não foi possível construir o prompt do agente" };
+    }
+
+    const systemPrompt = promptData.systemPrompt;
+    const modelo = promptData.modelo;
 
     // ETAPA 7: Estima tokens antes de chamar
     const estimativa = Math.ceil((systemPrompt.length + ctx.mensagem.length) / 4);
@@ -157,7 +168,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
     mensagens.push({ role: "user", content: ctx.mensagem });
 
     const resposta = await anthropic.messages.create({
-      model: agente.modelo,
+      model: modelo,
       max_tokens: 1024,
       system: systemPrompt,
       messages: mensagens,
@@ -166,7 +177,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
     const textoResposta = resposta.content[0].type === "text" ? resposta.content[0].text : "";
     const tokensEntrada = resposta.usage.input_tokens;
     const tokensSaida = resposta.usage.output_tokens;
-    const custo = calcularCusto(agente.modelo, tokensEntrada, tokensSaida);
+    const custo = calcularCusto(modelo, tokensEntrada, tokensSaida);
     const latencia = Date.now() - inicio;
 
     // ETAPA 9: Registra log
@@ -175,7 +186,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
       .insert({
         agente_id: agente.slug,
         lead_id: ctx.leadId,
-        modelo_usado: agente.modelo,
+        modelo_usado: modelo,
         tokens_entrada: tokensEntrada,
         tokens_saida: tokensSaida,
         custo_usd: custo.usd,
