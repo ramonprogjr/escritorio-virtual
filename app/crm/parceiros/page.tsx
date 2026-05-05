@@ -8,179 +8,273 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-interface Profissional {
+interface Modulo {
+  modulo_numero: number;
+  status: string;
+  concluido_em: string | null;
+}
+
+interface Parceiro {
   id: string;
   nome: string;
+  telefone: string;
   email: string | null;
-  telefone: string | null;
-  especialidade: string;
+  especialidade: string | null;
   mercado: string | null;
   cidade: string | null;
   estado: string | null;
   status: string;
+  modulo_atual: number;
+  recebe_leads: boolean;
+  total_leads_recebidos: number;
+  total_leads_convertidos: number;
   comissao_pct: number;
-  total_encaminhamentos: number;
-  total_fechamentos: number;
   criado_em: string;
+  hub_parceiros_captacao: { estagio: string; origem: string | null } | null;
+  hub_parceiros_homologacao: { estagio: string; modulos_concluidos: number; data_conclusao: string | null } | null;
+  hub_parceiros_modulos: Modulo[];
 }
 
-const STATUS_COR: Record<string, string> = {
-  pendente: "#c9a24a",
-  ativo: "#34d399",
-  inativo: "#8b949e",
-  rejeitado: "#ef4444",
-};
+const ESTAGIOS_CAPTACAO = [
+  { id: "interessado", label: "Interessado", cor: "#8b949e" },
+  { id: "contato_feito", label: "Contato feito", cor: "#c9a24a" },
+  { id: "proposta_enviada", label: "Proposta enviada", cor: "#a78bfa" },
+  { id: "documentos_pendentes", label: "Docs pendentes", cor: "#f97316" },
+  { id: "aguardando_treinamento", label: "Aguard. treino", cor: "#38bdf8" },
+  { id: "concluido", label: "Concluído", cor: "#003b26" },
+];
+
+function ModuloBar({ modulos, total = 8 }: { modulos: Modulo[]; total?: number }) {
+  return (
+    <div className="flex gap-0.5 mt-1">
+      {Array.from({ length: total }, (_, i) => {
+        const m = modulos.find(x => x.modulo_numero === i + 1);
+        const cor = m?.status === "concluido" ? "#003b26" : m?.status === "em_andamento" ? "#c9a24a" : "#21262d";
+        return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: cor }} />;
+      })}
+    </div>
+  );
+}
+
+function CardParceiro({ p, onClick }: { p: Parceiro; onClick: () => void }) {
+  return (
+    <div onClick={onClick} className="rounded-xl p-3 cursor-pointer"
+      style={{ background: "#161b22", border: "1px solid #30363d" }}>
+      <div className="flex items-start justify-between mb-1">
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-bold text-sm truncate">{p.nome}</p>
+          <p className="text-xs truncate" style={{ color: "#8b949e" }}>
+            {p.especialidade || "—"}{p.cidade ? ` · ${p.cidade}` : ""}
+          </p>
+        </div>
+        {p.recebe_leads && (
+          <span className="text-xs px-1.5 py-0.5 rounded ml-2 flex-shrink-0"
+            style={{ background: "#003b2630", color: "#34d399", fontSize: 10 }}>
+            leads ✓
+          </span>
+        )}
+      </div>
+      <p className="text-xs mb-1" style={{ color: "#484f58" }}>{p.telefone}</p>
+      {p.hub_parceiros_modulos?.length > 0 && (
+        <ModuloBar modulos={p.hub_parceiros_modulos} />
+      )}
+      <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: "#484f58" }}>
+        <span>Módulo {p.modulo_atual}/8</span>
+        <span>{p.comissao_pct}% comissão</span>
+        {p.total_leads_recebidos > 0 && <span style={{ color: "#c9a24a" }}>{p.total_leads_recebidos} leads</span>}
+      </div>
+    </div>
+  );
+}
 
 export default function ParceirosPage() {
   const router = useRouter();
-  const [parceiros, setParceiros] = useState<Profissional[]>([]);
+  const [parceiros, setParceiros] = useState<Parceiro[]>([]);
+  const [aba, setAba] = useState<"captacao" | "homologacao" | "homologados">("captacao");
   const [loading, setLoading] = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState("todos");
-  const [atualizando, setAtualizando] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   const carregar = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("hub_profissionais")
-      .select("*")
+      .from("hub_parceiros")
+      .select(`
+        *,
+        hub_parceiros_captacao(estagio, origem),
+        hub_parceiros_homologacao(estagio, modulos_concluidos, data_conclusao),
+        hub_parceiros_modulos(modulo_numero, status, concluido_em)
+      `)
       .order("criado_em", { ascending: false });
-    setParceiros(data || []);
+    setParceiros((data || []) as Parceiro[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
 
-  async function atualizarStatus(id: string, status: string) {
-    setAtualizando(id);
-    await supabase.from("hub_profissionais").update({
-      status,
-      aprovado_em: status === "ativo" ? new Date().toISOString() : null,
-      aprovado_por: "gestor",
-      atualizado_em: new Date().toISOString(),
-    }).eq("id", id);
-    await carregar();
-    setAtualizando(null);
-  }
+  const filtrados = parceiros.filter(p =>
+    !busca || p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+    p.telefone.includes(busca) || (p.email || "").toLowerCase().includes(busca.toLowerCase())
+  );
 
-  const filtrados = filtroStatus === "todos"
-    ? parceiros
-    : parceiros.filter(p => p.status === filtroStatus);
+  const captacao = filtrados.filter(p => p.status === "captacao");
+  const homologacao = filtrados.filter(p => p.status === "em_homologacao");
+  const homologados = filtrados.filter(p => p.status === "homologado");
 
-  const contagens = {
-    todos: parceiros.length,
-    pendente: parceiros.filter(p => p.status === "pendente").length,
-    ativo: parceiros.filter(p => p.status === "ativo").length,
-    inativo: parceiros.filter(p => p.status === "inativo").length,
-  };
+  const contagens = { captacao: captacao.length, homologacao: homologacao.length, homologados: homologados.length };
 
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh", padding: "1.5rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
+      {/* Header */}
+      <div className="px-4 py-3 flex items-center justify-between sticky top-0 z-10"
+        style={{ background: "#161b22", borderBottom: "1px solid #30363d" }}>
         <div>
-          <h1 style={{ color: "#e6edf3", fontSize: 22, fontWeight: 800, margin: 0 }}>Parceiros</h1>
-          <p style={{ color: "#8b949e", fontSize: 13, margin: "4px 0 0" }}>Rede de profissionais e colaboradores</p>
+          <h1 className="text-white font-bold">Parceiros</h1>
+          <p className="text-xs" style={{ color: "#8b949e" }}>
+            {parceiros.length} cadastrados · {homologados.length} homologados
+          </p>
         </div>
         <button onClick={() => router.push("/crm/parceiros/novo")}
-          style={{
-            padding: "10px 16px", borderRadius: 10, border: "none", cursor: "pointer",
-            background: "#c9a24a", color: "#0d1117", fontWeight: 800, fontSize: 13,
-          }}>
+          className="text-sm px-3 py-1.5 rounded-lg font-bold"
+          style={{ background: "#c9a24a", color: "#0d1117", border: "none", cursor: "pointer" }}>
           + Convidar
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto" }}>
-        {(["todos", "pendente", "ativo", "inativo"] as const).map(s => (
-          <button key={s} onClick={() => setFiltroStatus(s)}
+      {/* Search */}
+      <div className="px-4 pt-3 pb-2">
+        <input
+          value={busca} onChange={e => setBusca(e.target.value)}
+          placeholder="Buscar por nome, telefone ou email..."
+          className="w-full text-sm rounded-lg px-3 py-2"
+          style={{ background: "#21262d", border: "1px solid #30363d", color: "#e6edf3" }}
+        />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex" style={{ borderBottom: "1px solid #30363d" }}>
+        {([
+          { id: "captacao", label: `Captação (${contagens.captacao})` },
+          { id: "homologacao", label: `Homologação (${contagens.homologacao})` },
+          { id: "homologados", label: `Homologados (${contagens.homologados})` },
+        ] as const).map(t => (
+          <button key={t.id} onClick={() => setAba(t.id)}
+            className="flex-1 py-2.5 text-xs transition-colors"
             style={{
-              padding: "6px 14px", borderRadius: 20, border: "1px solid",
-              fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-              background: filtroStatus === s ? "#c9a24a20" : "transparent",
-              borderColor: filtroStatus === s ? "#c9a24a" : "#30363d",
-              color: filtroStatus === s ? "#c9a24a" : "#8b949e",
+              color: aba === t.id ? "#c9a24a" : "#8b949e",
+              borderBottom: aba === t.id ? "2px solid #c9a24a" : "2px solid transparent",
+              background: "#0d1117", border: "none", cursor: "pointer",
             }}>
-            {s === "todos" ? "Todos" : s.charAt(0).toUpperCase() + s.slice(1)}
-            {" "}({contagens[s as keyof typeof contagens] ?? 0})
+            {t.label}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", color: "#8b949e", padding: 40 }}>Carregando...</div>
-      ) : filtrados.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 60 }}>
-          <p style={{ color: "#8b949e", marginBottom: 12 }}>Nenhum parceiro encontrado.</p>
-          <button onClick={() => router.push("/crm/parceiros/novo")}
-            style={{ padding: "10px 20px", borderRadius: 10, background: "#c9a24a20", border: "1px solid #c9a24a40", color: "#c9a24a", fontSize: 13, cursor: "pointer", fontWeight: 700 }}>
-            Convidar primeiro parceiro
-          </button>
-        </div>
+        <p className="text-center py-12 text-sm" style={{ color: "#484f58" }}>Carregando...</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {filtrados.map(p => (
-            <div key={p.id}
-              style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 14, padding: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <div>
-                  <p style={{ color: "#e6edf3", fontWeight: 700, fontSize: 15, margin: 0 }}>{p.nome}</p>
-                  <p style={{ color: "#8b949e", fontSize: 12, margin: "2px 0 0" }}>
-                    {p.especialidade}{p.cidade ? ` · ${p.cidade}/${p.estado}` : ""}
-                  </p>
-                </div>
-                <span style={{
-                  padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-                  background: `${STATUS_COR[p.status] || "#8b949e"}20`,
-                  color: STATUS_COR[p.status] || "#8b949e",
-                  border: `1px solid ${STATUS_COR[p.status] || "#8b949e"}40`,
-                }}>
-                  {p.status}
-                </span>
+        <div className="p-4">
+          {/* CAPTAÇÃO — kanban by stage */}
+          {aba === "captacao" && (
+            captacao.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="font-bold" style={{ color: "#e6edf3" }}>Nenhum parceiro em captação</p>
+                <p className="text-xs mt-1" style={{ color: "#484f58" }}>Convide novos parceiros pelo botão acima</p>
               </div>
-
-              <div style={{ display: "flex", gap: 20, marginBottom: 10 }}>
-                <div>
-                  <p style={{ color: "#a78bfa", fontSize: 18, fontWeight: 800, margin: 0 }}>{p.total_encaminhamentos}</p>
-                  <p style={{ color: "#484f58", fontSize: 10, margin: 0 }}>encaminhados</p>
-                </div>
-                <div>
-                  <p style={{ color: "#34d399", fontSize: 18, fontWeight: 800, margin: 0 }}>{p.total_fechamentos}</p>
-                  <p style={{ color: "#484f58", fontSize: 10, margin: 0 }}>fechamentos</p>
-                </div>
-                <div>
-                  <p style={{ color: "#c9a24a", fontSize: 18, fontWeight: 800, margin: 0 }}>{p.comissao_pct}%</p>
-                  <p style={{ color: "#484f58", fontSize: 10, margin: 0 }}>comissão</p>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {ESTAGIOS_CAPTACAO.map(est => {
+                  const grupo = captacao.filter(p =>
+                    (p.hub_parceiros_captacao?.estagio || "interessado") === est.id
+                  );
+                  if (grupo.length === 0) return null;
+                  return (
+                    <div key={est.id}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: est.cor }} />
+                        <span className="text-xs font-bold" style={{ color: est.cor }}>{est.label}</span>
+                        <span className="text-xs" style={{ color: "#484f58" }}>({grupo.length})</span>
+                      </div>
+                      <div className="space-y-2">
+                        {grupo.map(p => (
+                          <CardParceiro key={p.id} p={p} onClick={() => router.push(`/crm/parceiros/${p.id}`)} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+            )
+          )}
 
-              {p.email && <p style={{ color: "#8b949e", fontSize: 11, margin: "0 0 2px" }}>{p.email}</p>}
-              {p.telefone && <p style={{ color: "#8b949e", fontSize: 11, margin: 0 }}>{p.telefone}</p>}
+          {/* HOMOLOGAÇÃO — by module progress */}
+          {aba === "homologacao" && (
+            homologacao.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="font-bold" style={{ color: "#e6edf3" }}>Nenhum parceiro em homologação</p>
+                <p className="text-xs mt-1" style={{ color: "#484f58" }}>Parceiros chegam aqui após concluir o módulo 5</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {homologacao
+                  .sort((a, b) => b.modulo_atual - a.modulo_atual)
+                  .map(p => (
+                    <div key={p.id} onClick={() => router.push(`/crm/parceiros/${p.id}`)}
+                      className="rounded-xl p-3 cursor-pointer"
+                      style={{ background: "#161b22", border: "1px solid #30363d" }}>
+                      <div className="flex items-start justify-between mb-1">
+                        <div>
+                          <p className="text-white font-bold text-sm">{p.nome}</p>
+                          <p className="text-xs" style={{ color: "#8b949e" }}>{p.especialidade || "—"}</p>
+                        </div>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                          style={{ background: "#c9a24a30", color: "#c9a24a" }}>
+                          Módulo {p.modulo_atual}/8
+                        </span>
+                      </div>
+                      <ModuloBar modulos={p.hub_parceiros_modulos || []} />
+                      <div className="flex gap-3 mt-2 text-xs" style={{ color: "#484f58" }}>
+                        <span>{p.hub_parceiros_modulos?.filter(m => m.status === "concluido").length || 0} concluídos</span>
+                        {p.recebe_leads && <span style={{ color: "#34d399" }}>✓ Recebe leads</span>}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )
+          )}
 
-              {p.status === "pendente" && (
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                  <button onClick={() => atualizarStatus(p.id, "ativo")} disabled={atualizando === p.id}
-                    style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer", background: "#34d39920", color: "#34d399", fontWeight: 700, fontSize: 13, opacity: atualizando === p.id ? 0.5 : 1 }}>
-                    Aprovar
-                  </button>
-                  <button onClick={() => atualizarStatus(p.id, "rejeitado")} disabled={atualizando === p.id}
-                    style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer", background: "#ef444420", color: "#ef4444", fontWeight: 700, fontSize: 13, opacity: atualizando === p.id ? 0.5 : 1 }}>
-                    Rejeitar
-                  </button>
-                </div>
-              )}
-              {p.status === "ativo" && (
-                <button onClick={() => atualizarStatus(p.id, "inativo")}
-                  style={{ marginTop: 10, width: "100%", padding: "9px 0", borderRadius: 10, border: "1px solid #30363d", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 12 }}>
-                  Desativar
-                </button>
-              )}
-              {p.status === "inativo" && (
-                <button onClick={() => atualizarStatus(p.id, "ativo")}
-                  style={{ marginTop: 10, width: "100%", padding: "9px 0", borderRadius: 10, border: "1px solid #34d39940", cursor: "pointer", background: "#34d39910", color: "#34d399", fontSize: 12 }}>
-                  Reativar
-                </button>
-              )}
-            </div>
-          ))}
+          {/* HOMOLOGADOS — grid */}
+          {aba === "homologados" && (
+            homologados.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-2xl mb-2">🏆</p>
+                <p className="font-bold" style={{ color: "#e6edf3" }}>Nenhum parceiro homologado ainda</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {homologados.map(p => (
+                  <div key={p.id} onClick={() => router.push(`/crm/parceiros/${p.id}`)}
+                    className="rounded-xl p-3 cursor-pointer"
+                    style={{ background: "#161b22", border: "1px solid #003b2640", borderLeft: "3px solid #003b26" }}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-bold text-sm">{p.nome}</p>
+                        <p className="text-xs" style={{ color: "#8b949e" }}>
+                          {p.especialidade || "—"}{p.cidade ? ` · ${p.cidade}/${p.estado}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-xs px-2 py-0.5 rounded-full ml-2 flex-shrink-0"
+                        style={{ background: "#003b2630", color: "#34d399" }}>homologado</span>
+                    </div>
+                    <div className="flex gap-4 mt-2 text-xs" style={{ color: "#484f58" }}>
+                      <span style={{ color: "#c9a24a" }}>{p.total_leads_recebidos} leads</span>
+                      <span style={{ color: "#34d399" }}>{p.total_leads_convertidos} convertidos</span>
+                      <span>{p.comissao_pct}% comissão</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
         </div>
       )}
     </div>

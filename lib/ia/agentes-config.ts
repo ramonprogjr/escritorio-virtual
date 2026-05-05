@@ -137,6 +137,30 @@ export type MercadoId = keyof typeof MERCADOS;
 export type HumorId = keyof typeof HUMORES;
 export type PersonalidadeId = keyof typeof PERSONALIDADES;
 
+// ─── Intent types ─────────────────────────────────────────────────────────────
+
+export type IntencaoId = "lead" | "parceiro" | "suporte";
+
+const PALAVRAS_PARCEIRO = [
+  "quero ser parceiro", "quero ser um parceiro", "quero indicar", "quero fazer indicação",
+  "parceiro", "parceria", "homologação", "homologar", "comissão de indicação",
+  "cadastro de parceiro", "me cadastrar como", "quero me cadastrar",
+  "programa de parceiros", "indicação de clientes", "ganhar comissão",
+  "treinamento", "módulo", "portal do parceiro", "sou corretor parceiro",
+];
+
+const PALAVRAS_SUPORTE = [
+  "reclamação", "problema com", "erro no sistema", "bug", "não funciona",
+  "suporte técnico", "ajuda técnica",
+];
+
+export function identificarIntencao(mensagem: string): IntencaoId {
+  const t = mensagem.toLowerCase();
+  if (PALAVRAS_PARCEIRO.some(kw => t.includes(kw))) return "parceiro";
+  if (PALAVRAS_SUPORTE.some(kw => t.includes(kw))) return "suporte";
+  return "lead";
+}
+
 // ─── Market identification ────────────────────────────────────────────────────
 
 export function identificarMercado(mensagem: string): MercadoId {

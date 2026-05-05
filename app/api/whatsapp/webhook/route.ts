@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { identificarMercado } from "@/lib/ia/agentes-config";
+import { identificarMercado, identificarIntencao } from "@/lib/ia/agentes-config";
 
 const IA_ATIVA = process.env.ANTHROPIC_API_KEY ? true : false;
 
@@ -188,7 +188,63 @@ export async function POST(request: NextRequest) {
 
     console.log(`[WEBHOOK] ${pushName || telefone}: ${mensagemFinal.slice(0, 80)}`);
 
+    const intencao = identificarIntencao(mensagemFinal);
     const mercado = identificarMercado(mensagemFinal);
+
+    // Roteamento para parceiro
+    if (intencao === "parceiro") {
+      const telLimpo = telefone.replace(/\D/g, "");
+      const { data: parceiroExistente } = await supabase
+        .from("hub_parceiros")
+        .select("id, nome, status, modulo_atual")
+        .eq("telefone", telLimpo)
+        .maybeSingle();
+
+      if (!parceiroExistente) {
+        const { data: novoParceiro } = await supabase.from("hub_parceiros").insert({
+          nome: pushName || `Parceiro ${telLimpo.slice(-4)}`,
+          telefone: telLimpo,
+          status: "captacao",
+        }).select("id").single();
+
+        if (novoParceiro) {
+          await supabase.from("hub_parceiros_captacao").insert({
+            parceiro_id: novoParceiro.id,
+            estagio: "interessado",
+            origem: "whatsapp",
+            canal: "whatsapp",
+          });
+          await supabase.from("hub_parceiros_log").insert({
+            parceiro_id: novoParceiro.id,
+            evento: "captado_via_whatsapp",
+            descricao: `Parceiro captado via WhatsApp — mensagem: "${mensagemFinal.slice(0, 100)}"`,
+            feito_por: "webhook",
+            feito_por_tipo: "sistema",
+            dados: { telefone: telLimpo, pushName, mensagem: mensagemFinal.slice(0, 200) },
+          });
+
+          if (process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY) {
+            const boas_vindas = `Olá${pushName ? `, ${pushName.split(" ")[0]}` : ""}! 👋\n\nQue ótimo que você tem interesse em ser parceiro da Obra10+!\n\nVou te enviar o link de cadastro em instantes. Um de nossos consultores também vai entrar em contato para explicar como funciona o programa.\n\nAté já! 🏆`;
+            await fetch(`${process.env.EVOLUTION_API_URL}/message/sendText/obra10plus`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "apikey": process.env.EVOLUTION_API_KEY },
+              body: JSON.stringify({ number: telefone, text: boas_vindas }),
+            }).catch(() => {});
+          }
+        }
+      }
+
+      await supabase.from("hub_alertas").insert({
+        agente_slug: "diretor",
+        tipo: "importante",
+        titulo: "Novo interesse de parceiro via WhatsApp",
+        mensagem: `${pushName || telefone} perguntou sobre parceria: "${mensagemFinal.slice(0, 80)}"`,
+        lead_id: null,
+        dados: { telefone, pushName, mensagem: mensagemFinal },
+      });
+
+      return NextResponse.json({ status: "ok", intencao: "parceiro", telefone });
+    }
 
     const { lead, isNovo } = await encontrarOuCriarLead(telefone, pushName, mercado, mensagemFinal);
 
