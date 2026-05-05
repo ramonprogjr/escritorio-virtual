@@ -237,3 +237,172 @@ ${promptPersonalidade}
 ## MERCADO DE ATUAÇÃO
 ${m.emoji} ${m.label} — foque em temas relacionados a: ${m.palavrasChave.slice(0, 5).join(", ") || "atendimento geral"}${memoriasStr}${podeStr}${naoPodeStr}`;
 }
+
+// ============================================================
+// FLUXOS DE ATENDIMENTO — MARI
+// Documento Técnico-Operacional v1.0
+// Módulo Imobiliário + Arquitetura
+// ============================================================
+
+export const MARI_CONFIG = {
+  nome: "Mari",
+  apresentacao: "Seja muito bem-vindo ao Obra 10+.\nMeu nome é Mari e vou te acompanhar neste primeiro atendimento.\nMe fale qual é o seu nome, por gentileza?",
+  apos_nome: "Obrigado pela informação. É um prazer te atender.",
+  follow_up: "Conseguiu ver minha mensagem? Posso seguir com seu atendimento por aqui.",
+  regras_gerais: [
+    "Máximo 3 linhas por mensagem — preferir 1 ou 2",
+    "Nunca enviar blocos longos de texto",
+    "Responder primeiro a pergunta do cliente, depois conduzir",
+    "Nunca ignorar a resposta do nome e seguir mecanicamente",
+    "Enviar apenas 1 follow-up se sem resposta",
+    "Se dado faltante, registrar como não informado e seguir",
+    "Se pergunta fora do escopo, responder brevemente e encaminhar humano",
+    "Nunca encerrar sem indicar próximo passo",
+  ],
+} as const;
+
+export const FLUXO_IMOBILIARIO = {
+  identificacao: {
+    cliente_final: ["comprar","alugar","visitar","condomínio","valor","disponibilidade","apartamento","casa","imovel","imóvel","quero ver","quanto é","tem disponível"],
+    proprietario: ["tenho um imóvel","quero vender","quero alugar","anunciar","oferecer"],
+    corretor: ["corretor","imobiliária","parceria","cadastrar imóvel","representando"],
+    pergunta_classificacao: "Você está buscando um imóvel ou quer anunciar um imóvel?",
+  },
+  fluxo_1a: {
+    nome: "Cliente Final — Compra/Locação",
+    passos: [
+      { acao: "apresentar", mensagem: "Seja muito bem-vindo ao Obra 10+.\nMeu nome é Mari e vou te acompanhar neste primeiro atendimento.\nMe fale qual é o seu nome, por gentileza?" },
+      { acao: "apos_nome", mensagem: "Obrigado pela informação. É um prazer te atender." },
+      { acao: "encaminhar", mensagem: "Eu cuido desse primeiro contato e já vou te direcionar para o corretor responsável pelo imóvel.\nEle vai te chamar por aqui com todas as informações do imóvel.\nEu continuo acompanhando seu atendimento e fico à disposição para o que precisar." },
+    ],
+    respostas_rapidas: {
+      condominio: "O condomínio é R$ [valor].\nJá vou te direcionar para o corretor com todos os detalhes.",
+      visita: "Perfeito, é possível sim.\nVou te direcionar para o corretor responsável para agendar com você.",
+      mais_informacoes: "Claro.\nVou te direcionar para o corretor responsável, que vai te passar todos os detalhes.",
+      disponibilidade: "Vou confirmar a disponibilidade com o corretor responsável.\nEle vai te chamar por aqui com a informação atualizada.",
+      fotos: "Vou pedir para o corretor te enviar os materiais disponíveis.\nEle te chama por aqui com os detalhes.",
+      urgencia: "Entendi.\nVou priorizar seu encaminhamento para o corretor responsável.",
+      audio: "Recebi seu áudio.\nVou considerar essas informações no atendimento e direcionar corretamente.",
+    },
+    proibicoes: [
+      "Não pedir email neste fluxo",
+      "Não perguntar renda, financiamento ou prazo pessoal",
+      "Não explicar arquitetura ou outros serviços",
+      "Responder pergunta em até 2 mensagens curtas",
+    ],
+    acoes_sistema: [
+      "Criar lead no CRM | Pipeline: Mercado Imobiliário | Etapa: Lead recebido - compra/locação",
+      "Gerar card de atendimento estruturado",
+      "Notificar atendimento humano via WhatsApp interno",
+    ],
+    card: {
+      tipo: "1A - Cliente Final",
+      campos: ["nome","telefone","tipo_lead","origem","imovel","perguntas","potencial"],
+    },
+  },
+  fluxo_1b: {
+    nome: "Proprietário — Venda/Locação",
+    passos: [
+      { acao: "apresentar", mensagem: "Seja muito bem-vindo ao Obra 10+.\nMeu nome é Mari e vou te acompanhar neste atendimento.\nMe fale qual é o seu nome, por gentileza?" },
+      { acao: "apos_nome", mensagem: "Obrigado pela informação. É um prazer te atender." },
+      { acao: "tipo_operacao", mensagem: "Você quer vender ou alugar esse imóvel?" },
+      { acao: "cidade_bairro", mensagem: "Qual a cidade e o bairro onde está o imóvel?" },
+      { acao: "tamanho", mensagem: "Qual o tamanho aproximado do imóvel?" },
+      { acao: "valor", mensagem: "Qual o valor que você está pedindo?" },
+      { acao: "midias", mensagem: "Se tiver fotos ou vídeos, pode me enviar por aqui também.\nIsso ajuda bastante na análise do imóvel." },
+      { acao: "encerrar", mensagem: "Vou encaminhar tudo para um corretor especialista dar andamento.\nEle vai entrar em contato para alinhar os próximos passos com você." },
+    ],
+    dados_obrigatorios: ["nome","telefone","tipo_operacao","cidade_bairro","tamanho","valor"],
+    dados_opcionais: ["fotos_videos","tipo_imovel","anunciado","estado_ocupacao","urgencia"],
+    acoes_sistema: [
+      "Criar registro no CRM | Pipeline: Mercado Imobiliário | Etapa: Captação de imóvel",
+      "Gerar card completo com todos os dados coletados",
+      "Notificar atendimento humano",
+      "Anexar ou vincular fotos e vídeos enviados",
+    ],
+    card: {
+      tipo: "1B - Proprietário",
+      campos: ["nome","telefone","email","tipo_lead","operacao","cidade_bairro","tamanho","valor","midias","potencial"],
+    },
+  },
+  fluxo_1c: {
+    nome: "Corretor/Imobiliária Parceira",
+    passos: [
+      { acao: "apresentar", mensagem: "Seja muito bem-vindo ao Obra 10+.\nMeu nome é Mari e vou te acompanhar neste atendimento.\nMe fale qual é o seu nome, por gentileza?" },
+      { acao: "apos_nome", mensagem: "Obrigado pela informação. É um prazer te atender." },
+      { acao: "email_intencao", mensagem: "Agora me informe seu email para darmos continuidade.\nVocê quer cadastrar um imóvel ou falar sobre parceria?" },
+    ],
+    passos_cadastro: [
+      { acao: "dados_imovel", mensagem: "Perfeito. Me informe a cidade e o bairro do imóvel.\nQual o tamanho aproximado?\nQual o valor? Se tiver fotos ou vídeos, pode enviar por aqui também.\nVou direcionar para o time responsável dar andamento." },
+    ],
+    passos_parceria: [
+      { acao: "parceria", mensagem: "Perfeito. Vou direcionar seu contato para o time responsável.\nEm breve alguém do nosso time vai falar com você." },
+    ],
+    acoes_sistema: [
+      "Criar contato no CRM | Pipeline: Mercado Imobiliário | Etapa: Parceiros ou Imóvel indicado",
+      "Gerar card e notificar atendimento humano",
+    ],
+    card: {
+      tipo: "1C - Corretor",
+      campos: ["nome","telefone","email","tipo_lead","intencao","dados_imovel","potencial"],
+    },
+  },
+  classificacao_potencial: {
+    alto: "Respondeu, fez pergunta clara, pediu visita, enviou dados completos, demonstrou urgência ou enviou mídia do imóvel.",
+    medio: "Respondeu parcialmente, passou alguns dados, mas faltam informações importantes.",
+    baixo: "Interagiu pouco, enviou dados incompletos ou não respondeu após follow-up.",
+  },
+} as const;
+
+export const FLUXO_ARQUITETURA = {
+  nome: "Módulo Arquitetura",
+  canais_entrada: ["Instagram Ads","Facebook Ads","WhatsApp direto","Indicação","Lead importado manualmente"],
+  regra_critica: "Cliente de tráfego pago tem baixa paciência. Qualificar com poucas perguntas, preferentemente por múltipla escolha, e encaminhar rapidamente.",
+  passos: [
+    { etapa: 1, acao: "saudar", mensagem: "Seja muito bem-vindo ao Obra 10+.\nMeu nome é Mari e vou te acompanhar para garantir que seu projeto saia exatamente como você deseja.\nMe fale qual é o seu nome, por gentileza?" },
+    { etapa: 2, acao: "apos_nome", mensagem: "Obrigado pela informação. É um prazer te atender." },
+    { etapa: 3, acao: "tamanho", mensagem: "Qual o tamanho aproximado do imóvel?\n\n1. De 50 a 100 m²\n2. De 100 a 200 m²\n3. Acima de 200 m²" },
+    { etapa: 4, acao: "prazo", mensagem: "Para quando você pretende iniciar o projeto?\n\n1. Imediatamente\n2. Dentro dos próximos 90 dias\n3. Mais para frente, acima de 90 dias" },
+    { etapa: 5, acao: "localizacao", mensagem: "Qual a cidade e o bairro onde fica esse projeto?" },
+    { etapa: 6, acao: "transicao", mensagem: "Perfeito, obrigado pelas informações.\nEu cuido dessa fase inicial para entender melhor o que você precisa.\nAgora vou solicitar que os arquitetos responsáveis entrem em contato para dar continuidade.\nEles vão te orientar com mais detalhes e apresentar as melhores opções para o seu projeto.\nEu continuo acompanhando seu atendimento e fico à disposição para o que precisar." },
+  ],
+  dados_obrigatorios: ["nome","telefone","tamanho_imovel","prazo_inicio","cidade_bairro"],
+  dados_opcionais: ["email","referencias_projeto"],
+  proibicoes: [
+    "Não prometer preço antes da avaliação do arquiteto",
+    "Não garantir prazo de entrega sem avaliação humana",
+    "Não dizer que o projeto será feito de determinada forma sem briefing técnico",
+    "Não usar textos longos",
+    "Não pedir email no fluxo inicial",
+    "Não pressionar o cliente ou criar urgência artificial",
+    "Não encerrar sem indicar próximo passo",
+  ],
+  respostas_rapidas: {
+    como_funciona: "No Obra 10+, entendemos sua necessidade inicial e direcionamos você para arquitetos homologados.\nEles entram em contato para explicar o processo e apresentar as melhores opções para o seu projeto.",
+    arquitetos_hub: "Os arquitetos são homologados pelo HUB Obra 10+.\nIsso significa que passam por uma avaliação para garantir mais segurança, qualidade e padrão de atendimento.",
+    quanto_custa: "O valor depende do tamanho, tipo de projeto e nível de detalhamento necessário.\nO arquiteto vai te passar os valores com mais precisão no atendimento.",
+    falar_arquiteto: "Sim. Vou organizar suas informações iniciais e direcionar para os arquitetos responsáveis.\nAssim eles já entram em contato com mais clareza sobre o que você precisa.",
+    seguro: "Sim. O HUB trabalha com profissionais homologados e acompanhamento do atendimento.\nA ideia é trazer mais segurança desde o primeiro contato até a continuidade do projeto.",
+    faz_obra: "Sim, o HUB também pode apoiar na parte de obra e execução.\nNeste primeiro momento, vou direcionar seu projeto para o arquiteto e depois seguimos com as próximas etapas.",
+    so_projeto: "Podemos apoiar tanto no projeto quanto nas etapas seguintes, conforme a necessidade.\nO arquiteto vai entender seu caso e orientar o melhor caminho.",
+    audio: "Perfeito, recebi seu áudio. Vou registrar as informações principais para encaminhar corretamente.",
+  },
+  pipeline_crm: ["Lead recebido","Qualificação concluída","Atendimento humano","Proposta","Fechamento"],
+  classificacao_potencial: {
+    alto: "Quer iniciar imediatamente, respondeu todas as perguntas ou tem imóvel acima de 100 m².",
+    medio: "Pretende iniciar em até 90 dias ou respondeu parcialmente.",
+    baixo: "Quer iniciar após 90 dias, está muito incerto ou deixou muitos dados em aberto.",
+  },
+  card: {
+    tipo: "Arquitetura - Projeto",
+    campos: ["nome","telefone","tipo_servico","tamanho","cidade_bairro","prazo","necessidade_resumo","classificacao"],
+  },
+  notificacao_interna: "Novo lead de arquitetura recebido.\nCliente já respondeu tamanho, prazo e localização.\nVerificar card no CRM e iniciar atendimento humano.",
+  acoes_sistema: [
+    "Registrar lead no CRM | Pipeline: Arquitetura | Etapa: Lead recebido",
+    "Salvar todas as respostas coletadas",
+    "Gerar card final no padrão definido",
+    "Enviar notificação interna por WhatsApp para atendimento humano",
+    "Manter histórico da conversa vinculado ao lead",
+  ],
+} as const;

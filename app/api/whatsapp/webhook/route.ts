@@ -121,20 +121,34 @@ async function encontrarOuCriarLead(
 async function buscarAgentePorMercado(mercado: string) {
   const supabase = db();
 
+  // Mari handles imobiliario and arquitetura directly
+  if (mercado === "imobiliario" || mercado === "arquitetura") {
+    const { data: mari } = await supabase
+      .from("hub_agente_identidade")
+      .select("agente_slug, nome, area, prefixo_mercado")
+      .eq("agente_slug", "mari")
+      .eq("ativo", true)
+      .maybeSingle();
+
+    if (mari) return mari;
+  }
+
+  // Generic: match by area field
   const { data: especifico } = await supabase
     .from("hub_agente_identidade")
     .select("agente_slug, nome, area")
     .eq("ativo", true)
     .ilike("area", `%${mercado}%`)
-    .eq("nivel", 4)
+    .neq("agente_slug", "mari")
     .maybeSingle();
 
   if (especifico) return especifico;
 
+  // Fallback: SDR
   const { data: sdr } = await supabase
     .from("hub_agente_identidade")
     .select("agente_slug, nome, area")
-    .ilike("agente_slug", "%sdr%")
+    .eq("agente_slug", "sdr")
     .maybeSingle();
 
   return sdr;

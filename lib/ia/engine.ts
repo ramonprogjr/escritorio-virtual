@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { receberDemanda, escalarDemanda, verificarAutonomia, type Demanda } from "./router";
 import { criarAprovacao } from "./aprovacoes";
 import { salvarConversa } from "./storage";
+import { FLUXO_IMOBILIARIO, FLUXO_ARQUITETURA, MARI_CONFIG, identificarMercado, gerarSystemPromptCompleto } from "./agentes-config";
 
 function supabase() {
   return createClient(
