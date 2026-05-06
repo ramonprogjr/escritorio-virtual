@@ -83,8 +83,8 @@ function MobileOfficeView({ leads, agentes, metricas }: {
           background: "radial-gradient(ellipse at center, transparent 20%, rgba(13,17,23,0.8) 100%)"
         }} />
 
-        {/* Agentes no mobile — usa mesmas coordenadas % do desktop */}
-        {agentes.map(ag => {
+        {/* Agentes no mobile — só ativos */}
+        {agentes.filter(ag => ag.ativo === true).map(ag => {
           const pos = MAPA_AGENTES[ag.agente_slug];
           if (!pos) return null;
           const cor = CORES_AREA[ag.area] || "#c9a24a";
@@ -377,8 +377,8 @@ export default function OfficePage() {
               <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(13,17,23,0.25)" }} />
             </div>
 
-            {/* Todos os 26 agentes mapeados por slug */}
-            {agentes.map(agente => {
+            {/* Só agentes ativos no canvas */}
+            {agentes.filter(a => a.ativo === true).map(agente => {
               const pos = MAPA_AGENTES[agente.agente_slug];
               if (!pos) return null;
               const leadsDoAgente = leads.filter(l => l.agente_responsavel === agente.agente_slug).length;
