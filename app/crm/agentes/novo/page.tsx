@@ -1,705 +1,842 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  fetchCargosCatalogo, fetchPerfisPersonalidade, fetchMercados,
-  type CargoCatalogo, type PerfilPersonalidade, type MercadoCatalogo,
-} from "@/lib/supabase/catalogos";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const HUMORES_ORD = ["Analítico", "Criativo", "Pragmático", "Empático", "Competitivo"];
-const PERS_ORD    = ["Formal", "Casual", "Assertivo", "Entusiasta", "Estratégico"];
+const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
 
-const NIVEL_COR: Record<number, string> = {
-  1: "#b3261e", 2: "#f97316", 3: "#eab308", 4: "#3b82f6", 5: "#6b7280",
+const SEGMENTO_COR: Record<string, string> = {
+  Marketing: "#3b82f6",
+  Comercial: "#10b981",
+  Operações: "#f59e0b",
 };
-const NIVEL_LABEL: Record<number, string> = {
-  1: "N1 — CEO", 2: "N2 — Diretor", 3: "N3 — Gerente", 4: "N4 — Executor", 5: "N5 — Especialista",
-};
-const MODELO_LABEL: Record<string, string> = {
-  "claude-opus-4-7":           "Opus 4.7",
-  "claude-sonnet-4-6":         "Sonnet 4.6",
-  "claude-haiku-4-5-20251001": "Haiku 4.5",
-};
-const MODELO_COR: Record<string, string> = {
-  "claude-opus-4-7":           "#a78bfa",
-  "claude-sonnet-4-6":         "#3b82f6",
-  "claude-haiku-4-5-20251001": "#6b7280",
-};
-const MODELOS_ORD = ["claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-7"];
 
-const SECOES_CONHECIMENTO = [
-  { id: "empresa",     label: "🏢 Sobre o negócio",      placeholder: "Quem somos, diferenciais, valores e proposta de valor..." },
-  { id: "servicos",    label: "🛠 Serviços e produtos",   placeholder: "Detalhes de cada serviço, faixas de preço, prazos médios..." },
-  { id: "atendimento", label: "💬 Como atender",          placeholder: "Fluxo, perguntas a fazer, como conduzir o lead, tom de voz..." },
-  { id: "proibicoes",  label: "🚫 O que nunca fazer",     placeholder: "O que nunca prometer, quando sempre escalar para humano..." },
-  { id: "objeccoes",   label: "🛡 Como lidar com objeções",placeholder: "Objeções comuns e como responder. Ex: 'tá caro'..." },
-  { id: "exemplos",    label: "✅ Exemplos reais",         placeholder: "Exemplos de boas respostas, cases de sucesso..." },
+const NIVEL_COR: Record<string, string> = {
+  N2: "#a855f7",
+  N3: "#2dd4bf",
+  N4: "#fbbf24",
+};
+
+const EIXOS = [
+  {
+    nome: "Analítico / Criativo",
+    frases: [
+      "Baseie todas as respostas em dados e lógica. Evite linguagem subjetiva.",
+      "Priorize dados, mas use analogias simples para clareza quando necessário.",
+      "Equilibre argumentos racionais com exemplos práticos e linguagem acessível.",
+      "Use linguagem envolvente, exemplos criativos e storytelling leve.",
+      "Seja criativo, use metáforas e linguagem que engaje emocionalmente.",
+    ],
+  },
+  {
+    nome: "Formal / Informal",
+    frases: [
+      "Mantenha linguagem completamente formal. Sem contrações nem gírias.",
+      "Linguagem profissional e clara, pode usar contrações ocasionalmente.",
+      "Tom neutro e acessível, nem muito formal nem coloquial.",
+      "Linguagem descontraída e próxima, como conversa entre colegas.",
+      "Totalmente informal: uso de gírias leves e tom de conversa casual.",
+    ],
+  },
+  {
+    nome: "Direto / Detalhista",
+    frases: [
+      "Seja extremamente conciso. Máximo 2 frases por resposta.",
+      "Respostas curtas com a informação essencial. Evite explicações longas.",
+      "Resposta completa mas sem excessos. Explique o necessário.",
+      "Inclua contexto e justificativas relevantes nas respostas.",
+      "Seja completo e detalhado. Antecipe dúvidas e inclua exemplos.",
+    ],
+  },
+  {
+    nome: "Conservador / Arrojado",
+    frases: [
+      "Seja cauteloso. Prefira caminhos testados e seguros. Aponte riscos.",
+      "Sugira caminhos tradicionais como padrão, mas apresente alternativas.",
+      "Equilibre sugestões convencionais com oportunidades inovadoras.",
+      "Proponha abordagens ousadas e diferenciadas. Destaque oportunidades.",
+      "Seja provocador e disruptivo. Proponha ideias inovadoras.",
+    ],
+  },
+  {
+    nome: "Empático / Objetivo",
+    frases: [
+      "Priorize o lado humano: valide sentimentos antes de resolver.",
+      "Reconheça o contexto emocional antes de apresentar soluções.",
+      "Equilibre empatia e objetividade. Valide brevemente e siga para a solução.",
+      "Foque na solução e nos resultados práticos. Seja cordial mas eficiente.",
+      "Totalmente focado em resultado e eficiência. Sem rodeios emocionais.",
+    ],
+  },
 ];
 
-const ESCALA_OPCOES = [
-  { value: "sempre",           label: "Sempre — nunca resolve sozinho" },
-  { value: "lead_acima_50k",   label: "Lead acima de R$50k" },
-  { value: "lead_acima_100k",  label: "Lead acima de R$100k" },
-  { value: "lead_acima_200k",  label: "Lead acima de R$200k" },
-  { value: "reclamacao",       label: "Qualquer reclamação" },
-  { value: "nunca",            label: "Nunca — resolve tudo sozinho" },
+const SECOES_CONHECIMENTO = [
+  { id: "empresa",     label: "Sobre o negócio",          placeholder: "Quem somos, missão, diferenciais, proposta de valor, histórico..." },
+  { id: "servicos",   label: "Serviços",                  placeholder: "Detalhes de cada serviço, faixas de preço, prazos médios, garantias..." },
+  { id: "atendimento",label: "Como atender",              placeholder: "Fluxo de atendimento, perguntas que deve fazer, tom de voz, condução do lead..." },
+  { id: "proibicoes", label: "Nunca fazer",               placeholder: "O que nunca prometer, quando escalar para humano, temas proibidos..." },
+  { id: "objeccoes",  label: "Objeções comuns",           placeholder: "Objeções frequentes e como responder. Ex: 'tá caro', 'vou pensar'..." },
+  { id: "exemplos",   label: "Exemplos de atendimento",   placeholder: "Exemplos de boas conversas, casos reais, respostas modelo..." },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function gerarSlug(nome: string) {
-  return nome.toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
-}
-
-function gerarPreview(
-  cargo: CargoCatalogo | null,
-  perfil: PerfilPersonalidade | null,
-  nome: string,
-  mercados: string[],
-  podeFazer: string[],
-  conhecimentos: { secao: string; conteudo: string }[],
-) {
-  if (!cargo) return "Selecione um cargo para ver o preview...";
-  const secoes: string[] = [];
-  const nomeFinal = nome || `Agente ${cargo.titulo}`;
-
-  if (cargo.prompt_template) {
-    secoes.push(cargo.prompt_template.replace("{nome}", nomeFinal).replace("{cargo}", cargo.titulo).replace("{area}", cargo.area));
-  } else {
-    secoes.push(`═══ IDENTIDADE ═══\nVocê é ${nomeFinal}, ${cargo.titulo} da área de ${cargo.area}.`);
-  }
-
-  if (perfil) {
-    secoes.push(`═══ COMPORTAMENTO ═══\n${perfil.prompt_fragmento}`);
-  }
-
-  if (mercados.length > 0) {
-    secoes.push(`═══ MERCADOS ═══\nAtende: ${mercados.join(", ")}`);
-  }
-
-  const conhecFilled = conhecimentos.filter(c => c.conteudo.trim());
-  for (const c of conhecFilled) {
-    const s = SECOES_CONHECIMENTO.find(s => s.id === c.secao);
-    secoes.push(`═══ ${(s?.label || c.secao).replace(/^[^\s]+\s/, "").toUpperCase()} ═══\n${c.conteudo}`);
-  }
-
-  if (podeFazer.length > 0) {
-    secoes.push(`═══ PODE FAZER ═══\n${podeFazer.map(r => `• ${r}`).join("\n")}`);
-  }
-
-  if (cargo.nao_pode_fazer_padrao?.length > 0) {
-    secoes.push(`═══ NÃO PODE FAZER ═══\n${cargo.nao_pode_fazer_padrao.map(r => `• ${r}`).join("\n")}`);
-  }
-
-  secoes.push(`═══ REGRAS UNIVERSAIS ═══
-• Máximo 3 linhas por mensagem no WhatsApp
-• Responda primeiro a pergunta do cliente
-• Nunca mencione que é IA a menos que perguntado
-• Nunca encerre sem indicar o próximo passo`);
-
-  return secoes.join("\n\n");
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function CardCargo({ cargo, ativo, onClick }: { cargo: CargoCatalogo; ativo: boolean; onClick: () => void }) {
-  const cor = NIVEL_COR[cargo.nivel] || "#6b7280";
+function gerarPersonalidade(valores: number[]): string {
   return (
-    <button onClick={onClick} className="w-full text-left p-3 rounded-xl border-2 transition-all"
-      style={{
-        borderColor: ativo ? cor : "#e0ddd6",
-        background: ativo ? "#003b26" : "white",
-        color: ativo ? "white" : "#1a1a1a",
-      }}>
-      <div className="flex items-start gap-2">
-        <span className="text-xs px-1.5 py-0.5 rounded font-black flex-shrink-0 mt-0.5"
-          style={{ background: cor, color: "white" }}>
-          N{cargo.nivel}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-sm leading-tight">{cargo.titulo}</p>
-          <p className="text-xs mt-0.5" style={{ color: ativo ? "#c9a24a" : "#888" }}>{cargo.area} · {MODELO_LABEL[cargo.modelo_padrao] || cargo.modelo_padrao}</p>
-          {cargo.descricao && <p className="text-xs mt-1 leading-relaxed opacity-75">{cargo.descricao}</p>}
-        </div>
-      </div>
-    </button>
+    "## Tom e estilo de comunicação\n\n" +
+    EIXOS.map((e, i) => e.frases[valores[i] - 1]).join("\n")
   );
 }
 
-function Toggle5x5({ perfis, humorSel, persSel, onSelect }: {
-  perfis: PerfilPersonalidade[];
-  humorSel: string; persSel: string;
-  onSelect: (humor: string, pers: string) => void;
-}) {
-  const perfilSelecionado = perfis.find(p => p.humor === humorSel && p.personalidade === persSel);
-  return (
-    <div>
-      {/* Grid 5×5 */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
-          <thead>
-            <tr>
-              <th className="w-20 text-left text-[#888] font-bold pb-1 pr-2">Humor ↓ / Pers. →</th>
-              {PERS_ORD.map(p => (
-                <th key={p} className="text-center pb-1 px-1 font-bold" style={{ color: "#003b26", minWidth: 80 }}>{p}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {HUMORES_ORD.map(humor => (
-              <tr key={humor}>
-                <td className="pr-2 py-1 font-bold" style={{ color: "#003b26", whiteSpace: "nowrap" }}>{humor}</td>
-                {PERS_ORD.map(pers => {
-                  const ativo = humorSel === humor && persSel === pers;
-                  return (
-                    <td key={pers} className="py-1 px-1 text-center">
-                      <button onClick={() => onSelect(humor, pers)}
-                        className="w-full py-1.5 rounded-lg border-2 text-xs font-bold transition-all"
-                        style={{
-                          borderColor: ativo ? "#c9a24a" : "#e0ddd6",
-                          background: ativo ? "#003b26" : "white",
-                          color: ativo ? "#c9a24a" : "#888",
-                        }}>
-                        {ativo ? "✓" : "·"}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Perfil selecionado */}
-      {perfilSelecionado && (
-        <div className="mt-4 p-4 rounded-xl border-2 border-[#003b26] bg-[#003b26]">
-          <p className="text-[#c9a24a] text-xs font-black uppercase mb-2">{perfilSelecionado.humor} + {perfilSelecionado.personalidade}</p>
-          <p className="text-white text-sm font-medium mb-1">{perfilSelecionado.tom_comunicacao}</p>
-          <p className="text-[#c9a24a80] text-xs">{perfilSelecionado.estilo_trabalho}</p>
-        </div>
-      )}
-    </div>
-  );
+function montarPrompt(conhecimento: Record<string, string>): string {
+  const labels: Record<string, string> = {
+    empresa: "Sobre o negócio",
+    servicos: "Serviços",
+    atendimento: "Como atender",
+    proibicoes: "Nunca fazer",
+    objeccoes: "Objeções comuns",
+    exemplos: "Exemplos de atendimento",
+  };
+  return Object.entries(conhecimento)
+    .filter(([, v]) => v.trim())
+    .map(([k, v]) => `## ${labels[k] || k}\n\n${v}`)
+    .join("\n\n");
 }
+
+type Cargo = {
+  slug: string;
+  titulo: string;
+  descricao_curta?: string;
+  descricao?: string;
+  segmento?: string;
+  especialidade?: string;
+  nivel?: string;
+  modelo_padrao?: string;
+  [key: string]: unknown;
+};
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NovoAgentePage() {
   const router = useRouter();
 
-  // Catálogos
-  const [cargos, setCargos] = useState<CargoCatalogo[]>([]);
-  const [perfis, setPerfis] = useState<PerfilPersonalidade[]>([]);
-  const [mercadosCat, setMercadosCat] = useState<MercadoCatalogo[]>([]);
+  // Estado global
+  const [passo, setPasso] = useState(1);
+  const [cargoSelecionado, setCargoSelecionado] = useState<Cargo | null>(null);
+  const [nome, setNome] = useState("");
+  const [mercados, setMercados] = useState<string[]>([]);
+  const [valores, setValores] = useState<number[]>([3, 3, 3, 3, 3]);
+  const [conhecimento, setConhecimento] = useState<Record<string, string>>({
+    empresa: "", servicos: "", atendimento: "", proibicoes: "", objeccoes: "", exemplos: "",
+  });
+  const [criando, setCriando] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [erro, setErro] = useState("");
+
+  // Catálogo de cargos
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  // Formulário
-  const [passo, setPasso] = useState(1);
-  const [cargo, setCargo] = useState<CargoCatalogo | null>(null);
-  const [nome, setNome] = useState("");
-  const [humorSel, setHumorSel] = useState("Empático");
-  const [persSel, setPersSel] = useState("Casual");
-  const [mercadosSel, setMercadosSel] = useState<string[]>([]);
-  const [podeFazer, setPodeFazer] = useState<string[]>([]);
-  const [horarioInicio, setHorarioInicio] = useState("08:00");
-  const [horarioFim, setHorarioFim] = useState("22:00");
-  const [escalaQuando, setEscalaQuando] = useState("lead_acima_50k");
-  const [conhecimentos, setConhecimentos] = useState<{ secao: string; conteudo: string }[]>([]);
-  const [secaoAtiva, setSecaoAtiva] = useState("empresa");
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState("");
-  const [tipoSel, setTipoSel] = useState("");
+  // Filtros passo 1
+  const [filtroSegmento, setFiltroSegmento] = useState<string>("");
+  const [filtroEspecialidade, setFiltroEspecialidade] = useState<string>("");
 
-  const totalPassos = 5;
+  // Aba ativa passo 4
+  const [abaConhecimento, setAbaConhecimento] = useState("empresa");
 
-  useEffect(() => {
-    Promise.all([fetchCargosCatalogo(), fetchPerfisPersonalidade(), fetchMercados()])
-      .then(([c, p, m]) => { setCargos(c); setPerfis(p); setMercadosCat(m); })
+  const [erroCargos, setErroCargos] = useState(false);
+
+  const carregarCargos = useCallback(() => {
+    setCarregando(true);
+    setErroCargos(false);
+    fetch("/api/hub/cargos")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setCargos(data);
+        else if (Array.isArray(data)) setCargos(data);
+      })
+      .catch(() => setErroCargos(true))
       .finally(() => setCarregando(false));
   }, []);
 
-  const perfil = perfis.find(p => p.humor === humorSel && p.personalidade === persSel) ?? null;
+  useEffect(() => {
+    carregarCargos();
+  }, [carregarCargos]);
 
-  const selecionarCargo = useCallback((c: CargoCatalogo) => {
-    setCargo(c);
-    setPodeFazer(c.pode_fazer_padrao || []);
-    if ((c.limite_autonomia_brl || 0) >= 100000) setEscalaQuando("lead_acima_100k");
-    else if ((c.limite_autonomia_brl || 0) >= 50000) setEscalaQuando("lead_acima_50k");
-    else setEscalaQuando("sempre");
-  }, []);
+  // Segmentos disponíveis
+  const segmentos = Array.from(new Set(cargos.map((c) => c.segmento).filter(Boolean))) as string[];
 
-  function toggleMercado(sigla: string) {
-    setMercadosSel(prev => prev.includes(sigla) ? prev.filter(m => m !== sigla) : [...prev, sigla]);
-  }
+  // Especialidades do segmento selecionado
+  const especialidades = Array.from(
+    new Set(
+      cargos
+        .filter((c) => !filtroSegmento || c.segmento === filtroSegmento)
+        .map((c) => c.especialidade)
+        .filter(Boolean)
+    )
+  ) as string[];
 
-  function togglePodeFazer(item: string) {
-    setPodeFazer(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
-  }
+  // Cargos filtrados
+  const cargosFiltrados = cargos.filter((c) => {
+    if (filtroSegmento && c.segmento !== filtroSegmento) return false;
+    if (filtroEspecialidade && c.especialidade !== filtroEspecialidade) return false;
+    return true;
+  });
 
-  function getConhecimento(secao: string) {
-    return conhecimentos.find(c => c.secao === secao)?.conteudo || "";
-  }
-
-  function setConhecimento(secao: string, conteudo: string) {
-    setConhecimentos(prev => {
-      const existe = prev.find(c => c.secao === secao);
-      if (existe) return prev.map(c => c.secao === secao ? { ...c, conteudo } : c);
-      return [...prev, { secao, conteudo }];
-    });
-  }
-
-  async function salvar() {
-    if (!cargo) { setErro("Selecione um cargo"); return; }
-    if (!nome.trim()) { setErro("Informe o nome do agente"); return; }
-    setSalvando(true);
-    setErro("");
-
-    const payload = {
-      agente_slug: gerarSlug(nome),
-      nome: nome.trim(),
-      cargo: cargo.titulo,
-      cargo_slug: cargo.slug,
-      area: cargo.area,
-      nivel: cargo.nivel,
-      modelo_padrao: cargo.modelo_padrao,
-      humor: HUMORES_ORD.indexOf(humorSel) + 1,
-      personalidade_id: PERS_ORD.indexOf(persSel) + 1,
-      perfil_id: perfil?.id,
-      prefixo_mercado: mercadosSel.join(","),
-      supervisor_slug: cargo.supervisor_slug,
-      horario_inicio: horarioInicio,
-      horario_fim: horarioFim,
-      dias_semana: [0, 1, 2, 3, 4, 5, 6],
-      system_prompt_base: [
-        cargo.prompt_template?.replace("{nome}", nome.trim()).replace("{cargo}", cargo.titulo) || `Você é ${nome.trim()}, ${cargo.titulo} da área de ${cargo.area}.`,
-        perfil?.prompt_fragmento || "",
-      ].filter(Boolean).join("\n\n"),
-      pode_fazer: podeFazer,
-      nao_pode_fazer: cargo.nao_pode_fazer_padrao || [],
-      sempre_dizer: [],
-      nunca_dizer: [],
-      conhecimentos: conhecimentos.filter(c => c.conteudo.trim()),
-      limite_autonomia_brl: cargo.limite_autonomia_brl,
-    };
-
-    const res = await fetch("/api/agentes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY || "",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.ok) {
-      router.push("/crm/agentes");
-    } else {
-      const data = await res.json() as { erro?: string };
-      setErro(data.erro || "Erro ao criar agente");
-      setSalvando(false);
-    }
-  }
-
-  const previewPrompt = gerarPreview(cargo, perfil, nome, mercadosSel, podeFazer, conhecimentos);
-  const tokensEstimados = Math.ceil(previewPrompt.length / 4);
-  const progresso = (passo / totalPassos) * 100;
-
-  // Cargos filtrados por tipo/área
-  const ATENDIMENTO_SLUGS = ["atendente", "sdr"];
-  const areas = Array.from(new Set(cargos.map(c => c.area))).sort();
-  const cargosFiltrados = tipoSel === "Atendimento"
-    ? cargos.filter(c => ATENDIMENTO_SLUGS.includes(c.slug))
-    : tipoSel
-    ? cargos.filter(c => c.area === tipoSel)
-    : cargos;
-  const niveisList = [1, 2, 3, 4, 5].filter(n => cargosFiltrados.some(c => c.nivel === n));
-
-  if (carregando) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#f7f4ec" }}>
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-[#003b26] border-t-transparent animate-spin mx-auto mb-3" />
-          <p className="text-[#003b26] text-sm">Carregando catálogos...</p>
-        </div>
-      </div>
+  function toggleMercado(m: string) {
+    setMercados((prev) =>
+      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]
     );
   }
 
-  return (
-    <div className="min-h-screen" style={{ background: "#f7f4ec" }}>
+  function setValor(i: number, v: number) {
+    setValores((prev) => {
+      const n = [...prev];
+      n[i] = v;
+      return n;
+    });
+  }
 
-      {/* HEADER */}
-      <div className="sticky top-0 z-10 px-6 py-3 flex items-center justify-between" style={{ background: "#003b26" }}>
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="text-[#c9a24a] hover:text-white text-sm transition-colors">← Voltar</button>
-          <div>
-            <h1 className="text-white font-black text-base">Criar Novo Agente</h1>
-            <p className="text-[#c9a24a] text-xs">Passo {passo} de {totalPassos}</p>
+  async function criarAgente() {
+    if (!cargoSelecionado) return;
+    setCriando(true);
+    setErro("");
+    try {
+      const payload = {
+        cargo_slug: cargoSelecionado.slug,
+        nome,
+        prefixo_mercado: mercados.join(","),
+        personalidade: gerarPersonalidade(valores),
+        system_prompt_base: montarPrompt(conhecimento),
+        bio: conhecimento.empresa.slice(0, 200),
+        horario_inicio: "08:00",
+        horario_fim: "22:00",
+        dias_semana: [0, 1, 2, 3, 4, 5, 6],
+      };
+      const res = await fetch("/api/hub/agentes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        router.push("/crm/agentes");
+      } else {
+        const data = await res.json().catch(() => ({})) as { erro?: string; error?: string };
+        setErro(data.erro || data.error || "Erro ao criar agente.");
+        setShowConfirm(false);
+      }
+    } catch {
+      setErro("Falha na requisição.");
+      setShowConfirm(false);
+    } finally {
+      setCriando(false);
+    }
+  }
+
+  const personalidadeGerada = gerarPersonalidade(valores);
+
+  // Estilos base
+  const chip = (ativo: boolean, cor?: string): React.CSSProperties => ({
+    padding: "6px 14px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: "pointer",
+    border: `1px solid ${ativo ? (cor || "#c9a24a") : "#30363d"}`,
+    background: ativo ? (cor ? cor + "22" : "#c9a24a22") : "#161b22",
+    color: ativo ? (cor || "#c9a24a") : "#8b949e",
+    transition: "all 150ms",
+  });
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0d1117" }}>
+
+      {/* MODAL CONFIRMAÇÃO */}
+      {showConfirm && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowConfirm(false); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}
+        >
+          <div style={{
+            background: "#161b22", border: "1px solid #30363d", borderRadius: 16,
+            padding: 28, width: "100%", maxWidth: 440,
+          }}>
+            <h2 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
+              Confirmar criação
+            </h2>
+            <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
+              Confirmar criação do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>?
+            </p>
+            {erro && (
+              <p style={{ color: "#ef4444", fontSize: 12, marginBottom: 12 }}>{erro}</p>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowConfirm(false)}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8,
+                  background: "#21262d", border: "1px solid #30363d",
+                  color: "#8b949e", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={criarAgente}
+                disabled={criando}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8,
+                  background: "#003b26", border: "none",
+                  color: "#c9a24a", fontSize: 13, fontWeight: 700,
+                  cursor: criando ? "wait" : "pointer",
+                  opacity: criando ? 0.6 : 1,
+                }}
+              >
+                {criando ? "Criando..." : "Confirmar"}
+              </button>
+            </div>
           </div>
         </div>
-        {cargo && nome && (
-          <div className="text-right">
-            <p className="text-white text-sm font-black">{nome}</p>
-            <p className="text-[#c9a24a] text-xs">{cargo.titulo} · N{cargo.nivel}</p>
+      )}
+
+      {/* HEADER com stepper */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 10,
+        background: "#161b22", borderBottom: "1px solid #30363d",
+        padding: "12px 24px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              onClick={() => router.back()}
+              style={{ background: "none", border: "none", color: "#8b949e", fontSize: 18, cursor: "pointer", lineHeight: 1 }}
+            >
+              ←
+            </button>
+            <h1 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: 0 }}>Novo Agente IA</h1>
           </div>
-        )}
+          {cargoSelecionado && nome && (
+            <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>
+              {nome} · {cargoSelecionado.titulo}
+            </p>
+          )}
+        </div>
+
+        {/* Stepper */}
+        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+          {["Cargo", "Identidade", "Personalidade", "Conhecimento", "Revisão"].map((label, i) => {
+            const num = i + 1;
+            const ativo = passo === num;
+            const passado = passo > num;
+            return (
+              <div key={num} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: passado ? "#003b26" : ativo ? "#c9a24a" : "#21262d",
+                    border: `2px solid ${passado ? "#003b26" : ativo ? "#c9a24a" : "#30363d"}`,
+                    color: passado ? "#c9a24a" : ativo ? "#003b26" : "#8b949e",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700,
+                  }}>
+                    {passado ? "✓" : num}
+                  </div>
+                  <span style={{ fontSize: 10, color: ativo ? "#c9a24a" : "#8b949e", whiteSpace: "nowrap" }}>{label}</span>
+                </div>
+                {i < 4 && (
+                  <div style={{
+                    height: 2, flex: 0, width: 16,
+                    background: passo > num ? "#c9a24a" : "#30363d",
+                    marginBottom: 16,
+                  }} />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* BARRA PROGRESSO */}
-      <div className="h-1 bg-[#e0ddd6]">
-        <div className="h-full bg-[#c9a24a] transition-all duration-500" style={{ width: `${progresso}%` }} />
-      </div>
+      {/* CONTEÚDO */}
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 24px" }}>
 
-      <div className="flex max-w-6xl mx-auto gap-6 p-6">
+        {/* ─── PASSO 1 — CARGO ─── */}
+        {passo === 1 && (
+          <div>
+            <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+              Qual é o cargo deste agente?
+            </h2>
+            <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px" }}>
+              O cargo determina nível, modelo de IA e configurações padrão.
+            </p>
 
-        {/* FORMULÁRIO */}
-        <div className="flex-1 space-y-6">
-
-          {/* ── PASSO 1 — CARGO ── */}
-          {passo === 1 && (
-            <div>
-              <h2 className="text-[#003b26] font-black text-xl mb-1">Qual é o cargo deste agente?</h2>
-              <p className="text-[#888] text-sm mb-5">O cargo determina automaticamente o nível, modelo de IA, supervisor e permissões padrão.</p>
-
-              {/* Filtro por tipo/área */}
-              <div className="flex flex-wrap gap-2 mb-5">
-                <button onClick={() => setTipoSel("")}
-                  className="text-xs px-3 py-1.5 rounded-full border-2 font-bold transition-all"
-                  style={{ borderColor: tipoSel === "" ? "#003b26" : "#e0ddd6", background: tipoSel === "" ? "#003b26" : "white", color: tipoSel === "" ? "#c9a24a" : "#888" }}>
-                  Todos
+            {carregando ? (
+              <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando cargos...</p>
+            ) : erroCargos ? (
+              <div>
+                <p style={{ color: "#ef4444", fontSize: 13, margin: "0 0 10px" }}>Erro ao carregar cargos.</p>
+                <button
+                  onClick={carregarCargos}
+                  style={{
+                    padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                    background: "#161b22", border: "1px solid #30363d", color: "#8b949e",
+                    cursor: "pointer",
+                  }}
+                >
+                  Tentar novamente
                 </button>
-                {areas.map(area => (
-                  <button key={area} onClick={() => setTipoSel(area)}
-                    className="text-xs px-3 py-1.5 rounded-full border-2 font-bold transition-all"
-                    style={{ borderColor: tipoSel === area ? "#003b26" : "#e0ddd6", background: tipoSel === area ? "#003b26" : "white", color: tipoSel === area ? "#c9a24a" : "#888" }}>
-                    {area}
-                  </button>
-                ))}
               </div>
-
-              {niveisList.map(nivel => (
-                <div key={nivel} className="mb-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-black px-2 py-0.5 rounded text-white"
-                      style={{ background: NIVEL_COR[nivel] }}>
-                      {NIVEL_LABEL[nivel]}
-                    </span>
-                    <div className="flex-1 h-px bg-[#e0ddd6]" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {cargosFiltrados.filter(c => c.nivel === nivel).map(c => (
-                      <CardCargo key={c.slug} cargo={c} ativo={cargo?.slug === c.slug} onClick={() => selecionarCargo(c)} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ── PASSO 2 — IDENTIDADE ── */}
-          {passo === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-[#003b26] font-black text-xl mb-1">Identidade do agente</h2>
-                <p className="text-[#888] text-sm mb-4">Apenas o nome é livre. O resto vem do cargo e da personalidade selecionada.</p>
-              </div>
-
-              {/* Cargo selecionado (read-only) */}
-              {cargo && (
-                <div className="p-4 rounded-xl border-2 border-[#003b26] bg-[#003b26]">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs px-1.5 py-0.5 rounded font-black text-white" style={{ background: NIVEL_COR[cargo.nivel] }}>N{cargo.nivel}</span>
-                    <p className="text-white font-black">{cargo.titulo}</p>
-                    <button onClick={() => { setCargo(null); setPasso(1); }} className="ml-auto text-[#c9a24a80] hover:text-[#c9a24a] text-xs">Trocar →</button>
-                  </div>
-                  <p className="text-[#c9a24a] text-xs">{cargo.area} · {MODELO_LABEL[cargo.modelo_padrao]} · Supervisor: {cargo.supervisor_slug || "—"}</p>
-                  {cargo.limite_autonomia_brl > 0 && (
-                    <p className="text-[#c9a24a80] text-xs mt-1">Autonomia: até R${cargo.limite_autonomia_brl.toLocaleString("pt-BR")}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Nível hierárquico (visual-only, determinado pelo cargo) */}
-              {cargo && (
-                <div>
-                  <label className="text-[#003b26] text-xs font-black block mb-2">Nível hierárquico</label>
-                  <div className="flex gap-2 mb-1.5">
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <div key={n} className="flex-1 text-center py-2 rounded-lg border-2 text-xs font-black"
-                        style={{
-                          borderColor: cargo.nivel === n ? NIVEL_COR[n] : "#e0ddd6",
-                          background: cargo.nivel === n ? NIVEL_COR[n] + "20" : "white",
-                          color: cargo.nivel === n ? NIVEL_COR[n] : "#aaa",
-                          opacity: cargo.nivel === n ? 1 : 0.3,
-                          cursor: "default",
-                        }}>
-                        N{n}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[#003b26] text-xs font-bold">{NIVEL_LABEL[cargo.nivel]}</p>
-                </div>
-              )}
-
-              {/* Modelo de IA (visual-only, determinado pelo cargo) */}
-              {cargo && (
-                <div>
-                  <label className="text-[#003b26] text-xs font-black block mb-2">Modelo de IA</label>
-                  <div className="flex gap-2 mb-1.5">
-                    {MODELOS_ORD.map(modeloId => {
-                      const ativo = cargo.modelo_padrao === modeloId;
-                      const cor = MODELO_COR[modeloId];
-                      return (
-                        <div key={modeloId} className="flex-1 text-center py-2 rounded-lg border-2 text-xs font-black"
-                          style={{
-                            borderColor: ativo ? cor : "#e0ddd6",
-                            background: ativo ? cor + "20" : "white",
-                            color: ativo ? cor : "#aaa",
-                            opacity: ativo ? 1 : 0.3,
-                            cursor: "default",
-                          }}>
-                          {MODELO_LABEL[modeloId]}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[#003b26] text-xs font-bold">Determinado automaticamente pelo cargo</p>
-                </div>
-              )}
-
-              {/* Nome */}
-              <div>
-                <label className="text-[#003b26] text-xs font-black block mb-1.5">Nome do agente <span className="text-[#b3261e]">*</span> <span className="text-[#888] font-normal">(único campo livre)</span></label>
-                <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Mari, SDR Apex, Analista..."
-                  className="w-full bg-white border-2 border-[#e0ddd6] rounded-xl px-4 py-3 text-base font-bold outline-none focus:border-[#003b26] text-[#1a1a1a] placeholder:text-[#ccc]" />
-                {nome && <p className="text-[#888] text-xs mt-1">Slug: {gerarSlug(nome)}</p>}
-              </div>
-
-              {/* Mercados */}
-              <div>
-                <label className="text-[#003b26] text-xs font-black block mb-2">Mercados que atende</label>
-                <div className="flex flex-wrap gap-2">
-                  {mercadosCat.map(m => (
-                    <button key={m.sigla} onClick={() => toggleMercado(m.sigla)}
-                      className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-full border-2 font-bold transition-all"
-                      style={{
-                        borderColor: mercadosSel.includes(m.sigla) ? m.cor : "#e0ddd6",
-                        background: mercadosSel.includes(m.sigla) ? m.cor + "20" : "white",
-                        color: mercadosSel.includes(m.sigla) ? m.cor : "#888",
-                      }}>
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.cor }} />
-                      {m.sigla} — {m.nome}
+            ) : (
+              <>
+                {/* Filtro segmento */}
+                <div style={{ marginBottom: 12 }}>
+                  <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>SEGMENTO</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <button
+                      onClick={() => { setFiltroSegmento(""); setFiltroEspecialidade(""); }}
+                      style={chip(filtroSegmento === "")}
+                    >
+                      Todos
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Personalidade 5×5 */}
-              <div>
-                <label className="text-[#003b26] text-xs font-black block mb-2">Personalidade (5×5)</label>
-                <p className="text-[#888] text-xs mb-3">Humor + Personalidade geram automaticamente tom, estilo e comportamento.</p>
-                <Toggle5x5 perfis={perfis} humorSel={humorSel} persSel={persSel}
-                  onSelect={(h, p) => { setHumorSel(h); setPersSel(p); }} />
-              </div>
-
-              {/* Horário */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[#003b26] text-xs font-black block mb-1">Horário de início</label>
-                  <input type="time" value={horarioInicio} onChange={e => setHorarioInicio(e.target.value)}
-                    className="w-full bg-white border border-[#e0ddd6] rounded-lg px-3 py-2 text-sm outline-none" />
-                </div>
-                <div>
-                  <label className="text-[#003b26] text-xs font-black block mb-1">Horário de fim</label>
-                  <input type="time" value={horarioFim} onChange={e => setHorarioFim(e.target.value)}
-                    className="w-full bg-white border border-[#e0ddd6] rounded-lg px-3 py-2 text-sm outline-none" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── PASSO 3 — CONHECIMENTO ── */}
-          {passo === 3 && (
-            <div className="space-y-4">
-              <h2 className="text-[#003b26] font-black text-xl mb-1">O que este agente sabe?</h2>
-              <p className="text-[#888] text-sm mb-4">Este é o cérebro do agente. A IA só usa o que você escrever aqui.</p>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {SECOES_CONHECIMENTO.map(s => {
-                  const temConteudo = !!getConhecimento(s.id).trim();
-                  return (
-                    <button key={s.id} onClick={() => setSecaoAtiva(s.id)}
-                      className="text-xs px-3 py-1.5 rounded-full border-2 flex items-center gap-1.5 transition-all"
-                      style={{
-                        borderColor: secaoAtiva === s.id ? "#003b26" : "#e0ddd6",
-                        background: secaoAtiva === s.id ? "#003b26" : "white",
-                        color: secaoAtiva === s.id ? "white" : "#555",
-                      }}>
-                      {s.label}
-                      {temConteudo && <span className="w-1.5 h-1.5 rounded-full bg-[#c9a24a]" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {SECOES_CONHECIMENTO.filter(s => s.id === secaoAtiva).map(secao => {
-                const conteudo = getConhecimento(secao.id);
-                return (
-                  <div key={secao.id} className="bg-white rounded-xl border border-[#e0ddd6] p-4">
-                    <label className="text-[#003b26] text-xs font-black block mb-2">{secao.label}</label>
-                    <textarea value={conteudo} onChange={e => setConhecimento(secao.id, e.target.value)}
-                      placeholder={secao.placeholder} rows={8}
-                      className="w-full bg-[#f7f4ec] rounded-lg p-3 text-sm outline-none resize-none border border-[#e0ddd6] focus:border-[#003b26] placeholder:text-[#ccc]" />
-                    <div className="flex justify-between mt-2">
-                      <p className="text-[#ccc] text-xs">~{Math.ceil(conteudo.length / 4)} tokens</p>
-                      <p className="text-[#ccc] text-xs">{conteudo.length} caracteres</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ── PASSO 4 — REGRAS ── */}
-          {passo === 4 && (
-            <div className="space-y-5">
-              <h2 className="text-[#003b26] font-black text-xl mb-1">Regras de comportamento</h2>
-              <p className="text-[#888] text-sm mb-4">Configuradas a partir do cargo. Você pode ajustar o que este agente pode fazer.</p>
-
-              {/* Pode fazer — do cargo, toggleáveis */}
-              {(cargo?.pode_fazer_padrao || []).length > 0 && (
-                <div>
-                  <label className="text-[#003b26] text-xs font-black block mb-2">O que pode fazer (do cargo)</label>
-                  <div className="space-y-2">
-                    {(cargo?.pode_fazer_padrao || []).map(item => (
-                      <button key={item} onClick={() => togglePodeFazer(item)}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-all"
-                        style={{
-                          borderColor: podeFazer.includes(item) ? "#003b26" : "#e0ddd6",
-                          background: podeFazer.includes(item) ? "#f0f9f0" : "white",
-                        }}>
-                        <div className="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
-                          style={{ borderColor: podeFazer.includes(item) ? "#003b26" : "#ccc", background: podeFazer.includes(item) ? "#003b26" : "white" }}>
-                          {podeFazer.includes(item) && <span className="text-white text-xs font-black">✓</span>}
-                        </div>
-                        <span className="text-sm" style={{ color: podeFazer.includes(item) ? "#003b26" : "#888" }}>{item}</span>
+                    {segmentos.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => { setFiltroSegmento(s); setFiltroEspecialidade(""); }}
+                        style={chip(filtroSegmento === s, SEGMENTO_COR[s])}
+                      >
+                        {s}
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
 
-              {/* Não pode fazer — do cargo, fixo */}
-              {(cargo?.nao_pode_fazer_padrao || []).length > 0 && (
-                <div>
-                  <label className="text-[#b3261e] text-xs font-black block mb-2">Nunca pode fazer (fixo do cargo)</label>
-                  <div className="flex flex-wrap gap-2">
-                    {(cargo?.nao_pode_fazer_padrao || []).map(item => (
-                      <span key={item} className="text-xs px-3 py-1.5 rounded-full font-medium" style={{ background: "#b3261e15", color: "#b3261e", border: "1px solid #b3261e30" }}>
-                        🔒 {item}
-                      </span>
-                    ))}
+                {/* Filtro especialidade */}
+                {especialidades.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>ESPECIALIDADE</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      <button
+                        onClick={() => setFiltroEspecialidade("")}
+                        style={chip(filtroEspecialidade === "")}
+                      >
+                        Todas
+                      </button>
+                      {especialidades.map((e) => (
+                        <button
+                          key={e}
+                          onClick={() => setFiltroEspecialidade(e)}
+                          style={chip(filtroEspecialidade === e)}
+                        >
+                          {e}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Escala quando */}
-              <div>
-                <label className="text-[#003b26] text-xs font-black block mb-1.5">Escala para humano quando:</label>
-                <div className="space-y-1.5">
-                  {ESCALA_OPCOES.map(op => (
-                    <button key={op.value} onClick={() => setEscalaQuando(op.value)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-all"
-                      style={{
-                        borderColor: escalaQuando === op.value ? "#c9a24a" : "#e0ddd6",
-                        background: escalaQuando === op.value ? "#003b26" : "white",
-                        color: escalaQuando === op.value ? "#c9a24a" : "#555",
-                      }}>
-                      <div className="w-4 h-4 rounded-full border-2 flex-shrink-0"
-                        style={{ borderColor: escalaQuando === op.value ? "#c9a24a" : "#ccc", background: escalaQuando === op.value ? "#c9a24a" : "white" }} />
-                      <span className="text-sm font-medium">{op.label}</span>
-                    </button>
-                  ))}
+                {/* Cards de cargos */}
+                {cargosFiltrados.length === 0 ? (
+                  <p style={{ color: "#8b949e", fontSize: 13 }}>Nenhum cargo encontrado.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {cargosFiltrados.map((c) => {
+                      const ativo = cargoSelecionado?.slug === c.slug;
+                      const segCor = SEGMENTO_COR[c.segmento || ""] || "#8b949e";
+                      const nivelCor = NIVEL_COR[c.nivel || ""] || "#8b949e";
+                      return (
+                        <button
+                          key={c.slug}
+                          onClick={() => setCargoSelecionado(c)}
+                          style={{
+                            display: "flex", alignItems: "flex-start", gap: 12, textAlign: "left",
+                            padding: 16, borderRadius: 12, cursor: "pointer",
+                            background: ativo ? "#161b22" : "#161b22",
+                            border: `2px solid ${ativo ? "#c9a24a" : "#30363d"}`,
+                            transition: "border-color 150ms",
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0, flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <span style={{ color: "#e6edf3", fontSize: 14, fontWeight: 700 }}>{c.titulo}</span>
+                              {c.nivel && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
+                                  background: nivelCor + "22", color: nivelCor, border: `1px solid ${nivelCor}44`,
+                                }}>
+                                  {c.nivel}
+                                </span>
+                              )}
+                              {c.especialidade && (
+                                <span style={{ fontSize: 10, color: "#8b949e" }}>{c.especialidade}</span>
+                              )}
+                              {c.segmento && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
+                                  background: segCor + "22", color: segCor, border: `1px solid ${segCor}44`,
+                                }}>
+                                  {c.segmento}
+                                </span>
+                              )}
+                            </div>
+                            {c.descricao_curta && (
+                              <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>{c.descricao_curta}</p>
+                            )}
+                          </div>
+                          {ativo && (
+                            <span style={{ color: "#c9a24a", fontSize: 16, flexShrink: 0 }}>✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ─── PASSO 2 — IDENTIDADE ─── */}
+        {passo === 2 && cargoSelecionado && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                Identidade do agente
+              </h2>
+              <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
+                Campos fixos do cargo e o nome que você vai dar ao agente.
+              </p>
+            </div>
+
+            {/* Campos fixos */}
+            <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
+              <p style={{ color: "#c9a24a", fontSize: 11, fontWeight: 700, margin: "0 0 12px" }}>
+                Fixo do cargo 🔒
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>Nível</label>
+                  {cargoSelecionado.nivel ? (
+                    <span style={{
+                      display: "inline-block", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+                      background: (NIVEL_COR[cargoSelecionado.nivel] || "#8b949e") + "22",
+                      color: NIVEL_COR[cargoSelecionado.nivel] || "#8b949e",
+                      border: `1px solid ${(NIVEL_COR[cargoSelecionado.nivel] || "#8b949e")}44`,
+                    }}>
+                      {cargoSelecionado.nivel}
+                    </span>
+                  ) : (
+                    <span style={{ color: "#8b949e", fontSize: 13 }}>—</span>
+                  )}
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>Modelo padrão</label>
+                  <span style={{ color: "#8b949e", fontSize: 13 }}>
+                    {(cargoSelecionado.modelo_padrao as string) || "—"}
+                  </span>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* ── PASSO 5 — REVISÃO ── */}
-          {passo === 5 && (
-            <div className="space-y-4">
-              <h2 className="text-[#003b26] font-black text-xl mb-1">Revisar e ativar</h2>
-              <p className="text-[#888] text-sm mb-4">Confira tudo antes de criar o agente.</p>
+            {/* Nome */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+                Nome do agente <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <input
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Ex: Marina, SDR Apex, Analista Comercial..."
+                style={{
+                  width: "100%", background: "#161b22", border: "1px solid #30363d",
+                  color: "#e6edf3", borderRadius: 8, padding: "10px 14px",
+                  fontSize: 14, outline: "none", boxSizing: "border-box",
+                }}
+              />
+            </div>
 
-              <div className="bg-white rounded-xl border border-[#e0ddd6] divide-y divide-[#f0ede6]">
-                {[
-                  { label: "Nome", value: nome || "—" },
-                  { label: "Cargo", value: cargo ? `${cargo.titulo} (N${cargo.nivel})` : "—" },
-                  { label: "Área", value: cargo?.area || "—" },
-                  { label: "Modelo IA", value: cargo ? MODELO_LABEL[cargo.modelo_padrao] : "—" },
-                  { label: "Supervisor", value: cargo?.supervisor_slug || "—" },
-                  { label: "Personalidade", value: perfil ? `${perfil.humor} + ${perfil.personalidade}` : "—" },
-                  { label: "Tom", value: perfil?.tom_comunicacao || "—" },
-                  { label: "Mercados", value: mercadosSel.join(", ") || "—" },
-                  { label: "Horário", value: `${horarioInicio} às ${horarioFim}` },
-                  { label: "Autonomia", value: cargo?.limite_autonomia_brl ? `R$${cargo.limite_autonomia_brl.toLocaleString("pt-BR")}` : "—" },
-                  { label: "Pode fazer", value: `${podeFazer.length} ações` },
-                  { label: "Conhecimento", value: `${conhecimentos.filter(c => c.conteudo.trim()).length} de ${SECOES_CONHECIMENTO.length} seções` },
-                  { label: "Tokens estimados", value: `~${tokensEstimados}` },
-                ].map(item => (
-                  <div key={item.label} className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-[#888] text-xs">{item.label}</span>
-                    <span className="text-[#1a1a1a] text-xs font-bold">{item.value}</span>
+            {/* Mercados */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 10 }}>
+                Mercados
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {MERCADOS_FIXOS.map((m) => {
+                  const sel = mercados.includes(m);
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => toggleMercado(m)}
+                      style={chip(sel)}
+                    >
+                      {m}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── PASSO 3 — PERSONALIDADE ─── */}
+        {passo === 3 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                Personalidade
+              </h2>
+              <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
+                Ajuste os 5 eixos para definir o estilo de comunicação do agente.
+              </p>
+            </div>
+
+            {EIXOS.map((eixo, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3" }}>{eixo.nome}</label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[1, 2, 3, 4, 5].map((v) => {
+                    const ativo = valores[i] === v;
+                    return (
+                      <button
+                        key={v}
+                        onClick={() => setValor(i, v)}
+                        style={{
+                          width: 36, height: 36, borderRadius: "50%", fontSize: 13, fontWeight: 700,
+                          cursor: "pointer", border: `2px solid ${ativo ? "#c9a24a" : "#30363d"}`,
+                          background: ativo ? "#c9a24a" : "#161b22",
+                          color: ativo ? "#003b26" : "#8b949e",
+                          transition: "all 150ms",
+                        }}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Preview personalidade */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: "#8b949e", display: "block", marginBottom: 8 }}>
+                RESULTADO
+              </label>
+              <pre
+                style={{
+                  background: "#161b22", border: "1px solid #30363d", borderRadius: 8,
+                  padding: 14, fontFamily: "monospace", fontSize: 12, color: "#8b949e",
+                  whiteSpace: "pre-wrap", lineHeight: 1.6, margin: 0,
+                }}
+              >
+                {personalidadeGerada}
+              </pre>
+            </div>
+          </div>
+        )}
+
+        {/* ─── PASSO 4 — CONHECIMENTO ─── */}
+        {passo === 4 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                Conhecimento
+              </h2>
+              <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
+                Preencha as seções que desejar — o agente usará estas informações.
+              </p>
+            </div>
+
+            {/* Abas */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {SECOES_CONHECIMENTO.map((s) => {
+                const temConteudo = !!conhecimento[s.id]?.trim();
+                const ativa = abaConhecimento === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setAbaConhecimento(s.id)}
+                    style={{
+                      padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+                      cursor: "pointer",
+                      border: `1px solid ${ativa ? "#c9a24a" : "#30363d"}`,
+                      background: ativa ? "#c9a24a22" : "#161b22",
+                      color: ativa ? "#c9a24a" : "#8b949e",
+                      display: "flex", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    {s.label}
+                    {temConteudo && (
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c9a24a", display: "inline-block" }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Textarea da aba ativa */}
+            {SECOES_CONHECIMENTO.filter((s) => s.id === abaConhecimento).map((s) => (
+              <div key={s.id}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+                  {s.label}
+                </label>
+                <textarea
+                  value={conhecimento[s.id] || ""}
+                  onChange={(e) => setConhecimento((prev) => ({ ...prev, [s.id]: e.target.value }))}
+                  placeholder={s.placeholder}
+                  rows={8}
+                  style={{
+                    width: "100%", background: "#161b22", border: "1px solid #30363d",
+                    color: "#e6edf3", borderRadius: 8, padding: "12px 14px",
+                    fontSize: 13, outline: "none", resize: "vertical", lineHeight: 1.6,
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ─── PASSO 5 — REVISÃO ─── */}
+        {passo === 5 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                Revisão
+              </h2>
+              <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
+                Confira tudo antes de criar o agente.
+              </p>
+            </div>
+
+            {/* Cargo */}
+            {cargoSelecionado && (
+              <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
+                <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 6px" }}>CARGO SELECIONADO</p>
+                <p style={{ color: "#e6edf3", fontSize: 14, fontWeight: 700, margin: "0 0 4px" }}>{cargoSelecionado.titulo}</p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {cargoSelecionado.nivel && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                      background: (NIVEL_COR[cargoSelecionado.nivel] || "#8b949e") + "22",
+                      color: NIVEL_COR[cargoSelecionado.nivel] || "#8b949e",
+                      border: `1px solid ${(NIVEL_COR[cargoSelecionado.nivel] || "#8b949e")}44`,
+                    }}>
+                      {cargoSelecionado.nivel}
+                    </span>
+                  )}
+                  {cargoSelecionado.segmento && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                      background: (SEGMENTO_COR[cargoSelecionado.segmento] || "#8b949e") + "22",
+                      color: SEGMENTO_COR[cargoSelecionado.segmento] || "#8b949e",
+                      border: `1px solid ${(SEGMENTO_COR[cargoSelecionado.segmento] || "#8b949e")}44`,
+                    }}>
+                      {cargoSelecionado.segmento}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Identidade */}
+            <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
+              {[
+                { label: "Nome", value: nome || "—" },
+                { label: "Mercados", value: mercados.join(", ") || "—" },
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "12px 16px", borderBottom: "1px solid #30363d",
+                  }}
+                >
+                  <span style={{ color: "#8b949e", fontSize: 12 }}>{row.label}</span>
+                  <span style={{ color: "#e6edf3", fontSize: 12, fontWeight: 700 }}>{row.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Personalidade preview */}
+            <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
+              <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>PERSONALIDADE</p>
+              <pre style={{
+                fontFamily: "monospace", fontSize: 11, color: "#8b949e",
+                whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.5,
+              }}>
+                {personalidadeGerada.slice(0, 300)}{personalidadeGerada.length > 300 ? "..." : ""}
+              </pre>
+            </div>
+
+            {/* Conhecimento preview */}
+            {SECOES_CONHECIMENTO.filter((s) => conhecimento[s.id]?.trim()).length > 0 && (
+              <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
+                <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, padding: "12px 16px", borderBottom: "1px solid #30363d" }}>
+                  CONHECIMENTO
+                </p>
+                {SECOES_CONHECIMENTO.filter((s) => conhecimento[s.id]?.trim()).map((s) => (
+                  <div key={s.id} style={{ padding: "10px 16px", borderBottom: "1px solid #30363d" }}>
+                    <p style={{ color: "#c9a24a", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>{s.label}</p>
+                    <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>
+                      {conhecimento[s.id].slice(0, 100)}{conhecimento[s.id].length > 100 ? "..." : ""}
+                    </p>
                   </div>
                 ))}
               </div>
+            )}
 
-              {erro && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">{erro}</div>}
+            {erro && (
+              <p style={{ color: "#ef4444", fontSize: 13, background: "#ef444411", border: "1px solid #ef444433", borderRadius: 8, padding: "10px 14px" }}>
+                {erro}
+              </p>
+            )}
 
-              <button onClick={salvar} disabled={salvando || !cargo || !nome.trim()}
-                className="w-full font-black py-4 rounded-xl text-base transition-colors disabled:opacity-50"
-                style={{ background: "#003b26", color: "#c9a24a" }}>
-                {salvando ? "Criando agente..." : "✓ Criar e Ativar Agente"}
-              </button>
-            </div>
+            {/* Botão criar */}
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={!cargoSelecionado || !nome.trim()}
+              style={{
+                padding: "14px 0", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                background: "#003b26", border: "none", color: "#c9a24a",
+                cursor: (!cargoSelecionado || !nome.trim()) ? "not-allowed" : "pointer",
+                opacity: (!cargoSelecionado || !nome.trim()) ? 0.4 : 1,
+              }}
+            >
+              Criar agente
+            </button>
+          </div>
+        )}
+
+        {/* NAVEGAÇÃO */}
+        <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+          {passo > 1 && (
+            <button
+              onClick={() => setPasso((p) => p - 1)}
+              style={{
+                flex: 1, padding: "12px 0", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                background: "transparent", border: "1px solid #30363d", color: "#8b949e",
+                cursor: "pointer",
+              }}
+            >
+              ← Anterior
+            </button>
           )}
-
-          {/* NAVEGAÇÃO */}
-          <div className="flex gap-3 pt-2">
-            {passo > 1 && (
-              <button onClick={() => setPasso(p => p - 1)}
-                className="flex-1 py-3 rounded-xl font-black border-2 border-[#003b26] text-[#003b26] transition-all hover:bg-[#003b26] hover:text-white">
-                ← Anterior
-              </button>
-            )}
-            {passo < totalPassos && (
-              <button onClick={() => setPasso(p => p + 1)}
-                disabled={passo === 1 && !cargo}
-                className="flex-1 py-3 rounded-xl font-black text-white transition-colors disabled:opacity-40"
-                style={{ background: "#003b26" }}>
-                Próximo →
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* PREVIEW DO PROMPT */}
-        <div className="w-80 flex-shrink-0">
-          <div className="sticky top-20 rounded-xl overflow-hidden" style={{ background: "#003b26" }}>
-            <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-              <p className="text-[#c9a24a] text-xs font-black uppercase tracking-wide">Preview do System Prompt</p>
-              <p className="text-white text-xs opacity-50 mt-0.5">Gerado automaticamente do cargo + personalidade</p>
-              <p className="text-[#c9a24a] text-xs mt-1">~{tokensEstimados} tokens</p>
-            </div>
-            <div className="p-4 max-h-[65vh] overflow-y-auto">
-              <pre className="text-green-300 text-xs font-mono whitespace-pre-wrap leading-relaxed">{previewPrompt}</pre>
-            </div>
-          </div>
+          {passo < 5 && (
+            <button
+              onClick={() => setPasso((p) => p + 1)}
+              disabled={passo === 1 ? !cargoSelecionado : passo === 2 ? !nome.trim() : false}
+              style={{
+                flex: 1, padding: "12px 0", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                background: "#003b26", border: "none", color: "#c9a24a",
+                cursor: (passo === 1 && !cargoSelecionado) || (passo === 2 && !nome.trim()) ? "not-allowed" : "pointer",
+                opacity: (passo === 1 && !cargoSelecionado) || (passo === 2 && !nome.trim()) ? 0.4 : 1,
+              }}
+            >
+              Próximo →
+            </button>
+          )}
         </div>
       </div>
     </div>

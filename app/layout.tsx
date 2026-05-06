@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Poppins, Playfair_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import MobileDetector from "@/components/mobile/MobileDetector";
-import PWAProvider from "@/components/PWAProvider";
 import IOSInstallBanner from "@/components/IOSInstallBanner";
 
 const poppins = Poppins({
@@ -74,11 +73,10 @@ export default function RootLayout({
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
-        <link rel="preload" as="image" href="/sprites/office-bg.png" />
+        <link rel="preload" as="image" href="/sprites/office-bg.webp" type="image/webp" />
       </head>
       <body className={`${poppins.className} min-h-full flex flex-col`}>
         <MobileDetector>{children}</MobileDetector>
-        <PWAProvider />
         <IOSInstallBanner />
       </body>
     </html>

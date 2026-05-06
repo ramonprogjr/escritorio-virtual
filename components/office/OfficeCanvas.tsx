@@ -222,7 +222,7 @@ export function OfficeCanvas({
   /* load background */
   useEffect(() => {
     const img = new Image();
-    img.src = "/sprites/office-bg.png";
+    img.src = "/sprites/office-bg.webp";
     img.onload = () => { bgRef.current = img; };
   }, []);
 

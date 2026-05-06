@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><title>SW Reset</title></head>
+<body>
+<h2>Limpando Service Worker...</h2>
+<pre id="log"></pre>
+<script>
+const log = document.getElementById('log');
+function w(t) { log.textContent += t + '\n'; }
+(async () => {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    w('SWs encontrados: ' + regs.length);
+    for (const r of regs) {
+      const ok = await r.unregister();
+      w('Removido: ' + r.scope + ' => ' + ok);
+    }
+    const keys = await caches.keys();
+    w('Caches encontrados: ' + keys.length);
+    for (const k of keys) {
+      await caches.delete(k);
+      w('Cache deletado: ' + k);
+    }
+    w('\nTudo limpo! Redirecionando em 3s...');
+    setTimeout(() => window.location.href = '/', 3000);
+  } catch(e) { w('Erro: ' + e.message); }
+})();
+</script>
+</body></html>

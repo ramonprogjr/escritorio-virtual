@@ -21,7 +21,12 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--obra-dark, #0d1117)" }}>
+    <div className="flex h-screen overflow-hidden" style={{
+      backgroundImage: "url(/sprites/office-bg.webp)",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundAttachment: "fixed",
+    }}>
       {/* SIDEBAR — hidden on mobile */}
       <div className="hidden md:flex w-16 flex-shrink-0 flex-col items-center py-4 gap-1" style={{ background: "var(--obra-dark-2, #161b22)", borderRight: "1px solid var(--obra-borda, #30363d)" }}>
         <Link href="/office"

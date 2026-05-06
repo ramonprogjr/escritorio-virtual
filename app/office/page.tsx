@@ -8,6 +8,7 @@ import FFTAgentNode from "@/components/office/FFTAgentNode";
 import FFTLeadNode from "@/components/office/FFTLeadNode";
 import AnalyticsPanel from "@/components/office/AnalyticsPanel";
 import { MAPA_AGENTES, CORES_AREA, TAMANHO_NIVEL, getInitials } from "@/lib/data/office-map";
+import MobileAgentDrawer from "@/components/mobile/MobileAgentDrawer";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,129 +46,215 @@ interface Agente {
   ativo: boolean;
 }
 
-function MobileOfficeView({ leads, agentes, metricas }: {
+interface AgenteMap {
+  agente_slug: string;
+  nome: string;
+  cargo: string;
+  area: string;
+  nivel: number;
+  ativo: boolean;
+  pos_mobile_x: number;
+  pos_mobile_y: number;
+  sala_id: string;
+  cor_departamento: string;
+  modelo_padrao: string;
+  leads_atendendo: number;
+}
+
+interface AgenteDetalhes {
+  agente_slug: string;
+  nome: string;
+  cargo: string;
+  area: string;
+  nivel: number;
+  ativo: boolean;
+  cor_departamento: string;
+  modelo_padrao: string;
+  sala_id: string;
+  conhecimento: { secao: string; titulo: string }[];
+  conversas_ativas: { id: string; nome: string; estagio: string; origem: string; atualizado_em: string }[];
+  stats: { atendendo: number; atendidos_hoje: number; conversao_pct: number };
+}
+
+function MobileOfficeView({ leads, metricas }: {
   leads: Lead[];
-  agentes: Agente[];
   metricas: { leadsAguardando: number; aprovacoesPendentes: number; leadsHoje: number };
 }) {
   const router = useRouter();
-  const agentesAtivos = agentes.filter(ag => ag.ativo === true);
+  const [agentesMap, setAgentesMap] = useState<AgenteMap[]>([]);
+  const [drawerData, setDrawerData] = useState<AgenteDetalhes | null>(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/agentes/mobile")
+      .then(r => r.json())
+      .then(setAgentesMap)
+      .catch(() => {});
+  }, []);
+
+  async function abrirAgente(slug: string) {
+    setDrawerLoading(true);
+    try {
+      const r = await fetch(`/api/agentes/${slug}/detalhes`);
+      const data = await r.json();
+      setDrawerData(data);
+    } finally {
+      setDrawerLoading(false);
+    }
+  }
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#0d1117" }}>
+    <div style={{ display: "flex", flexDirection: "column", background: "#0d1117" }}>
 
-      {/* Header — safe-area-inset-top para não sobrepor status bar */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4"
-        style={{
-          background: "#161b22",
-          borderBottom: "1px solid #30363d",
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
-          paddingBottom: "12px",
-        }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm"
-            style={{ background: "linear-gradient(135deg, #003b26, #005c3d)" }}>O+</div>
+      {/* Header */}
+      <div style={{
+        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 16px",
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
+        background: "#161b22", borderBottom: "1px solid #30363d",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center",
+            justifyContent: "center", fontWeight: 900, color: "white", fontSize: 14,
+            background: "linear-gradient(135deg, #003b26, #005c3d)",
+          }}>O+</div>
           <div>
-            <p className="text-white font-black text-sm leading-none" style={{ letterSpacing: "0.04em" }}>OBRA10+</p>
-            <p className="leading-none mt-0.5" style={{ color: "#c9a24a", fontSize: "9px", letterSpacing: "0.1em" }}>ESCRITÓRIO VIRTUAL</p>
+            <p style={{ color: "white", fontWeight: 900, fontSize: 14, lineHeight: 1, letterSpacing: "0.04em" }}>OBRA10+</p>
+            <p style={{ color: "#c9a24a", fontSize: 9, letterSpacing: "0.1em", marginTop: 2 }}>ESCRITÓRIO VIRTUAL</p>
           </div>
         </div>
         {metricas.aprovacoesPendentes > 0 && (
-          <button onClick={() => router.push("/crm/aprovacoes")}
-            className="px-2 py-1 rounded-full text-xs font-bold"
-            style={{ background: "#b3261e", color: "white" }}>
+          <button
+            onClick={() => router.push("/crm/aprovacoes")}
+            style={{ background: "#b3261e", color: "white", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer" }}>
             🔴 {metricas.aprovacoesPendentes} crítico(s)
           </button>
         )}
       </div>
 
-      {/* EQUIPE ONLINE — grid de agentes ativos (só FFTAgentNode, sem leads) */}
-      {agentesAtivos.length > 0 && (
-        <div className="flex-shrink-0 px-3 pt-3 pb-2" style={{ borderBottom: "1px solid #30363d" }}>
-          <p className="text-xs font-black mb-2" style={{ color: "#484f58", letterSpacing: "0.08em" }}>
-            EQUIPE ONLINE · {agentesAtivos.length}
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 6px" }}>
-            {agentesAtivos.map(ag => {
-              const cor = CORES_AREA[ag.area] || "#c9a24a";
-              return (
-                <button
-                  key={ag.agente_slug}
-                  onClick={() => router.push(`/crm/agentes/${ag.agente_slug}`)}
-                  className="flex flex-col items-center gap-1"
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                  <div
-                    className="flex items-center justify-center font-black text-white rounded-full"
-                    style={{
-                      width: 52, height: 52,
-                      background: `radial-gradient(circle at 35% 35%, ${cor}55, #0d1117)`,
-                      border: `2px solid ${cor}`,
-                      boxShadow: `0 0 12px ${cor}44`,
-                      fontSize: "13px",
-                      flexShrink: 0,
-                    }}>
-                    {getInitials(ag.cargo)}
-                  </div>
-                  <p
-                    className="text-center w-full truncate leading-tight"
-                    style={{ color: "#8b949e", fontSize: "9px" }}>
-                    {ag.nome.split(" ")[0]}
-                  </p>
-                </button>
-              );
-            })}
+      {/* Mapa — img com width:100% height:auto para evitar colapso no Safari iOS */}
+      <div style={{ width: "100%", position: "relative", background: "#0a0a0a" }}>
+        <img
+          src="/sprites/office-mobile-bg.webp"
+          alt=""
+          style={{ width: "100%", height: "auto", display: "block" }}
+          loading="eager"
+          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+
+        {agentesMap.map(ag => {
+          const tamanho = ag.ativo && ag.leads_atendendo > 0 ? 36 : ag.ativo ? 28 : 22;
+          const opacity = ag.ativo ? 1 : 0.35;
+          const cor = ag.cor_departamento || "#c9a24a";
+          return (
+            <button
+              key={ag.agente_slug}
+              onClick={() => { if (ag.ativo) abrirAgente(ag.agente_slug); }}
+              style={{
+                position: "absolute",
+                left: `${ag.pos_mobile_x}%`,
+                top: `${ag.pos_mobile_y}%`,
+                transform: "translate(-50%, -50%)",
+                width: tamanho,
+                height: tamanho,
+                borderRadius: "50%",
+                background: `radial-gradient(circle at 35% 35%, ${cor}55, #0d1117)`,
+                border: `${ag.leads_atendendo > 0 ? 2.5 : 2}px solid ${cor}`,
+                boxShadow: ag.ativo ? `0 0 ${ag.leads_atendendo > 0 ? 14 : 8}px ${cor}55` : "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", fontWeight: 900, fontSize: Math.round(tamanho * 0.32),
+                opacity, cursor: ag.ativo ? "pointer" : "default", padding: 0,
+              }}>
+              {getInitials(ag.cargo)}
+              {ag.leads_atendendo > 0 && (
+                <div style={{
+                  position: "absolute", top: -3, right: -3,
+                  width: 14, height: 14, borderRadius: "50%",
+                  background: "#b3261e", border: "1.5px solid #0d1117",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "white", fontSize: 8, fontWeight: 900,
+                }}>
+                  {ag.leads_atendendo > 9 ? "9+" : ag.leads_atendendo}
+                </div>
+              )}
+            </button>
+          );
+        })}
+
+        {drawerLoading && (
+          <div style={{
+            position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{ color: "white", fontSize: 28, letterSpacing: 4 }}>⋯</div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Métricas rápidas */}
-      <div className="flex-shrink-0 grid grid-cols-4 gap-0"
-        style={{ borderBottom: "1px solid #30363d" }}>
+      <div style={{
+        flexShrink: 0, display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+        background: "#161b22", borderBottom: "1px solid #30363d",
+      }}>
         {[
-          { label: "Leads",     valor: leads.length,                   rota: "/crm/leads",       cor: "#c9a24a" },
-          { label: "Aguard.",   valor: metricas.leadsAguardando,        rota: "/crm/atendimento", cor: metricas.leadsAguardando > 0 ? "#c9a24a" : "#8b949e" },
-          { label: "Msgs",      valor: 0,                              rota: "/crm/atendimento", cor: "#8b949e" },
-          { label: "Aprov.",    valor: metricas.aprovacoesPendentes,    rota: "/crm/aprovacoes",  cor: metricas.aprovacoesPendentes > 0 ? "#b3261e" : "#8b949e" },
+          { label: "Leads",   valor: leads.length,                  rota: "/crm/leads",       cor: "#c9a24a" },
+          { label: "Aguard.", valor: metricas.leadsAguardando,       rota: "/crm/atendimento", cor: metricas.leadsAguardando > 0 ? "#c9a24a" : "#8b949e" },
+          { label: "Hoje",    valor: metricas.leadsHoje,             rota: "/crm/leads",       cor: "#8b949e" },
+          { label: "Aprov.",  valor: metricas.aprovacoesPendentes,   rota: "/crm/aprovacoes",  cor: metricas.aprovacoesPendentes > 0 ? "#b3261e" : "#8b949e" },
         ].map((m, i) => (
-          <button key={m.label} onClick={() => router.push(m.rota)}
-            className="flex flex-col items-center py-3"
-            style={{ borderRight: i < 3 ? "1px solid #30363d" : "none", background: "#161b22", border: "none", cursor: "pointer" }}>
-            <p className="text-lg font-black leading-none" style={{ color: m.cor }}>{m.valor}</p>
-            <p className="text-xs mt-0.5" style={{ color: "#484f58" }}>{m.label}</p>
+          <button key={m.label} onClick={() => router.push(m.rota)} style={{
+            display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0",
+            borderTop: "none", borderBottom: "none", borderLeft: "none",
+            borderRight: i < 3 ? "1px solid #30363d" : "none",
+            background: "none", cursor: "pointer",
+          }}>
+            <p style={{ color: m.cor, fontWeight: 900, fontSize: 18, lineHeight: 1 }}>{m.valor}</p>
+            <p style={{ color: "#484f58", fontSize: 10, marginTop: 2 }}>{m.label}</p>
           </button>
         ))}
       </div>
 
-      {/* LEADS ATIVOS — lista de cards (sem bolinhas flutuantes) */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
-        <p className="text-xs font-black mb-2" style={{ color: "#c9a24a", letterSpacing: "0.08em" }}>LEADS ATIVOS</p>
-        <div className="space-y-2">
-          {leads.length === 0 ? (
-            <p className="text-xs text-center py-4" style={{ color: "#484f58" }}>Nenhum lead ativo</p>
-          ) : leads.slice(0, 6).map(lead => {
-            const mins = (Date.now() - new Date(lead.atualizado_em).getTime()) / 60000;
-            const cor = mins > 15 ? "#b3261e" : mins > 5 ? "#c9a24a" : "#003b26";
-            const tempo = mins < 1 ? "agora" : mins < 60 ? `${Math.round(mins)}min` : `${Math.round(mins / 60)}h`;
-            return (
-              <button key={lead.id}
-                onClick={() => router.push(`/crm/leads/${lead.id}`)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
-                style={{ background: "#161b22", border: `1px solid #30363d`, borderLeft: `3px solid ${cor}` }}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-white text-sm flex-shrink-0"
-                  style={{ background: `${cor}33`, border: `1px solid ${cor}` }}>
-                  {lead.nome.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-bold text-sm truncate">{lead.nome}</p>
-                  <p className="text-xs truncate" style={{ color: "#484f58" }}>{lead.estagio} · {lead.origem}</p>
-                </div>
-                <span className="text-xs font-bold flex-shrink-0" style={{ color: cor }}>{tempo}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Leads ativos */}
+      <div style={{ padding: "10px 12px" }}>
+        <p style={{ color: "#c9a24a", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8 }}>LEADS ATIVOS</p>
+        {leads.length === 0 ? (
+          <p style={{ color: "#484f58", fontSize: 12, textAlign: "center", padding: "16px 0" }}>Nenhum lead ativo</p>
+        ) : leads.slice(0, 8).map(lead => {
+          const mins = (Date.now() - new Date(lead.atualizado_em).getTime()) / 60000;
+          const corLead = mins > 15 ? "#b3261e" : mins > 5 ? "#c9a24a" : "#3fb950";
+          const tempo = mins < 1 ? "agora" : mins < 60 ? `${Math.round(mins)}min` : `${Math.round(mins / 60)}h`;
+          return (
+            <button key={lead.id} onClick={() => router.push(`/crm/leads/${lead.id}`)} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "8px 12px", borderRadius: 12, marginBottom: 6,
+              background: "#161b22",
+              borderTop: "1px solid #30363d", borderBottom: "1px solid #30363d", borderRight: "1px solid #30363d",
+              borderLeft: `3px solid ${corLead}`,
+              width: "100%", textAlign: "left", cursor: "pointer",
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                background: `${corLead}33`, border: `1px solid ${corLead}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", fontWeight: 900, fontSize: 14,
+              }}>
+                {lead.nome.charAt(0)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ color: "white", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lead.nome}</p>
+                <p style={{ color: "#484f58", fontSize: 11 }}>{lead.estagio} · {lead.origem}</p>
+              </div>
+              <span style={{ color: corLead, fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{tempo}</span>
+            </button>
+          );
+        })}
+
+        {/* Espaço inferior para não ficar colado na bottom nav sticky */}
+        <div style={{ height: 16 }} />
       </div>
 
+      <MobileAgentDrawer agente={drawerData} onClose={() => setDrawerData(null)} />
     </div>
   );
 }
@@ -183,10 +270,8 @@ export default function OfficePage() {
   const [transitioning, setTransitioning] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    setIsMobile(isMobileDevice);
   }, []);
 
   const carregar = useCallback(async () => {
@@ -225,7 +310,7 @@ export default function OfficePage() {
   }
 
   if (isMobile === null) return null;
-  if (isMobile) return <MobileOfficeView leads={leads} agentes={agentes} metricas={metricas} />;
+  if (isMobile) return <MobileOfficeView leads={leads} metricas={metricas} />;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -345,7 +430,7 @@ export default function OfficePage() {
                 Garante que left/top em % batem exatamente com as coordenadas do JSON. */}
             <div className="relative" style={{ aspectRatio: "1672 / 941", width: "100%", maxHeight: "100%" }}>
               <img
-                src="/sprites/office-bg.png"
+                src="/sprites/office-bg.webp"
                 className="absolute inset-0 w-full h-full"
                 style={{ objectFit: "fill" }}
                 loading="eager"

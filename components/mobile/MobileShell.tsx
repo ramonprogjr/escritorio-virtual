@@ -107,7 +107,7 @@ export default function MobileShell({ children }: Props) {
   if (pathname.startsWith("/parceiro/")) return <>{children}</>;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "#0d1117" }}>
+    <div className="flex flex-col min-h-screen" style={{ background: "#0d1117" }}>
       {pathname !== "/office" && (
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
           style={{
@@ -147,12 +147,13 @@ export default function MobileShell({ children }: Props) {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1">
         {children}
       </div>
 
       <div className="flex-shrink-0"
         style={{
+          position: "sticky", bottom: 0, zIndex: 10,
           background: "#161b22",
           borderTop: "1px solid #30363d",
           paddingBottom: "env(safe-area-inset-bottom, 8px)",

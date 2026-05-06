@@ -8,10 +8,8 @@ export default function MobileDetector({ children }: Props) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    setIsMobile(isMobileDevice);
   }, []);
 
   if (isMobile === null) {

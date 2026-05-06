@@ -1,475 +1,789 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
-import { fetchCargosCatalogo, fetchPerfisPersonalidade, fetchMercados } from "@/lib/supabase/catalogos";
-import type { CargoCatalogo, PerfilPersonalidade, MercadoCatalogo } from "@/lib/supabase/catalogos";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const HUMORES_ORD    = ["Analítico","Criativo","Pragmático","Empático","Competitivo"];
-const PERS_ORD       = ["Formal","Casual","Assertivo","Entusiasta","Estratégico"];
-const MODELOS = [
-  { id: "claude-haiku-4-5-20251001", label: "Haiku — Rápido e econômico" },
-  { id: "claude-sonnet-4-6", label: "Sonnet — Equilibrado" },
-  { id: "claude-opus-4-7", label: "Opus — Mais poderoso" },
+const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
+
+const SEGMENTO_COR: Record<string, string> = {
+  Marketing: "#3b82f6",
+  Comercial: "#10b981",
+  Operações: "#f59e0b",
+};
+
+const NIVEL_COR: Record<string, string> = {
+  N2: "#a855f7",
+  N3: "#2dd4bf",
+  N4: "#fbbf24",
+};
+
+const DIAS_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+const EIXOS = [
+  {
+    nome: "Analítico / Criativo",
+    frases: [
+      "Baseie todas as respostas em dados e lógica. Evite linguagem subjetiva.",
+      "Priorize dados, mas use analogias simples para clareza quando necessário.",
+      "Equilibre argumentos racionais com exemplos práticos e linguagem acessível.",
+      "Use linguagem envolvente, exemplos criativos e storytelling leve.",
+      "Seja criativo, use metáforas e linguagem que engaje emocionalmente.",
+    ],
+  },
+  {
+    nome: "Formal / Informal",
+    frases: [
+      "Mantenha linguagem completamente formal. Sem contrações nem gírias.",
+      "Linguagem profissional e clara, pode usar contrações ocasionalmente.",
+      "Tom neutro e acessível, nem muito formal nem coloquial.",
+      "Linguagem descontraída e próxima, como conversa entre colegas.",
+      "Totalmente informal: uso de gírias leves e tom de conversa casual.",
+    ],
+  },
+  {
+    nome: "Direto / Detalhista",
+    frases: [
+      "Seja extremamente conciso. Máximo 2 frases por resposta.",
+      "Respostas curtas com a informação essencial. Evite explicações longas.",
+      "Resposta completa mas sem excessos. Explique o necessário.",
+      "Inclua contexto e justificativas relevantes nas respostas.",
+      "Seja completo e detalhado. Antecipe dúvidas e inclua exemplos.",
+    ],
+  },
+  {
+    nome: "Conservador / Arrojado",
+    frases: [
+      "Seja cauteloso. Prefira caminhos testados e seguros. Aponte riscos.",
+      "Sugira caminhos tradicionais como padrão, mas apresente alternativas.",
+      "Equilibre sugestões convencionais com oportunidades inovadoras.",
+      "Proponha abordagens ousadas e diferenciadas. Destaque oportunidades.",
+      "Seja provocador e disruptivo. Proponha ideias inovadoras.",
+    ],
+  },
+  {
+    nome: "Empático / Objetivo",
+    frases: [
+      "Priorize o lado humano: valide sentimentos antes de resolver.",
+      "Reconheça o contexto emocional antes de apresentar soluções.",
+      "Equilibre empatia e objetividade. Valide brevemente e siga para a solução.",
+      "Foque na solução e nos resultados práticos. Seja cordial mas eficiente.",
+      "Totalmente focado em resultado e eficiência. Sem rodeios emocionais.",
+    ],
+  },
 ];
-const NIVEL_COR: Record<number, string> = {
-  1: "#b3261e", 2: "#f97316", 3: "#eab308", 4: "#3b82f6", 5: "#6b7280",
-};
-const NIVEL_LABEL: Record<number, string> = {
-  1: "CEO", 2: "Diretor", 3: "Gerente", 4: "Executor", 5: "Especialista",
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function iniciais(nome: string): string {
+  return (nome || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() || "")
+    .join("");
+}
+
+function gerarPersonalidade(valores: number[]): string {
+  return (
+    "## Tom e estilo de comunicação\n\n" +
+    EIXOS.map((e, i) => e.frases[valores[i] - 1]).join("\n")
+  );
+}
+
+function nivelTag(nivel: string | number | undefined): string {
+  if (nivel === undefined || nivel === null) return "";
+  return typeof nivel === "number" ? `N${nivel}` : nivel;
+}
+
+function parsearValores(texto: string): number[] {
+  const linhas = (texto || "").split("\n").filter((l) => l.trim() && !l.startsWith("#"));
+  return EIXOS.map((eixo, i) => {
+    const idx = eixo.frases.findIndex((f) => linhas[i]?.trim() === f.trim());
+    return idx >= 0 ? idx + 1 : 3;
+  });
+}
+
+type Agente = {
+  agente_slug: string;
+  nome: string;
+  cargo?: string;
+  area?: string;
+  segmento?: string;
+  nivel?: string | number;
+  modelo_padrao?: string;
+  prefixo_mercado?: string;
+  personalidade?: string;
+  bio?: string;
+  tom_voz?: string;
+  estilo_comunicacao?: string;
+  system_prompt_base?: string;
+  horario_inicio?: string;
+  horario_fim?: string;
+  dias_semana?: number[];
+  arquivado_em?: string | null;
+  ativo?: boolean;
+  [key: string]: unknown;
 };
 
-interface CargoItem { cargo: string; area: string; mercados?: string[]; ativo: boolean; }
-type Aba = "basico" | "cargos" | "personalidade" | "conhecimento" | "regras";
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function EditarAgentePage() {
+export default function AgentePage() {
   const params = useParams();
   const router = useRouter();
   const slug = params?.slug as string;
 
-  const [agente, setAgente] = useState<Record<string, unknown> | null>(null);
-  const [conhecimentos, setConhecimentos] = useState<Record<string, unknown>[]>([]);
-  const [personalidade, setPersonalidade] = useState<Record<string, unknown> | null>(null);
-  const [aba, setAba] = useState<Aba>("basico");
+  const [agente, setAgente] = useState<Agente | null>(null);
+  const [carregando, setCarregando] = useState(true);
+
+  // Campos editáveis
+  const [nome, setNome] = useState("");
+  const [mercados, setMercados] = useState<string[]>([]);
+  const [valores, setValores] = useState<number[]>([3, 3, 3, 3, 3]);
+  const [horarioInicio, setHorarioInicio] = useState("08:00");
+  const [horarioFim, setHorarioFim] = useState("22:00");
+  const [diasSemana, setDiasSemana] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
+
+  const [bio, setBio] = useState("");
+  const [tomVoz, setTomVoz] = useState("");
+  const [estiloComunicacao, setEstiloComunicacao] = useState("");
+  const [systemPromptBase, setSystemPromptBase] = useState("");
+
+  // UI state
+  const [showArquivar, setShowArquivar] = useState(false);
+  const [motivoArquivamento, setMotivoArquivamento] = useState("");
+  const [arquivando, setArquivando] = useState(false);
+  const [showConfirmSalvar, setShowConfirmSalvar] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [mensagem, setMensagem] = useState("");
-  const [cargos, setCargos] = useState<CargoCatalogo[]>([]);
-  const [perfis, setPerfis] = useState<PerfilPersonalidade[]>([]);
-  const [mercadosCat, setMercadosCat] = useState<MercadoCatalogo[]>([]);
+  const [toast, setToast] = useState("");
+  const [erro, setErro] = useState("");
 
-  useEffect(() => { if (slug) carregar(); }, [slug]);
+  const carregar = useCallback(async () => {
+    if (!slug) return;
+    setCarregando(true);
+    try {
+      const res = await fetch(`/api/hub/agentes/${slug}`);
+      if (res.ok) {
+        const data = (await res.json()) as Agente;
+        setAgente(data);
+        // Popular campos editáveis
+        setNome(data.nome || "");
+        setMercados(
+          (data.prefixo_mercado || "")
+            .split(",")
+            .map((m: string) => m.trim())
+            .filter(Boolean)
+        );
+        setValores(parsearValores(data.personalidade || ""));
+        setHorarioInicio(data.horario_inicio || "08:00");
+        setHorarioFim(data.horario_fim || "22:00");
+        setDiasSemana(data.dias_semana || [0, 1, 2, 3, 4, 5, 6]);
+        setBio(data.bio || "");
+        setTomVoz(data.tom_voz || "");
+        setEstiloComunicacao(data.estilo_comunicacao || "");
+        setSystemPromptBase(data.system_prompt_base || "");
+      }
+    } catch {
+      // silencioso
+    } finally {
+      setCarregando(false);
+    }
+  }, [slug]);
 
-  async function carregar() {
-    const [a, c, p, cargosData, perfisData, mercadosData] = await Promise.all([
-      supabase.from("hub_agente_identidade").select("*").eq("agente_slug", slug).single(),
-      supabase.from("hub_agente_conhecimento").select("*").eq("agente_slug", slug).order("ordem"),
-      supabase.from("hub_personalidade").select("*").eq("agente_slug", slug).maybeSingle(),
-      fetchCargosCatalogo(),
-      fetchPerfisPersonalidade(),
-      fetchMercados(),
-    ]);
-    if (a.data) setAgente(a.data);
-    if (c.data) setConhecimentos(c.data);
-    if (p.data) setPersonalidade(p.data);
-    setCargos(cargosData);
-    setPerfis(perfisData);
-    setMercadosCat(mercadosData);
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  function toggleMercado(m: string) {
+    setMercados((prev) =>
+      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]
+    );
+  }
+
+  function toggleDia(d: number) {
+    setDiasSemana((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()
+    );
+  }
+
+  function setValor(i: number, v: number) {
+    setValores((prev) => {
+      const n = [...prev];
+      n[i] = v;
+      return n;
+    });
+  }
+
+  async function confirmarArquivamento() {
+    if (motivoArquivamento.trim().length < 10) return;
+    setArquivando(true);
+    try {
+      const res = await fetch(`/api/hub/agentes/${slug}/arquivar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motivo: motivoArquivamento.trim() }),
+      });
+      if (res.ok) {
+        router.push("/crm/agentes");
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { erro?: string };
+        setErro(data.erro || "Falha ao arquivar.");
+        setShowArquivar(false);
+      }
+    } catch {
+      setErro("Falha na requisição.");
+      setShowArquivar(false);
+    } finally {
+      setArquivando(false);
+    }
   }
 
   async function salvar() {
     if (!agente) return;
     setSalvando(true);
-    await supabase.from("hub_agente_identidade").update({
-      nome: agente.nome,
-      cargo: agente.cargo,
-      area: agente.area,
-      bio: agente.bio,
-      cargos: agente.cargos,
-      modelo_padrao: agente.modelo_padrao,
-      pode_fazer: agente.pode_fazer,
-      nao_pode_fazer: agente.nao_pode_fazer,
-      prefixo_mercado: agente.prefixo_mercado,
-      ativo: agente.ativo,
-    }).eq("agente_slug", slug);
-
-    if (personalidade) {
-      await supabase.from("hub_personalidade").upsert({
-        agente_slug: slug,
-        humor: personalidade.humor,
-        personalidade: personalidade.personalidade,
-        humor_label: HUMORES_ORD[((personalidade.humor as number) || 1) - 1],
-        personalidade_label: PERS_ORD[((personalidade.personalidade as number) || 1) - 1],
-        descricao_comportamento: personalidade.descricao_comportamento,
-        tom_comunicacao: personalidade.tom_comunicacao,
+    setErro("");
+    try {
+      const res = await fetch(`/api/hub/agentes/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome,
+          prefixo_mercado: mercados.join(","),
+          personalidade: gerarPersonalidade(valores),
+          horario_inicio: horarioInicio,
+          horario_fim: horarioFim,
+          dias_semana: diasSemana,
+          bio,
+          tom_voz: tomVoz,
+          estilo_comunicacao: estiloComunicacao,
+          system_prompt_base: systemPromptBase,
+        }),
       });
-    }
-    setMensagem("✓ Salvo");
-    setTimeout(() => setMensagem(""), 3000);
-    setSalvando(false);
-  }
-
-  function update(campo: string, valor: unknown) {
-    if (!agente) return;
-    setAgente({ ...agente, [campo]: valor });
-  }
-
-  function adicionarCargo() {
-    const cargos = (agente?.cargos as CargoItem[]) || [];
-    update("cargos", [...cargos, { cargo: "Novo cargo", area: "Atendimento", ativo: true }]);
-  }
-
-  function removerCargo(i: number) {
-    const cargos = ((agente?.cargos as CargoItem[]) || []).filter((_, idx) => idx !== i);
-    update("cargos", cargos);
-  }
-
-  function updateCargo(i: number, campo: string, valor: unknown) {
-    const cargos = ((agente?.cargos as CargoItem[]) || []).map((c, idx) =>
-      idx === i ? { ...c, [campo]: valor } : c
-    );
-    update("cargos", cargos);
-  }
-
-  function adicionarConhecimento(secao: string) {
-    setConhecimentos(prev => [...prev, { agente_slug: slug, secao, titulo: "Novo item", conteudo: "", ordem: prev.length, ativo: true }]);
-  }
-
-  async function salvarConhecimento(item: Record<string, unknown>, idx: number) {
-    if (item.id) {
-      await supabase.from("hub_agente_conhecimento").update({ titulo: item.titulo, conteudo: item.conteudo, ativo: item.ativo }).eq("id", item.id);
-    } else {
-      const { data } = await supabase.from("hub_agente_conhecimento").insert({
-        agente_slug: slug, secao: item.secao, titulo: item.titulo, conteudo: item.conteudo, ordem: idx, ativo: true,
-      }).select().single();
-      if (data) {
-        const novos = [...conhecimentos];
-        novos[idx] = data;
-        setConhecimentos(novos);
+      if (res.ok) {
+        setToast("✓ Salvo");
+        setTimeout(() => setToast(""), 3000);
+        setShowConfirmSalvar(false);
+        await carregar();
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { erro?: string; error?: string };
+        setErro(data.erro || data.error || "Erro ao salvar.");
+        setShowConfirmSalvar(false);
       }
+    } catch {
+      setErro("Falha na requisição.");
+      setShowConfirmSalvar(false);
+    } finally {
+      setSalvando(false);
     }
-    setMensagem("✓ Salvo");
-    setTimeout(() => setMensagem(""), 2000);
   }
 
-  async function deletarConhecimento(item: Record<string, unknown>, idx: number) {
-    if (item.id) await supabase.from("hub_agente_conhecimento").delete().eq("id", item.id);
-    setConhecimentos(conhecimentos.filter((_, i) => i !== idx));
+  if (carregando) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0d1117", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando agente...</p>
+      </div>
+    );
   }
 
   if (!agente) {
     return (
-      <div style={{ background: "#0d1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#8b949e", fontSize: 14 }}>Carregando agente...</div>
+      <div style={{ minHeight: "100vh", background: "#0d1117", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <p style={{ color: "#8b949e", fontSize: 13 }}>Agente não encontrado.</p>
+        <button
+          onClick={() => router.push("/crm/agentes")}
+          style={{
+            padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+            background: "#161b22", border: "1px solid #30363d", color: "#8b949e", cursor: "pointer",
+          }}
+        >
+          ← Voltar para agentes
+        </button>
       </div>
     );
   }
 
-  const cargosAgente = (agente.cargos as CargoItem[]) || [];
-  const SECOES = [
-    { id: "empresa", label: "🏢 Sobre o negócio" },
-    { id: "servicos", label: "🛠 Serviços" },
-    { id: "atendimento", label: "💬 Como atender" },
-    { id: "proibicoes", label: "🚫 O que nunca fazer" },
-    { id: "objeccoes", label: "🛡 Objeções comuns" },
-    { id: "exemplos", label: "✅ Exemplos reais" },
-  ];
+  const segCor = SEGMENTO_COR[agente.area || ""] || "#8b949e";
+  const nivelCor = NIVEL_COR[nivelTag(agente.nivel)] || "#8b949e";
 
-  const inputStyle = { background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3", borderRadius: 8, padding: "8px 12px", width: "100%", fontSize: 13, outline: "none" } as const;
-  const labelStyle = { fontSize: 11, fontWeight: 700, color: "#c9a24a", display: "block", marginBottom: 4 } as const;
+  const chipStyle = (ativo: boolean): React.CSSProperties => ({
+    padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+    cursor: "pointer",
+    border: `1px solid ${ativo ? "#c9a24a" : "#30363d"}`,
+    background: ativo ? "#c9a24a22" : "#161b22",
+    color: ativo ? "#c9a24a" : "#8b949e",
+    transition: "all 150ms",
+  });
+
+  const inputStyle: React.CSSProperties = {
+    background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3",
+    borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none",
+    width: "100%", boxSizing: "border-box",
+  };
+
+  const inputDisabledStyle: React.CSSProperties = {
+    ...inputStyle,
+    color: "#8b949e", cursor: "not-allowed", opacity: 0.6,
+  };
 
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
-      {/* HEADER */}
-      <div style={{ padding: "12px 20px", background: "#161b22", borderBottom: "1px solid #30363d", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => router.back()} style={{ color: "#8b949e", background: "none", border: "none", fontSize: 20, cursor: "pointer", lineHeight: 1 }}>←</button>
-          <div>
-            <h1 style={{ color: "#e6edf3", fontWeight: 700, fontSize: 16, margin: 0, lineHeight: 1 }}>{agente.nome as string}</h1>
-            <p style={{ color: "#8b949e", fontSize: 11, margin: "2px 0 0" }}>{agente.cargo as string} · N{agente.nivel as number}</p>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {mensagem && <span style={{ fontSize: 12, color: "#c9a24a" }}>{mensagem}</span>}
-          <button onClick={salvar} disabled={salvando} style={{ padding: "8px 16px", borderRadius: 8, background: "#003b26", border: "none", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-            {salvando ? "..." : "Salvar"}
-          </button>
-        </div>
-      </div>
+    <div style={{ minHeight: "100vh", background: "#0d1117" }}>
 
-      {/* TABS */}
-      <div style={{ display: "flex", borderBottom: "1px solid #30363d", background: "#0d1117" }}>
-        {([
-          { id: "basico", label: "Básico" },
-          { id: "cargos", label: `Cargos (${cargosAgente.length})` },
-          { id: "personalidade", label: "Personalidade" },
-          { id: "conhecimento", label: `Conhecimento (${conhecimentos.length})` },
-          { id: "regras", label: "Regras" },
-        ] as { id: Aba; label: string }[]).map(t => (
-          <button key={t.id} onClick={() => setAba(t.id)}
-            style={{
-              flex: 1, padding: "12px 4px", fontSize: 12, fontWeight: 500,
-              color: aba === t.id ? "#c9a24a" : "#8b949e",
-              borderBottom: aba === t.id ? "2px solid #c9a24a" : "2px solid transparent",
-              background: "none", border: aba === t.id ? undefined : "none",
-              borderLeft: "none", borderRight: "none", borderTop: "none",
-              cursor: "pointer", transition: "color 150ms",
+      {/* MODAL ARQUIVAR */}
+      {showArquivar && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowArquivar(false); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}
+        >
+          <div style={{
+            background: "#161b22", border: "1px solid #30363d", borderRadius: 16,
+            padding: 28, width: "100%", maxWidth: 460,
+          }}>
+            <h2 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
+              Arquivar agente
+            </h2>
+            <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 14px" }}>
+              Agente: <strong style={{ color: "#e6edf3" }}>{agente.nome}</strong>
+            </p>
+
+            {/* Aviso */}
+            <div style={{
+              background: "#ef444411", border: "1px solid #ef444433",
+              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
             }}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* CONTENT */}
-      <div style={{ padding: 24, maxWidth: 760, margin: "0 auto" }}>
-
-        {/* ── BÁSICO ── */}
-        {aba === "basico" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={labelStyle}>Nome</label>
-              <input value={agente.nome as string || ""} onChange={e => update("nome", e.target.value)} style={inputStyle} />
+              <p style={{ color: "#ef4444", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                Esta ação não pode ser desfeita pelo UI.
+              </p>
             </div>
-            <div>
-              <label style={labelStyle}>Cargo principal</label>
-              <select
-                value={agente.cargo as string || ""}
-                onChange={e => {
-                  const c = cargos.find(x => x.titulo === e.target.value);
-                  if (c) { update("cargo", c.titulo); update("area", c.area); update("nivel", c.nivel); update("modelo_padrao", c.modelo_padrao); }
-                  else update("cargo", e.target.value);
+
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              Motivo do arquivamento <span style={{ color: "#ef4444" }}>*</span>
+            </label>
+            <textarea
+              value={motivoArquivamento}
+              onChange={(e) => setMotivoArquivamento(e.target.value)}
+              placeholder="Descreva o motivo (mínimo 10 caracteres)..."
+              rows={3}
+              style={{
+                ...inputStyle, resize: "none", marginBottom: 6,
+                border: `1px solid ${motivoArquivamento.length > 0 && motivoArquivamento.trim().length < 10 ? "#ef4444" : "#30363d"}`,
+              }}
+            />
+            {motivoArquivamento.length > 0 && motivoArquivamento.trim().length < 10 && (
+              <p style={{ color: "#ef4444", fontSize: 11, margin: "0 0 12px" }}>
+                Mínimo 10 caracteres ({motivoArquivamento.trim().length}/10)
+              </p>
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button
+                onClick={() => setShowArquivar(false)}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8,
+                  background: "#21262d", border: "1px solid #30363d",
+                  color: "#8b949e", fontSize: 13, fontWeight: 700, cursor: "pointer",
                 }}
-                style={{ ...inputStyle, cursor: "pointer" }}>
-                <option value="">Selecionar cargo...</option>
-                {[1, 2, 3, 4, 5].map(nivel => {
-                  const nivelCargos = cargos.filter(c => c.nivel === nivel);
-                  if (!nivelCargos.length) return null;
-                  return (
-                    <optgroup key={nivel} label={`N${nivel} — ${NIVEL_LABEL[nivel]}`}>
-                      {nivelCargos.map(c => <option key={c.slug} value={c.titulo}>{c.titulo}</option>)}
-                    </optgroup>
-                  );
-                })}
-              </select>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <label style={labelStyle}>Área <span style={{ color: "#484f58", fontWeight: 400 }}>(auto)</span></label>
-                <div style={{ ...inputStyle, color: "#8b949e" }}>{agente.area as string || "—"}</div>
-              </div>
-              <div>
-                <label style={labelStyle}>Modelo de IA <span style={{ color: "#484f58", fontWeight: 400 }}>(do cargo)</span></label>
-                <div style={{ ...inputStyle, color: "#8b949e" }}>
-                  {MODELOS.find(m => m.id === (agente.modelo_padrao as string))?.label || agente.modelo_padrao as string || "—"}
-                </div>
-              </div>
-            </div>
-            <div>
-              <label style={labelStyle}>Bio</label>
-              <textarea value={agente.bio as string || ""} onChange={e => update("bio", e.target.value)} rows={3}
-                style={{ ...inputStyle, resize: "none" }} />
-            </div>
-            <div>
-              <label style={labelStyle}>Mercados</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-                {mercadosCat.map(m => {
-                  const sel = ((agente.prefixo_mercado as string) || "").split(",").map(s => s.trim()).includes(m.sigla);
-                  return (
-                    <button key={m.sigla} onClick={() => {
-                      const atual = ((agente.prefixo_mercado as string) || "").split(",").map(s => s.trim()).filter(Boolean);
-                      const novos = sel ? atual.filter(x => x !== m.sigla) : [...atual, m.sigla];
-                      update("prefixo_mercado", novos.join(","));
-                    }} style={{
-                      padding: "4px 10px", borderRadius: 20, fontSize: 11, cursor: "pointer",
-                      background: sel ? (m.cor + "20") : "#21262d",
-                      color: sel ? m.cor : "#8b949e",
-                      border: `1px solid ${sel ? m.cor : "#30363d"}`,
-                      display: "flex", alignItems: "center", gap: 4,
-                    }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.cor, display: "inline-block" }} />
-                      {m.sigla} — {m.nome}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" id="ativo" checked={agente.ativo as boolean || false} onChange={e => update("ativo", e.target.checked)} style={{ accentColor: "#c9a24a" }} />
-              <label htmlFor="ativo" style={{ color: "#e6edf3", fontSize: 13, cursor: "pointer" }}>Agente ativo</label>
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarArquivamento}
+                disabled={arquivando || motivoArquivamento.trim().length < 10}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8,
+                  background: motivoArquivamento.trim().length >= 10 ? "#dc2626" : "#30363d",
+                  border: "none", color: "white", fontSize: 13, fontWeight: 700,
+                  cursor: arquivando || motivoArquivamento.trim().length < 10 ? "not-allowed" : "pointer",
+                  opacity: arquivando ? 0.6 : 1,
+                }}
+              >
+                {arquivando ? "Arquivando..." : "Confirmar arquivamento"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── CARGOS ── */}
-        {aba === "cargos" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>Um agente pode ocupar múltiplos cargos, cada um atendendo mercados específicos.</p>
-            {cargosAgente.map((c, i) => (
-              <div key={i} style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontSize: 11, color: "#c9a24a", fontWeight: 700 }}>Cargo {i + 1}</span>
-                  <button onClick={() => removerCargo(i)} style={{ fontSize: 11, color: "#b3261e", background: "none", border: "none", cursor: "pointer" }}>Remover</button>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                  <select value={c.cargo} onChange={e => {
-                    const cat = cargos.find(x => x.titulo === e.target.value);
-                    updateCargo(i, "cargo", e.target.value);
-                    if (cat) updateCargo(i, "area", cat.area);
-                  }} style={{ ...inputStyle, padding: "6px 10px", cursor: "pointer" }}>
-                    <option value="">Cargo...</option>
-                    {cargos.map(cat => <option key={cat.slug} value={cat.titulo}>{cat.titulo}</option>)}
-                  </select>
-                  <div style={{ ...inputStyle, padding: "6px 10px", color: "#8b949e" }}>{c.area || "—"}</div>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {mercadosCat.map(m => {
-                    const ativo = (c.mercados || []).includes(m.sigla);
-                    return (
-                      <button key={m.sigla} onClick={() => {
-                        const mercados = ativo ? (c.mercados || []).filter((x: string) => x !== m.sigla) : [...(c.mercados || []), m.sigla];
-                        updateCargo(i, "mercados", mercados);
-                      }} style={{
-                        padding: "4px 10px", borderRadius: 20, fontSize: 11, cursor: "pointer",
-                        display: "flex", alignItems: "center", gap: 4,
-                        background: ativo ? (m.cor + "20") : "#21262d",
-                        color: ativo ? m.cor : "#8b949e",
-                        border: `1px solid ${ativo ? m.cor : "#30363d"}`,
-                      }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.cor, display: "inline-block" }} />
-                        {m.sigla}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-            <button onClick={adicionarCargo} style={{
-              padding: "12px 0", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer",
-              background: "transparent", border: "1px dashed #c9a24a", color: "#c9a24a",
-            }}>
-              + Adicionar cargo
-            </button>
+      {/* MODAL CONFIRMAR SALVAR */}
+      {showConfirmSalvar && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowConfirmSalvar(false); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          }}
+        >
+          <div style={{
+            background: "#161b22", border: "1px solid #30363d", borderRadius: 16,
+            padding: 28, width: "100%", maxWidth: 420,
+          }}>
+            <h2 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
+              Confirmar alterações
+            </h2>
+            <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
+              Confirmar alterações no agente{" "}
+              <strong style={{ color: "#e6edf3" }}>{nome}</strong>?
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowConfirmSalvar(false)}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8,
+                  background: "#21262d", border: "1px solid #30363d",
+                  color: "#8b949e", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvar}
+                disabled={salvando}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8,
+                  background: "#003b26", border: "none",
+                  color: "#c9a24a", fontSize: 13, fontWeight: 700,
+                  cursor: salvando ? "wait" : "pointer",
+                  opacity: salvando ? 0.6 : 1,
+                }}
+              >
+                {salvando ? "Salvando..." : "Confirmar"}
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── PERSONALIDADE ── */}
-        {aba === "personalidade" && (() => {
-          const humorIdx = ((personalidade?.humor as number) || 1) - 1;
-          const persIdx  = ((personalidade?.personalidade as number) || 1) - 1;
-          const humorStr = HUMORES_ORD[humorIdx] || HUMORES_ORD[0];
-          const persStr  = PERS_ORD[persIdx]  || PERS_ORD[0];
-          const perfilAtual = perfis.find(p => p.humor === humorStr && p.personalidade === persStr);
-
-          return (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label style={labelStyle}>Personalidade (5×5)</label>
-                <p style={{ fontSize: 11, color: "#484f58", margin: "0 0 10px" }}>Selecione Humor (linha) + Personalidade (coluna)</p>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                    <thead>
-                      <tr>
-                        <th style={{ textAlign: "left", color: "#8b949e", paddingBottom: 6, paddingRight: 8, whiteSpace: "nowrap" }}>↓ / →</th>
-                        {PERS_ORD.map(p => (
-                          <th key={p} style={{ textAlign: "center", color: "#c9a24a", paddingBottom: 6, paddingLeft: 4, paddingRight: 4, minWidth: 72 }}>{p}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {HUMORES_ORD.map((humor, hi) => (
-                        <tr key={humor}>
-                          <td style={{ paddingRight: 8, paddingTop: 4, paddingBottom: 4, color: "#c9a24a", whiteSpace: "nowrap", fontWeight: 700 }}>{humor}</td>
-                          {PERS_ORD.map((pers, pi) => {
-                            const ativo = hi === humorIdx && pi === persIdx;
-                            return (
-                              <td key={pers} style={{ padding: "4px 2px", textAlign: "center" }}>
-                                <button onClick={() => setPersonalidade(prev => ({ ...(prev || {}), humor: hi + 1, personalidade: pi + 1 }))}
-                                  style={{
-                                    width: "100%", padding: "6px 4px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer",
-                                    background: ativo ? "#003b26" : "#161b22",
-                                    color: ativo ? "#c9a24a" : "#484f58",
-                                    border: `1px solid ${ativo ? "#c9a24a40" : "#30363d"}`,
-                                  }}>
-                                  {ativo ? "✓" : "·"}
-                                </button>
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {perfilAtual && (
-                <div style={{ background: "#161b22", border: "1px solid #c9a24a40", borderRadius: 12, padding: 14 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#c9a24a", marginBottom: 8 }}>{humorStr} + {persStr}</p>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={labelStyle}>Tom de comunicação <span style={{ color: "#484f58", fontWeight: 400 }}>(do catálogo)</span></label>
-                    <div style={{ ...inputStyle, color: "#8b949e" }}>{perfilAtual.tom_comunicacao}</div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Estilo de trabalho <span style={{ color: "#484f58", fontWeight: 400 }}>(do catálogo)</span></label>
-                    <div style={{ ...inputStyle, color: "#8b949e" }}>{perfilAtual.estilo_trabalho}</div>
-                  </div>
-                </div>
+      {/* HEADER */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 10,
+        background: "#161b22", borderBottom: "1px solid #30363d",
+        padding: "16px 24px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        {/* TOPO ESQUERDA: avatar + info */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button
+            onClick={() => router.back()}
+            style={{ background: "none", border: "none", color: "#8b949e", fontSize: 18, cursor: "pointer", lineHeight: 1, marginRight: 4 }}
+          >
+            ←
+          </button>
+          <div
+            style={{
+              width: 56, height: 56, borderRadius: "50%",
+              background: segCor,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, fontWeight: 700, color: "white", flexShrink: 0,
+            }}
+          >
+            {iniciais(agente.nome)}
+          </div>
+          <div>
+            <h1 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+              {agente.nome}
+            </h1>
+            <p style={{ color: "#8b949e", fontSize: 12, margin: "0 0 6px" }}>
+              {agente.cargo}
+              <span style={{ color: "#444c56", marginLeft: 6 }}>@{agente.agente_slug}</span>
+            </p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                background: agente.arquivado_em ? "#ef444422" : "#22c55e22",
+                color: agente.arquivado_em ? "#ef4444" : "#22c55e",
+                border: `1px solid ${agente.arquivado_em ? "#ef444444" : "#22c55e44"}`,
+              }}>
+                {agente.arquivado_em ? "Arquivado" : "Ativo"}
+              </span>
+              {agente.area && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                  background: segCor + "22", color: segCor, border: `1px solid ${segCor}44`,
+                }}>
+                  {agente.area}
+                </span>
+              )}
+              {agente.nivel && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                  background: nivelCor + "22", color: nivelCor, border: `1px solid ${nivelCor}44`,
+                }}>
+                  {nivelTag(agente.nivel)}
+                </span>
               )}
             </div>
-          );
-        })()}
+          </div>
+        </div>
 
-        {/* ── CONHECIMENTO ── */}
-        {aba === "conhecimento" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {SECOES.map(secao => {
-              const itens = conhecimentos.filter(c => c.secao === secao.id);
-              return (
-                <div key={secao.id} style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>{secao.label}</span>
-                    <button onClick={() => adicionarConhecimento(secao.id)} style={{ fontSize: 11, color: "#c9a24a", background: "none", border: "none", cursor: "pointer" }}>+ Adicionar</button>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {itens.length === 0 ? (
-                      <p style={{ fontSize: 12, color: "#484f58", margin: 0 }}>Nenhum item ainda</p>
-                    ) : itens.map(item => {
-                      const realIdx = conhecimentos.indexOf(item);
+        {/* TOPO DIREITA */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {toast && (
+            <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700 }}>{toast}</span>
+          )}
+          {erro && (
+            <span style={{ fontSize: 11, color: "#ef4444", maxWidth: 220 }}>{erro}</span>
+          )}
+          <button
+            onClick={() => { setShowArquivar(true); setMotivoArquivamento(""); }}
+            style={{
+              padding: "8px 16px", borderRadius: 8,
+              background: "transparent", border: "1px solid #ef4444",
+              color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            Arquivar agente
+          </button>
+        </div>
+      </div>
+
+      {/* CONTEÚDO */}
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column", gap: 24 }}>
+
+        {/* BLOCO: Configurações fixas */}
+        <div>
+          {/* Banner amarelo */}
+          <div style={{
+            background: "#c9a24a11", border: "1px solid #c9a24a33",
+            borderRadius: 8, padding: "10px 16px", marginBottom: 16,
+          }}>
+            <p style={{ color: "#c9a24a", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+              Cargo, segmento, nível e modelo são imutáveis após criação — protegidos por trigger no banco.
+            </p>
+          </div>
+
+          <div style={{
+            background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 20,
+            display: "flex", flexDirection: "column", gap: 16,
+          }}>
+            <h2 style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>
+              Configurações fixas
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>Cargo</label>
+                <input
+                  value={agente.cargo || "—"}
+                  disabled
+                  style={inputDisabledStyle}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>Área</label>
+                <input
+                  value={agente.area || "—"}
+                  disabled
+                  style={inputDisabledStyle}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>Nível</label>
+                <div style={{
+                  ...inputDisabledStyle, display: "flex", alignItems: "center", gap: 8,
+                  padding: "6px 12px",
+                }}>
+                  {agente.nivel ? (
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                      background: nivelCor + "22", color: nivelCor, border: `1px solid ${nivelCor}44`,
+                    }}>
+                      {nivelTag(agente.nivel)}
+                    </span>
+                  ) : (
+                    <span>—</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>Modelo padrão</label>
+                <input
+                  value={agente.modelo_padrao as string || "—"}
+                  disabled
+                  style={inputDisabledStyle}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BLOCO: Configurações editáveis */}
+        <div style={{
+          background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 20,
+          display: "flex", flexDirection: "column", gap: 20,
+        }}>
+          <h2 style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>
+            Configurações editáveis
+          </h2>
+
+          {/* Nome */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              Nome
+            </label>
+            <input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Mercados */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 10 }}>
+              Mercados
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {MERCADOS_FIXOS.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => toggleMercado(m)}
+                  style={chipStyle(mercados.includes(m))}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Personalidade — 5 eixos */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 14 }}>
+              Personalidade
+            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {EIXOS.map((eixo, i) => (
+                <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span style={{ fontSize: 11, color: "#8b949e", fontWeight: 700 }}>{eixo.nome}</span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {[1, 2, 3, 4, 5].map((v) => {
+                      const ativo = valores[i] === v;
                       return (
-                        <div key={realIdx} style={{ background: "#0d1117", borderRadius: 8, padding: 10 }}>
-                          <input value={item.titulo as string || ""} placeholder="Título"
-                            onChange={e => {
-                              const novos = [...conhecimentos];
-                              novos[realIdx] = { ...item, titulo: e.target.value };
-                              setConhecimentos(novos);
-                            }} style={{ ...inputStyle, marginBottom: 6 }} />
-                          <textarea value={item.conteudo as string || ""} placeholder="Conteúdo..." rows={3}
-                            onChange={e => {
-                              const novos = [...conhecimentos];
-                              novos[realIdx] = { ...item, conteudo: e.target.value };
-                              setConhecimentos(novos);
-                            }} style={{ ...inputStyle, resize: "none" }} />
-                          <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                            <button onClick={() => salvarConhecimento(item, realIdx)}
-                              style={{ flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 12, fontWeight: 700, background: "#003b26", border: "none", color: "white", cursor: "pointer" }}>
-                              Salvar
-                            </button>
-                            <button onClick={() => deletarConhecimento(item, realIdx)}
-                              style={{ padding: "6px 12px", borderRadius: 6, fontSize: 12, background: "#21262d", border: "none", color: "#b3261e", cursor: "pointer" }}>
-                              ✕
-                            </button>
-                          </div>
-                        </div>
+                        <button
+                          key={v}
+                          onClick={() => setValor(i, v)}
+                          style={{
+                            width: 34, height: 34, borderRadius: "50%", fontSize: 12, fontWeight: 700,
+                            cursor: "pointer", border: `2px solid ${ativo ? "#c9a24a" : "#30363d"}`,
+                            background: ativo ? "#c9a24a" : "#0d1117",
+                            color: ativo ? "#003b26" : "#8b949e",
+                            transition: "all 150ms",
+                          }}
+                        >
+                          {v}
+                        </button>
                       );
                     })}
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        )}
 
-        {/* ── REGRAS ── */}
-        {aba === "regras" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={labelStyle}>Pode fazer (uma por linha)</label>
-              <textarea value={((agente.pode_fazer as string[]) || []).join("\n")}
-                onChange={e => update("pode_fazer", e.target.value.split("\n").map(s => s.trim()).filter(Boolean))}
-                rows={5} style={{ ...inputStyle, resize: "none" }} />
-            </div>
-            <div>
-              <label style={{ ...labelStyle, color: "#b3261e" }}>NÃO pode fazer (uma por linha)</label>
-              <textarea value={((agente.nao_pode_fazer as string[]) || []).join("\n")}
-                onChange={e => update("nao_pode_fazer", e.target.value.split("\n").map(s => s.trim()).filter(Boolean))}
-                rows={5} style={{ ...inputStyle, resize: "none" }} />
+          {/* Horário */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 10 }}>
+              Horário de atendimento
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="time"
+                value={horarioInicio}
+                onChange={(e) => setHorarioInicio(e.target.value)}
+                style={{ ...inputStyle, width: "auto" }}
+              />
+              <span style={{ color: "#8b949e", fontSize: 13 }}>até</span>
+              <input
+                type="time"
+                value={horarioFim}
+                onChange={(e) => setHorarioFim(e.target.value)}
+                style={{ ...inputStyle, width: "auto" }}
+              />
             </div>
           </div>
-        )}
+
+          {/* Dias da semana */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 10 }}>
+              Dias da semana
+            </label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {DIAS_LABELS.map((label, idx) => {
+                const ativo = diasSemana.includes(idx);
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => toggleDia(idx)}
+                    style={chipStyle(ativo)}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
+            />
+          </div>
+
+          {/* Tom de voz */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              Tom de voz
+            </label>
+            <input
+              value={tomVoz}
+              onChange={(e) => setTomVoz(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Estilo de comunicação */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              Estilo de comunicação
+            </label>
+            <input
+              value={estiloComunicacao}
+              onChange={(e) => setEstiloComunicacao(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* System prompt base */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              System prompt base
+            </label>
+            <textarea
+              value={systemPromptBase}
+              onChange={(e) => setSystemPromptBase(e.target.value)}
+              rows={6}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
+            />
+          </div>
+
+          {/* Botão salvar */}
+          <button
+            onClick={() => setShowConfirmSalvar(true)}
+            style={{
+              padding: "12px 0", borderRadius: 8, fontSize: 13, fontWeight: 700,
+              background: "#003b26", border: "none", color: "#c9a24a", cursor: "pointer",
+            }}
+          >
+            Salvar alterações
+          </button>
+        </div>
       </div>
     </div>
   );
