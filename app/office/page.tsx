@@ -73,14 +73,10 @@ function MobileOfficeView({ leads, agentes, metricas }: {
         )}
       </div>
 
-      {/* CANVAS MOBILE — ocupa o espaço restante após o header */}
+      {/* CANVAS MOBILE — fundo sólido, sem imagem */}
       <div className="relative overflow-hidden" style={{
         flex: 1,
         minHeight: 0,
-        backgroundImage: "url(/sprites/office-mobile-bg.png)",
-        backgroundSize: "contain",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center top",
         backgroundColor: "#0d1117",
       }}>
         <div className="absolute inset-0" style={{
@@ -351,8 +347,8 @@ export default function OfficePage() {
           <div className="absolute inset-0"
             style={{ opacity: transitioning ? 0 : 1, transition: "opacity 0.2s ease", animation: !transitioning ? "office-enter 0.3s ease" : "none" }}>
 
-            {/* Fundo via globals.css body background-attachment: fixed */}
-            <div className="absolute inset-0">
+            {/* Fundo — .office-desktop-bg aplicada somente quando este componente monta */}
+            <div className="absolute inset-0 office-desktop-bg">
               <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(13,17,23,0.75) 100%)" }} />
               <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(13,17,23,0.25)" }} />
             </div>

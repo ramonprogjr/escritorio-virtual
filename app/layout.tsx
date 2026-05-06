@@ -70,6 +70,9 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${poppins.variable} ${playfair.variable} ${spaceMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preload" as="image" href="/sprites/office-bg.png" />
+      </head>
       <body className={`${poppins.className} min-h-full flex flex-col`}>
         <MobileDetector>{children}</MobileDetector>
         <PWAProvider />

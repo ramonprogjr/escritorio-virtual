@@ -627,13 +627,7 @@ export default function MobileExperience() {
     <div style={{ position: "relative", width: "100%", minHeight: "100svh", background: "#0d1117", overflow: "hidden" }}>
 
       {/* FUNDO */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
-        <img src="/sprites/office-mobile-bg.png" alt=""
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-        />
-        <div style={{ position: "absolute", inset: 0, background: "rgba(13,17,23,0.6)" }} />
-      </div>
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, background: "#0d1117" }} />
 
 
       {/* STACK DE POPUPS */}
