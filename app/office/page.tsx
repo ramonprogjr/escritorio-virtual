@@ -51,18 +51,25 @@ function MobileOfficeView({ leads, agentes, metricas }: {
   metricas: { leadsAguardando: number; aprovacoesPendentes: number; leadsHoje: number };
 }) {
   const router = useRouter();
+  const agentesAtivos = agentes.filter(ag => ag.ativo === true);
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#0d1117" }}>
-      {/* Header mobile */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3"
-        style={{ background: "#161b22", borderBottom: "1px solid #30363d" }}>
+
+      {/* Header — safe-area-inset-top para não sobrepor status bar */}
+      <div className="flex-shrink-0 flex items-center justify-between px-4"
+        style={{
+          background: "#161b22",
+          borderBottom: "1px solid #30363d",
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
+          paddingBottom: "12px",
+        }}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm"
-            style={{ background: "#003b26" }}>O+</div>
+            style={{ background: "linear-gradient(135deg, #003b26, #005c3d)" }}>O+</div>
           <div>
-            <p className="text-white font-black text-sm">OBRA10+</p>
-            <p className="text-xs" style={{ color: "#c9a24a", fontSize: "9px" }}>ESCRITÓRIO VIRTUAL</p>
+            <p className="text-white font-black text-sm leading-none" style={{ letterSpacing: "0.04em" }}>OBRA10+</p>
+            <p className="leading-none mt-0.5" style={{ color: "#c9a24a", fontSize: "9px", letterSpacing: "0.1em" }}>ESCRITÓRIO VIRTUAL</p>
           </div>
         </div>
         {metricas.aprovacoesPendentes > 0 && (
@@ -74,79 +81,64 @@ function MobileOfficeView({ leads, agentes, metricas }: {
         )}
       </div>
 
-      {/* CANVAS MOBILE — fundo sólido, sem imagem */}
-      <div className="relative overflow-hidden" style={{
-        flex: 1,
-        minHeight: 0,
-        backgroundColor: "#0d1117",
-      }}>
-        <div className="absolute inset-0" style={{
-          background: "radial-gradient(ellipse at center, transparent 20%, rgba(13,17,23,0.8) 100%)"
-        }} />
-
-        {/* Agentes no mobile — só ativos */}
-        {agentes.filter(ag => ag.ativo === true).map(ag => {
-          const pos = MAPA_AGENTES[ag.agente_slug];
-          if (!pos) return null;
-          const cor = CORES_AREA[ag.area] || "#c9a24a";
-          const tam = (TAMANHO_NIVEL[ag.nivel] || 24) * 0.75;
-          return (
-            <div key={ag.agente_slug}
-              className="absolute flex flex-col items-center gap-0.5 cursor-pointer"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%,-50%)", opacity: ag.ativo ? 1 : 0.3 }}
-              onClick={() => router.push(`/crm/agentes/${ag.agente_slug}`)}>
-              <div className="rounded-full flex items-center justify-center font-black text-white"
-                style={{
-                  width: `${tam}px`, height: `${tam}px`,
-                  background: `radial-gradient(circle, ${cor}88, #0d1117)`,
-                  border: `1.5px solid ${cor}`,
-                  boxShadow: ag.ativo ? `0 0 8px ${cor}66` : "none",
-                  fontSize: `${Math.max(8, tam * 0.35)}px`,
-                }}>
-                {getInitials(ag.cargo)}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Leads no mobile */}
-        {leads.slice(0, 5).map((lead, i) => {
-          const mins = (Date.now() - new Date(lead.atualizado_em).getTime()) / 60000;
-          const cor = mins > 15 ? "#b3261e" : mins > 5 ? "#c9a24a" : "#003b26";
-          const posX = 15 + (i * 18);
-          return (
-            <div key={lead.id}
-              className="absolute flex flex-col items-center gap-0.5 cursor-pointer"
-              style={{ left: `${posX}%`, bottom: "10%", transform: "translateX(-50%)" }}
-              onClick={() => router.push(`/crm/leads/${lead.id}`)}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white"
-                style={{ background: `radial-gradient(circle, ${cor}66, #0d1117)`, border: `1.5px solid ${cor}` }}>
-                {lead.nome.charAt(0)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* EQUIPE ONLINE — grid de agentes ativos (só FFTAgentNode, sem leads) */}
+      {agentesAtivos.length > 0 && (
+        <div className="flex-shrink-0 px-3 pt-3 pb-2" style={{ borderBottom: "1px solid #30363d" }}>
+          <p className="text-xs font-black mb-2" style={{ color: "#484f58", letterSpacing: "0.08em" }}>
+            EQUIPE ONLINE · {agentesAtivos.length}
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px 6px" }}>
+            {agentesAtivos.map(ag => {
+              const cor = CORES_AREA[ag.area] || "#c9a24a";
+              return (
+                <button
+                  key={ag.agente_slug}
+                  onClick={() => router.push(`/crm/agentes/${ag.agente_slug}`)}
+                  className="flex flex-col items-center gap-1"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  <div
+                    className="flex items-center justify-center font-black text-white rounded-full"
+                    style={{
+                      width: 52, height: 52,
+                      background: `radial-gradient(circle at 35% 35%, ${cor}55, #0d1117)`,
+                      border: `2px solid ${cor}`,
+                      boxShadow: `0 0 12px ${cor}44`,
+                      fontSize: "13px",
+                      flexShrink: 0,
+                    }}>
+                    {getInitials(ag.cargo)}
+                  </div>
+                  <p
+                    className="text-center w-full truncate leading-tight"
+                    style={{ color: "#8b949e", fontSize: "9px" }}>
+                    {ag.nome.split(" ")[0]}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Métricas rápidas */}
       <div className="flex-shrink-0 grid grid-cols-4 gap-0"
-        style={{ borderTop: "1px solid #30363d", borderBottom: "1px solid #30363d" }}>
+        style={{ borderBottom: "1px solid #30363d" }}>
         {[
-          { label: "Leads", valor: leads.length, rota: "/crm/leads", cor: "#c9a24a" },
-          { label: "Aguard.", valor: metricas.leadsAguardando, rota: "/crm/atendimento", cor: metricas.leadsAguardando > 0 ? "#c9a24a" : "#8b949e" },
-          { label: "Mensagens", valor: 0, rota: "/crm/atendimento", cor: "#8b949e" },
-          { label: "Aprovações", valor: metricas.aprovacoesPendentes, rota: "/crm/aprovacoes", cor: metricas.aprovacoesPendentes > 0 ? "#b3261e" : "#8b949e" },
+          { label: "Leads",     valor: leads.length,                   rota: "/crm/leads",       cor: "#c9a24a" },
+          { label: "Aguard.",   valor: metricas.leadsAguardando,        rota: "/crm/atendimento", cor: metricas.leadsAguardando > 0 ? "#c9a24a" : "#8b949e" },
+          { label: "Msgs",      valor: 0,                              rota: "/crm/atendimento", cor: "#8b949e" },
+          { label: "Aprov.",    valor: metricas.aprovacoesPendentes,    rota: "/crm/aprovacoes",  cor: metricas.aprovacoesPendentes > 0 ? "#b3261e" : "#8b949e" },
         ].map((m, i) => (
           <button key={m.label} onClick={() => router.push(m.rota)}
             className="flex flex-col items-center py-3"
-            style={{ borderRight: i < 3 ? "1px solid #30363d" : "none", background: "#161b22" }}>
+            style={{ borderRight: i < 3 ? "1px solid #30363d" : "none", background: "#161b22", border: "none", cursor: "pointer" }}>
             <p className="text-lg font-black leading-none" style={{ color: m.cor }}>{m.valor}</p>
             <p className="text-xs mt-0.5" style={{ color: "#484f58" }}>{m.label}</p>
           </button>
         ))}
       </div>
 
-      {/* Leads recentes */}
+      {/* LEADS ATIVOS — lista de cards (sem bolinhas flutuantes) */}
       <div className="flex-1 overflow-y-auto px-3 py-2">
         <p className="text-xs font-black mb-2" style={{ color: "#c9a24a", letterSpacing: "0.08em" }}>LEADS ATIVOS</p>
         <div className="space-y-2">
