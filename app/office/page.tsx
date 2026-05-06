@@ -14,11 +14,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Leads aparecem na área de recepção/entrada (% do container)
+// Leads na área de espera + entrada (coordenadas % calibradas pelo office-map.json 1672×941)
+// waiting_area nav(740,720)=44.3%,76.5%  main_entrance nav(850,840)=50.8%,89.3%
 const POSICOES_LEADS = [
-  { x: 12, y: 82 }, { x: 18, y: 82 }, { x: 24, y: 82 },
-  { x: 30, y: 82 }, { x: 36, y: 82 }, { x: 42, y: 82 },
-  { x: 12, y: 89 }, { x: 18, y: 89 },
+  { x: 40.5, y: 76.5 }, { x: 44.3, y: 76.5 }, { x: 48.0, y: 76.5 },
+  { x: 40.5, y: 80.0 }, { x: 44.3, y: 80.0 }, { x: 48.0, y: 80.0 },
+  { x: 44.3, y: 84.0 }, { x: 48.0, y: 84.0 },
 ];
 
 interface Lead {
@@ -345,64 +346,76 @@ export default function OfficePage() {
 
         {/* MODO ESCRITÓRIO */}
         {modoVisual === "escritorio" && (
-          <div className="absolute inset-0 office-desktop-bg"
-            style={{ opacity: transitioning ? 0 : 1, transition: "opacity 0.2s ease", animation: !transitioning ? "office-enter 0.3s ease" : "none" }}>
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden"
+            style={{ opacity: transitioning ? 0 : 1, transition: "opacity 0.2s ease", animation: !transitioning ? "office-enter 0.3s ease" : "none", background: "#0a0a0a" }}>
 
-            {/* Agentes posicionados por cima do escritório 3D */}
-            {agentes.filter(a => a.ativo === true).map(agente => {
-              const pos = MAPA_AGENTES[agente.agente_slug];
-              if (!pos) return null;
-              const leadsDoAgente = leads.filter(l => l.agente_responsavel === agente.agente_slug).length;
-              const cor = CORES_AREA[agente.area] || "#c9a24a";
-              const tamanho = TAMANHO_NIVEL[agente.nivel] || 24;
-              return (
-                <FFTAgentNode
-                  key={agente.agente_slug}
-                  slug={agente.agente_slug}
-                  nome={agente.cargo}
-                  cargo={agente.cargo}
-                  x={pos.x}
-                  y={pos.y}
-                  leadsAtivos={leadsDoAgente}
-                  status={leadsDoAgente > 3 ? "critico" : leadsDoAgente > 0 ? "ocupado" : "ativo"}
-                  cor={cor}
-                  tamanho={tamanho}
-                  ativoDb={agente.ativo}
-                  iniciais={getInitials(agente.cargo)}
-                />
-              );
-            })}
+            {/* Container com aspect-ratio idêntico ao office-bg.png (1672×941).
+                Garante que left/top em % batem exatamente com as coordenadas do JSON. */}
+            <div className="relative" style={{ aspectRatio: "1672 / 941", width: "100%", maxHeight: "100%" }}>
+              <img
+                src="/sprites/office-bg.png"
+                className="absolute inset-0 w-full h-full"
+                style={{ objectFit: "fill" }}
+                loading="eager"
+                alt=""
+              />
 
-            {/* Leads */}
-            {leads.slice(0, 8).map((lead, idx) => {
-              const pos = POSICOES_LEADS[idx];
-              if (!pos) return null;
-              return (
-                <FFTLeadNode
-                  key={lead.id}
-                  id={lead.id}
-                  nome={lead.nome}
-                  mercado={(lead.metadata?.mercado as string) || "geral"}
-                  estagio={lead.estagio}
-                  valor={lead.valor_estimado}
-                  x={pos.x}
-                  y={pos.y}
-                  atualizadoEm={lead.atualizado_em}
-                  onClick={() => setLeadSelecionado(lead)}
-                />
-              );
-            })}
+              {/* Agentes posicionados por cima do escritório 3D — coords calibradas pelo office-map.json */}
+              {agentes.filter(a => a.ativo === true).map(agente => {
+                const pos = MAPA_AGENTES[agente.agente_slug];
+                if (!pos) return null;
+                const leadsDoAgente = leads.filter(l => l.agente_responsavel === agente.agente_slug).length;
+                const cor = CORES_AREA[agente.area] || "#c9a24a";
+                const tamanho = TAMANHO_NIVEL[agente.nivel] || 24;
+                return (
+                  <FFTAgentNode
+                    key={agente.agente_slug}
+                    slug={agente.agente_slug}
+                    nome={agente.cargo}
+                    cargo={agente.cargo}
+                    x={pos.x}
+                    y={pos.y}
+                    leadsAtivos={leadsDoAgente}
+                    status={leadsDoAgente > 3 ? "critico" : leadsDoAgente > 0 ? "ocupado" : "ativo"}
+                    cor={cor}
+                    tamanho={tamanho}
+                    ativoDb={agente.ativo}
+                    iniciais={getInitials(agente.cargo)}
+                  />
+                );
+              })}
 
-            {leads.length === 0 && (
-              <div className="absolute bottom-32 left-1/2 -translate-x-1/2">
-                <div className="fft-panel px-6 py-4 text-center">
-                  <p className="text-white font-bold mb-1" style={{ letterSpacing: "0.1em" }}>ESCRITÓRIO TRANQUILO</p>
-                  <p className="text-xs" style={{ color: "#484f58" }}>Nenhum lead ativo no momento</p>
+              {/* Leads na área de espera / entrada */}
+              {leads.slice(0, 8).map((lead, idx) => {
+                const pos = POSICOES_LEADS[idx];
+                if (!pos) return null;
+                return (
+                  <FFTLeadNode
+                    key={lead.id}
+                    id={lead.id}
+                    nome={lead.nome}
+                    mercado={(lead.metadata?.mercado as string) || "geral"}
+                    estagio={lead.estagio}
+                    valor={lead.valor_estimado}
+                    x={pos.x}
+                    y={pos.y}
+                    atualizadoEm={lead.atualizado_em}
+                    onClick={() => setLeadSelecionado(lead)}
+                  />
+                );
+              })}
+
+              {leads.length === 0 && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+                  <div className="fft-panel px-6 py-4 text-center">
+                    <p className="text-white font-bold mb-1" style={{ letterSpacing: "0.1em" }}>ESCRITÓRIO TRANQUILO</p>
+                    <p className="text-xs" style={{ color: "#484f58" }}>Nenhum lead ativo no momento</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <LiveMessageFeed />
+              <LiveMessageFeed />
+            </div>
           </div>
         )}
 

@@ -1,41 +1,39 @@
-// Coordenadas percentuais dos agentes no canvas (% da área de exibição)
-// Funciona em qualquer resolução — desktop e mobile
+// Coordenadas calibradas diretamente pelo office-map.json (1672×941 px)
+// Fórmula: x% = navigationPoint.x / 1672 * 100, y% = navigationPoint.y / 941 * 100
+// O container usa aspectRatio "1672/941" então os % batem pixel-perfect com a imagem.
 
 export const MAPA_AGENTES: Record<string, { sala: string; x: number; y: number }> = {
-  // N1 — CEO
-  ceo:                     { sala: "Sala do CEO",               x: 41.5, y: 21.1 },
+  // N1 — CEO  (ceo_office nav 210,150)
+  ceo:                     { sala: "CEO",                       x: 12.6, y: 15.9 },
   // N2 — Diretores
-  ariane:                  { sala: "Marketing Director",        x: 27.2, y: 19.5 },
-  diretor_comercial:       { sala: "Sala de Reunião 01",        x: 56.3, y: 21.1 },
-  diretor_operacoes:       { sala: "Sala de Reunião 02",        x: 68.8, y: 21.1 },
-  // N3 — Gestores
-  gestor_trafego:          { sala: "Performance & Tráfego",     x: 72.5, y: 44.4 },
-  gestor_conteudo:         { sala: "Copy Lab",                  x: 38.8, y: 44.4 },
-  gerente_atendimento:     { sala: "Atendimento Ativo",          x: 57.0, y: 74.5 },
-  gerente_vendas:          { sala: "Recepção",                  x: 58.8, y: 73.9 },
-  gestor_projetos:         { sala: "Estratégia & Planejamento", x: 25.0, y: 44.4 },
-  // N4 — Executores de Conteúdo
-  copywriter:              { sala: "Copy Lab",                  x: 38.1, y: 48.9 },
-  designer:                { sala: "Design Studio",             x: 53.8, y: 44.4 },
-  motion_designer:         { sala: "Design Studio",             x: 57.8, y: 48.9 },
-  social_media:            { sala: "Conteúdo & Mídia",          x: 85.0, y: 44.4 },
-  revisor_ia:              { sala: "Conteúdo & Mídia",          x: 89.1, y: 48.9 },
-  // N4 — Executores de Tráfego
-  analista_trafego_google: { sala: "Performance & Tráfego",     x: 69.4, y: 48.9 },
-  analista_trafego_meta:   { sala: "Performance & Tráfego",     x: 73.4, y: 48.9 },
-  analytics_ia:            { sala: "Performance & Tráfego",     x: 77.5, y: 44.4 },
-  // N4 — Executores Comercial / Vendas
-  sdr:                     { sala: "Lead Qualification Zone",   x: 44.0, y: 78.0 },
-  atendente:               { sala: "Atendimento Ativo",          x: 62.0, y: 76.5 },
-  closer:                  { sala: "Sala de Reunião 01",        x: 53.1, y: 21.1 },
-  cs:                      { sala: "Sala de Reunião 02",        x: 65.6, y: 21.1 },
-  crm_ia:                  { sala: "Estratégia & Planejamento", x: 21.9, y: 48.9 },
-  // N4 — Operações
-  dev_ia:                  { sala: "Sala de Servidores",        x: 83.8, y: 21.1 },
-  // N5 — Especialistas
-  estrategista:            { sala: "Estratégia & Planejamento", x: 25.0, y: 48.9 },
-  pesquisador:             { sala: "Estratégia & Planejamento", x: 28.1, y: 48.9 },
-  monitor_qualidade:       { sala: "Copa",                      x: 75.6, y: 21.1 },
+  ariane:                  { sala: "Dir. Marketing",            x: 26.0, y: 15.9 },  // marketing_director nav 435,150
+  diretor_comercial:       { sala: "Dir. Comercial",            x: 38.9, y: 15.9 },  // commercial_director nav 650,150
+  closer:                  { sala: "Sala Reunião 1",            x: 51.7, y: 15.9 },  // meeting_room_01 nav 865,150
+  diretor_operacoes:       { sala: "Sala Reunião 2",            x: 65.2, y: 15.9 },  // meeting_room_02 nav 1090,150
+  cs:                      { sala: "Sala Reunião 2",            x: 67.2, y: 15.9 },  // meeting_room_02 offset +2x
+  dev_ia:                  { sala: "Operações",                 x: 80.5, y: 15.9 },  // área ops top-right
+  monitor_qualidade:       { sala: "Operações",                 x: 87.0, y: 15.9 },  // área ops top-right
+  // N3 — Gestores (row 2, y nav=340 → 36.1%)
+  gestor_projetos:         { sala: "Estratégia",                x: 12.6, y: 36.1 },  // strategy_planning nav 210,340
+  crm_ia:                  { sala: "Estratégia",                x: 10.6, y: 36.1 },  // strategy_planning offset -2x
+  estrategista:            { sala: "Estratégia",                x: 14.6, y: 36.1 },  // strategy_planning offset +2x
+  pesquisador:             { sala: "Estratégia",                x: 12.6, y: 38.1 },  // strategy_planning offset +2y
+  gestor_conteudo:         { sala: "Copy Lab",                  x: 24.8, y: 36.1 },  // copy_lab nav 415,340
+  copywriter:              { sala: "Copy Lab",                  x: 26.8, y: 36.1 },  // copy_lab offset +2x
+  designer:                { sala: "Design Studio",             x: 35.3, y: 36.1 },  // design_studio nav 590,340
+  motion_designer:         { sala: "Design Studio",             x: 37.3, y: 36.1 },  // design_studio offset +2x
+  gestor_trafego:          { sala: "Performance & Tráfego",     x: 49.6, y: 36.1 },  // performance_traffic nav 830,340
+  analista_trafego_google: { sala: "Performance & Tráfego",     x: 47.6, y: 36.1 },  // performance_traffic offset -2x
+  analista_trafego_meta:   { sala: "Performance & Tráfego",     x: 51.6, y: 36.1 },  // performance_traffic offset +2x
+  analytics_ia:            { sala: "Performance & Tráfego",     x: 49.6, y: 38.1 },  // performance_traffic offset +2y
+  gerente_vendas:          { sala: "Ger. Vendas",               x: 64.6, y: 36.1 },  // sales_manager nav 1080,340
+  // N3 — Gerentes Atendimento (row 3, y nav=525 → 55.8%)
+  revisor_ia:              { sala: "Conteúdo & Mídia",          x: 29.9, y: 55.8 },  // content_media nav 500,525
+  social_media:            { sala: "Conteúdo & Mídia",          x: 31.9, y: 55.8 },  // content_media offset +2x
+  // N4 — Atendimento (row 4, y nav=720 → 76.5%)
+  sdr:                     { sala: "Lead Qualification Zone",   x: 16.7, y: 76.5 },  // lead_qual_zone nav 280,720
+  gerente_atendimento:     { sala: "Atendimento Ativo",          x: 58.0, y: 76.5 },  // active_attendance nav 970,720
+  atendente:               { sala: "Atendimento Ativo",          x: 60.0, y: 76.5 },  // active_attendance offset +2x
 };
 
 export const CORES_AREA: Record<string, string> = {

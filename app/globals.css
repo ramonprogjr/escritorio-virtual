@@ -52,10 +52,8 @@ body {
 }
 
 .office-desktop-bg {
-  background-image: url('/sprites/office-bg.png');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
+  /* Substituído por <img> com aspectRatio 1672/941 em app/office/page.tsx */
+  background-color: #0a0a0a;
 }
 
 :focus-visible {
