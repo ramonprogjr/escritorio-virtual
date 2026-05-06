@@ -345,19 +345,10 @@ export default function OfficePage() {
 
         {/* MODO ESCRITÓRIO */}
         {modoVisual === "escritorio" && (
-          <div className="absolute inset-0"
+          <div className="absolute inset-0 office-desktop-bg"
             style={{ opacity: transitioning ? 0 : 1, transition: "opacity 0.2s ease", animation: !transitioning ? "office-enter 0.3s ease" : "none" }}>
 
-            {/* Fundo — .office-desktop-bg aplicada somente quando este componente monta */}
-            <div className="absolute inset-0 office-desktop-bg">
-              <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(13,17,23,0.75) 100%)" }} />
-              <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(13,17,23,0.25)" }} />
-            </div>
-
-            {/* Mapa de agentes e leads — opacity 0.95 para o bg 3D aparecer sutilmente */}
-            <div className="absolute inset-0" style={{ opacity: 0.95 }}>
-
-            {/* Só agentes ativos no canvas */}
+            {/* Agentes posicionados por cima do escritório 3D */}
             {agentes.filter(a => a.ativo === true).map(agente => {
               const pos = MAPA_AGENTES[agente.agente_slug];
               if (!pos) return null;
@@ -412,7 +403,6 @@ export default function OfficePage() {
             )}
 
             <LiveMessageFeed />
-            </div>
           </div>
         )}
 
