@@ -371,17 +371,7 @@ export default function OfficePage() {
                 src="/sprites/office-bg.png"
                 alt="Escritório"
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  const img = e.target as HTMLImageElement;
-                  const fallbacks = ["/sprites/office-bg.png", "/sprites/bg-office.png", "/sprites/office-bg.jpg"];
-                  const idx = parseInt(img.dataset.attempt || "0");
-                  if (idx < fallbacks.length) {
-                    img.dataset.attempt = String(idx + 1);
-                    img.src = fallbacks[idx];
-                  } else {
-                    img.style.display = "none";
-                  }
-                }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
               <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(13,17,23,0.75) 100%)" }} />
               <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(13,17,23,0.25)" }} />

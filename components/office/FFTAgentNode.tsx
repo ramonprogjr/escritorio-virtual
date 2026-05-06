@@ -16,11 +16,11 @@ interface Props {
   iniciais?: string;
 }
 
-const CARGO_CONFIG: Record<string, { cor: string; glow: string; simbolo: string; classe: string }> = {
-  sdr:                  { cor: "#60a5fa", glow: "rgba(96,165,250,0.5)",   simbolo: "⚡", classe: "Explorador" },
-  atendente:            { cor: "#c9a24a", glow: "rgba(201,162,74,0.5)",   simbolo: "✦", classe: "Arauto"     },
-  gerente_atendimento:  { cor: "#c0c0c0", glow: "rgba(192,192,192,0.4)",  simbolo: "◈", classe: "Cavaleiro"  },
-  diretor:              { cor: "#a78bfa", glow: "rgba(167,139,250,0.5)",  simbolo: "❋", classe: "Sábio"      },
+const CARGO_CONFIG: Record<string, { cor: string; glow: string; simbolo: string }> = {
+  sdr:                  { cor: "#60a5fa", glow: "rgba(96,165,250,0.5)",   simbolo: "⚡" },
+  atendente:            { cor: "#c9a24a", glow: "rgba(201,162,74,0.5)",   simbolo: "✦" },
+  gerente_atendimento:  { cor: "#c0c0c0", glow: "rgba(192,192,192,0.4)",  simbolo: "◈" },
+  diretor:              { cor: "#a78bfa", glow: "rgba(167,139,250,0.5)",  simbolo: "❋" },
 };
 
 export default function FFTAgentNode({ slug, nome, cargo, x, y, status = "ativo", leadsAtivos = 0, cor, tamanho, ativoDb = true, iniciais }: Props) {
