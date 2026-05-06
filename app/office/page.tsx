@@ -181,7 +181,7 @@ function MobileOfficeView({ leads, agentes, metricas }: {
 
 export default function OfficePage() {
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [metricas, setMetricas] = useState({ leadsAguardando: 0, aprovacoesPendentes: 0, leadsHoje: 0 });
@@ -231,6 +231,7 @@ export default function OfficePage() {
     setTimeout(() => { setModoVisual(modo); setTransitioning(false); }, 200);
   }
 
+  if (isMobile === null) return null;
   if (isMobile) return <MobileOfficeView leads={leads} agentes={agentes} metricas={metricas} />;
 
   return (
@@ -353,6 +354,9 @@ export default function OfficePage() {
               <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(13,17,23,0.25)" }} />
             </div>
 
+            {/* Mapa de agentes e leads — opacity 0.95 para o bg 3D aparecer sutilmente */}
+            <div className="absolute inset-0" style={{ opacity: 0.95 }}>
+
             {/* Só agentes ativos no canvas */}
             {agentes.filter(a => a.ativo === true).map(agente => {
               const pos = MAPA_AGENTES[agente.agente_slug];
@@ -408,6 +412,7 @@ export default function OfficePage() {
             )}
 
             <LiveMessageFeed />
+            </div>
           </div>
         )}
 
