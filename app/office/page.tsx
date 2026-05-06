@@ -76,7 +76,7 @@ function MobileOfficeView({ leads, agentes, metricas }: {
 
       {/* CANVAS MOBILE — escritório SVG + agentes */}
       <div className="relative flex-shrink-0 overflow-hidden" style={{ maxHeight: "45vh" }}>
-        <img src="/sprites/bg-office.svg" alt="Escritório"
+        <img src="/sprites/office-mobile-bg.png" alt="Escritório"
           className="w-full h-full object-cover"
           onError={e => { (e.target as HTMLImageElement).style.opacity = "0.1"; }} />
         <div className="absolute inset-0" style={{
@@ -368,7 +368,7 @@ export default function OfficePage() {
             {/* Fundo */}
             <div className="absolute inset-0">
               <img
-                src="/sprites/bg-office.svg"
+                src="/sprites/office-bg.png"
                 alt="Escritório"
                 className="w-full h-full object-cover"
                 onError={(e) => {
