@@ -208,6 +208,9 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
 
+    // === HMAC DESLIGADO TEMPORARIAMENTE 07/05/2026 - REATIVAR APOS REUNIAO 08/05/2026 ===
+    // === Ver hub_caderno: DEBITO TECNICO - HMAC desligado no webhook WhatsApp ===
+    /* CODIGO ORIGINAL ABAIXO:
     if (process.env.WEBHOOK_SECRET) {
       const signature = request.headers.get("x-hub-signature-256")
         || request.headers.get("x-signature")
@@ -223,6 +226,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Assinatura inválida" }, { status: 401 });
       }
     }
+    */
 
     const body = JSON.parse(rawBody);
 
