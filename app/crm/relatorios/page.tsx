@@ -2,7 +2,7 @@
 
 export default function Relatorios() {
   return (
-    <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#0d1117", padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: 0 }}>Relatórios</h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>
