@@ -422,6 +422,119 @@ export async function POST(request: NextRequest) {
           });
 
           await enviarMensagemWhatsApp(telefone, respostaTexto);
+
+          // === OBSERVABILIDADE — cada bloco isolado, falha nunca interrompe o fluxo ===
+          const _obsTokens = response.usage.input_tokens + response.usage.output_tokens;
+          const _obsCusto  = parseFloat(((_obsTokens / 1000) * 0.00025 * 5.75).toFixed(4));
+
+          // 1. hub_prompt_logs
+          try {
+            await supabase.from("hub_prompt_logs").insert({
+              lead_id:            lead.id,
+              agente_slug:        agente.agente_slug,
+              system_prompt:      promptData.systemPrompt,
+              mensagem_usuario:   mensagemFinal,
+              resposta_ia:        respostaTexto,
+              tokens_input:       response.usage.input_tokens,
+              tokens_output:      response.usage.output_tokens,
+              custo_estimado_brl: _obsCusto,
+              modelo_usado:       promptData.modelo,
+              foi_escalado:       false,
+            });
+          } catch (e) { console.error("[OBS] hub_prompt_logs:", e); }
+
+          // 2. hub_conversas — reusar conversa aberta ou criar nova
+          let _obsConversaId: string | null = null;
+          try {
+            const { data: _convExist } = await supabase
+              .from("hub_conversas")
+              .select("id")
+              .eq("lead_id", lead.id)
+              .eq("canal", "whatsapp")
+              .is("encerrada_em", null)
+              .maybeSingle();
+            if (_convExist) {
+              _obsConversaId = _convExist.id;
+              await supabase.from("hub_conversas").update({
+                ultima_mensagem_em:      new Date().toISOString(),
+                ultima_mensagem_preview: respostaTexto.slice(0, 100),
+              }).eq("id", _obsConversaId);
+            } else {
+              const { data: _convNova } = await supabase.from("hub_conversas").insert({
+                lead_id:                 lead.id,
+                canal:                   "whatsapp",
+                status:                  "ativa",
+                ia_ativa:                true,
+                ia_modelo:               promptData.modelo,
+                total_mensagens:         2,
+                ultima_mensagem_em:      new Date().toISOString(),
+                ultima_mensagem_preview: respostaTexto.slice(0, 100),
+                aberta_em:               new Date().toISOString(),
+              }).select("id").single();
+              if (_convNova) _obsConversaId = _convNova.id;
+            }
+          } catch (e) { console.error("[OBS] hub_conversas:", e); }
+
+          // 3. hub_mensagens x2 — mensagem do lead + resposta da IA
+          try {
+            if (_obsConversaId) {
+              await supabase.from("hub_mensagens").insert([
+                {
+                  conversa_id:         _obsConversaId,
+                  lead_id:             lead.id,
+                  remetente:           "lead",
+                  tipo_conteudo:       tipoMidia,
+                  conteudo:            mensagemFinal,
+                  whatsapp_message_id: messageId,
+                  enviada_em:          timestamp,
+                },
+                {
+                  conversa_id:   _obsConversaId,
+                  lead_id:       lead.id,
+                  remetente:     "ia",
+                  agente_id:     agente.agente_slug,
+                  ia_modelo:     promptData.modelo,
+                  tipo_conteudo: "texto",
+                  conteudo:      respostaTexto,
+                  enviada_em:    new Date().toISOString(),
+                },
+              ]);
+            }
+          } catch (e) { console.error("[OBS] hub_mensagens:", e); }
+
+          // 4. hub_ciclos_log
+          try {
+            const { data: _cicloRef } = await supabase
+              .from("hub_ciclos_ia")
+              .select("id")
+              .eq("agente_slug", agente.agente_slug)
+              .maybeSingle();
+            await supabase.from("hub_ciclos_log").insert({
+              ciclo_id:      _cicloRef?.id ?? null,
+              agente_slug:   agente.agente_slug,
+              status:        "sucesso",
+              tokens_usados: _obsTokens,
+              custo_brl:     _obsCusto,
+              acoes_tomadas: { acao: "respondeu", lead_id: lead.id, mercado, isNovo },
+              iniciado_em:   new Date().toISOString(),
+              finalizado_em: new Date().toISOString(),
+            });
+          } catch (e) { console.error("[OBS] hub_ciclos_log:", e); }
+
+          // 5. hub_ciclos_ia — incrementa total_execucoes
+          try {
+            const { data: _cicloCount } = await supabase
+              .from("hub_ciclos_ia")
+              .select("total_execucoes")
+              .eq("agente_slug", agente.agente_slug)
+              .maybeSingle();
+            if (_cicloCount) {
+              await supabase.from("hub_ciclos_ia").update({
+                total_execucoes: (_cicloCount.total_execucoes || 0) + 1,
+                atualizado_em:   new Date().toISOString(),
+              }).eq("agente_slug", agente.agente_slug);
+            }
+          } catch (e) { console.error("[OBS] hub_ciclos_ia:", e); }
         }
       } catch (e) {
         console.error("[WEBHOOK] Erro IA:", e);
