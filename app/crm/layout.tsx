@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 const NAV = [
   { href: "/crm",              label: "Dashboard",   icon: "📊" },
   { href: "/crm/leads",        label: "Leads",       icon: "👥" },
+  { href: "/crm/pessoas",      label: "Pessoas",     icon: "🧑" },
+  { href: "/crm/empresas",     label: "Empresas",    icon: "🏢" },
+  { href: "/crm/imoveis",      label: "Imóveis",     icon: "🏠" },
+  { href: "/crm/negocios",     label: "Negócios",    icon: "💼" },
   { href: "/crm/atendimento",  label: "Atendimento", icon: "💬" },
   { href: "/crm/aprovacoes",   label: "Aprovações",  icon: "✅" },
   { href: "/crm/agentes",      label: "Agentes",     icon: "🤖", extra: { href: "/crm/agentes/novo", label: "Novo Agente", icon: "+" } },
