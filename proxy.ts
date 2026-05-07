@@ -15,6 +15,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // /api/crm/atendimento liberado em 07/05/2026 - DEBITO TECNICO no hub_caderno
+  if (pathname.startsWith("/api/crm/atendimento")) {
+    return NextResponse.next();
+  }
+
   // Rotas públicas
   if (pathname.startsWith("/api/health")) {
     return NextResponse.next();

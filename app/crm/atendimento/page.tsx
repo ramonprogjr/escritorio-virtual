@@ -11,8 +11,8 @@ interface Lead {
   id: string;
   nome: string;
   valor_estimado?: number;
-  status: string;
-  canal: string;
+  estagio: string;
+  origem: string;
   criado_em: string;
 }
 
@@ -25,12 +25,14 @@ interface Mensagem {
 }
 
 const STATUS_COR: Record<string, string> = {
-  novo: "bg-yellow-500", qualificado: "bg-green-500", atendimento: "bg-blue-500",
-  negociando: "bg-purple-500", fechamento: "bg-orange-500", ganho: "bg-emerald-500", perdido: "bg-red-500",
+  novo: "bg-yellow-500", qualificando: "bg-cyan-500", qualificado: "bg-green-500",
+  atendimento: "bg-blue-500", negociando: "bg-purple-500", fechamento: "bg-orange-500",
+  ganho: "bg-emerald-500", perdido: "bg-red-500",
 };
 const STATUS_LABEL: Record<string, string> = {
-  novo: "Novo", qualificado: "Qualificado", atendimento: "Em Atendimento",
-  negociando: "Negociando", fechamento: "Fechamento", ganho: "Ganho", perdido: "Perdido",
+  novo: "Novo", qualificando: "Qualificando", qualificado: "Qualificado",
+  atendimento: "Em Atendimento", negociando: "Negociando",
+  fechamento: "Fechamento", ganho: "Ganho", perdido: "Perdido",
 };
 
 export default function AtendimentoPage() {
@@ -42,22 +44,27 @@ export default function AtendimentoPage() {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
+    setCarregando(true);
     carregarLeads();
     const t = setInterval(carregarLeads, 30000);
     return () => clearInterval(t);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtro]);
 
   useEffect(() => { if (leadSel) carregarMensagens(leadSel.id); }, [leadSel]);
 
   async function carregarLeads() {
-    const { data } = await supabase.from("hub_memorias_lead").select("*").order("criado_em", { ascending: false }).limit(50);
-    if (data) {
-      setLeads(data.map((d: Record<string, unknown>) => ({
-        id: d.lead_id as string,
-        nome: (d.conteudo as string)?.replace("telefone:", "Lead ") || "Lead",
-        status: "atendimento", canal: "whatsapp", criado_em: d.criado_em as string,
-      })));
-    }
+    const qs = filtro !== "todos" ? `?estagio=${filtro}` : "";
+    const res = await fetch(`/api/crm/atendimento${qs}`);
+    const json = await res.json();
+    setLeads((json.leads ?? []).map((d: Record<string, unknown>) => ({
+      id: d.id as string,
+      nome: (d.nome as string) || "Lead",
+      estagio: (d.estagio as string) || "novo",
+      origem: (d.origem as string) || "whatsapp",
+      valor_estimado: d.valor_estimado as number,
+      criado_em: d.criado_em as string,
+    })));
     setCarregando(false);
   }
 
@@ -72,7 +79,6 @@ export default function AtendimentoPage() {
   }
 
   const filtrados = leads.filter(l =>
-    (filtro === "todos" || l.status === filtro) &&
     (!busca || l.nome.toLowerCase().includes(busca.toLowerCase()))
   );
 
@@ -101,7 +107,7 @@ export default function AtendimentoPage() {
             <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar lead..."
               className="w-full bg-gray-800 text-white text-xs rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-orange-500" />
             <div className="flex gap-1 flex-wrap">
-              {["todos","novo","qualificado","atendimento","negociando"].map(f => (
+              {["todos","novo","qualificando","qualificado","atendimento","negociando"].map(f => (
                 <button key={f} onClick={() => setFiltro(f)}
                   className={`text-xs px-2 py-1 rounded-full transition-colors ${filtro === f ? "bg-orange-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>
                   {f === "todos" ? "Todos" : STATUS_LABEL[f]}
@@ -117,12 +123,12 @@ export default function AtendimentoPage() {
                 className={`w-full p-3 border-b border-gray-800 text-left hover:bg-gray-800 transition-colors ${leadSel?.id === lead.id ? "bg-gray-800 border-l-2 border-l-orange-500" : ""}`}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${STATUS_COR[lead.status] || "bg-gray-500"}`} />
+                    <div className={`w-2 h-2 rounded-full ${STATUS_COR[lead.estagio] || "bg-gray-500"}`} />
                     <span className="text-white text-xs font-bold truncate max-w-[140px]">{lead.nome}</span>
                   </div>
                   <span className="text-gray-500 text-xs">{rel(lead.criado_em)}</span>
                 </div>
-                <span className="text-gray-500 text-xs">{lead.canal}</span>
+                <span className="text-gray-500 text-xs">{lead.origem}</span>
               </button>
             ))}
           </div>
@@ -141,8 +147,8 @@ export default function AtendimentoPage() {
                 <div>
                   <div className="text-white font-bold text-sm">{leadSel.nome}</div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${STATUS_COR[leadSel.status]}`} />
-                    <span className="text-gray-400 text-xs">{STATUS_LABEL[leadSel.status]}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full ${STATUS_COR[leadSel.estagio]}`} />
+                    <span className="text-gray-400 text-xs">{STATUS_LABEL[leadSel.estagio]}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -180,8 +186,8 @@ export default function AtendimentoPage() {
             <p className="text-gray-500 text-xs font-bold uppercase tracking-wide">Informações</p>
             <div className="space-y-2">
               {[
-                { label: "Status", value: STATUS_LABEL[leadSel.status] },
-                { label: "Canal", value: leadSel.canal },
+                { label: "Status", value: STATUS_LABEL[leadSel.estagio] },
+                { label: "Origem", value: leadSel.origem },
                 { label: "Criado em", value: new Date(leadSel.criado_em).toLocaleDateString("pt-BR") },
               ].map(i => (
                 <div key={i.label} className="bg-gray-800 rounded-lg p-2">
