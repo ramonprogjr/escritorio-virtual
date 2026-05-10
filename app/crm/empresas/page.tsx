@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { KpiBar } from "@/components/crm/KpiBar";
 import { SearchBar } from "@/components/crm/SearchBar";
 import { EmptyState } from "@/components/crm/EmptyState";
@@ -68,7 +69,7 @@ export default function EmpresasPage() {
     const p = new URLSearchParams({ offset: "0", ativo: String(ativo) });
     if (busca) p.set("busca", busca);
 
-    fetch(`/api/crm/empresas?${p}`)
+    fetch(`/api/crm/empresas?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setEmpresas(d.data ?? []);
@@ -84,7 +85,7 @@ export default function EmpresasPage() {
     const p = new URLSearchParams({ offset: String(offset), ativo: String(ativo) });
     if (busca) p.set("busca", busca);
 
-    fetch(`/api/crm/empresas?${p}`)
+    fetch(`/api/crm/empresas?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setEmpresas((prev) => [...prev, ...(d.data ?? [])]);

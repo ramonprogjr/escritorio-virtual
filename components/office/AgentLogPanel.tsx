@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import type { Agent } from "./OfficeCanvas";
 import { HUMORES, PERSONALIDADES, getPerfil, type Humor, type Personalidade } from "@/lib/personality-matrix";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 interface Props {
   agent: Agent;
@@ -187,7 +188,7 @@ export function AgentLogPanel({ agent, onClose }: Props) {
     try {
       await fetch(`/api/agents/${agent.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({
           nome: draft.nome,
           funcao: draft.funcao,

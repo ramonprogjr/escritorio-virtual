@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { KpiBar } from "@/components/crm/KpiBar";
 import { SearchBar } from "@/components/crm/SearchBar";
 import { FilterPills } from "@/components/crm/FilterPills";
@@ -80,7 +81,7 @@ export default function ImoveisPage() {
     if (busca) p.set("busca", busca);
     if (finalidade) p.set("finalidade", finalidade);
 
-    fetch(`/api/crm/imoveis?${p}`)
+    fetch(`/api/crm/imoveis?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setImoveis(d.data ?? []);
@@ -97,7 +98,7 @@ export default function ImoveisPage() {
     if (busca) p.set("busca", busca);
     if (finalidade) p.set("finalidade", finalidade);
 
-    fetch(`/api/crm/imoveis?${p}`)
+    fetch(`/api/crm/imoveis?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setImoveis((prev) => [...prev, ...(d.data ?? [])]);

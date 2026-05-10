@@ -27,6 +27,16 @@ function abaAtivaPorRota(pathname: string): string {
   return "office";
 }
 
+/** Lista CRM: faixa do escritório no topo (mesma base que desktop, proporção reduzida). */
+function mostrarFaixaEscritorio(pathname: string): boolean {
+  return (
+    pathname === "/crm/leads" ||
+    pathname === "/crm/atendimento" ||
+    pathname === "/crm/aprovacoes" ||
+    pathname === "/crm/agentes"
+  );
+}
+
 export default function MobileShell({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -100,6 +110,17 @@ export default function MobileShell({ children }: Props) {
     if (pathname === "/crm/parceiros") return "Parceiros";
     if (pathname === "/crm/ciclos") return "Ciclos IA";
     if (pathname === "/crm/kpis") return "KPIs";
+    if (pathname.startsWith("/crm/pessoas")) return "Pessoas";
+    if (pathname.startsWith("/crm/empresas")) return "Empresas";
+    if (pathname.startsWith("/crm/imoveis")) return "Imóveis";
+    if (pathname.startsWith("/crm/negocios")) return "Negócios";
+    if (pathname.startsWith("/crm/relatorios")) return "Relatórios";
+    if (pathname.startsWith("/crm/trafego")) return "Tráfego";
+    if (pathname.startsWith("/crm/conteudo")) return "Conteúdo";
+    if (pathname.startsWith("/crm/contatos")) return "Contatos";
+    if (pathname.startsWith("/crm/integracoes")) return "Integrações";
+    if (pathname.startsWith("/crm/parceiros/")) return pathname.includes("/novo") ? "Novo parceiro" : "Parceiro";
+    if (pathname === "/crm/configuracoes") return "Configurações";
     if (pathname === "/crm") return "Dashboard";
     return "Obra10+";
   }
@@ -107,7 +128,7 @@ export default function MobileShell({ children }: Props) {
   if (pathname.startsWith("/parceiro/")) return <>{children}</>;
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: "#0d1117" }}>
+    <div className="flex flex-col min-h-[100dvh]" style={{ background: "#0d1117" }}>
       {pathname !== "/office" && (
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
           style={{
@@ -147,7 +168,27 @@ export default function MobileShell({ children }: Props) {
         </div>
       )}
 
-      <div className="flex-1">
+      {pathname !== "/office" && mostrarFaixaEscritorio(pathname) && (
+        <button
+          type="button"
+          className="relative h-[72px] w-full flex-shrink-0 overflow-hidden border-b border-[#30363d] p-0 cursor-pointer"
+          style={{ background: "#0a0a0a" }}
+          onClick={() => router.push("/office")}
+        >
+          <img
+            src="/sprites/office-mobile-bg.webp"
+            alt=""
+            className="h-full w-full object-cover object-top opacity-55"
+          />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-t from-[#0d1117]/80 to-transparent">
+            <span className="rounded-full bg-black/50 px-3 py-1 text-[10px] font-bold tracking-wide text-[#c9a24a]">
+              Escritório · toque para ver em destaque
+            </span>
+          </div>
+        </button>
+      )}
+
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {children}
       </div>
 

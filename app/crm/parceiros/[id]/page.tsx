@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,6 +52,7 @@ export default function ParceiroDetalhePage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [aba, setAba] = useState<"perfil" | "modulos" | "documentos" | "referencias" | "logs">("perfil");
   const [avancando, setAvancando] = useState<number | null>(null);
+  const [msgLinkPortal, setMsgLinkPortal] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     const [p, m, mt, d, r, l] = await Promise.all([
@@ -71,11 +73,32 @@ export default function ParceiroDetalhePage() {
 
   useEffect(() => { carregar(); }, [carregar]);
 
+  async function copiarLinkPortal() {
+    setMsgLinkPortal(null);
+    const res = await fetch(`/api/parceiros/${id}/portal-link`, { headers: internalApiHeaders() });
+    const j = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      setMsgLinkPortal("Produção: use curl com Authorization Bearer CRON_SECRET (README).");
+      return;
+    }
+    if (!j.url) {
+      setMsgLinkPortal("Não foi possível gerar o link.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(j.url);
+      setMsgLinkPortal("Link do portal copiado.");
+    } catch {
+      setMsgLinkPortal(j.url);
+    }
+    setTimeout(() => setMsgLinkPortal(null), 5000);
+  }
+
   async function avancarModulo(numero: number) {
     setAvancando(numero);
     await fetch(`/api/parceiros/${id}/modulo`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ modulo_numero: numero, feito_por: "gestor" }),
     });
     await carregar();
@@ -103,7 +126,17 @@ export default function ParceiroDetalhePage() {
               style={{ background: `${statusCor}25`, color: statusCor }}>
               {parceiro.status.replace("_", " ")}
             </span>
+            <button
+              type="button"
+              onClick={() => void copiarLinkPortal()}
+              className="text-xs px-2 py-0.5 rounded border border-[#30363d] text-[#8b949e] hover:text-[#c9a24a]"
+            >
+              Link portal
+            </button>
           </div>
+          {msgLinkPortal && (
+            <p className="text-[10px] mt-1 break-all" style={{ color: "#8b949e" }}>{msgLinkPortal}</p>
+          )}
           <p className="text-xs" style={{ color: "#8b949e" }}>
             {parceiro.especialidade || "—"}{parceiro.cidade ? ` · ${parceiro.cidade}/${parceiro.estado}` : ""}
           </p>

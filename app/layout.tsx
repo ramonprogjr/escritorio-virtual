@@ -6,14 +6,14 @@ import IOSInstallBanner from "@/components/IOSInstallBanner";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
   variable: "--font-poppins",
   display: "swap",
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["600", "700"],
   variable: "--font-playfair",
   display: "swap",
 });

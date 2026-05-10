@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -161,7 +162,7 @@ export default function AgentePage() {
     if (!slug) return;
     setCarregando(true);
     try {
-      const res = await fetch(`/api/hub/agentes/${slug}`);
+      const res = await fetch(`/api/hub/agentes/${slug}`, { headers: internalApiHeaders() });
       if (res.ok) {
         const data = (await res.json()) as Agente;
         setAgente(data);
@@ -219,7 +220,7 @@ export default function AgentePage() {
     try {
       const res = await fetch(`/api/hub/agentes/${slug}/arquivar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ motivo: motivoArquivamento.trim() }),
       });
       if (res.ok) {
@@ -244,7 +245,7 @@ export default function AgentePage() {
     try {
       const res = await fetch(`/api/hub/agentes/${slug}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({
           nome,
           prefixo_mercado: mercados.join(","),

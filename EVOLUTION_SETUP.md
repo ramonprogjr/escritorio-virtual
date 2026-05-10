@@ -49,6 +49,16 @@ EVOLUTION_API_KEY=obra10plus_evolution_key
 EVOLUTION_INSTANCE=obra10plus
 ```
 
+### Segurança do webhook (recomendado em produção)
+
+No Vercel (ou `.env.local`), defina `WEBHOOK_SECRET` com um valor longo e aleatório. O endpoint `POST /api/whatsapp/webhook` passa a exigir **uma** das opções:
+
+1. **Header customizado** (alinhado à Evolution API): na configuração do webhook da instância, envie o mesmo valor no header `x-webhook-secret` (ou o nome em `WEBHOOK_SECRET_HEADER`).
+2. **Bearer**: `Authorization: Bearer <mesmo valor de WEBHOOK_SECRET>`.
+3. **HMAC SHA-256 do body** (se o provedor enviar): cabeçalhos `x-hub-signature-256`, `x-signature` ou `x-evolution-signature` no formato `sha256=<hex>` ou hex puro; o segredo usado é `WEBHOOK_SECRET`.
+
+Para depuração local apenas: `WEBHOOK_SKIP_SIGNATURE_VERIFY=true` (não use em produção). Se `WEBHOOK_SECRET` não estiver definido, o servidor aceita qualquer origem e registra um aviso nos logs.
+
 ## 5. Enviar mensagem de volta (via Evolution API)
 
 ```bash

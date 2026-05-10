@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { defaultTenantId } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
       comissao_pct: comissao_pct || 5,
       indicado_por: indicado_por || null,
       status: "captacao",
+      tenant_id: defaultTenantId(),
     }).select().single();
 
     if (errP || !parceiro) return NextResponse.json({ erro: errP?.message || "Erro ao criar parceiro" }, { status: 500 });

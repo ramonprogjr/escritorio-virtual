@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { KpiBar } from "@/components/crm/KpiBar";
 import { SearchBar } from "@/components/crm/SearchBar";
 import { FilterPills } from "@/components/crm/FilterPills";
@@ -65,7 +66,7 @@ export default function PessoasPage() {
     if (busca) p.set("busca", busca);
     if (tipoPessoa) p.set("tipo_pessoa", tipoPessoa);
 
-    fetch(`/api/crm/pessoas?${p}`)
+    fetch(`/api/crm/pessoas?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setPessoas(d.data ?? []);
@@ -82,7 +83,7 @@ export default function PessoasPage() {
     if (busca) p.set("busca", busca);
     if (tipoPessoa) p.set("tipo_pessoa", tipoPessoa);
 
-    fetch(`/api/crm/pessoas?${p}`)
+    fetch(`/api/crm/pessoas?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setPessoas((prev) => [...prev, ...(d.data ?? [])]);

@@ -1,4 +1,5 @@
 "use client";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
@@ -55,7 +56,7 @@ export default function AtendimentoPage() {
 
   async function carregarLeads() {
     const qs = filtro !== "todos" ? `?estagio=${filtro}` : "";
-    const res = await fetch(`/api/crm/atendimento${qs}`);
+    const res = await fetch(`/api/crm/atendimento${qs}`, { headers: internalApiHeaders() });
     const json = await res.json();
     setLeads((json.leads ?? []).map((d: Record<string, unknown>) => ({
       id: d.id as string,

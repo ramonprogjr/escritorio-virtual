@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -150,7 +151,7 @@ export default function NovoAgentePage() {
   const carregarCargos = useCallback(() => {
     setCarregando(true);
     setErroCargos(false);
-    fetch("/api/hub/cargos")
+    fetch("/api/hub/cargos", { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setCargos(data);
@@ -217,7 +218,7 @@ export default function NovoAgentePage() {
       };
       const res = await fetch("/api/hub/agentes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (res.ok) {

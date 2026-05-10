@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 type Campanha = {
   campaign_name: string;
@@ -36,7 +37,7 @@ export default function TrafegoPage() {
   useEffect(() => {
     setLoading(true);
     setErro(null);
-    fetch(`/api/windsor/campanhas?periodo=${periodo}`)
+    fetch(`/api/windsor/campanhas?periodo=${periodo}`, { headers: internalApiHeaders() })
       .then(r => r.json())
       .then(d => {
         if (d.error) { setErro(d.error); setCampanhas([]); }

@@ -1,0 +1,37 @@
+# Backup lógico diário (artefato GitHub). Exige secret DATABASE_URL (Postgres Supabase).
+name: Supabase backup diário
+
+on:
+  schedule:
+    - cron: "20 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: pg_dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Defina o secret DATABASE_URL no repositório."
+            exit 1
+          fi
+          mkdir -p artefatos
+          fn="supabase_dump_$(date -u +%Y%m%d_%H%M%S).sql"
+          pg_dump "$DATABASE_URL" --no-owner --no-acl -f "artefatos/$fn"
+          gzip "artefatos/$fn"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup
+          path: artefatos/*.gz
+          retention-days: 14

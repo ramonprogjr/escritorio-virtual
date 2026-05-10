@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,7 +115,7 @@ function AprovacoesInner() {
     setProcessando(id);
     const res = await fetch(`/api/aprovacoes/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ status: "aprovado", aprovado_por: "wendel" }),
     });
     if (res.ok) {
@@ -130,7 +131,7 @@ function AprovacoesInner() {
     setProcessando(id);
     const res = await fetch(`/api/aprovacoes/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ status: "rejeitado", aprovado_por: "wendel" }),
     });
     if (res.ok) {

@@ -20,7 +20,8 @@ export type TipoAprovacao =
   | "trafego"
   | "contrato"
   | "financeiro"
-  | "atendimento_critico";
+  | "atendimento_critico"
+  | "cotacao_fornecedor";
 
 export interface CardAprovacao {
   id: string;
@@ -113,6 +114,11 @@ function montarCard(item: Record<string, unknown>): CardAprovacao {
       { label: "Assumir atendimento", tipo: "aprovar", estilo: "primario" },
       { label: "Atribuir para equipe", tipo: "editar", estilo: "secundario" },
       { label: "Ver conversa", tipo: "ver_mais", estilo: "neutro" },
+    ],
+    cotacao_fornecedor: [
+      { label: "Aprovar fornecedor sugerido", tipo: "aprovar", estilo: "primario" },
+      { label: "Ver propostas", tipo: "ver_mais", estilo: "neutro" },
+      { label: "Recusar", tipo: "rejeitar", estilo: "perigo" },
     ],
   };
 
@@ -208,6 +214,14 @@ export async function rejeitar(
     })
     .eq("id", aprovacaoId);
 
+  const dados = (aprovacao.dados as Record<string, unknown>) || {};
+  if (aprovacao.tipo === "cotacao_fornecedor" && dados.pedido_id) {
+    await db
+      .from("hub_cotacoes_pedidos")
+      .update({ status: "rejeitado", atualizado_em: new Date().toISOString() })
+      .eq("id", dados.pedido_id as string);
+  }
+
   await db.from("hub_decision_logs").insert({
     agente_slug: aprovacao.agente_slug,
     tipo: "rejeicao_humana",
@@ -281,6 +295,14 @@ async function executarAcaoAprovada(aprovacao: Record<string, unknown>): Promise
   const tipo = aprovacao.tipo as string;
 
   console.log(`[APROVAÇÕES] Executando ação aprovada: ${tipo}`, dados);
+
+  if (tipo === "cotacao_fornecedor" && dados.pedido_id) {
+    const db = supabase();
+    await db
+      .from("hub_cotacoes_pedidos")
+      .update({ status: "aprovado", atualizado_em: new Date().toISOString() })
+      .eq("id", dados.pedido_id as string);
+  }
 
   // Aqui cada tipo de aprovação tem sua execução específica
   // Por enquanto registra no log — integração com APIs externas

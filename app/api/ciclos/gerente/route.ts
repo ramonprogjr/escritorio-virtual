@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { cronRequestAuthorized } from "@/lib/cron-auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-const CRON_SECRET = process.env.CRON_SECRET || "obra10plus_cron_2026";
 
 async function cicloRelatorioManha() {
   const ontem = new Date(); ontem.setDate(ontem.getDate() - 1); ontem.setHours(0, 0, 0, 0);
@@ -99,9 +98,8 @@ async function cicloSupervisao() {
 
 export async function GET(request: NextRequest) {
   const ciclo = request.nextUrl.searchParams.get("ciclo") || "relatorio_manha";
-  const secret = request.headers.get("x-cron-secret") || request.nextUrl.searchParams.get("secret");
 
-  if (secret !== CRON_SECRET && process.env.NODE_ENV === "production") {
+  if (!cronRequestAuthorized(request)) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
   }
 

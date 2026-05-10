@@ -1,6 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createHmac, timingSafeEqual } from "crypto";
 import { identificarMercado, identificarIntencao } from "@/lib/ia/agentes-config";
+import { defaultTenantId } from "@/lib/tenant-default";
+
+let warnedMissingWebhookSecret = false;
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  try {
+    const ba = Buffer.from(a, "utf8");
+    const bb = Buffer.from(b, "utf8");
+    if (ba.length !== bb.length) return false;
+    return timingSafeEqual(ba, bb);
+  } catch {
+    return false;
+  }
+}
+
+/** Verifica origem do webhook quando WEBHOOK_SECRET está definido (HMAC ou segredo em header/Bearer). */
+function webhookAutenticado(request: NextRequest, rawBody: string, secret: string): boolean {
+  const sig =
+    request.headers.get("x-hub-signature-256") ||
+    request.headers.get("x-signature") ||
+    request.headers.get("x-evolution-signature");
+
+  if (sig) {
+    const expectedHex = createHmac("sha256", secret).update(rawBody).digest("hex");
+    let incoming = sig.trim();
+    if (incoming.startsWith("sha256=")) incoming = incoming.slice(7);
+    try {
+      const a = Buffer.from(incoming, "hex");
+      const b = Buffer.from(expectedHex, "hex");
+      if (a.length === b.length && a.length > 0) return timingSafeEqual(a, b);
+    } catch {
+      /* fallthrough */
+    }
+  }
+
+  const auth = request.headers.get("authorization");
+  if (auth?.startsWith("Bearer ")) {
+    const token = auth.slice(7).trim();
+    if (timingSafeStringEqual(token, secret)) return true;
+  }
+
+  const headerName = (process.env.WEBHOOK_SECRET_HEADER || "x-webhook-secret").toLowerCase();
+  for (const [key, value] of request.headers.entries()) {
+    if (key.toLowerCase() === headerName && timingSafeStringEqual((value || "").trim(), secret)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 const IA_ATIVA = process.env.ANTHROPIC_API_KEY ? true : false;
 
@@ -81,7 +132,11 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
   if (leadExistente) {
     await supabase
       .from("hub_leads_crm")
-      .update({ atualizado_em: new Date().toISOString(), pessoa_id: pessoa?.id ?? leadExistente.pessoa_id })
+      .update({
+        atualizado_em: new Date().toISOString(),
+        pessoa_id: pessoa?.id ?? leadExistente.pessoa_id,
+        tenant_id: leadExistente.tenant_id || defaultTenantId(),
+      })
       .eq("id", leadExistente.id);
 
     await supabase.from("hub_memorias_lead").insert({
@@ -108,6 +163,7 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
       valor_estimado: 0,
       agente_responsavel: agenteResponsavel,
       pessoa_id: pessoa?.id ?? null,
+      tenant_id: defaultTenantId(),
       metadata: { mercado, primeira_mensagem: mensagem.slice(0, 200) },
     })
     .select()
@@ -195,8 +251,12 @@ export async function GET(request: NextRequest) {
   const hub_token     = searchParams.get("hub.verify_token");
   const hub_challenge = searchParams.get("hub.challenge");
 
-  if (hub_mode === "subscribe" && hub_token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    return new NextResponse(hub_challenge, { status: 200 });
+  if (hub_mode === "subscribe") {
+    const expected = process.env.WHATSAPP_VERIFY_TOKEN;
+    if (expected && hub_token === expected && hub_challenge) {
+      return new NextResponse(hub_challenge, { status: 200 });
+    }
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   return NextResponse.json({ status: "ok", service: "obra10plus-webhook", version: "2.0" });
@@ -208,27 +268,29 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
 
-    // === HMAC DESLIGADO TEMPORARIAMENTE 07/05/2026 - REATIVAR APOS REUNIAO 08/05/2026 ===
-    // === Ver hub_caderno: DEBITO TECNICO - HMAC desligado no webhook WhatsApp ===
-    /* CODIGO ORIGINAL ABAIXO:
-    if (process.env.WEBHOOK_SECRET) {
-      const signature = request.headers.get("x-hub-signature-256")
-        || request.headers.get("x-signature")
-        || request.headers.get("x-evolution-signature");
-      const crypto = await import("crypto");
-      const expectedSig = crypto
-        .createHmac("sha256", process.env.WEBHOOK_SECRET)
-        .update(rawBody)
-        .digest("hex");
-      const incoming = (signature || "").replace("sha256=", "");
-      if (incoming !== expectedSig) {
-        console.warn("[WEBHOOK] Assinatura inválida — rejeitando");
-        return NextResponse.json({ error: "Assinatura inválida" }, { status: 401 });
+    const skipVerify = process.env.WEBHOOK_SKIP_SIGNATURE_VERIFY === "true";
+    const secret = process.env.WEBHOOK_SECRET?.trim();
+
+    if (secret && !skipVerify) {
+      if (!webhookAutenticado(request, rawBody, secret)) {
+        console.warn("[WEBHOOK] Falha na verificação (HMAC ou header/Bearer)");
+        return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      }
+    } else if (!secret && !skipVerify) {
+      if (!warnedMissingWebhookSecret) {
+        warnedMissingWebhookSecret = true;
+        console.warn(
+          "[WEBHOOK] WEBHOOK_SECRET não definido — webhook aceita qualquer origem. Defina WEBHOOK_SECRET e configure Evolution (header ou HMAC). Em emergência local: WEBHOOK_SKIP_SIGNATURE_VERIFY=true"
+        );
       }
     }
-    */
 
-    const body = JSON.parse(rawBody);
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+    }
 
     const event    = body.event as string | undefined;
     const data     = body.data as Record<string, unknown> | undefined;
@@ -286,6 +348,7 @@ export async function POST(request: NextRequest) {
           nome: pushName || `Parceiro ${telLimpo.slice(-4)}`,
           telefone: telLimpo,
           status: "captacao",
+          tenant_id: defaultTenantId(),
         }).select("id").single();
 
         if (novoParceiro) {
@@ -316,7 +379,7 @@ export async function POST(request: NextRequest) {
       }
 
       await supabase.from("hub_alertas").insert({
-        agente_slug: "diretor",
+        agente_slug: "diretor_geral_ia",
         tipo: "importante",
         titulo: "Novo interesse de parceiro via WhatsApp",
         mensagem: `${pushName || telefone} perguntou sobre parceria: "${mensagemFinal.slice(0, 80)}"`,
@@ -341,6 +404,7 @@ export async function POST(request: NextRequest) {
       direcao:   "entrada",
       conteudo:  mensagemFinal,
       status:    "pendente",
+      tenant_id: defaultTenantId(),
       metadata:  { telefone, pushName, messageId, timestamp, mercado, instance, isNovo, tipoMidia },
     });
 
@@ -418,6 +482,7 @@ export async function POST(request: NextRequest) {
             direcao: "saida",
             conteudo: respostaTexto,
             status: "pendente_envio",
+            tenant_id: defaultTenantId(),
             metadata: { feito_por: "ia", modelo: promptData.modelo, tokens: response.usage },
           });
 

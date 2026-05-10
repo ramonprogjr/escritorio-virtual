@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { cronRequestAuthorized } from "@/lib/cron-auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-const CRON_SECRET = process.env.CRON_SECRET || "obra10plus_cron_2026";
 
 async function gerarAlerta(tipo: string, agente: string, titulo: string, mensagem: string, dados: Record<string, unknown> = {}, leadId?: string) {
   await supabase.from("hub_alertas").insert({
@@ -165,9 +164,8 @@ async function cicloSLA() {
 
 export async function GET(request: NextRequest) {
   const ciclo = request.nextUrl.searchParams.get("ciclo") || "followup";
-  const secret = request.headers.get("x-cron-secret") || request.nextUrl.searchParams.get("secret");
 
-  if (secret !== CRON_SECRET && process.env.NODE_ENV === "production") {
+  if (!cronRequestAuthorized(request)) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
   }
 
@@ -205,9 +203,21 @@ export async function GET(request: NextRequest) {
       }).eq("id", logRes.data.id);
     }
 
-    await supabase.from("hub_ciclos_ia")
-      .update({ ultimo_ciclo: new Date().toISOString(), ultimo_status: status })
-      .eq("agente_slug", "atendente");
+    if (cicloConfig?.id) {
+      const { data: rowAt } = await supabase
+        .from("hub_ciclos_ia")
+        .select("total_execucoes")
+        .eq("id", cicloConfig.id)
+        .single();
+      await supabase
+        .from("hub_ciclos_ia")
+        .update({
+          ultimo_ciclo: new Date().toISOString(),
+          ultimo_status: status,
+          total_execucoes: (rowAt?.total_execucoes ?? 0) + 1,
+        })
+        .eq("id", cicloConfig.id);
+    }
 
     return NextResponse.json({ ok: true, ciclo, duracao_ms: Date.now() - inicio, ...resultado });
   } catch (erro) {

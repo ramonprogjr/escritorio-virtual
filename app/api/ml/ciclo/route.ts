@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { rodarCicloML, cobrarSubordinados, medirKPIs } from "@/lib/ia/ml";
 import { varrerSistema, monitorarTrafego } from "@/lib/ia/monitor";
 import { createClient } from "@supabase/supabase-js";
+import { cronRequestAuthorized } from "@/lib/cron-auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,7 +58,39 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const acao = request.nextUrl.searchParams.get("acao");
+
+  if (acao === "kpis") {
+    if (!cronRequestAuthorized(request)) {
+      return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
+    }
+    try {
+      const db = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: agentes } = await db
+        .from("hub_agente_identidade")
+        .select("agente_slug")
+        .eq("ativo", true);
+      if (agentes?.length) {
+        await Promise.all(
+          agentes.map((a: { agente_slug: string }) => medirKPIs(a.agente_slug))
+        );
+      }
+      return NextResponse.json({
+        sucesso: true,
+        tipo: "kpis",
+        agentes_medidos: agentes?.length ?? 0,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (erro) {
+      const errMsg = erro instanceof Error ? erro.message : "Erro desconhecido";
+      return NextResponse.json({ sucesso: false, erro: errMsg }, { status: 500 });
+    }
+  }
+
   try {
     const db = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
 
@@ -43,7 +44,7 @@ export default function AgentesPage() {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    fetch("/api/hub/agentes?ativo=true")
+    fetch("/api/hub/agentes?ativo=true", { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setAgentes(data);

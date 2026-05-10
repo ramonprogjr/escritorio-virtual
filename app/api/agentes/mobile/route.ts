@@ -9,6 +9,10 @@ function db() {
 }
 
 export async function GET() {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json([]);
+  }
+
   const supabase = db();
 
   const { data: agentes, error } = await supabase

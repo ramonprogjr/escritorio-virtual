@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -91,7 +92,7 @@ export default function AnalyticsPanel() {
 
     try {
       const res = await fetch("/api/windsor/campanhas", {
-        headers: { "x-api-key": process.env.NEXT_PUBLIC_INTERNAL_API_KEY || "" },
+        headers: internalApiHeaders(),
       });
       if (res.ok) setCampanhas(await res.json());
     } catch { /* Windsor opcional */ }

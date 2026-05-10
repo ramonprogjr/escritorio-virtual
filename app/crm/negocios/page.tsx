@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { KpiBar } from "@/components/crm/KpiBar";
 import { SearchBar } from "@/components/crm/SearchBar";
 import { FilterPills } from "@/components/crm/FilterPills";
@@ -86,7 +87,7 @@ export default function NegociosPage() {
     if (busca) p.set("busca", busca);
     if (etapa) p.set("etapa", etapa);
 
-    fetch(`/api/crm/negocios?${p}`)
+    fetch(`/api/crm/negocios?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setNegocios(d.data ?? []);
@@ -103,7 +104,7 @@ export default function NegociosPage() {
     if (busca) p.set("busca", busca);
     if (etapa) p.set("etapa", etapa);
 
-    fetch(`/api/crm/negocios?${p}`)
+    fetch(`/api/crm/negocios?${p}`, { headers: internalApiHeaders() })
       .then((r) => r.json())
       .then((d) => {
         setNegocios((prev) => [...prev, ...(d.data ?? [])]);

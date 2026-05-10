@@ -20,6 +20,13 @@ export async function PATCH(
     observacao?: string;
   };
 
+  const supabase = db();
+  const { data: aprovacaoRow } = await supabase
+    .from("hub_aprovacoes")
+    .select("tipo, dados")
+    .eq("id", id)
+    .single();
+
   const updates: Record<string, unknown> = {
     status,
     atualizado_em: new Date().toISOString(),
@@ -34,7 +41,20 @@ export async function PATCH(
     if (observacao) updates.observacao = observacao;
   }
 
-  const { error } = await db().from("hub_aprovacoes").update(updates).eq("id", id);
+  const { error } = await supabase.from("hub_aprovacoes").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const dados = (aprovacaoRow?.dados as Record<string, unknown>) || {};
+  const pedidoId = dados.pedido_id as string | undefined;
+  if (aprovacaoRow?.tipo === "cotacao_fornecedor" && pedidoId && (status === "aprovado" || status === "rejeitado")) {
+    await supabase
+      .from("hub_cotacoes_pedidos")
+      .update({
+        status: status === "aprovado" ? "aprovado" : "rejeitado",
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("id", pedidoId);
+  }
+
   return NextResponse.json({ ok: true });
 }

@@ -1,14 +1,43 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import DecisionPanel from "@/components/office/DecisionPanel";
-import LiveMessageFeed from "@/components/office/LiveMessageFeed";
-import FFTAgentNode from "@/components/office/FFTAgentNode";
-import FFTLeadNode from "@/components/office/FFTLeadNode";
-import AnalyticsPanel from "@/components/office/AnalyticsPanel";
 import { MAPA_AGENTES, CORES_AREA, TAMANHO_NIVEL, getInitials } from "@/lib/data/office-map";
 import MobileAgentDrawer from "@/components/mobile/MobileAgentDrawer";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
+
+const panelLoading = (
+  <div className="flex items-center justify-center p-6 text-xs" style={{ color: "#484f58" }}>
+    Carregando…
+  </div>
+);
+
+const DecisionPanel = dynamic(() => import("@/components/office/DecisionPanel"), {
+  ssr: false,
+  loading: () => panelLoading,
+});
+
+const LiveMessageFeed = dynamic(() => import("@/components/office/LiveMessageFeed"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const FFTAgentNode = dynamic(() => import("@/components/office/FFTAgentNode"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const FFTLeadNode = dynamic(() => import("@/components/office/FFTLeadNode"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const AnalyticsPanel = dynamic(() => import("@/components/office/AnalyticsPanel"), {
+  ssr: false,
+  loading: () => panelLoading,
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -76,6 +105,17 @@ interface AgenteDetalhes {
   stats: { atendendo: number; atendidos_hoje: number; conversao_pct: number };
 }
 
+/** Verde = livre, amarelo = ocupado, vermelho = crítico (>3 conversas). */
+function corEstadoAgente(leadsAtendendo: number, ativo: boolean): string {
+  if (!ativo) return "#484f58";
+  if (leadsAtendendo > 3) return "#f85149";
+  if (leadsAtendendo > 0) return "#d29922";
+  return "#3fb950";
+}
+
+/** Futuro: balões de diálogo agente↔agente / cliente (mock desligado). */
+const MOBILE_AGENT_DIALOGUES_ENABLED = false;
+
 function MobileOfficeView({ leads, metricas }: {
   leads: Lead[];
   metricas: { leadsAguardando: number; aprovacoesPendentes: number; leadsHoje: number };
@@ -84,18 +124,28 @@ function MobileOfficeView({ leads, metricas }: {
   const [agentesMap, setAgentesMap] = useState<AgenteMap[]>([]);
   const [drawerData, setDrawerData] = useState<AgenteDetalhes | null>(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
+  /** Toque no agente: resumo; botão abre detalhes (tarefas / config no drawer). */
+  const [agentePreviewSlug, setAgentePreviewSlug] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/agentes/mobile")
-      .then(r => r.json())
+    fetch("/api/agentes/mobile", { headers: internalApiHeaders() })
+      .then(async r => {
+        try {
+          const data: unknown = await r.json();
+          return Array.isArray(data) ? data : [];
+        } catch {
+          return [];
+        }
+      })
       .then(setAgentesMap)
-      .catch(() => {});
+      .catch(() => setAgentesMap([]));
   }, []);
 
   async function abrirAgente(slug: string) {
+    setAgentePreviewSlug(null);
     setDrawerLoading(true);
     try {
-      const r = await fetch(`/api/agentes/${slug}/detalhes`);
+      const r = await fetch(`/api/agentes/${slug}/detalhes`, { headers: internalApiHeaders() });
       const data = await r.json();
       setDrawerData(data);
     } finally {
@@ -104,154 +154,286 @@ function MobileOfficeView({ leads, metricas }: {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", background: "#0d1117" }}>
+    <div
+      className="flex flex-col min-h-0 h-full bg-[#0d1117]"
+      onClick={() => setAgentePreviewSlug(null)}
+    >
+      {/* Zona superior: escritório (~menos de metade do ecrã) */}
+      <div className="flex-shrink-0 flex flex-col max-h-[min(46vh,50dvh)]">
+        <div
+          className="flex items-center justify-between gap-2 px-3 py-2 flex-shrink-0 border-b border-[#30363d] bg-[#161b22]"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <div
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs font-black text-white"
+              style={{ background: "linear-gradient(135deg, #003b26, #005c3d)" }}
+            >
+              O+
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-black tracking-wide text-white">OBRA10+</p>
+              <p className="truncate text-[8px] tracking-widest text-[#c9a24a]">ESCRITÓRIO</p>
+            </div>
+          </div>
+          {metricas.aprovacoesPendentes > 0 && (
+            <button
+              type="button"
+              className="flex-shrink-0 rounded-full border-0 px-2 py-1 text-[11px] font-bold text-white cursor-pointer bg-[#b3261e]"
+              onClick={() => router.push("/crm/aprovacoes")}
+            >
+              {metricas.aprovacoesPendentes} aprov.
+            </button>
+          )}
+        </div>
 
-      {/* Header */}
-      <div style={{
-        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 16px",
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
-        background: "#161b22", borderBottom: "1px solid #30363d",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center",
-            justifyContent: "center", fontWeight: 900, color: "white", fontSize: 14,
-            background: "linear-gradient(135deg, #003b26, #005c3d)",
-          }}>O+</div>
-          <div>
-            <p style={{ color: "white", fontWeight: 900, fontSize: 14, lineHeight: 1, letterSpacing: "0.04em" }}>OBRA10+</p>
-            <p style={{ color: "#c9a24a", fontSize: 9, letterSpacing: "0.1em", marginTop: 2 }}>ESCRITÓRIO VIRTUAL</p>
+        <div
+          className="relative w-full min-h-0 overflow-hidden bg-[#0a0a0a]"
+          style={{ height: "clamp(168px, 40vh, 340px)" }}
+          onClick={e => e.stopPropagation()}
+        >
+          <img
+            src="/sprites/office-mobile-bg.webp"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-top"
+            loading="eager"
+            onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+
+          {/* Pop-ups de dashboard sobre o escritório */}
+          <div className="pointer-events-auto absolute left-2 top-2 z-[2] max-w-[48%]">
+            <button
+              type="button"
+              className="w-full rounded-lg border border-[#30363d] px-2 py-1.5 text-left shadow-lg"
+              style={{ background: "rgba(22,27,34,0.92)", boxShadow: "0 4px 16px rgba(0,0,0,0.45)" }}
+              onClick={() => router.push("/crm/leads")}
+            >
+              <p className="text-[9px] font-bold tracking-wider text-[#484f58]">PIPELINE</p>
+              <p className="text-lg font-black leading-tight text-[#c9a24a]">{leads.length}</p>
+              <p className="text-[10px] text-[#8b949e]">{metricas.leadsAguardando} aguard. humano</p>
+            </button>
+          </div>
+          <div className="pointer-events-auto absolute right-2 top-2 z-[2] max-w-[48%]">
+            <button
+              type="button"
+              className="w-full rounded-lg border border-[#30363d] px-2 py-1.5 text-left shadow-lg"
+              style={{ background: "rgba(22,27,34,0.92)", boxShadow: "0 4px 16px rgba(0,0,0,0.45)" }}
+              onClick={() => router.push("/crm")}
+            >
+              <p className="text-[9px] font-bold tracking-wider text-[#484f58]">HOJE</p>
+              <p className="text-lg font-black leading-tight text-[#e6edf3]">{metricas.leadsHoje}</p>
+              <p className="text-[10px] text-[#8b949e]">leads · CRM</p>
+            </button>
+          </div>
+          {metricas.aprovacoesPendentes > 0 && (
+            <div className="pointer-events-auto absolute bottom-2 left-1/2 z-[2] max-w-[90%] -translate-x-1/2">
+              <button
+                type="button"
+                className="rounded-full border border-[#b3261e66] px-3 py-1 text-center text-[10px] font-bold text-white shadow-lg"
+                style={{ background: "rgba(179,38,30,0.92)" }}
+                onClick={() => router.push("/crm/aprovacoes")}
+              >
+                {metricas.aprovacoesPendentes} aprovação(ões) pendente(s)
+              </button>
+            </div>
+          )}
+
+          {MOBILE_AGENT_DIALOGUES_ENABLED && (
+            <div className="sr-only" aria-hidden>
+              Espaço reservado para balões de diálogo entre agentes (desativado).
+            </div>
+          )}
+
+          {(Array.isArray(agentesMap) ? agentesMap : []).map(ag => {
+            const tamanho = ag.ativo && ag.leads_atendendo > 0 ? 34 : ag.ativo ? 26 : 20;
+            const opacity = ag.ativo ? 1 : 0.35;
+            const cor = ag.cor_departamento || "#c9a24a";
+            const estadoCor = corEstadoAgente(ag.leads_atendendo, ag.ativo);
+            const aberto = agentePreviewSlug === ag.agente_slug;
+            return (
+              <div
+                key={ag.agente_slug}
+                className="absolute z-[3]"
+                style={{
+                  left: `${ag.pos_mobile_x}%`,
+                  top: `${ag.pos_mobile_y}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex flex-col items-center gap-0.5">
+                  <div
+                    className="rounded-full border border-black/40"
+                    style={{
+                      width: 10,
+                      height: 4,
+                      background: estadoCor,
+                      boxShadow: `0 0 8px ${estadoCor}88`,
+                    }}
+                    title={
+                      ag.leads_atendendo > 3 ? "Crítico" : ag.leads_atendendo > 0 ? "Ocupado" : "Disponível"
+                    }
+                  />
+                  <button
+                    type="button"
+                    disabled={!ag.ativo}
+                    className="relative flex items-center justify-center rounded-full border-0 p-0 font-black text-white"
+                    style={{
+                      width: tamanho,
+                      height: tamanho,
+                      background: `radial-gradient(circle at 35% 35%, ${cor}55, #0d1117)`,
+                      border: `${ag.leads_atendendo > 0 ? 2.5 : 2}px solid ${cor}`,
+                      boxShadow: ag.ativo ? `0 0 ${ag.leads_atendendo > 0 ? 12 : 6}px ${cor}55` : "none",
+                      fontSize: Math.round(tamanho * 0.32),
+                      opacity,
+                      cursor: ag.ativo ? "pointer" : "default",
+                    }}
+                    title={`${ag.nome} — ${ag.cargo.replace(/_/g, " ")}`}
+                    onClick={() => {
+                      if (!ag.ativo) return;
+                      setAgentePreviewSlug(aberto ? null : ag.agente_slug);
+                    }}
+                  >
+                    {getInitials(ag.cargo)}
+                    {ag.leads_atendendo > 0 && (
+                      <span
+                        className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#0d1117] text-[7px] font-black text-white bg-[#b3261e]"
+                      >
+                        {ag.leads_atendendo > 9 ? "9+" : ag.leads_atendendo}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {aberto && ag.ativo && (
+                  <div
+                    className="absolute left-1/2 top-full z-[4] mt-1.5 w-[min(228px,72vw)] -translate-x-1/2 rounded-xl border border-[#c9a24a55] p-2 shadow-xl"
+                    style={{ background: "rgba(22,27,34,0.98)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}
+                  >
+                    <p className="truncate text-xs font-bold text-white">{ag.nome}</p>
+                    <p className="mt-0.5 text-[11px] text-[#8b949e]">{ag.cargo.replace(/_/g, " ")}</p>
+                    <p className="mt-1 text-[11px] text-[#c9a24a]">
+                      {ag.leads_atendendo > 0
+                        ? `Atendendo ${ag.leads_atendendo} conversa(s) ativa(s).`
+                        : "Disponível — sem conversas na fila."}
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-2 w-full cursor-pointer rounded-lg border-0 py-1.5 text-[11px] font-bold text-white"
+                      style={{ background: "linear-gradient(135deg, #003b26, #005c3d)" }}
+                      onClick={() => void abrirAgente(ag.agente_slug)}
+                    >
+                      Ver detalhes e tarefas
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {drawerLoading && (
+            <div className="absolute inset-0 z-[5] flex items-center justify-center bg-black/35">
+              <span className="text-2xl tracking-widest text-white">⋯</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Entre escritório e menu inferior: ações da aba Office */}
+      <div className="min-h-0 flex-1 overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="border-b border-[#30363d] bg-[#161b22] px-3 py-2">
+          <p className="mb-2 text-[10px] font-black tracking-widest text-[#484f58]">AÇÕES · OFFICE</p>
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              { label: "Leads", valor: leads.length, rota: "/crm/leads", cor: "#c9a24a" },
+              {
+                label: "Aguard.",
+                valor: metricas.leadsAguardando,
+                rota: "/crm/atendimento",
+                cor: metricas.leadsAguardando > 0 ? "#c9a24a" : "#8b949e",
+              },
+              { label: "Hoje", valor: metricas.leadsHoje, rota: "/crm/leads", cor: "#8b949e" },
+              {
+                label: "Aprov.",
+                valor: metricas.aprovacoesPendentes,
+                rota: "/crm/aprovacoes",
+                cor: metricas.aprovacoesPendentes > 0 ? "#b3261e" : "#8b949e",
+              },
+            ].map((m, i) => (
+              <button
+                key={m.label}
+                type="button"
+                className="flex cursor-pointer flex-col items-center rounded-lg border-0 py-2"
+                style={{
+                  background: "#21262d",
+                  borderRight: i < 3 ? "1px solid #30363d" : undefined,
+                }}
+                onClick={() => router.push(m.rota)}
+              >
+                <span className="text-base font-black leading-none" style={{ color: m.cor }}>
+                  {m.valor}
+                </span>
+                <span className="mt-1 text-[9px] text-[#484f58]">{m.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              className="flex-1 cursor-pointer rounded-lg border-0 py-2 text-[11px] font-bold text-[#c9a24a]"
+              style={{ background: "#003b26" }}
+              onClick={() => router.push("/crm")}
+            >
+              Dashboard CRM
+            </button>
+            <button
+              type="button"
+              className="flex-1 cursor-pointer rounded-lg border-0 py-2 text-[11px] font-bold text-[#8b949e] bg-[#21262d]"
+              onClick={() => router.push("/crm/ciclos")}
+            >
+              Ciclos IA
+            </button>
           </div>
         </div>
-        {metricas.aprovacoesPendentes > 0 && (
-          <button
-            onClick={() => router.push("/crm/aprovacoes")}
-            style={{ background: "#b3261e", color: "white", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer" }}>
-            🔴 {metricas.aprovacoesPendentes} crítico(s)
-          </button>
-        )}
-      </div>
 
-      {/* Mapa — img com width:100% height:auto para evitar colapso no Safari iOS */}
-      <div style={{ width: "100%", position: "relative", background: "#0a0a0a" }}>
-        <img
-          src="/sprites/office-mobile-bg.webp"
-          alt=""
-          style={{ width: "100%", height: "auto", display: "block" }}
-          loading="eager"
-          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-        />
-
-        {agentesMap.map(ag => {
-          const tamanho = ag.ativo && ag.leads_atendendo > 0 ? 36 : ag.ativo ? 28 : 22;
-          const opacity = ag.ativo ? 1 : 0.35;
-          const cor = ag.cor_departamento || "#c9a24a";
-          return (
-            <button
-              key={ag.agente_slug}
-              onClick={() => { if (ag.ativo) abrirAgente(ag.agente_slug); }}
-              style={{
-                position: "absolute",
-                left: `${ag.pos_mobile_x}%`,
-                top: `${ag.pos_mobile_y}%`,
-                transform: "translate(-50%, -50%)",
-                width: tamanho,
-                height: tamanho,
-                borderRadius: "50%",
-                background: `radial-gradient(circle at 35% 35%, ${cor}55, #0d1117)`,
-                border: `${ag.leads_atendendo > 0 ? 2.5 : 2}px solid ${cor}`,
-                boxShadow: ag.ativo ? `0 0 ${ag.leads_atendendo > 0 ? 14 : 8}px ${cor}55` : "none",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontWeight: 900, fontSize: Math.round(tamanho * 0.32),
-                opacity, cursor: ag.ativo ? "pointer" : "default", padding: 0,
-              }}>
-              {getInitials(ag.cargo)}
-              {ag.leads_atendendo > 0 && (
-                <div style={{
-                  position: "absolute", top: -3, right: -3,
-                  width: 14, height: 14, borderRadius: "50%",
-                  background: "#b3261e", border: "1.5px solid #0d1117",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "white", fontSize: 8, fontWeight: 900,
-                }}>
-                  {ag.leads_atendendo > 9 ? "9+" : ag.leads_atendendo}
-                </div>
-              )}
-            </button>
-          );
-        })}
-
-        {drawerLoading && (
-          <div style={{
-            position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <div style={{ color: "white", fontSize: 28, letterSpacing: 4 }}>⋯</div>
-          </div>
-        )}
-      </div>
-
-      {/* Métricas rápidas */}
-      <div style={{
-        flexShrink: 0, display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-        background: "#161b22", borderBottom: "1px solid #30363d",
-      }}>
-        {[
-          { label: "Leads",   valor: leads.length,                  rota: "/crm/leads",       cor: "#c9a24a" },
-          { label: "Aguard.", valor: metricas.leadsAguardando,       rota: "/crm/atendimento", cor: metricas.leadsAguardando > 0 ? "#c9a24a" : "#8b949e" },
-          { label: "Hoje",    valor: metricas.leadsHoje,             rota: "/crm/leads",       cor: "#8b949e" },
-          { label: "Aprov.",  valor: metricas.aprovacoesPendentes,   rota: "/crm/aprovacoes",  cor: metricas.aprovacoesPendentes > 0 ? "#b3261e" : "#8b949e" },
-        ].map((m, i) => (
-          <button key={m.label} onClick={() => router.push(m.rota)} style={{
-            display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0",
-            borderTop: "none", borderBottom: "none", borderLeft: "none",
-            borderRight: i < 3 ? "1px solid #30363d" : "none",
-            background: "none", cursor: "pointer",
-          }}>
-            <p style={{ color: m.cor, fontWeight: 900, fontSize: 18, lineHeight: 1 }}>{m.valor}</p>
-            <p style={{ color: "#484f58", fontSize: 10, marginTop: 2 }}>{m.label}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Leads ativos */}
-      <div style={{ padding: "10px 12px" }}>
-        <p style={{ color: "#c9a24a", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8 }}>LEADS ATIVOS</p>
-        {leads.length === 0 ? (
-          <p style={{ color: "#484f58", fontSize: 12, textAlign: "center", padding: "16px 0" }}>Nenhum lead ativo</p>
-        ) : leads.slice(0, 8).map(lead => {
-          const mins = (Date.now() - new Date(lead.atualizado_em).getTime()) / 60000;
-          const corLead = mins > 15 ? "#b3261e" : mins > 5 ? "#c9a24a" : "#3fb950";
-          const tempo = mins < 1 ? "agora" : mins < 60 ? `${Math.round(mins)}min` : `${Math.round(mins / 60)}h`;
-          return (
-            <button key={lead.id} onClick={() => router.push(`/crm/leads/${lead.id}`)} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "8px 12px", borderRadius: 12, marginBottom: 6,
-              background: "#161b22",
-              borderTop: "1px solid #30363d", borderBottom: "1px solid #30363d", borderRight: "1px solid #30363d",
-              borderLeft: `3px solid ${corLead}`,
-              width: "100%", textAlign: "left", cursor: "pointer",
-            }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                background: `${corLead}33`, border: `1px solid ${corLead}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontWeight: 900, fontSize: 14,
-              }}>
-                {lead.nome.charAt(0)}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ color: "white", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lead.nome}</p>
-                <p style={{ color: "#484f58", fontSize: 11 }}>{lead.estagio} · {lead.origem}</p>
-              </div>
-              <span style={{ color: corLead, fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{tempo}</span>
-            </button>
-          );
-        })}
-
-        {/* Espaço inferior para não ficar colado na bottom nav sticky */}
-        <div style={{ height: 16 }} />
+        <div className="px-3 py-2 pb-4">
+          <p className="mb-2 text-[10px] font-bold tracking-widest text-[#c9a24a]">LEADS ATIVOS</p>
+          {leads.length === 0 ? (
+            <p className="py-6 text-center text-xs text-[#484f58]">Nenhum lead ativo</p>
+          ) : (
+            leads.slice(0, 8).map(lead => {
+              const mins = (Date.now() - new Date(lead.atualizado_em).getTime()) / 60000;
+              const corLead = mins > 15 ? "#b3261e" : mins > 5 ? "#c9a24a" : "#3fb950";
+              const tempo = mins < 1 ? "agora" : mins < 60 ? `${Math.round(mins)}min` : `${Math.round(mins / 60)}h`;
+              return (
+                <button
+                  key={lead.id}
+                  type="button"
+                  className="mb-2 flex w-full cursor-pointer items-center gap-2 rounded-xl border border-[#30363d] bg-[#161b22] text-left"
+                  style={{ borderLeftWidth: 3, borderLeftColor: corLead }}
+                  onClick={() => router.push(`/crm/leads/${lead.id}`)}
+                >
+                  <div className="m-2 flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full border text-sm font-black text-white"
+                    style={{ background: `${corLead}33`, borderColor: corLead }}
+                  >
+                    {lead.nome.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1 py-2 pr-2">
+                    <p className="truncate text-xs font-bold text-white">{lead.nome}</p>
+                    <p className="truncate text-[11px] text-[#484f58]">
+                      {lead.estagio} · {lead.origem}
+                    </p>
+                  </div>
+                  <span className="flex-shrink-0 pr-3 text-[11px] font-bold" style={{ color: corLead }}>
+                    {tempo}
+                  </span>
+                </button>
+              );
+            })
+          )}
+          <div className="h-3" />
+        </div>
       </div>
 
       <MobileAgentDrawer agente={drawerData} onClose={() => setDrawerData(null)} />
@@ -261,18 +443,13 @@ function MobileOfficeView({ leads, metricas }: {
 
 export default function OfficePage() {
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const narrow = useNarrowViewport();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [metricas, setMetricas] = useState({ leadsAguardando: 0, aprovacoesPendentes: 0, leadsHoje: 0 });
   const [modoVisual, setModoVisual] = useState<"escritorio" | "analytics">("escritorio");
   const [leadSelecionado, setLeadSelecionado] = useState<Lead | null>(null);
   const [transitioning, setTransitioning] = useState(false);
-
-  useEffect(() => {
-    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    setIsMobile(isMobileDevice);
-  }, []);
 
   const carregar = useCallback(async () => {
     const [l, a, aprov] = await Promise.all([
@@ -309,8 +486,8 @@ export default function OfficePage() {
     setTimeout(() => { setModoVisual(modo); setTransitioning(false); }, 200);
   }
 
-  if (isMobile === null) return null;
-  if (isMobile) return <MobileOfficeView leads={leads} metricas={metricas} />;
+  if (narrow === null) return null;
+  if (narrow) return <MobileOfficeView leads={leads} metricas={metricas} />;
 
   return (
     <div className="flex h-screen overflow-hidden">

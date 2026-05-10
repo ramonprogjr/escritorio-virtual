@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { cronRequestAuthorized } from "@/lib/cron-auth";
+import { medirKPIs } from "@/lib/ia/ml";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const CRON_SECRET = process.env.CRON_SECRET || "obra10plus_cron_2026";
+/** Slugs reais em hub_agente_identidade (documento mestre — evitar "diretor" inexistente). */
+const AG_TRAFEGO = "diretor_operacoes";
+const AG_ANALISES = "diretor_geral_ia";
 
 async function buscarDadosWindsor() {
   if (!process.env.WINDSOR_API_KEY) return null;
@@ -40,7 +44,7 @@ async function cicloTrafego() {
   if (!campanhas || campanhas.length === 0) {
     await supabase.from("hub_alertas").insert({
       tipo: "info",
-      agente_slug: "diretor",
+      agente_slug: AG_TRAFEGO,
       titulo: "Verificação de campanhas",
       mensagem: "Dados de campanhas não disponíveis. Configure a integração Windsor.ai.",
       dados: {},
@@ -56,7 +60,7 @@ async function cicloTrafego() {
     if (cpc > 5) {
       await supabase.from("hub_alertas").insert({
         tipo: "critico",
-        agente_slug: "diretor",
+        agente_slug: AG_TRAFEGO,
         titulo: `CPC crítico: ${camp.campaign}`,
         mensagem: `Campanha "${camp.campaign}" com CPC R$${cpc.toFixed(2)} — muito acima da meta.\nGasto: R$${spend.toFixed(0)} | Cliques: ${clicks}`,
         dados: { campanha: camp.campaign, cpc, spend, clicks },
@@ -65,7 +69,7 @@ async function cicloTrafego() {
     } else if (cpc > 3) {
       await supabase.from("hub_alertas").insert({
         tipo: "importante",
-        agente_slug: "diretor",
+        agente_slug: AG_TRAFEGO,
         titulo: `CPC alto: ${camp.campaign}`,
         mensagem: `Campanha "${camp.campaign}" com CPC R$${cpc.toFixed(2)} — acima da meta de R$2,50.`,
         dados: { campanha: camp.campaign, cpc, spend, clicks },
@@ -80,7 +84,7 @@ async function cicloTrafego() {
   if (sugestoes.length > 0) {
     await supabase.from("hub_alertas").insert({
       tipo: "sugestao",
-      agente_slug: "diretor",
+      agente_slug: AG_TRAFEGO,
       titulo: `${sugestoes.length} sugestão(ões) de otimização`,
       mensagem: sugestoes.join("\n"),
       dados: { sugestoes },
@@ -104,7 +108,7 @@ async function cicloAnaliseManha() {
   if (criticos > 0) {
     await supabase.from("hub_alertas").insert({
       tipo: "importante",
-      agente_slug: "diretor",
+      agente_slug: AG_ANALISES,
       titulo: `${criticos} alerta(s) crítico(s) pendente(s)`,
       mensagem: `Há ${criticos} alertas críticos não resolvidos que precisam de atenção.`,
       dados: { criticos },
@@ -159,11 +163,82 @@ ${(alertasHoje.count || 0) > 0 ? "Verifique os alertas pendentes." : "✓ Opera�
   return { resumo, leads: leadsHoje.count, encaminhados: encHoje.count, alertas: alertasHoje.count };
 }
 
+/** Fragmentos do nome em `hub_ciclos_ia` (ajustar seed se necessário). */
+const CICLO_NOME_FRAG: Record<string, { slug: string; frag: string }> = {
+  trafego: { slug: AG_TRAFEGO, frag: "tráfego" },
+  analise_manha: { slug: AG_ANALISES, frag: "Matinal" },
+  analise_noite: { slug: AG_ANALISES, frag: "Noite" },
+};
+
+function statusUltimoDiretor(ciclo: string, resultado: unknown): "sucesso" | "sem_acao" {
+  if (!resultado || typeof resultado !== "object") return "sem_acao";
+  const r = resultado as Record<string, unknown>;
+  if (ciclo === "trafego") return ((r.total as number) ?? 0) > 0 ? "sucesso" : "sem_acao";
+  if (ciclo === "analise_manha")
+    return ((r.criticos as number) ?? 0) > 0 || ((r.leads_ativos as number) ?? 0) > 0 ? "sucesso" : "sem_acao";
+  if (ciclo === "analise_noite")
+    return ((r.alertas as number) ?? 0) > 0 || ((r.leads as number) ?? 0) > 0 ? "sucesso" : "sem_acao";
+  return "sem_acao";
+}
+
+async function registrarExecucaoDiretor(ciclo: string, statusExec: string, resultado: unknown) {
+  const map = CICLO_NOME_FRAG[ciclo];
+  if (!map) return;
+
+  let { data: cfg } = await supabase
+    .from("hub_ciclos_ia")
+    .select("id, total_execucoes")
+    .eq("agente_slug", map.slug)
+    .ilike("nome", `%${map.frag}%`)
+    .maybeSingle();
+
+  if (!cfg && ciclo === "trafego") {
+    const alt = await supabase
+      .from("hub_ciclos_ia")
+      .select("id, total_execucoes")
+      .eq("agente_slug", map.slug)
+      .ilike("nome", "%trafego%")
+      .maybeSingle();
+    cfg = alt.data;
+  }
+  if (!cfg && ciclo === "analise_manha") {
+    const alt = await supabase
+      .from("hub_ciclos_ia")
+      .select("id, total_execucoes")
+      .eq("agente_slug", map.slug)
+      .ilike("nome", "%manh%")
+      .maybeSingle();
+    cfg = alt.data;
+  }
+  if (!cfg?.id) return;
+
+  const alertasGer =
+    resultado && typeof resultado === "object" && "alertas" in resultado
+      ? (resultado as { alertas?: unknown }).alertas
+      : [];
+
+  await supabase.from("hub_ciclos_log").insert({
+    ciclo_id: cfg.id,
+    agente_slug: map.slug,
+    status: statusExec,
+    finalizado_em: new Date().toISOString(),
+    acoes_tomadas: [],
+    alertas_gerados: Array.isArray(alertasGer) ? alertasGer : [],
+  });
+
+  await supabase
+    .from("hub_ciclos_ia")
+    .update({
+      ultimo_ciclo: new Date().toISOString(),
+      ultimo_status: statusExec,
+      total_execucoes: (cfg.total_execucoes || 0) + 1,
+    })
+    .eq("id", cfg.id);
+}
+
 export async function GET(request: NextRequest) {
   const ciclo = request.nextUrl.searchParams.get("ciclo") || "trafego";
-  const secret = request.headers.get("x-cron-secret") || request.nextUrl.searchParams.get("secret");
-
-  if (secret !== CRON_SECRET && process.env.NODE_ENV === "production") {
+  if (!cronRequestAuthorized(request)) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
   }
 
@@ -173,6 +248,14 @@ export async function GET(request: NextRequest) {
     else if (ciclo === "analise_manha") resultado = await cicloAnaliseManha();
     else if (ciclo === "analise_noite") resultado = await cicloAnaliseNoite();
     else resultado = {};
+
+    const statusExec = statusUltimoDiretor(ciclo, resultado);
+    await registrarExecucaoDiretor(ciclo, statusExec, resultado);
+
+    void Promise.all([
+      medirKPIs(AG_TRAFEGO).catch(() => undefined),
+      medirKPIs(AG_ANALISES).catch(() => undefined),
+    ]);
 
     return NextResponse.json({ ok: true, ciclo, resultado });
   } catch (erro) {

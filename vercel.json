@@ -27,6 +27,22 @@
     {
       "path": "/api/ciclos/diretor?ciclo=analise_noite",
       "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/ciclos/diretor?ciclo=trafego",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/ciclos/atendente?ciclo=followup",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/ciclos/atendente?ciclo=sla",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/ml/ciclo?acao=kpis",
+      "schedule": "5 * * * *"
     }
   ]
 }

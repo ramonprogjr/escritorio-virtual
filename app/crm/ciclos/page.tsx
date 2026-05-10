@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,6 +56,12 @@ const TIPO_COR: Record<string, string> = {
   gatilho: "#8b949e",
 };
 
+function slugParaApiCiclos(agenteSlug: string): string {
+  if (agenteSlug === "diretor" || agenteSlug === "diretor_geral_ia" || agenteSlug === "diretor_operacoes") return "diretor";
+  if (agenteSlug === "gerente_atendimento") return "gerente";
+  return agenteSlug;
+}
+
 const STATUS_COR: Record<string, string> = {
   sucesso: "#003b26",
   sem_acao: "#8b949e",
@@ -91,7 +98,7 @@ export default function CiclosPage() {
 
   async function executarAgora(ciclo: Ciclo) {
     setExecutando(ciclo.id);
-    const agente = ciclo.agente_slug === "diretor" ? "diretor" : ciclo.agente_slug === "gerente_atendimento" ? "gerente" : ciclo.agente_slug;
+    const agente = slugParaApiCiclos(ciclo.agente_slug);
     const nome = ciclo.nome.toLowerCase();
     const nomeCiclo = nome.includes("follow") ? "followup"
       : nome.includes("sla") ? "sla"
@@ -102,7 +109,9 @@ export default function CiclosPage() {
       : "followup";
 
     try {
-      await fetch(`/api/ciclos/${agente}?ciclo=${nomeCiclo}&secret=obra10plus_cron_2026`);
+      await fetch(`/api/ciclos/${agente}?ciclo=${nomeCiclo}&secret=obra10plus_cron_2026`, {
+        headers: internalApiHeaders(),
+      });
     } catch (e) { console.error(e); }
 
     await carregar();
