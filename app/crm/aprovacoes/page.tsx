@@ -1,14 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
-
-const sb = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/lib/supabase/client";
 
 // ─── Brand palette ────────────────────────────────────────────────────────────
 const C = {
@@ -95,14 +90,14 @@ function AprovacoesInner() {
 
   useEffect(() => {
     carregar();
-    const sub = sb.channel("aprovacoes_page")
+    const sub = supabase.channel("aprovacoes_page")
       .on("postgres_changes", { event: "*", schema: "public", table: "hub_aprovacoes" }, carregar)
       .subscribe();
-    return () => { sb.removeChannel(sub); };
+    return () => { supabase.removeChannel(sub); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function carregar() {
-    const { data } = await sb
+    const { data } = await supabase
       .from("hub_aprovacoes")
       .select("*")
       .eq("status", "pendente")
