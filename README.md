@@ -19,7 +19,7 @@ npm run dev
 
 Abra [http://localhost:3001](http://localhost:3001).
 
-**TLS / `fetch failed` só depois de clicar Entrar:** o browser fala com o Supabase, mas o **servidor Next.js** (`/api/auth/crm-session`) também faz `fetch` ao Supabase. Em alguns PCs (antivírus, proxy SSL) o Node falha com erro de certificado ou `fetch failed`. Em **desenvolvimento local**, use `npm run dev:insecure-tls` em vez de `npm run dev` (apenas local; **nunca** em produção). Alternativa correta em ambiente empresarial: `NODE_EXTRA_CA_CERTS` com o PEM do certificado raiz que assina o tráfego interceptado — ver comentário em [`.env.example`](.env.example).
+**TLS em `npm run dev`:** o comando **`npm run dev`** arranca o Next com `NODE_TLS_REJECT_UNAUTHORIZED=0` só nesse processo, para o servidor conseguir fazer `fetch` ao Supabase em PCs com antivírus/proxy SSL (caso contrário o login pode falhar após `signInWithPassword` com “fetch failed”). **`npm run build` / `npm start`** não usam isto. Se não precisares do workaround: `npm run dev:strict-tls`. Em empresas, a solução “certa” continua a ser `NODE_EXTRA_CA_CERTS` com o PEM raiz — ver [`.env.example`](.env.example).
 
 ## Variáveis de ambiente
 

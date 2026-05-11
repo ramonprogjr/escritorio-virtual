@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
           ? ` (${err.message})`
           : "";
       const msg = isNetworkishError(err)
-        ? `Não foi possível contactar o Supabase (rede ou certificado SSL).${hint} Em desenvolvimento local, veja README: dev-insecure-tls.`
+        ? `Não foi possível contactar o Supabase (rede ou certificado SSL).${hint} Em desenvolvimento local use \`npm run dev\` (workaround TLS no Node); se estiver a usar \`npm run dev:strict-tls\`, volte ao \`dev\`. Ver README.`
         : `Falha ao validar a sessão com o fornecedor de autenticação.${hint}`;
       return NextResponse.json({ error: msg }, { status: 502 });
     }
