@@ -1,10 +1,12 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { AgenteNovoWizard } from "@/components/crm/AgenteNovoWizard";
+
+const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
 
 const SEGMENTO_COR: Record<string, string> = {
   Marketing: "#3b82f6",
@@ -13,10 +15,52 @@ const SEGMENTO_COR: Record<string, string> = {
 };
 
 const NIVEL_COR: Record<string, string> = {
+  N1: "#fb7185",
   N2: "#a855f7",
   N3: "#2dd4bf",
   N4: "#fbbf24",
 };
+
+type Agente = {
+  agente_slug: string;
+  nome: string;
+  cargo: string;
+  area?: string;
+  segmento?: string;
+  nivel?: string;
+  ativo?: boolean;
+  arquivado_em?: string | null;
+  avatar_url?: string | null;
+  prefixo_mercado?: string;
+  bio?: string;
+  tom_voz?: string;
+  estilo_comunicacao?: string;
+  system_prompt_base?: string;
+  modelo_padrao?: string;
+  [key: string]: unknown;
+};
+
+type AgenteLog = {
+  id: string;
+  criado_em?: string;
+  mensagem_usuario?: string;
+  resposta_ia?: string;
+  modelo_usado?: string;
+  tempo_resposta_ms?: number;
+  tokens_input?: number;
+  tokens_output?: number;
+  custo_estimado_brl?: number;
+  [key: string]: unknown;
+};
+
+type ListMode = "ativos" | "inativos" | "arquivados";
+type DetailTab = "editar" | "logs";
+
+function urlParaModo(modo: ListMode): string {
+  if (modo === "arquivados") return "/api/hub/agentes?arquivados=somente";
+  if (modo === "inativos") return "/api/hub/agentes?ativo=false";
+  return "/api/hub/agentes?ativo=true";
+}
 
 function iniciais(nome: string): string {
   return (nome || "")
@@ -27,24 +71,11 @@ function iniciais(nome: string): string {
     .join("");
 }
 
-type Agente = {
-  agente_slug: string;
-  nome: string;
-  cargo: string;
-  segmento?: string;
-  nivel?: string;
-  ativo?: boolean;
-  arquivado_em?: string | null;
-  avatar_url?: string | null;
-  [key: string]: unknown;
-};
-
-type ListMode = "ativos" | "inativos" | "arquivados";
-
-function urlParaModo(modo: ListMode): string {
-  if (modo === "arquivados") return "/api/hub/agentes?arquivados=somente";
-  if (modo === "inativos") return "/api/hub/agentes?ativo=false";
-  return "/api/hub/agentes?ativo=true";
+function formatarData(v?: string) {
+  if (!v) return "Sem data";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
+  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 function AgentesView() {
@@ -52,15 +83,34 @@ function AgentesView() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const openedFromQuery = useRef(false);
-
   const { setSlot } = useCrmHeaderSlot();
+
   const [agentes, setAgentes] = useState<Agente[]>([]);
-  /** Uma lista por vez: ativos (produção), só inativos (pausados), ou só arquivados. */
   const [modoLista, setModoLista] = useState<ListMode>("ativos");
   const [carregando, setCarregando] = useState(true);
   const [erroLista, setErroLista] = useState<string | null>(null);
   const [drawerNovoOpen, setDrawerNovoOpen] = useState(false);
   const [alternandoAtivoSlug, setAlternandoAtivoSlug] = useState<string | null>(null);
+
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<DetailTab>("editar");
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailErro, setDetailErro] = useState<string | null>(null);
+  const [detailAgente, setDetailAgente] = useState<Agente | null>(null);
+  const [logs, setLogs] = useState<AgenteLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsErro, setLogsErro] = useState<string | null>(null);
+  const [salvandoDetalhe, setSalvandoDetalhe] = useState(false);
+
+  const [editNome, setEditNome] = useState("");
+  const [editMercados, setEditMercados] = useState<string[]>([]);
+  const [editBio, setEditBio] = useState("");
+  const [editTom, setEditTom] = useState("");
+  const [editEstilo, setEditEstilo] = useState("");
+  const [editPrompt, setEditPrompt] = useState("");
+  const [editAtivo, setEditAtivo] = useState(true);
+
+  const detalheAberto = !!selectedSlug;
 
   const carregarAgentes = useCallback(() => {
     setErroLista(null);
@@ -69,9 +119,7 @@ function AgentesView() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) {
-          const msg =
-            typeof data?.error === "string" ? data.error : `Erro ${r.status} ao carregar agentes.`;
-          setErroLista(msg);
+          setErroLista(typeof data?.error === "string" ? data.error : `Erro ${r.status} ao carregar agentes.`);
           setAgentes([]);
           return;
         }
@@ -89,6 +137,61 @@ function AgentesView() {
       .finally(() => setCarregando(false));
   }, [modoLista]);
 
+  const carregarDetalhe = useCallback(async (slug: string) => {
+    setDetailLoading(true);
+    setDetailErro(null);
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(slug)}`, { headers: internalApiHeaders() });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDetailErro(typeof data?.error === "string" ? data.error : "Falha ao carregar agente.");
+        setDetailAgente(null);
+        return;
+      }
+      setDetailAgente(data);
+      setEditNome(String(data?.nome || ""));
+      setEditMercados(
+        String(data?.prefixo_mercado || "")
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean)
+      );
+      setEditBio(String(data?.bio || ""));
+      setEditTom(String(data?.tom_voz || ""));
+      setEditEstilo(String(data?.estilo_comunicacao || ""));
+      setEditPrompt(String(data?.system_prompt_base || ""));
+      setEditAtivo(data?.ativo !== false);
+    } catch (e) {
+      setDetailErro((e as Error)?.message || "Falha de rede ao carregar detalhes.");
+      setDetailAgente(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  const carregarLogs = useCallback(async (slug: string) => {
+    setLogsLoading(true);
+    setLogsErro(null);
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(slug)}/logs?limit=80`, {
+        headers: internalApiHeaders(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setLogsErro(typeof data?.error === "string" ? data.error : "Falha ao carregar logs.");
+        setLogs([]);
+        return;
+      }
+      const raw = Array.isArray(data?.logs) ? data.logs : [];
+      setLogs(raw);
+    } catch (e) {
+      setLogsErro((e as Error)?.message || "Falha de rede ao carregar logs.");
+      setLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     carregarAgentes();
   }, [carregarAgentes]);
@@ -103,43 +206,27 @@ function AgentesView() {
   }, [searchParams, router]);
 
   useEffect(() => {
-    if (!drawerNovoOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDrawerNovoOpen(false);
+      if (e.key !== "Escape") return;
+      if (detalheAberto) setSelectedSlug(null);
+      else if (drawerNovoOpen) setDrawerNovoOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [drawerNovoOpen]);
+  }, [detalheAberto, drawerNovoOpen]);
 
-  async function alternarAtivo(agente: Agente, e: React.MouseEvent) {
-    e.stopPropagation();
-    if (agente.arquivado_em) return;
-    const atual = agente.ativo !== false;
-    const proximo = !atual;
-    setAlternandoAtivoSlug(agente.agente_slug);
-    try {
-      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(agente.agente_slug)}`, {
-        method: "PATCH",
-        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ ativo: proximo }),
-      });
-      if (res.ok) {
-        if (modoLista === "ativos" && proximo === false) {
-          setAgentes((prev) => prev.filter((a) => a.agente_slug !== agente.agente_slug));
-        } else if (modoLista === "inativos" && proximo === true) {
-          setAgentes((prev) => prev.filter((a) => a.agente_slug !== agente.agente_slug));
-        } else {
-          setAgentes((prev) =>
-            prev.map((a) =>
-              a.agente_slug === agente.agente_slug ? { ...a, ativo: proximo } : a
-            )
-          );
-        }
-      }
-    } finally {
-      setAlternandoAtivoSlug(null);
-    }
-  }
+  useEffect(() => {
+    if (!selectedSlug) return;
+    void carregarDetalhe(selectedSlug);
+    setLogs([]);
+    setLogsErro(null);
+  }, [selectedSlug, carregarDetalhe]);
+
+  useEffect(() => {
+    if (!selectedSlug || detailTab !== "logs") return;
+    if (logs.length > 0 || logsLoading) return;
+    void carregarLogs(selectedSlug);
+  }, [selectedSlug, detailTab, logs.length, logsLoading, carregarLogs]);
 
   useEffect(() => {
     setSlot({
@@ -166,10 +253,87 @@ function AgentesView() {
     return () => setSlot(null);
   }, [pathname, setSlot]);
 
+  async function alternarAtivo(agente: Agente, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (agente.arquivado_em) return;
+    const proximo = agente.ativo === false;
+    setAlternandoAtivoSlug(agente.agente_slug);
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(agente.agente_slug)}`, {
+        method: "PATCH",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ ativo: proximo }),
+      });
+      if (!res.ok) return;
+
+      if ((modoLista === "ativos" && !proximo) || (modoLista === "inativos" && proximo)) {
+        setAgentes((prev) => prev.filter((a) => a.agente_slug !== agente.agente_slug));
+      } else {
+        setAgentes((prev) =>
+          prev.map((a) => (a.agente_slug === agente.agente_slug ? { ...a, ativo: proximo } : a))
+        );
+      }
+
+      if (detailAgente?.agente_slug === agente.agente_slug) setEditAtivo(proximo);
+    } finally {
+      setAlternandoAtivoSlug(null);
+    }
+  }
+
+  function toggleEditMercado(m: string) {
+    setEditMercados((prev) => (prev.includes(m) ? prev.filter((v) => v !== m) : [...prev, m]));
+  }
+
+  async function salvarDetalhes() {
+    if (!selectedSlug || !detailAgente) return;
+    setSalvandoDetalhe(true);
+    setDetailErro(null);
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(selectedSlug)}`, {
+        method: "PATCH",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: editNome.trim(),
+          prefixo_mercado: editMercados.join(","),
+          bio: editBio,
+          tom_voz: editTom,
+          estilo_comunicacao: editEstilo,
+          system_prompt_base: editPrompt,
+          ativo: editAtivo,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDetailErro(typeof data?.error === "string" ? data.error : "Falha ao salvar.");
+        return;
+      }
+      setDetailAgente(data);
+      setAgentes((prev) =>
+        prev
+          .map((a) =>
+            a.agente_slug === selectedSlug
+              ? {
+                  ...a,
+                  nome: editNome.trim() || a.nome,
+                  ativo: editAtivo,
+                }
+              : a
+          )
+          .filter((a) => {
+            if (modoLista === "ativos") return a.ativo !== false && !a.arquivado_em;
+            if (modoLista === "inativos") return a.ativo === false && !a.arquivado_em;
+            return !!a.arquivado_em;
+          })
+      );
+    } finally {
+      setSalvandoDetalhe(false);
+    }
+  }
+
   return (
     <>
       <div style={{ minHeight: "100vh", background: "#0d1117", padding: "24px" }}>
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 18 }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "#8b949e", margin: "0 0 10px", letterSpacing: 0.5 }}>
             LISTA
           </p>
@@ -189,14 +353,13 @@ function AgentesView() {
                   onClick={() => setModoLista(opt.id)}
                   style={{
                     padding: "8px 16px",
-                    borderRadius: 8,
-                    fontSize: 13,
+                    borderRadius: 999,
+                    fontSize: 12,
                     fontWeight: 700,
                     cursor: "pointer",
-                    border: `1px solid ${sel ? "#c9a24a" : "#30363d"}`,
-                    background: sel ? "#c9a24a22" : "#161b22",
-                    color: sel ? "#c9a24a" : "#8b949e",
-                    transition: "all 150ms",
+                    border: `1px solid ${sel ? "#c9a24a66" : "#293241"}`,
+                    background: sel ? "#c9a24a1f" : "#121923",
+                    color: sel ? "#d6b976" : "#99a6b8",
                   }}
                 >
                   {opt.label}
@@ -204,17 +367,11 @@ function AgentesView() {
               );
             })}
             {!carregando && !erroLista && (
-              <span style={{ fontSize: 12, color: "#6e7681", marginLeft: 8 }}>
+              <span style={{ fontSize: 12, color: "#708096", marginLeft: 6 }}>
                 {agentes.length} agente{agentes.length === 1 ? "" : "s"}
               </span>
             )}
           </div>
-          <p style={{ fontSize: 12, color: "#6e7681", margin: "12px 0 0", maxWidth: 640, lineHeight: 1.5 }}>
-            <strong style={{ color: "#8b949e" }}>Inativo</strong> pausa o agente (continua no sistema).{" "}
-            <strong style={{ color: "#8b949e" }}>Arquivado</strong> é para registros retirados do dia a dia após o fluxo
-            de arquivamento (motivo no servidor). São estados diferentes: arquivado implica sair da operação normal;
-            inativo pode voltar com um clique em Ativar.
-          </p>
         </div>
 
         {erroLista && (
@@ -222,7 +379,7 @@ function AgentesView() {
             style={{
               marginBottom: 16,
               padding: 12,
-              borderRadius: 8,
+              borderRadius: 10,
               background: "#3d1414",
               border: "1px solid #f8514966",
               color: "#f85149",
@@ -233,77 +390,70 @@ function AgentesView() {
             {erroLista}
           </div>
         )}
+
         {carregando ? (
           <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando...</p>
         ) : agentes.length === 0 && !erroLista ? (
           <p style={{ color: "#8b949e", fontSize: 13 }}>Nenhum agente encontrado.</p>
-        ) : agentes.length === 0 ? null : (
+        ) : (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              gap: 16,
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: 14,
             }}
           >
             {agentes.map((agente) => {
-              const arquivado = !!agente.arquivado_em;
-              const segCor = SEGMENTO_COR[agente.segmento || ""] || "#8b949e";
-              const nivelCor = NIVEL_COR[agente.nivel || ""] || "#8b949e";
-              const nivelBg = nivelCor + "22";
-              const segBg = segCor + "22";
+              const segCor = SEGMENTO_COR[String(agente.segmento || agente.area || "")] || "#7d8a9a";
+              const nivelCor = NIVEL_COR[String(agente.nivel || "")] || "#7d8a9a";
               const ativo = agente.ativo !== false;
-              const avatarUrl =
-                typeof agente.avatar_url === "string" && agente.avatar_url.trim()
-                  ? agente.avatar_url.trim()
-                  : null;
+              const avatarUrl = typeof agente.avatar_url === "string" && agente.avatar_url.trim() ? agente.avatar_url.trim() : null;
+              const selecionado = selectedSlug === agente.agente_slug;
 
               return (
                 <div
                   key={agente.agente_slug}
                   role="button"
                   tabIndex={0}
-                  onClick={() => router.push(`/crm/agentes/${agente.agente_slug}`)}
+                  onClick={() => {
+                    setSelectedSlug(agente.agente_slug);
+                    setDetailTab("editar");
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      router.push(`/crm/agentes/${agente.agente_slug}`);
+                      setSelectedSlug(agente.agente_slug);
+                      setDetailTab("editar");
                     }
                   }}
                   style={{
-                    background: "#161b22",
-                    border: "1px solid #30363d",
-                    borderRadius: 12,
-                    padding: 16,
+                    background: "linear-gradient(160deg, #161f2b 0%, #121a24 52%, #111821 100%)",
+                    border: selecionado ? "1px solid #c9a24a66" : "1px solid #273243",
+                    borderRadius: 14,
+                    padding: 14,
                     cursor: "pointer",
-                    opacity: arquivado ? 0.4 : 1,
-                    transition: "border-color 150ms",
+                    boxShadow: selecionado ? "0 12px 36px rgba(0,0,0,0.35)" : "0 8px 22px rgba(0,0,0,0.24)",
+                    transition: "all 150ms ease",
                     display: "flex",
                     flexDirection: "column",
                     gap: 10,
                   }}
-                  onMouseEnter={(e) => {
-                    if (!arquivado) (e.currentTarget as HTMLDivElement).style.borderColor = "#c9a24a";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = "#30363d";
-                  }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div
                       style={{
-                        width: 44,
-                        height: 44,
+                        width: 42,
+                        height: 42,
                         borderRadius: "50%",
                         background: segCor,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 15,
+                        color: "#fff",
+                        fontSize: 14,
                         fontWeight: 700,
-                        color: "white",
-                        flexShrink: 0,
-                        letterSpacing: 0.5,
                         overflow: "hidden",
+                        border: "1px solid #ffffff22",
                       }}
                     >
                       {avatarUrl ? (
@@ -314,115 +464,52 @@ function AgentesView() {
                       )}
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <p
-                        style={{
-                          color: "#e6edf3",
-                          fontWeight: 700,
-                          fontSize: 14,
-                          margin: 0,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
+                      <p style={{ color: "#f0f5ff", fontWeight: 700, fontSize: 15, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {agente.nome}
                       </p>
-                      <p
-                        style={{
-                          color: "#8b949e",
-                          fontSize: 11,
-                          margin: "2px 0 0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
+                      <p style={{ color: "#94a3b8", fontSize: 11, margin: "2px 0 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {agente.cargo}
                       </p>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
                     {agente.segmento && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: 20,
-                          background: segBg,
-                          color: segCor,
-                          border: `1px solid ${segCor}44`,
-                        }}
-                      >
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: `${segCor}1f`, color: segCor, border: `1px solid ${segCor}44` }}>
                         {agente.segmento}
                       </span>
                     )}
                     {agente.nivel && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: 20,
-                          background: nivelBg,
-                          color: nivelCor,
-                          border: `1px solid ${nivelCor}44`,
-                        }}
-                      >
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: `${nivelCor}1f`, color: nivelCor, border: `1px solid ${nivelCor}44` }}>
                         {agente.nivel}
                       </span>
                     )}
                     {modoLista === "arquivados" && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: 20,
-                          background: "#6366f122",
-                          color: "#a5b4fc",
-                          border: "1px solid #6366f144",
-                        }}
-                      >
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#7c3aed1f", color: "#c4b5fd", border: "1px solid #7c3aed44" }}>
                         Arquivado
                       </span>
                     )}
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: "2px 8px",
-                        borderRadius: 20,
-                        background: ativo ? "#003b2620" : "#b3261e20",
-                        color: ativo ? "#22c55e" : "#ef4444",
-                        border: `1px solid ${ativo ? "#22c55e44" : "#ef444444"}`,
-                      }}
-                    >
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: ativo ? "#003b2620" : "#b3261e20", color: ativo ? "#22c55e" : "#ef4444", border: `1px solid ${ativo ? "#22c55e44" : "#ef444444"}` }}>
                       {ativo ? "Ativo" : "Inativo"}
                     </span>
                     <button
                       type="button"
                       onClick={(e) => alternarAtivo(agente, e)}
-                      disabled={!!arquivado || alternandoAtivoSlug === agente.agente_slug}
+                      disabled={!!agente.arquivado_em || alternandoAtivoSlug === agente.agente_slug}
                       style={{
                         marginLeft: "auto",
                         fontSize: 10,
                         fontWeight: 700,
                         padding: "4px 8px",
-                        borderRadius: 6,
-                        border: "1px solid #30363d",
-                        background: "#21262d",
-                        color: "#8b949e",
-                        cursor: arquivado ? "not-allowed" : "pointer",
-                        opacity: arquivado ? 0.5 : 1,
+                        borderRadius: 8,
+                        border: "1px solid #344256",
+                        background: "#1d2633",
+                        color: "#afbed1",
+                        cursor: agente.arquivado_em ? "not-allowed" : "pointer",
+                        opacity: agente.arquivado_em ? 0.5 : 1,
                       }}
                     >
-                      {alternandoAtivoSlug === agente.agente_slug
-                        ? "…"
-                        : ativo
-                          ? "Desativar"
-                          : "Ativar"}
+                      {alternandoAtivoSlug === agente.agente_slug ? "..." : ativo ? "Desativar" : "Ativar"}
                     </button>
                   </div>
                 </div>
@@ -438,15 +525,7 @@ function AgentesView() {
             type="button"
             aria-label="Fechar painel"
             onClick={() => setDrawerNovoOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 40,
-              background: "rgba(0,0,0,0.55)",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-            }}
+            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.55)", border: "none", cursor: "pointer", padding: 0 }}
           />
           <aside
             style={{
@@ -464,11 +543,223 @@ function AgentesView() {
               minHeight: 0,
             }}
           >
-            <AgenteNovoWizard
-              variant="drawer"
-              onClose={() => setDrawerNovoOpen(false)}
-              onCreated={() => carregarAgentes()}
-            />
+            <AgenteNovoWizard variant="drawer" onClose={() => setDrawerNovoOpen(false)} onCreated={() => carregarAgentes()} />
+          </aside>
+        </>
+      )}
+
+      {detalheAberto && (
+        <>
+          <button
+            type="button"
+            aria-label="Fechar detalhes"
+            onClick={() => setSelectedSlug(null)}
+            style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(0,0,0,0.55)", border: "none", padding: 0 }}
+          />
+          <aside
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "min(640px, 100vw)",
+              zIndex: 60,
+              background: "#0f1620",
+              borderLeft: "1px solid #2d394b",
+              boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
+          >
+            <div style={{ borderBottom: "1px solid #2d394b", padding: 16, background: "linear-gradient(180deg,#121a26 0%, #101722 100%)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div>
+                  <p style={{ margin: 0, color: "#8ea1ba", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>AGENTE</p>
+                  <h3 style={{ margin: "3px 0 0", color: "#e6edf3", fontSize: 17 }}>
+                    {detailAgente?.nome || selectedSlug}
+                  </h3>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => selectedSlug && router.push(`/crm/agentes/${selectedSlug}`)}
+                    style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, padding: "8px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}
+                  >
+                    Página completa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSlug(null)}
+                    style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, width: 34, cursor: "pointer" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                {(["editar", "logs"] as const).map((tab) => {
+                  const sel = detailTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setDetailTab(tab)}
+                      style={{
+                        border: `1px solid ${sel ? "#c9a24a66" : "#344256"}`,
+                        background: sel ? "#c9a24a1f" : "#16202d",
+                        color: sel ? "#d6b976" : "#9fb0c6",
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {tab === "editar" ? "Editar agente" : "Logs timeline"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+              {detailLoading ? (
+                <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando dados do agente...</p>
+              ) : detailErro ? (
+                <div style={{ color: "#f87171", background: "#3a1518", border: "1px solid #7f1d1d", borderRadius: 8, padding: 10, fontSize: 13 }}>
+                  {detailErro}
+                </div>
+              ) : !detailAgente ? (
+                <p style={{ color: "#8b949e", fontSize: 13 }}>Agente não encontrado.</p>
+              ) : detailTab === "editar" ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ background: "#141d29", border: "1px solid #2c384b", borderRadius: 10, padding: 12 }}>
+                    <p style={{ color: "#8ea1ba", fontSize: 11, margin: "0 0 8px", fontWeight: 700 }}>FIXO</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      <input value={String(detailAgente.cargo || "-")} readOnly style={{ background: "#0f1620", border: "1px solid #2e3948", color: "#8ea1ba", borderRadius: 8, padding: "8px 10px", fontSize: 12 }} />
+                      <input value={String(detailAgente.modelo_padrao || "-")} readOnly style={{ background: "#0f1620", border: "1px solid #2e3948", color: "#8ea1ba", borderRadius: 8, padding: "8px 10px", fontSize: 12 }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>Nome</label>
+                    <input value={editNome} onChange={(e) => setEditNome(e.target.value)} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13 }} />
+                  </div>
+
+                  <div>
+                    <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>Mercados</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {MERCADOS_FIXOS.map((m) => {
+                        const sel = editMercados.includes(m);
+                        return (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => toggleEditMercado(m)}
+                            style={{ border: `1px solid ${sel ? "#c9a24a66" : "#344256"}`, background: sel ? "#c9a24a1f" : "#121b27", color: sel ? "#d6b976" : "#9fb0c6", borderRadius: 999, padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                          >
+                            {m}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>Bio</label>
+                    <textarea value={editBio} onChange={(e) => setEditBio(e.target.value)} rows={3} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13, resize: "vertical" }} />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>Tom</label>
+                      <input value={editTom} onChange={(e) => setEditTom(e.target.value)} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13 }} />
+                    </div>
+                    <div>
+                      <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>Estilo</label>
+                      <input value={editEstilo} onChange={(e) => setEditEstilo(e.target.value)} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13 }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>System prompt base</label>
+                    <textarea value={editPrompt} onChange={(e) => setEditPrompt(e.target.value)} rows={7} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13, resize: "vertical", lineHeight: 1.5 }} />
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#141d29", border: "1px solid #2c384b", borderRadius: 8, padding: "10px 12px" }}>
+                    <span style={{ color: "#c3d0e3", fontSize: 12, fontWeight: 700 }}>Status operacional</span>
+                    <button
+                      type="button"
+                      onClick={() => setEditAtivo((v) => !v)}
+                      disabled={!!detailAgente.arquivado_em}
+                      style={{ border: `1px solid ${editAtivo ? "#22c55e66" : "#ef444466"}`, color: editAtivo ? "#22c55e" : "#ef4444", background: editAtivo ? "#22c55e1a" : "#ef44441a", borderRadius: 999, padding: "5px 10px", fontWeight: 700, fontSize: 11, cursor: detailAgente.arquivado_em ? "not-allowed" : "pointer", opacity: detailAgente.arquivado_em ? 0.5 : 1 }}
+                    >
+                      {editAtivo ? "Ativo" : "Inativo"}
+                    </button>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    <button
+                      type="button"
+                      onClick={salvarDetalhes}
+                      disabled={salvandoDetalhe || !editNome.trim()}
+                      style={{ flex: 1, border: "none", background: "#003b26", color: "#c9a24a", borderRadius: 8, padding: "10px 12px", fontSize: 13, fontWeight: 700, cursor: salvandoDetalhe ? "wait" : "pointer", opacity: !editNome.trim() ? 0.5 : 1 }}
+                    >
+                      {salvandoDetalhe ? "Salvando..." : "Salvar alterações"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {logsErro && (
+                    <div style={{ color: "#f87171", background: "#3a1518", border: "1px solid #7f1d1d", borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12 }}>
+                      {logsErro}
+                    </div>
+                  )}
+                  {logsLoading ? (
+                    <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando logs...</p>
+                  ) : logs.length === 0 ? (
+                    <p style={{ color: "#8b949e", fontSize: 13 }}>Nenhum log encontrado para este agente.</p>
+                  ) : (
+                    <div style={{ position: "relative", paddingLeft: 18 }}>
+                      <div style={{ position: "absolute", left: 5, top: 8, bottom: 8, width: 2, background: "#2f3d50" }} />
+                      {logs.map((log, idx) => (
+                        <div key={String(log.id || idx)} style={{ position: "relative", marginBottom: 14, padding: "10px 12px", borderRadius: 10, border: "1px solid #2d3a4d", background: "#131c28" }}>
+                          <span style={{ position: "absolute", left: -17, top: 16, width: 10, height: 10, borderRadius: "50%", background: "#c9a24a", boxShadow: "0 0 0 2px #101722" }} />
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6, alignItems: "baseline" }}>
+                            <strong style={{ color: "#d7e3f4", fontSize: 12 }}>{String(log.modelo_usado || "Modelo não informado")}</strong>
+                            <span style={{ color: "#7f90a8", fontSize: 11 }}>{formatarData(String(log.criado_em || ""))}</span>
+                          </div>
+                          <p style={{ margin: "0 0 6px", color: "#9cb0c9", fontSize: 12, lineHeight: 1.5 }}>
+                            <strong style={{ color: "#c4d2e5" }}>Usuário:</strong>{" "}
+                            {String(log.mensagem_usuario || "").slice(0, 220) || "Sem mensagem registrada."}
+                          </p>
+                          <p style={{ margin: 0, color: "#9cb0c9", fontSize: 12, lineHeight: 1.5 }}>
+                            <strong style={{ color: "#c4d2e5" }}>Resposta IA:</strong>{" "}
+                            {String(log.resposta_ia || "").slice(0, 220) || "Sem resposta registrada."}
+                          </p>
+                          <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {log.tempo_resposta_ms != null && (
+                              <span style={{ color: "#7f90a8", fontSize: 11 }}>Latência: {String(log.tempo_resposta_ms)} ms</span>
+                            )}
+                            {log.tokens_input != null && (
+                              <span style={{ color: "#7f90a8", fontSize: 11 }}>Input: {String(log.tokens_input)}</span>
+                            )}
+                            {log.tokens_output != null && (
+                              <span style={{ color: "#7f90a8", fontSize: 11 }}>Output: {String(log.tokens_output)}</span>
+                            )}
+                            {log.custo_estimado_brl != null && (
+                              <span style={{ color: "#7f90a8", fontSize: 11 }}>Custo: R$ {String(log.custo_estimado_brl)}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </aside>
         </>
       )}
@@ -478,13 +769,7 @@ function AgentesView() {
 
 export default function AgentesPage() {
   return (
-    <Suspense
-      fallback={
-        <div style={{ minHeight: "100vh", background: "#0d1117", padding: 24, color: "#8b949e" }}>
-          Carregando...
-        </div>
-      }
-    >
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0d1117", padding: 24, color: "#8b949e" }}>Carregando...</div>}>
       <AgentesView />
     </Suspense>
   );
