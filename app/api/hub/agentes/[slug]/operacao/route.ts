@@ -20,6 +20,9 @@ export async function GET(
   const slug = decodeURIComponent(raw);
   const supabase = db();
 
+  /** Histórico de execuções no painel (não é “lifetime” completo; ver CRM / relatórios para auditoria longa). */
+  const CICLOS_LOG_LIMIT = 150;
+
   const [ciclosR, logsR, acoesR, promptR] = await Promise.all([
     supabase
       .from("hub_ciclos_ia")
@@ -31,7 +34,7 @@ export async function GET(
       .select("id, ciclo_id, status, erro, iniciado_em, finalizado_em, tokens_usados, custo_brl, acoes_tomadas")
       .eq("agente_slug", slug)
       .order("iniciado_em", { ascending: false })
-      .limit(25),
+      .limit(CICLOS_LOG_LIMIT),
     supabase
       .from("hub_acoes_ia")
       .select("id, tipo, descricao, lead_id, sucesso, criado_em, metadata")

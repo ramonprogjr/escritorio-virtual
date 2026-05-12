@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Bot, CalendarClock, Webhook } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
@@ -109,6 +110,180 @@ function tempoOpRelativo(iso?: string | null): string {
   return `${Math.round(diff / 1440)}d`;
 }
 
+const TIPO_CICLO_OPERACAO: Record<string, { cor: string }> = {
+  continuo: { cor: "#22c55e" },
+  programado: { cor: "#c9a24a" },
+  gatilho: { cor: "#94a3b8" },
+};
+
+function corUltimoCicloStatus(st?: string): string {
+  const s = String(st || "").toLowerCase();
+  if (s === "sucesso") return "#86efac";
+  if (s === "erro") return "#f87171";
+  if (s === "rodando") return "#fbbf24";
+  if (s === "sem_acao") return "#94a3b8";
+  return "#64748b";
+}
+
+function estimateIntervalMinutes(cron?: string | null, intervaloRaw?: unknown): number | null {
+  const fromNum =
+    typeof intervaloRaw === "number"
+      ? intervaloRaw
+      : typeof intervaloRaw === "string"
+        ? Number.parseFloat(intervaloRaw)
+        : NaN;
+  if (Number.isFinite(fromNum) && fromNum > 0) return fromNum;
+
+  const c = String(cron || "").trim();
+  if (!c) return null;
+  if (c === "*/2 * * * *") return 2;
+  if (c === "*/30 * * * *") return 30;
+  if (c === "0 */6 * * *") return 360;
+  if (/^0 \d+ \* \* \*$/.test(c)) return 1440;
+  return null;
+}
+
+/** Progresso 0–1 ao longo da cadência (repete a cada período). */
+function progressoAnelCiclo(ultimoIso: string | null | undefined, intervalMin: number | null): number {
+  if (!intervalMin || intervalMin <= 0) return 0;
+  const t = ultimoIso ? new Date(ultimoIso).getTime() : NaN;
+  if (Number.isNaN(t)) return 0;
+  const elapsed = Date.now() - t;
+  const period = intervalMin * 60000;
+  if (period <= 0) return 0;
+  const p = (elapsed % period) / period;
+  return Math.min(1, Math.max(0, p));
+}
+
+function rotuloCadenciaCron(intervalMin: number | null, cron?: string | null, tipo?: string): string {
+  if (intervalMin != null && intervalMin > 0) {
+    if (intervalMin < 60) return `a cada ${Math.round(intervalMin)} min`;
+    if (intervalMin < 1440) return `a cada ${Math.round(intervalMin / 60)} h`;
+    return "≈ 1× ao dia";
+  }
+  const t = String(tipo || "").toLowerCase();
+  if (t === "continuo") return "Contínuo (tempo real)";
+  if (t === "programado") return "Programado (cron)";
+  if (t === "gatilho") return "Sob gatilho";
+  const cr = String(cron || "").trim();
+  if (cr) return cr.length > 28 ? `${cr.slice(0, 28)}…` : cr;
+  return t || "—";
+}
+
+function cicloOperacionalIcon(tipoKey: string) {
+  if (tipoKey === "programado") return CalendarClock;
+  if (tipoKey === "gatilho") return Webhook;
+  return Bot;
+}
+
+/** Mascote + anel de cadência (SVG), com pulso quando ainda não houve execução. */
+function CicloOperacionalAvatar({
+  tipoKey,
+  accent,
+  progress01,
+  ativo,
+  aguardandoPrimeira,
+  labelTimer,
+}: {
+  tipoKey: string;
+  accent: string;
+  progress01: number;
+  ativo: boolean;
+  aguardandoPrimeira: boolean;
+  labelTimer: string;
+}) {
+  const Icon = cicloOperacionalIcon(tipoKey);
+  const r = 24;
+  const cx = 29;
+  const cy = 29;
+  const circ = 2 * Math.PI * r;
+  const p = Math.min(1, Math.max(0, progress01));
+  const strokeShown = Math.max(circ * 0.08, circ * p);
+  const strokeHide = circ - strokeShown;
+  const dim = !ativo;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+        flexShrink: 0,
+        width: 62,
+      }}
+    >
+      <div style={{ position: "relative", width: 58, height: 58 }}>
+        <svg width="58" height="58" viewBox="0 0 58 58" style={{ display: "block" }} aria-hidden>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e293b" strokeWidth="2.5" opacity={dim ? 0.45 : 1} />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke={accent}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray={`${strokeShown} ${strokeHide}`}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            opacity={dim ? 0.35 : 0.95}
+            style={{ transition: "stroke-dasharray 0.65s ease, opacity 0.3s ease" }}
+          />
+          {ativo && aguardandoPrimeira ? (
+            <circle cx={cx} cy={cy} r={r + 3} fill="none" stroke={accent} strokeWidth="1.2" opacity={0.5}>
+              <animate attributeName="r" values={`${r + 2};${r + 5};${r + 2}`} dur="2.4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.45;0.06;0.45" dur="2.4s" repeatCount="indefinite" />
+            </circle>
+          ) : null}
+          {ativo && !aguardandoPrimeira && p > 0.02 ? (
+            <circle cx={cx} cy={cy} r={r + 2.5} fill="none" stroke={accent} strokeWidth="1" strokeDasharray="4 7" opacity={0.35}>
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from={`0 ${cx} ${cy}`}
+                to={`360 ${cx} ${cy}`}
+                dur="14s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          ) : null}
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: `linear-gradient(165deg, ${accent}26 0%, #0d1117 50%, #0d1117 100%)`,
+            border: `1px solid ${accent}55`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: aguardandoPrimeira ? `0 0 14px ${accent}33` : `0 0 0 1px #00000040 inset`,
+          }}
+        >
+          <Icon size={19} color={dim ? "#64748b" : accent} strokeWidth={2} aria-hidden />
+        </div>
+      </div>
+      <span
+        style={{
+          fontSize: 9,
+          fontWeight: 700,
+          color: dim ? "#475569" : "#7f90a8",
+          textAlign: "center",
+          lineHeight: 1.2,
+          maxWidth: 62,
+        }}
+      >
+        {labelTimer}
+      </span>
+    </div>
+  );
+}
+
 function matchesModo(agente: Pick<Agente, "ativo" | "arquivado_em">, modo: ListMode): boolean {
   if (modo === "todos") return true;
   if (modo === "ativos") return agente.ativo !== false && !agente.arquivado_em;
@@ -125,6 +300,8 @@ function AgentesView() {
 
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [modoLista, setModoLista] = useState<ListMode>("todos");
+  const [buscaLista, setBuscaLista] = useState("");
+  const [filtroSegmento, setFiltroSegmento] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [erroLista, setErroLista] = useState<string | null>(null);
   const [drawerNovoOpen, setDrawerNovoOpen] = useState(false);
@@ -431,6 +608,39 @@ function AgentesView() {
     arquivados: agentes.filter((a) => matchesModo(a, "arquivados")).length,
   };
 
+  const segmentosNaLista = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of agentes) {
+      const v = String(a.segmento || a.area || "").trim();
+      if (v) s.add(v);
+    }
+    return [...s].sort((a, b) => a.localeCompare(b));
+  }, [agentes]);
+
+  const agentesFiltrados = useMemo(() => {
+    let list = agentes;
+    if (filtroSegmento) {
+      list = list.filter((a) => String(a.segmento || a.area || "").trim() === filtroSegmento);
+    }
+    const q = buscaLista.trim().toLowerCase();
+    if (q) {
+      list = list.filter((a) => {
+        const nome = String(a.nome || "").toLowerCase();
+        const slug = String(a.agente_slug || "").toLowerCase();
+        const bio = String(a.bio || "").toLowerCase();
+        const cargo = String(a.cargo || "").toLowerCase();
+        return nome.includes(q) || slug.includes(q) || bio.includes(q) || cargo.includes(q);
+      });
+    }
+    return list;
+  }, [agentes, filtroSegmento, buscaLista]);
+
+  useEffect(() => {
+    if (filtroSegmento && !segmentosNaLista.includes(filtroSegmento)) {
+      setFiltroSegmento("");
+    }
+  }, [filtroSegmento, segmentosNaLista]);
+
   useEffect(() => {
     setSlot({
       path: pathname,
@@ -585,9 +795,51 @@ function AgentesView() {
                 </button>
               );
             })}
-            {!carregando && !erroLista && (
+            {segmentosNaLista.length > 0 && (
+              <select
+                aria-label="Filtrar por segmento ou área"
+                value={filtroSegmento}
+                onChange={(e) => setFiltroSegmento(e.target.value)}
+                style={{
+                  marginLeft: 8,
+                  minWidth: 200,
+                  padding: "8px 12px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  background: "#121923",
+                  border: "1px solid #293241",
+                  color: "#e6edf3",
+                }}
+              >
+                <option value="">Todos os segmentos</option>
+                {segmentosNaLista.map((seg) => (
+                  <option key={seg} value={seg}>
+                    {seg}
+                  </option>
+                ))}
+              </select>
+            )}
+            <input
+              type="search"
+              value={buscaLista}
+              onChange={(e) => setBuscaLista(e.target.value)}
+              placeholder="Buscar nome, slug, cargo ou bio…"
+              style={{
+                marginLeft: 8,
+                minWidth: 220,
+                padding: "8px 12px",
+                borderRadius: 999,
+                fontSize: 12,
+                background: "#121923",
+                border: "1px solid #293241",
+                color: "#e6edf3",
+              }}
+            />
+            {!carregando && !erroLista && agentes.length > 0 && (
               <span style={{ fontSize: 12, color: "#708096", marginLeft: 6 }}>
-                mostrando: {counters[modoLista]} agente{counters[modoLista] === 1 ? "" : "s"}
+                mostrando: {agentesFiltrados.length} agente{agentesFiltrados.length === 1 ? "" : "s"}
               </span>
             )}
           </div>
@@ -614,9 +866,13 @@ function AgentesView() {
           <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando...</p>
         ) : agentes.length === 0 && !erroLista ? (
           <p style={{ color: "#8b949e", fontSize: 13 }}>Nenhum agente encontrado.</p>
+        ) : agentesFiltrados.length === 0 ? (
+          <p style={{ color: "#8b949e", fontSize: 13, textAlign: "center", padding: "32px 0" }}>
+            Nenhum agente corresponde à busca ou ao filtro
+          </p>
         ) : (
           <div style={CRM_ENTITY_GRID}>
-            {agentes.map((agente) => {
+            {agentesFiltrados.map((agente) => {
               const segCor = SEGMENTO_COR[String(agente.segmento || agente.area || "")] || "#3b82f6";
               const nivelCor = NIVEL_COR[String(agente.nivel || "")] || "#7d8a9a";
               const ativo = agente.ativo !== false;
@@ -1101,7 +1357,7 @@ function AgentesView() {
                       <p style={{ margin: "0 0 10px", color: "#9cb0c9", fontSize: 11, lineHeight: 1.5 }}>
                         {saudeAgente === "ok" && "Execuções e ações recentes dentro do esperado."}
                         {saudeAgente === "degradado" &&
-                          "Há erros em ciclos, ausência de logs com ciclos ativos ou atividade antiga. Revise Ciclos IA e logs."}
+                          "Há erro recente nas execuções de ciclo, várias falhas seguidas, última corrida muito antiga ou silêncio prolongado (ciclos ativos sem log e sem prompt recente). Revise Ciclos IA e o fluxo WhatsApp/cron."}
                         {saudeAgente === "parado" && "Agente inativo ou arquivado — não há operação esperada."}
                         {!saudeAgente && "—"}
                       </p>
@@ -1132,28 +1388,136 @@ function AgentesView() {
                       {operacao.ciclos.length === 0 ? (
                         <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>Nenhum ciclo vinculado a este agente.</p>
                       ) : (
-                        <ul style={{ margin: 0, paddingLeft: 18, color: "#c3d0e3", fontSize: 12, lineHeight: 1.6 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {operacao.ciclos.map((c) => {
                             const row = c as {
                               id?: string;
                               nome?: string;
+                              descricao?: string;
                               ativo?: boolean;
                               ultimo_status?: string;
                               tipo?: string;
+                              ultimo_ciclo?: string | null;
+                              cron_expressao?: string | null;
+                              intervalo_minutos?: number | null;
+                              total_execucoes?: number | null;
                             };
+                            const tipoKey = String(row.tipo || "").toLowerCase();
+                            const metaTipo = TIPO_CICLO_OPERACAO[tipoKey] || {
+                              cor: "#7d8a9a",
+                            };
+                            const intervalMin = estimateIntervalMinutes(row.cron_expressao, row.intervalo_minutos);
+                            const prog = progressoAnelCiclo(row.ultimo_ciclo, intervalMin);
+                            const ultimoIso = row.ultimo_ciclo ? String(row.ultimo_ciclo) : "";
+                            const temExecucao = ultimoIso && !Number.isNaN(new Date(ultimoIso).getTime());
+                            const st = String(row.ultimo_status || "nunca_executado");
+                            const stCor = corUltimoCicloStatus(st);
+                            const cadencia = rotuloCadenciaCron(intervalMin, row.cron_expressao, row.tipo);
+                            const execN = row.total_execucoes != null ? Number(row.total_execucoes) : null;
+
+                            const labelTimer =
+                              row.ativo === false
+                                ? "pausado"
+                                : !temExecucao
+                                  ? "1ª execução…"
+                                  : intervalMin != null
+                                    ? `${Math.round(prog * 100)}% da volta`
+                                    : "rodando";
+
                             return (
-                              <li key={String(row.id || row.nome)}>
-                                <strong style={{ color: "#e6edf3" }}>{String(row.nome || "—")}</strong>
-                                {" · "}
-                                <span style={{ color: row.ativo !== false ? "#86efac" : "#fca5a5" }}>
-                                  {row.ativo !== false ? "ativo" : "inativo"}
-                                </span>
-                                {row.ultimo_status ? ` · último: ${row.ultimo_status}` : ""}
-                                {row.tipo ? ` · ${row.tipo}` : ""}
-                              </li>
+                              <div
+                                key={String(row.id || row.nome)}
+                                style={{
+                                  display: "flex",
+                                  gap: 14,
+                                  alignItems: "stretch",
+                                  background: "#101822",
+                                  border: "1px solid #253042",
+                                  borderRadius: 10,
+                                  padding: "10px 12px",
+                                }}
+                              >
+                                <CicloOperacionalAvatar
+                                  tipoKey={tipoKey || "continuo"}
+                                  accent={metaTipo.cor}
+                                  progress01={prog}
+                                  ativo={row.ativo !== false}
+                                  aguardandoPrimeira={!temExecucao && row.ativo !== false}
+                                  labelTimer={labelTimer}
+                                />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                    <strong style={{ color: "#e6edf3", fontSize: 13 }}>{String(row.nome || "—")}</strong>
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        padding: "2px 8px",
+                                        borderRadius: 999,
+                                        background: row.ativo !== false ? "#052e1622" : "#3f1515",
+                                        color: row.ativo !== false ? "#86efac" : "#fca5a5",
+                                        border: `1px solid ${row.ativo !== false ? "#15803d55" : "#7f1d1d"}`,
+                                      }}
+                                    >
+                                      {row.ativo !== false ? "ativo" : "inativo"}
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        padding: "2px 8px",
+                                        borderRadius: 999,
+                                        background: `${stCor}18`,
+                                        color: stCor,
+                                        border: `1px solid ${stCor}44`,
+                                      }}
+                                    >
+                                      Último status · {st}
+                                    </span>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "grid",
+                                      gridTemplateColumns: "auto 1fr",
+                                      gap: "4px 14px",
+                                      fontSize: 11,
+                                      color: "#94a3b8",
+                                      lineHeight: 1.45,
+                                    }}
+                                  >
+                                    <span style={{ color: "#64748b", fontWeight: 600 }}>Última execução</span>
+                                    <span style={{ color: temExecucao ? "#c8d4e6" : "#64748b" }}>
+                                      {temExecucao ? (
+                                        <>
+                                          <time dateTime={ultimoIso} style={{ color: "#e2e8f0", fontWeight: 600 }}>
+                                            {formatarData(ultimoIso)}
+                                          </time>
+                                          <span style={{ color: "#7f90a8" }}> ({tempoOpRelativo(ultimoIso)} atrás)</span>
+                                        </>
+                                      ) : (
+                                        "Nunca executado — aguardando 1ª corrida"
+                                      )}
+                                    </span>
+                                    <span style={{ color: "#64748b", fontWeight: 600 }}>Cadência</span>
+                                    <span style={{ color: "#aebccf" }}>{cadencia}</span>
+                                    {execN != null && Number.isFinite(execN) ? (
+                                      <>
+                                        <span style={{ color: "#64748b", fontWeight: 600 }}>Total exec.</span>
+                                        <span style={{ color: "#aebccf" }}>{execN}</span>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                  {row.descricao && String(row.descricao).trim() ? (
+                                    <p style={{ margin: "8px 0 0", fontSize: 10, color: "#64748b", lineHeight: 1.4 }}>
+                                      {String(row.descricao).trim().slice(0, 120)}
+                                      {String(row.descricao).trim().length > 120 ? "…" : ""}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </div>
                             );
                           })}
-                        </ul>
+                        </div>
                       )}
 
                       <p style={{ color: "#c4d2e5", fontSize: 12, fontWeight: 700, margin: "14px 0 8px" }}>Últimas ações (IA)</p>
@@ -1197,46 +1561,101 @@ function AgentesView() {
                         </div>
                       )}
 
-                      <p style={{ color: "#c4d2e5", fontSize: 12, fontWeight: 700, margin: "14px 0 8px" }}>
-                        Execuções de ciclo (recentes)
+                      <p style={{ color: "#c4d2e5", fontSize: 12, fontWeight: 700, margin: "14px 0 4px" }}>
+                        Execuções de ciclo
+                      </p>
+                      <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 10 }}>
+                        Até 150 últimas linhas de hub_ciclos_log para este agente (painel; não substitui relatório completo).
                       </p>
                       {operacao.execucoes_ciclo.length === 0 ? (
                         <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>
-                          Nenhum registro em hub_ciclos_log para este agente.
+                          Nenhuma execução em hub_ciclos_log ainda — comum antes da primeira corrida (cron ou webhook após resposta no WhatsApp).
                         </p>
                       ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          {operacao.execucoes_ciclo.slice(0, 8).map((ex, i) => {
-                            const row = ex as {
-                              id?: string;
-                              status?: string;
-                              erro?: string;
-                              iniciado_em?: string;
-                              custo_brl?: number;
-                              tokens_usados?: number;
-                            };
-                            const st = String(row.status || "—");
-                            const stCor =
-                              st === "erro" ? "#f87171" : st === "sucesso" ? "#86efac" : st === "sem_acao" ? "#94a3b8" : "#c9a24a";
-                            return (
-                              <div
-                                key={String(row.id || i)}
-                                style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline", fontSize: 11 }}
-                              >
-                                <span style={{ color: stCor, fontWeight: 700 }}>{st}</span>
-                                <span style={{ color: "#7f90a8" }}>{tempoOpRelativo(row.iniciado_em)}</span>
-                                {row.tokens_usados != null && (
-                                  <span style={{ color: "#64748b" }}>{row.tokens_usados} tok</span>
-                                )}
-                                {row.custo_brl != null && (
-                                  <span style={{ color: "#64748b" }}>R$ {Number(row.custo_brl).toFixed(4)}</span>
-                                )}
-                                {row.erro && (
-                                  <span style={{ color: "#f87171", flex: "1 1 100%" }}>{String(row.erro).slice(0, 120)}</span>
-                                )}
-                              </div>
-                            );
-                          })}
+                        <div style={{ position: "relative", paddingLeft: 14 }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: 3,
+                              top: 6,
+                              bottom: 6,
+                              width: 2,
+                              borderRadius: 2,
+                              background: "linear-gradient(180deg, #c9a24a55 0%, #2d394b 100%)",
+                            }}
+                          />
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            {operacao.execucoes_ciclo.map((ex, i) => {
+                              const row = ex as {
+                                id?: string;
+                                status?: string;
+                                erro?: string;
+                                iniciado_em?: string;
+                                custo_brl?: number;
+                                tokens_usados?: number;
+                              };
+                              const st = String(row.status || "—");
+                              const stCor =
+                                st === "erro"
+                                  ? "#f87171"
+                                  : st === "sucesso"
+                                    ? "#86efac"
+                                    : st === "sem_acao"
+                                      ? "#94a3b8"
+                                      : "#c9a24a";
+                              const iso = row.iniciado_em;
+                              const abs = iso && !Number.isNaN(new Date(String(iso)).getTime()) ? formatarData(String(iso)) : null;
+                              const rel = tempoOpRelativo(iso ?? null);
+                              return (
+                                <div
+                                  key={String(row.id || i)}
+                                  style={{
+                                    position: "relative",
+                                    paddingLeft: 12,
+                                    fontSize: 11,
+                                    background: "#101822",
+                                    borderRadius: 8,
+                                    padding: "8px 10px 8px 14px",
+                                    border: "1px solid #253042",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      left: -10,
+                                      top: 12,
+                                      width: 8,
+                                      height: 8,
+                                      borderRadius: "50%",
+                                      background: stCor,
+                                      boxShadow: `0 0 0 2px #0d1117`,
+                                    }}
+                                  />
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline" }}>
+                                    <span style={{ color: stCor, fontWeight: 700 }}>{st}</span>
+                                    {abs ? (
+                                      <time dateTime={String(iso)} style={{ color: "#c8d4e6", fontWeight: 600 }}>
+                                        {abs}
+                                      </time>
+                                    ) : null}
+                                    <span style={{ color: "#7f90a8" }}>{rel !== "—" ? `${rel} atrás` : "—"}</span>
+                                    {row.tokens_usados != null && (
+                                      <span style={{ color: "#64748b" }}>{row.tokens_usados} tok</span>
+                                    )}
+                                    {row.custo_brl != null && (
+                                      <span style={{ color: "#64748b" }}>R$ {Number(row.custo_brl).toFixed(4)}</span>
+                                    )}
+                                  </div>
+                                  {row.erro && (
+                                    <p style={{ margin: "6px 0 0", color: "#f87171", fontSize: 10, lineHeight: 1.35 }}>
+                                      {String(row.erro).slice(0, 160)}
+                                      {String(row.erro).length > 160 ? "…" : ""}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
