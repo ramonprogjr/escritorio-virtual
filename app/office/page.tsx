@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Zap, Users, MessageSquare, Handshake, MailPlus, Bot, Settings, Bell, Building2, BarChart3 } from "lucide-react";
+import { Zap, Users, MessageSquare, Handshake, MailPlus, Bot, Settings, Bell, Building2, BarChart3, LayoutDashboard } from "lucide-react";
 import { Obra10BrandHeader } from "@/components/brand/Obra10Brand";
+import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 import { MAPA_AGENTES, CORES_AREA, TAMANHO_NIVEL, getInitials } from "@/lib/data/office-map";
 import MobileAgentDrawer from "@/components/mobile/MobileAgentDrawer";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
@@ -577,11 +578,16 @@ export default function OfficePage() {
           ))}
         </div>
 
-        <div className="p-3 mt-auto" style={{ borderTop: "1px solid #30363d" }}>
-          <button onClick={() => router.push("/crm")} className="w-full py-2 rounded-xl text-xs font-bold"
-            style={{ background: "#003b26", color: "#c9a24a", letterSpacing: "0.05em", border: "none", cursor: "pointer" }}>
-            CRM COMPLETO →
-          </button>
+        <div className="mt-auto border-t" style={{ borderColor: "#30363d" }}>
+          <CrmSessionFooter
+            expanded
+            primaryAction={{
+              href: "/crm",
+              label: "CRM completo",
+              title: "Abrir CRM",
+              icon: LayoutDashboard,
+            }}
+          />
         </div>
       </div>
 

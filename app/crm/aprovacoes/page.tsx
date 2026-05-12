@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { supabase } from "@/lib/supabase/client";
+import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 
 // ─── Brand palette ────────────────────────────────────────────────────────────
 const C = {
@@ -71,6 +72,8 @@ function Toast({ msg, tipo }: { msg: string; tipo: "ok" | "erro" }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 function AprovacoesInner() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { setSlot } = useCrmHeaderSlot();
   const tipoParam = searchParams.get("tipo") ?? "todos";
 
   const [aprovacoes, setAprovacoes] = useState<Aprovacao[]>([]);
@@ -141,31 +144,41 @@ function AprovacoesInner() {
   const tipos = ["todos", ...Array.from(new Set(aprovacoes.map(a => a.tipo)))];
   const filtradas = filtro === "todos" ? aprovacoes : aprovacoes.filter(a => a.tipo === filtro);
 
-  return (
-    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column" }}>
-
-      {/* ── Header ─── */}
-      <div style={{
-        padding: "16px 24px", background: C.green, flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div>
-          <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 18, margin: 0, lineHeight: 1.2 }}>Central de Aprovações</h1>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, margin: "4px 0 0" }}>
-            {aprovacoes.length} pendente{aprovacoes.length !== 1 ? "s" : ""} — tudo que precisa da sua decisão
-          </p>
-        </div>
-        {aprovacoes.length > 0 && (
-          <div style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: C.redSoft, border: `1px solid ${C.red}44`,
-            borderRadius: 20, padding: "4px 12px",
-          }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.red, animation: "pulse 1.4s ease-in-out infinite" }} />
+  useEffect(() => {
+    setSlot({
+      path: pathname,
+      subtitle: `${aprovacoes.length} pendente${aprovacoes.length !== 1 ? "s" : ""} — tudo que precisa da sua decisão`,
+      actions:
+        aprovacoes.length > 0 ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: C.redSoft,
+              border: `1px solid ${C.red}44`,
+              borderRadius: 20,
+              padding: "4px 12px",
+            }}
+          >
+            <div
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: C.red,
+                animation: "pulse 1.4s ease-in-out infinite",
+              }}
+            />
             <span style={{ color: C.red, fontSize: 11, fontWeight: 700 }}>{aprovacoes.length} aguardando</span>
           </div>
-        )}
-      </div>
+        ) : undefined,
+    });
+    return () => setSlot(null);
+  }, [pathname, setSlot, aprovacoes.length]);
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column" }}>
 
       {/* ── Filters ─── */}
       <div style={{

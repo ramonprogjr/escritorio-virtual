@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
@@ -27,7 +27,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Obra10LogoBadge, Obra10BrandHeader } from "@/components/brand/Obra10Brand";
-import { CrmSignOutButton } from "@/components/crm/CrmSignOutButton";
+import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
+import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
+import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
+import { CRM_HEADER_BAR_GRADIENT, CRM_SIDEBAR_GRADIENT } from "@/lib/crm-shell-theme";
+
+import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
 
 const SIDEBAR_STORAGE_KEY = "crm-sidebar-expanded";
 
@@ -39,10 +44,11 @@ type NavItem = {
 };
 
 /** Gavetas do menu (desktop expandido): reduz rolagem ao mostrar só um bloco por vez. Ver docs/crm-sidebar-navigation.md */
-const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
+const NAV_GROUPS: { id: string; label: string; sectionIcon: LucideIcon; items: NavItem[] }[] = [
   {
     id: "inicio",
     label: "Início",
+    sectionIcon: LayoutDashboard,
     items: [
       { href: "/crm", label: "Dashboard", icon: LayoutDashboard },
       { href: "/crm/kpis", label: "KPIs", icon: LineChart },
@@ -51,6 +57,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   {
     id: "pipeline",
     label: "Pipeline e cadastros",
+    sectionIcon: Users,
     items: [
       { href: "/crm/leads", label: "Leads", icon: Users },
       { href: "/crm/pessoas", label: "Pessoas", icon: User },
@@ -62,6 +69,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   {
     id: "atendimento",
     label: "Atendimento",
+    sectionIcon: MessageSquare,
     items: [
       { href: "/crm/atendimento", label: "Atendimento", icon: MessageSquare },
       { href: "/crm/aprovacoes", label: "Aprovações", icon: ClipboardCheck },
@@ -70,6 +78,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   {
     id: "midia",
     label: "Parceiros e mídia",
+    sectionIcon: Handshake,
     items: [
       { href: "/crm/parceiros", label: "Parceiros", icon: Handshake },
       { href: "/crm/relatorios", label: "Relatórios", icon: ClipboardList },
@@ -80,6 +89,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   {
     id: "automacao",
     label: "Automação",
+    sectionIcon: Bot,
     items: [
       {
         href: "/crm/agentes",
@@ -93,14 +103,13 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   {
     id: "sistema",
     label: "Sistema",
+    sectionIcon: Settings,
     items: [
       { href: "/crm/configuracoes", label: "Configurações", icon: Settings },
       { href: "/crm/onboarding-tenant", label: "Onboarding tenant", icon: Shield },
     ],
   },
 ];
-
-const NAV: NavItem[] = NAV_GROUPS.flatMap(g => g.items);
 
 function NavIcon({ Icon, expanded }: { Icon: LucideIcon; expanded: boolean }) {
   const size = expanded ? 18 : 20;
@@ -118,8 +127,7 @@ function findGroupIdForPath(pathname: string): string {
   return NAV_GROUPS[0]?.id ?? "inicio";
 }
 
-const SIDEBAR_GRADIENT =
-  "linear-gradient(180deg, #0a1628 0%, #121a2e 38%, #1c2433 72%, #1a1f27 100%)";
+const SIDEBAR_GRADIENT = CRM_SIDEBAR_GRADIENT;
 
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -127,6 +135,35 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDrawerId, setOpenDrawerId] = useState<string | null>(NAV_GROUPS[0].id);
+  const [collapsedFlyoutId, setCollapsedFlyoutId] = useState<string | null>(null);
+  const miniSidebarShellRef = useRef<HTMLDivElement>(null);
+  const miniFlyoutRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCollapsedFlyoutId(null);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (sidebarExpanded) setCollapsedFlyoutId(null);
+  }, [sidebarExpanded]);
+
+  useEffect(() => {
+    if (collapsedFlyoutId == null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setCollapsedFlyoutId(null);
+    }
+    function onPointerDown(e: PointerEvent) {
+      const t = e.target as Node;
+      if (miniSidebarShellRef.current?.contains(t)) return;
+      setCollapsedFlyoutId(null);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown, true);
+    };
+  }, [collapsedFlyoutId]);
 
   const activeGroupId = useMemo(() => findGroupIdForPath(pathname), [pathname]);
 
@@ -152,6 +189,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   }, [syncOpenDrawer]);
 
   function toggleSidebar() {
+    setCollapsedFlyoutId(null);
     setSidebarExpanded(prev => {
       const next = !prev;
       try {
@@ -168,8 +206,24 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-0 overflow-hidden box-border h-[100dvh] md:h-screen md:p-3 md:gap-3 bg-[#0d1117]">
-      <div className="relative hidden md:flex flex-shrink-0 self-stretch md:h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-1.5rem)]">
+    <CrmHeaderProvider>
+      <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:gap-2">
+          {!shouldHideCrmUniversalHeader(pathname) ? (
+            <div
+              className="pointer-events-none absolute left-0 right-0 top-0 z-[8] hidden h-14 border-b md:block"
+              style={{
+                background: CRM_HEADER_BAR_GRADIENT,
+                borderBottomColor: "var(--obra-borda, #30363d)",
+                boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.25)",
+              }}
+              aria-hidden
+            />
+          ) : null}
+          <div
+            ref={miniSidebarShellRef}
+            className="relative z-20 hidden md:flex md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] flex-shrink-0 self-stretch"
+          >
         <button
           type="button"
           onClick={toggleSidebar}
@@ -193,8 +247,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </button>
 
         <aside
-          className={`flex h-full flex-col gap-1 overflow-hidden rounded-2xl border py-3 transition-[width] duration-200 ease-out ${
-            sidebarExpanded ? "w-56 items-stretch px-2" : "w-[4.25rem] items-center px-0"
+          className={`flex h-full flex-col gap-1 overflow-hidden rounded-xl border py-3 transition-[width] duration-200 ease-out ${
+            sidebarExpanded ? "w-72 items-stretch px-2" : "w-[4.25rem] items-center px-0"
           }`}
           style={{
             background: SIDEBAR_GRADIENT,
@@ -203,7 +257,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           }}
         >
           <div
-            className={`flex min-h-0 flex-shrink-0 items-start ${sidebarExpanded ? "mb-1 w-full flex-row gap-1 pt-0.5 pl-1 pr-10 md:pr-11" : "mb-3 mt-6 flex-col items-center gap-2 px-0 pb-0.5 pr-3"}`}
+            className={`flex min-h-0 flex-shrink-0 items-start ${sidebarExpanded ? "mb-1 w-full flex-row gap-1 pt-0.5 pl-1 pr-10 md:pr-11" : "mb-1 mt-2 flex-col items-center gap-1 px-0 pb-0.5 pr-3"}`}
           >
             {sidebarExpanded ? (
               <div className="min-w-0 flex-1 px-1 py-1">
@@ -216,7 +270,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          <nav className="flex min-h-0 w-full flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+          <nav className="flex min-h-0 w-full flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-0.5">
             {sidebarExpanded ? (
               <>
                 {NAV_GROUPS.map(group => {
@@ -310,70 +364,138 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                 })}
               </>
             ) : (
-              NAV.map(item => {
-                const active = isNavActive(pathname, item.href);
-                return (
-                  <div key={item.href} className={`relative group ${sidebarExpanded ? "w-full" : ""}`}>
-                    <Link
-                      href={item.href}
-                      title={item.label}
-                      className="relative mx-auto flex h-10 w-10 items-center justify-center rounded-xl transition-colors"
+              <>
+                {NAV_GROUPS.map(group => {
+                  const flyoutOpen = collapsedFlyoutId === group.id;
+                  const groupHasActive = group.items.some(item => isNavActive(pathname, item.href));
+                  const SectionIcon = group.sectionIcon;
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      onClick={() => setCollapsedFlyoutId(prev => (prev === group.id ? null : group.id))}
+                      className="relative mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-colors"
                       style={{
-                        background: active ? "rgba(33,38,45,0.95)" : "transparent",
-                        color: active ? "var(--obra-dourado, #c9a24a)" : "var(--obra-texto-2, #8b949e)",
+                        background: flyoutOpen || groupHasActive ? "rgba(33,38,45,0.95)" : "transparent",
+                        color:
+                          flyoutOpen || groupHasActive
+                            ? "var(--obra-dourado, #c9a24a)"
+                            : "var(--obra-texto-2, #8b949e)",
+                        border: "none",
+                        cursor: "pointer",
                       }}
+                      title={group.label}
+                      aria-expanded={flyoutOpen}
+                      aria-haspopup="dialog"
                     >
-                      {active && (
+                      {groupHasActive && (
                         <span
                           className="pointer-events-none absolute right-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full"
                           style={{ background: "#3fb950" }}
                           aria-hidden
                         />
                       )}
-                      <NavIcon Icon={item.icon} expanded={false} />
-                    </Link>
-                    {item.extra && (
-                      <Link
-                        href={item.extra.href}
-                        title={item.extra.label}
-                        className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black opacity-0 transition-opacity group-hover:opacity-100"
-                        style={{
-                          background: "var(--obra-dourado, #c9a24a)",
-                          color: "var(--obra-verde, #003b26)",
-                        }}
-                      >
-                        <Plus size={12} strokeWidth={2.5} aria-hidden />
-                      </Link>
-                    )}
-                  </div>
-                );
-              })
+                      <SectionIcon size={20} strokeWidth={1.5} className="flex-shrink-0" aria-hidden />
+                    </button>
+                  );
+                })}
+              </>
             )}
           </nav>
 
           <div
-            className={`mt-auto flex flex-shrink-0 border-t pt-2 pb-1 ${sidebarExpanded ? "w-full px-1" : "flex-col items-center"}`}
+            className={`relative z-30 mt-auto flex flex-shrink-0 border-t pt-2 pb-1 ${sidebarExpanded ? "w-full px-1" : "flex-col items-center"}`}
             style={{ borderColor: "rgba(48,54,61,0.65)" }}
           >
-            <Link
-              href="/office"
-              className={
-                sidebarExpanded
-                  ? "flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-opacity hover:opacity-92"
-                  : "flex h-10 w-10 items-center justify-center rounded-xl transition-opacity hover:opacity-92"
-              }
-              style={{ background: "var(--obra-verde, #003b26)", color: "#c9a24a" }}
-              title="Escritório virtual"
-            >
-              <Building2 size={sidebarExpanded ? 18 : 20} strokeWidth={2} className="flex-shrink-0" aria-hidden />
-              {sidebarExpanded && <span className="truncate">Escritório virtual</span>}
-            </Link>
-            <CrmSignOutButton expanded={sidebarExpanded} />
+            <CrmSessionFooter expanded={sidebarExpanded} />
           </div>
         </aside>
+
+        {collapsedFlyoutId && !sidebarExpanded
+          ? (() => {
+              const group = NAV_GROUPS.find(g => g.id === collapsedFlyoutId);
+              if (!group) return null;
+              return (
+                <div
+                  ref={miniFlyoutRef}
+                  role="dialog"
+                  aria-label={group.label}
+                  className="pointer-events-auto absolute z-[60] flex max-h-[min(72vh,calc(100%-4.75rem))] w-72 flex-col overflow-hidden rounded-xl border shadow-2xl"
+                  style={{
+                    left: "100%",
+                    top: "2.25rem",
+                    marginLeft: "0.35rem",
+                    background: SIDEBAR_GRADIENT,
+                    borderColor: "var(--obra-borda, #30363d)",
+                    boxShadow: "0 16px 48px rgba(0,0,0,0.45)",
+                  }}
+                >
+                  <div
+                    className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2"
+                    style={{ borderColor: "var(--obra-borda, #30363d)" }}
+                  >
+                    <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+                      {group.label}
+                    </span>
+                    <button
+                      type="button"
+                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
+                      style={{
+                        background: "var(--obra-dark-3, #21262d)",
+                        color: "var(--obra-texto-2, #8b949e)",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                      aria-label="Fechar"
+                      onClick={() => setCollapsedFlyoutId(null)}
+                    >
+                      <X size={16} strokeWidth={2} aria-hidden />
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto py-2" style={{ WebkitOverflowScrolling: "touch" }}>
+                    <div className="space-y-0.5 px-2">
+                      {group.items.map(item => {
+                        const active = isNavActive(pathname, item.href);
+                        return (
+                          <div key={item.href} className="relative">
+                            <Link
+                              href={item.href}
+                              onClick={() => setCollapsedFlyoutId(null)}
+                              className={`relative flex min-h-10 items-center gap-2 rounded-xl px-2 py-2 text-left text-sm font-medium ${item.extra ? "pr-10" : ""}`}
+                              style={{
+                                background: active ? "rgba(33,38,45,0.95)" : "transparent",
+                                color: active ? "var(--obra-dourado, #c9a24a)" : "var(--obra-texto-2, #8b949e)",
+                              }}
+                            >
+                              <NavIcon Icon={item.icon} expanded />
+                              <span className="min-w-0 truncate">{item.label}</span>
+                            </Link>
+                            {item.extra && (
+                              <Link
+                                href={item.extra.href}
+                                onClick={() => setCollapsedFlyoutId(null)}
+                                className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-xs font-black"
+                                style={{
+                                  background: "var(--obra-dourado, #c9a24a)",
+                                  color: "var(--obra-verde, #003b26)",
+                                }}
+                                title={item.extra.label}
+                              >
+                                <Plus size={16} strokeWidth={2.5} aria-hidden />
+                              </Link>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          : null}
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-1.5rem)] md:self-stretch">
+      <div className="relative z-[12] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] md:self-stretch">
         <div
           className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2 md:hidden sticky top-0 z-30 backdrop-blur-md supports-[backdrop-filter]:bg-[#161b22]/90"
           style={{
@@ -422,6 +544,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
+        <CrmUniversalHeader />
+
         <div
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0"
           style={{ WebkitOverflowScrolling: "touch" }}
@@ -429,7 +553,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </div>
-
+        </div>
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[100] flex md:hidden" role="dialog" aria-modal="true" aria-label="Menu do CRM">
           <button
@@ -463,18 +587,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             <div className="flex-shrink-0 space-y-2 border-b px-2 py-2" style={{ borderColor: "var(--obra-borda, #30363d)" }}>
-              <Link
-                href="/office"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold"
-                style={{ background: "var(--obra-verde, #003b26)", color: "white" }}
-              >
-                <Building2 size={18} strokeWidth={2} className="flex-shrink-0" aria-hidden />
-                Escritório virtual
-              </Link>
-              <div className="px-0">
-                <CrmSignOutButton expanded />
-              </div>
+              <CrmSessionFooter variant="drawer" onNavigate={() => setMobileMenuOpen(false)} />
             </div>
             <nav className="min-h-0 flex-1 overflow-y-auto py-2" style={{ WebkitOverflowScrolling: "touch" }}>
               {NAV_GROUPS.map(group => {
@@ -555,5 +668,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
     </div>
+    </CrmHeaderProvider>
   );
 }

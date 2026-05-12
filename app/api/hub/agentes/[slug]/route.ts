@@ -65,6 +65,8 @@ export async function PATCH(
     "tom_voz",
     "estilo_comunicacao",
     "system_prompt_base",
+    "avatar_url",
+    "ativo",
   ] as const;
 
   const patch: Record<string, unknown> = {};

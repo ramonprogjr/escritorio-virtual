@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
-import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
+import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,6 +107,8 @@ function borderColor(iso: string) {
 
 export default function LeadsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { setSlot } = useCrmHeaderSlot();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [view, setView] = useState<"kanban" | "lista">("kanban");
   const [busca, setBusca] = useState("");
@@ -211,58 +213,61 @@ export default function LeadsPage() {
   const emRisco = leads.filter(l => !["ganho", "perdido"].includes(l.estagio) && Date.now() - new Date(l.atualizado_em).getTime() > 3_600_000).reduce((s, l) => s + l.valor_estimado, 0);
   const pipeline = leads.filter(l => !["ganho", "perdido"].includes(l.estagio)).reduce((s, l) => s + l.valor_estimado, 0);
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0d1117]">
-
-      <CrmStickyPageHeader
-        title="Pipeline de Leads"
-        description={`${leads.length} leads · tempo real`}
-        actions={
-          <>
-            <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
-              <button
-                type="button"
-                onClick={() => setView("kanban")}
-                className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-              >
-                Kanban
-              </button>
-              <button
-                type="button"
-                onClick={() => setView("lista")}
-                className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-              >
-                Lista
-              </button>
-            </div>
-            <input
-              value={busca}
-              onChange={e => setBusca(e.target.value)}
-              placeholder="Buscar lead..."
-              className="w-full min-h-11 min-w-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
-            />
-            <select
-              value={filtroEstagio}
-              onChange={e => setFiltroEstagio(e.target.value)}
-              className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
-            >
-              <option value="">Todos os estágios</option>
-              {ESTAGIOS.map(e => (
-                <option key={e.id} value={e.id}>
-                  {e.label}
-                </option>
-              ))}
-            </select>
+  useEffect(() => {
+    setSlot({
+      path: pathname,
+      subtitle: `${leads.length} leads · tempo real`,
+      actions: (
+        <>
+          <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
             <button
               type="button"
-              onClick={() => setNovoAberto(true)}
-              className="min-h-11 w-full touch-manipulation rounded-lg bg-[#c9a24a] px-4 py-2 text-sm font-bold text-[#003b26] transition-colors hover:bg-[#e0b86a] min-[480px]:min-h-10 min-[480px]:w-auto"
+              onClick={() => setView("kanban")}
+              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
             >
-              + Novo Lead
+              Kanban
             </button>
-          </>
-        }
-      />
+            <button
+              type="button"
+              onClick={() => setView("lista")}
+              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+            >
+              Lista
+            </button>
+          </div>
+          <input
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            placeholder="Buscar lead..."
+            className="w-full min-h-11 min-w-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
+          />
+          <select
+            value={filtroEstagio}
+            onChange={e => setFiltroEstagio(e.target.value)}
+            className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
+          >
+            <option value="">Todos os estágios</option>
+            {ESTAGIOS.map(e => (
+              <option key={e.id} value={e.id}>
+                {e.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setNovoAberto(true)}
+            className="min-h-11 w-full touch-manipulation rounded-lg bg-[#c9a24a] px-4 py-2 text-sm font-bold text-[#003b26] transition-colors hover:bg-[#e0b86a] min-[480px]:min-h-10 min-[480px]:w-auto"
+          >
+            + Novo Lead
+          </button>
+        </>
+      ),
+    });
+    return () => setSlot(null);
+  }, [pathname, setSlot, leads.length, view, busca, filtroEstagio]);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0d1117]">
 
       {/* ─── METRICS ─── */}
       <div className="grid grid-cols-2 gap-px sm:grid-cols-4 flex-shrink-0 bg-[#30363d]">

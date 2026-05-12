@@ -8,6 +8,29 @@ import { Obra10BrandHeader } from "@/components/brand/Obra10Brand";
 import { LoginHeroPanel } from "@/components/login/LoginHeroPanel";
 import { getSafeReturnPath } from "@/lib/auth/safe-return-path";
 
+function messageForAuthRequestFailure(err: unknown): string {
+  const msg = err instanceof Error ? err.message : "";
+  const isNetwork =
+    err instanceof TypeError ||
+    msg === "Failed to fetch" ||
+    /failed to fetch|networkerror|load failed/i.test(msg);
+  if (!isNetwork) {
+    return msg || "Não foi possível iniciar sessão. Tente novamente.";
+  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const urlHint =
+    !url || !/^https?:\/\//i.test(url)
+      ? " NEXT_PUBLIC_SUPABASE_URL no .env.local deve ser uma URL válida (ex.: https://xxxxx.supabase.co ou http://127.0.0.1:54321)."
+      : "";
+  return (
+    "Não foi possível contactar o servidor de autenticação (Supabase). Verifique: ligação à Internet; URL e chave em .env.local (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY); reinicie o servidor após alterar o .env; no dashboard Supabase confirme que o projeto não está em pausa." +
+    urlHint +
+    (typeof window !== "undefined" && /^http:\/\/(127\.0\.0\.1|localhost):/i.test(window.location.origin)
+      ? " Se usar Supabase local (CLI), deixe supabase start a correr e confira CORS/additional redirects para este origin."
+      : "")
+  );
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,13 +55,21 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setMsg(null);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    if (error) {
+    let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"];
+    try {
+      const result = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (result.error) {
+        setLoading(false);
+        setMsg(result.error.message);
+        return;
+      }
+      data = result.data;
+    } catch (err) {
       setLoading(false);
-      setMsg(error.message);
+      setMsg(messageForAuthRequestFailure(err));
       return;
     }
     const access_token = data.session?.access_token;

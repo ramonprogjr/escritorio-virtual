@@ -48,9 +48,6 @@ export default function NovoParceiro() {
         ← Voltar
       </button>
 
-      <h1 style={{ color: "#e6edf3", fontSize: 22, fontWeight: 800, margin: "0 0 4px" }}>Convidar Parceiro</h1>
-      <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 24px" }}>Gere um link de auto-cadastro para um novo parceiro ou profissional.</p>
-
       {!linkGerado ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>

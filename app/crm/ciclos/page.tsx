@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { supabase } from "@/lib/supabase/client";
 
 interface Ciclo {
@@ -66,7 +67,8 @@ const STATUS_COR: Record<string, string> = {
 };
 
 export default function CiclosPage() {
-  const router = useRouter();
+  const pathname = usePathname();
+  const { setSlot } = useCrmHeaderSlot();
   const [ciclos, setCiclos] = useState<Ciclo[]>([]);
   const [logs, setLogs] = useState<Record<string, unknown>[]>([]);
   const [alertas, setAlertas] = useState<Record<string, unknown>[]>([]);
@@ -118,26 +120,31 @@ export default function CiclosPage() {
     carregar();
   }
 
-  return (
-    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
-      <div className="px-4 py-3 flex items-center justify-between" style={{ background: "#161b22", borderBottom: "1px solid #30363d" }}>
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} style={{ color: "#8b949e", background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem" }}>←</button>
-          <div>
-            <h1 className="text-white font-bold">Central de Ciclos IA</h1>
-            <p className="text-xs" style={{ color: "#8b949e" }}>Agendamento e execução dos agentes</p>
-          </div>
-        </div>
+  useEffect(() => {
+    setSlot({
+      path: pathname,
+      actions: (
         <div className="flex gap-2 text-xs">
-          <span className="px-2 py-1 rounded" style={{ background: "#003b2630", color: "#c9a24a" }}>
-            {ciclos.filter(c => c.ativo).length} ativos
+          <span className="rounded px-2 py-1" style={{ background: "#003b2630", color: "#c9a24a" }}>
+            {ciclos.filter((c) => c.ativo).length} ativos
           </span>
-          <span className="px-2 py-1 rounded" style={{ background: alertas.length > 0 ? "#b3261e30" : "#21262d", color: alertas.length > 0 ? "#b3261e" : "#8b949e" }}>
+          <span
+            className="rounded px-2 py-1"
+            style={{
+              background: alertas.length > 0 ? "#b3261e30" : "#21262d",
+              color: alertas.length > 0 ? "#b3261e" : "#8b949e",
+            }}
+          >
             {alertas.length} alertas
           </span>
         </div>
-      </div>
+      ),
+    });
+    return () => setSlot(null);
+  }, [pathname, setSlot, ciclos, alertas]);
 
+  return (
+    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
       <div className="flex" style={{ borderBottom: "1px solid #30363d" }}>
         {[
           { id: "ciclos", label: `Ciclos (${ciclos.length})` },

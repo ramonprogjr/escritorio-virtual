@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 
 type Meta = Record<string, unknown>;
 type Resultado = Record<string, unknown>;
@@ -34,10 +33,6 @@ export default function KpisPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-[#0d1117]">
-      <CrmStickyPageHeader
-        title="Painel de KPIs"
-        description="Métricas em tempo real — últimas 24h"
-      />
       <div className="min-h-0 flex-1 px-3 py-4 sm:px-6 sm:py-6">
         {carregando ? (
           <div className="mt-12 text-center text-[#8b949e]">Carregando KPIs...</div>
