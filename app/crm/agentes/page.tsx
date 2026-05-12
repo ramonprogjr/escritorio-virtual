@@ -53,6 +53,17 @@ type AgenteLog = {
   [key: string]: unknown;
 };
 
+type CargoCatalogo = {
+  slug: string;
+  titulo?: string;
+  segmento?: string;
+  especialidade?: string;
+  nivel?: string | number;
+  ativo?: boolean;
+  descricao_curta?: string;
+  [key: string]: unknown;
+};
+
 type ListMode = "todos" | "ativos" | "inativos" | "arquivados";
 type DetailTab = "editar" | "logs";
 
@@ -91,7 +102,12 @@ function AgentesView() {
   const [carregando, setCarregando] = useState(true);
   const [erroLista, setErroLista] = useState<string | null>(null);
   const [drawerNovoOpen, setDrawerNovoOpen] = useState(false);
+  const [drawerCargosOpen, setDrawerCargosOpen] = useState(false);
   const [alternandoAtivoSlug, setAlternandoAtivoSlug] = useState<string | null>(null);
+  const [cargos, setCargos] = useState<CargoCatalogo[]>([]);
+  const [carregandoCargos, setCarregandoCargos] = useState(false);
+  const [erroCargos, setErroCargos] = useState<string | null>(null);
+  const [alternandoCargoSlug, setAlternandoCargoSlug] = useState<string | null>(null);
 
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("editar");
@@ -137,6 +153,31 @@ function AgentesView() {
       })
       .finally(() => setCarregando(false));
   }, [modoLista]);
+
+  const carregarCargos = useCallback(() => {
+    setCarregandoCargos(true);
+    setErroCargos(null);
+    fetch("/api/hub/cargos?all=true", { headers: internalApiHeaders() })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          setErroCargos(typeof data?.error === "string" ? data.error : `Erro ${r.status} ao carregar cargos.`);
+          setCargos([]);
+          return;
+        }
+        if (Array.isArray(data)) setCargos(data);
+        else if (Array.isArray(data?.cargos)) setCargos(data.cargos);
+        else {
+          setErroCargos("Resposta inesperada ao carregar cargos.");
+          setCargos([]);
+        }
+      })
+      .catch((e: Error) => {
+        setErroCargos(e?.message || "Falha de rede ao carregar cargos.");
+        setCargos([]);
+      })
+      .finally(() => setCarregandoCargos(false));
+  }, []);
 
   const carregarDetalhe = useCallback(async (slug: string) => {
     setDetailLoading(true);
@@ -193,9 +234,32 @@ function AgentesView() {
     }
   }, []);
 
+  async function alternarCargoAtivo(cargo: CargoCatalogo) {
+    const slug = String(cargo.slug || "").trim();
+    if (!slug) return;
+    const proximo = cargo.ativo === false;
+    setAlternandoCargoSlug(slug);
+    try {
+      const res = await fetch("/api/hub/cargos", {
+        method: "PATCH",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, ativo: proximo }),
+      });
+      if (!res.ok) return;
+      setCargos((prev) => prev.map((c) => (c.slug === slug ? { ...c, ativo: proximo } : c)));
+    } finally {
+      setAlternandoCargoSlug(null);
+    }
+  }
+
   useEffect(() => {
     carregarAgentes();
   }, [carregarAgentes]);
+
+  useEffect(() => {
+    if (!drawerCargosOpen) return;
+    carregarCargos();
+  }, [drawerCargosOpen, carregarCargos]);
 
   useEffect(() => {
     if (openedFromQuery.current) return;
@@ -210,11 +274,12 @@ function AgentesView() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (detalheAberto) setSelectedSlug(null);
+      else if (drawerCargosOpen) setDrawerCargosOpen(false);
       else if (drawerNovoOpen) setDrawerNovoOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [detalheAberto, drawerNovoOpen]);
+  }, [detalheAberto, drawerCargosOpen, drawerNovoOpen]);
 
   useEffect(() => {
     if (!selectedSlug) return;
@@ -233,22 +298,40 @@ function AgentesView() {
     setSlot({
       path: pathname,
       actions: (
-        <button
-          type="button"
-          onClick={() => setDrawerNovoOpen(true)}
-          style={{
-            background: "#003b26",
-            color: "#c9a24a",
-            border: "none",
-            borderRadius: 8,
-            padding: "10px 20px",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          + Novo agente
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={() => setDrawerCargosOpen(true)}
+            style={{
+              background: "#1b2330",
+              color: "#9fb0c6",
+              border: "1px solid #344256",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Gerenciar cargos
+          </button>
+          <button
+            type="button"
+            onClick={() => setDrawerNovoOpen(true)}
+            style={{
+              background: "#003b26",
+              color: "#c9a24a",
+              border: "none",
+              borderRadius: 8,
+              padding: "10px 20px",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            + Novo agente
+          </button>
+        </div>
       ),
     });
     return () => setSlot(null);
@@ -547,6 +630,116 @@ function AgentesView() {
             }}
           >
             <AgenteNovoWizard variant="drawer" onClose={() => setDrawerNovoOpen(false)} onCreated={() => carregarAgentes()} />
+          </aside>
+        </>
+      )}
+
+      {drawerCargosOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Fechar gerenciamento de cargos"
+            onClick={() => setDrawerCargosOpen(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 52, background: "rgba(0,0,0,0.55)", border: "none", padding: 0 }}
+          />
+          <aside
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "min(560px, 100vw)",
+              zIndex: 53,
+              background: "#0f1620",
+              borderLeft: "1px solid #2d394b",
+              boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
+          >
+            <div style={{ borderBottom: "1px solid #2d394b", padding: 16, background: "linear-gradient(180deg,#121a26 0%, #101722 100%)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div>
+                  <p style={{ margin: 0, color: "#8ea1ba", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>ADMINISTRAÇÃO</p>
+                  <h3 style={{ margin: "3px 0 0", color: "#e6edf3", fontSize: 17 }}>Gerenciar cargos</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDrawerCargosOpen(false)}
+                  style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, width: 34, cursor: "pointer" }}
+                >
+                  ✕
+                </button>
+              </div>
+              <p style={{ margin: "8px 0 0", color: "#8092a9", fontSize: 12 }}>
+                Controle quais cargos ficam disponíveis no cadastro de novos agentes.
+              </p>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+              {erroCargos && (
+                <div style={{ color: "#f87171", background: "#3a1518", border: "1px solid #7f1d1d", borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12 }}>
+                  {erroCargos}
+                </div>
+              )}
+              {carregandoCargos ? (
+                <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando cargos...</p>
+              ) : cargos.length === 0 ? (
+                <p style={{ color: "#8b949e", fontSize: 13 }}>Nenhum cargo encontrado.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {cargos.map((cargo) => {
+                    const ativo = cargo.ativo !== false;
+                    const slug = String(cargo.slug || "");
+                    return (
+                      <div
+                        key={slug}
+                        style={{
+                          background: "#131c28",
+                          border: "1px solid #2d3a4d",
+                          borderRadius: 10,
+                          padding: "10px 12px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ margin: 0, color: "#e6edf3", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {String(cargo.titulo || slug)}
+                          </p>
+                          <p style={{ margin: "2px 0 0", color: "#8394ab", fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            @{slug}
+                            {cargo.segmento ? ` · ${String(cargo.segmento)}` : ""}
+                            {cargo.especialidade ? ` · ${String(cargo.especialidade)}` : ""}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => alternarCargoAtivo(cargo)}
+                          disabled={alternandoCargoSlug === slug}
+                          style={{
+                            flexShrink: 0,
+                            border: `1px solid ${ativo ? "#ef444455" : "#22c55e55"}`,
+                            background: ativo ? "#ef444420" : "#22c55e20",
+                            color: ativo ? "#ef4444" : "#22c55e",
+                            borderRadius: 999,
+                            padding: "6px 10px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: alternandoCargoSlug === slug ? "wait" : "pointer",
+                          }}
+                        >
+                          {alternandoCargoSlug === slug ? "..." : ativo ? "Desativar" : "Ativar"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </aside>
         </>
       )}
