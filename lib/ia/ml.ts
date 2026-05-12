@@ -447,6 +447,60 @@ IMPORTANTE: Apenas avalie. Não sugira novas alterações aqui.`;
 
 // ── MEDIR KPIs ────────────────────────────────────────────────
 // Apenas lê dados e registra — não altera nada
+/** KPI agregado do hub (cron) — não substitui metas por agente em `hub_kpis_metas`. */
+const KPI_CRON_FILA_GLOBAL = "mensagens_entrada_fila_pendentes";
+
+/**
+ * Um registo em `hub_kpis_resultados` por execução de cron (`?acao=kpis`), independentemente de haver metas.
+ * Métrica: contagem global de `hub_fila_mensagens` com status pendente / direção entrada.
+ * Uses the same Supabase client as ML (service_role when configurado).
+ */
+export async function registrarResultadoCronKpisHub(): Promise<{
+  kpi_slug: string;
+  agente_slug: string;
+  valor: number;
+}> {
+  const db = supabase();
+  const periodo_fim = new Date();
+  const periodo_inicio = new Date(periodo_fim.getTime() - 60 * 60 * 1000);
+
+  const { count, error: countErr } = await db
+    .from("hub_fila_mensagens")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "pendente")
+    .eq("direcao", "entrada");
+
+  const valor = countErr ? 0 : count ?? 0;
+
+  const { data: defRow } = await db
+    .from("hub_kpis_definicao")
+    .select("slug")
+    .eq("slug", KPI_CRON_FILA_GLOBAL)
+    .maybeSingle();
+
+  const kpiSlug = KPI_CRON_FILA_GLOBAL;
+  const agente_hub = "_hub";
+
+  await db.from("hub_kpis_resultados").insert({
+    kpi_slug: kpiSlug,
+    agente_slug: agente_hub,
+    valor,
+    periodo_inicio: periodo_inicio.toISOString(),
+    periodo_fim: periodo_fim.toISOString(),
+    dentro_da_meta: true,
+    nivel_alerta: "ok",
+    metadata: {
+      cron: "/api/ml/ciclo?acao=kpis",
+      escopo: "globo_hub",
+      slug_catalogo_hub_kpis_definicao: defRow ? true : false,
+      fonte_medicao: { tabela: "hub_fila_mensagens", status: "pendente", direcao: "entrada" },
+      erro_count_supabase: countErr?.message ?? null,
+    },
+  });
+
+  return { kpi_slug: kpiSlug, agente_slug: agente_hub, valor };
+}
+
 export async function medirKPIs(agenteSlug: string): Promise<void> {
   const db = supabase();
 

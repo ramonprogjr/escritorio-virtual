@@ -3,6 +3,12 @@
 // Qualquer demanda entra aqui e encontra o agente certo
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
+import {
+  avaliarRegrasMatriz,
+  filtrarRegrasPorCanal,
+  type CanalAutonomia,
+  type HubAutonomiaMatrizRow,
+} from "./autonomia-matriz";
 
 function supabase() {
   return createClient(
@@ -309,25 +315,59 @@ export async function escalarDemanda(
   return receberDemanda({ ...demanda, contexto: { ...demanda.contexto, escaladoDe: slugAtual, motivo } });
 }
 
+function normalizarCriteriosEscalonamento(raw: unknown): string[] {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) return raw.map((x) => String(x).trim()).filter(Boolean);
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) return [];
+    try {
+      const j = JSON.parse(t) as unknown;
+      if (Array.isArray(j)) return j.map((x) => String(x).trim()).filter(Boolean);
+    } catch {
+      /* não é JSON */
+    }
+    return t.split(/[\n,;|]+/).map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 // ── VERIFICADOR DE AUTONOMIA ──────────────────────────────────
-// Verifica se o agente pode agir sozinho ou precisa de aprovação
+// Ordem: hub_autonomia_matriz (por canal + gatilhos) → hub_hierarquia (limite BRL + critérios texto/JSON).
 export async function verificarAutonomia(
   slugAgente: string,
   acao: string,
-  valorEnvolvido: number
+  valorEnvolvido: number,
+  canal?: CanalAutonomia
 ): Promise<{ podeAgir: boolean; motivo: string; precisaAprovacao: boolean }> {
   const db = supabase();
+
+  const { data: linhasMatriz } = await db
+    .from("hub_autonomia_matriz")
+    .select("*")
+    .eq("agente_slug", slugAgente)
+    .eq("ativo", true)
+    .order("prioridade", { ascending: false });
+
+  const aplicaveis = filtrarRegrasPorCanal(
+    (linhasMatriz || []) as HubAutonomiaMatrizRow[],
+    canal
+  );
+  const bloqueioMatriz = avaliarRegrasMatriz(aplicaveis, acao, valorEnvolvido);
+  if (bloqueioMatriz?.bloqueado) {
+    return { podeAgir: false, motivo: bloqueioMatriz.motivo, precisaAprovacao: true };
+  }
 
   const { data: hierarquia } = await db
     .from("hub_hierarquia")
     .select("*")
     .eq("agente_slug", slugAgente)
-    .single();
+    .maybeSingle();
 
   if (!hierarquia) return { podeAgir: false, motivo: "Agente sem hierarquia configurada", precisaAprovacao: true };
 
-  const limite = hierarquia.limite_autonomia_brl || 0;
-  const criterios = hierarquia.criterios_escalonamento || [];
+  const limite = Number(hierarquia.limite_autonomia_brl) || 0;
+  const criterios = normalizarCriteriosEscalonamento(hierarquia.criterios_escalonamento);
 
   // Verifica limite financeiro
   if (valorEnvolvido > limite) {
@@ -339,8 +379,9 @@ export async function verificarAutonomia(
   }
 
   // Verifica critérios de escalamento
+  const acaoLower = acao.toLowerCase();
   for (const criterio of criterios) {
-    if (acao.toLowerCase().includes(criterio.toLowerCase())) {
+    if (acaoLower.includes(criterio.toLowerCase())) {
       return {
         podeAgir: false,
         motivo: `Ação "${acao}" requer aprovação: ${criterio}`,

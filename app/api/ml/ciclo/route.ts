@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { rodarCicloML, cobrarSubordinados, medirKPIs } from "@/lib/ia/ml";
+import { rodarCicloML, cobrarSubordinados, medirKPIs, registrarResultadoCronKpisHub } from "@/lib/ia/ml";
 import { varrerSistema, monitorarTrafego } from "@/lib/ia/monitor";
 import { createClient } from "@supabase/supabase-js";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
@@ -61,6 +61,20 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const acao = request.nextUrl.searchParams.get("acao");
 
+  /**
+   * KPIs cron (Vercel: `vercel.json` → `/api/ml/ciclo?acao=kpis`).
+   *
+   * Auth: `@/lib/cron-auth` (`CRON_SECRET`, `x-vercel-cron`, etc.).
+   *
+   * Teste manual (dev sem auth quando `NODE_ENV` ≠ production; porto típico 3001 via `npm run dev`):
+   *   curl -sS "http://localhost:3001/api/ml/ciclo?acao=kpis"
+   * Execução local verificada 2026-05-12: HTTP 200, `hub_agregado.kpi_slug` = `mensagens_entrada_fila_pendentes`,
+   * `agente_slug` = `_hub`, `valor` = contagem (ex.: `0`).
+   *
+   * Cada corrida faz `INSERT` em `hub_kpis_resultados` (`mensagens_entrada_fila_pendentes`, agente `_hub`,
+   * janela última hora UTC) com leitura opcional em `hub_kpis_definicao` para metadata;
+   * também corre `medirKPIs` por agente com metas activas (`hub_kpis_metas`).
+   */
   if (acao === "kpis") {
     if (!cronRequestAuthorized(request)) {
       return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
@@ -75,14 +89,15 @@ export async function GET(request: NextRequest) {
         .select("agente_slug")
         .eq("ativo", true);
       if (agentes?.length) {
-        await Promise.all(
-          agentes.map((a: { agente_slug: string }) => medirKPIs(a.agente_slug))
-        );
+        await Promise.all(agentes.map((a: { agente_slug: string }) => medirKPIs(a.agente_slug)));
       }
+      const hubAgregado = await registrarResultadoCronKpisHub();
       return NextResponse.json({
         sucesso: true,
         tipo: "kpis",
         agentes_medidos: agentes?.length ?? 0,
+        hub_agregado: hubAgregado,
+        usa_service_role: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
         timestamp: new Date().toISOString(),
       });
     } catch (erro) {

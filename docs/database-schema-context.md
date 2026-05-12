@@ -1,6 +1,7 @@
 # Contexto de schema — Supabase (Obra10+ / Escritório Virtual)
 
 **Gerado:** 2026-05-11  
+**Última atualização docs:** 2026-05-12  
 **Projeto Supabase (ref):** `cdjlqsznerdhwqyunodl` (MCP Cursor: pode viver em `.cursor/mcp.json` na raiz do workspace, ex. pasta pai `vitual/`, ou na configuração global do Cursor)
 
 Este ficheiro serve de **contexto para agentes e para ti**. Combina o que está **definido no repositório** com o inventário de tabelas que o **código** usa. **Não substitui** um `pg_dump` nem o estado live até ser atualizado via MCP ou SQL no dashboard.
@@ -53,6 +54,7 @@ Ficheiros aplicados pelo fluxo normal Supabase CLI / dashboard:
 | `20260509120000_hub_ciclos_slugs_e_tenants.sql` | `hub_tenants`; `tenant_id` em `hub_leads_crm`, `hub_agente_identidade`, `hub_fila_mensagens`, `hub_parceiros`; updates `hub_ciclos_ia` / `hub_alertas` |
 | `20260510130000_rls_tenant_pilot.sql` | RLS + `app_tenant_id()`, `default_obra10_tenant_id()` |
 | `20260510140000_hub_cotacoes.sql` | `hub_cotacoes_pedidos`, `hub_cotacoes_respostas` |
+| `20260512120000_hub_autonomia_matriz.sql` | `hub_autonomia_matriz`; FK `agente_slug` → `hub_agente_identidade(agente_slug)` |
 
 ---
 
@@ -75,9 +77,9 @@ Definições **`CREATE TABLE`** explícitas no repo (além das migrações acima
 
 ## 5. Tabelas `hub_*` referenciadas no código (App + API + lib)
 
-Lista única (2026-05-11), extraída de `.from("hub_…")` e joins Supabase no repositório:
+Lista única (2026-05-12), extraída de `.from("hub_…")` e joins Supabase no repositório:
 
-`hub_acoes_ia`, `hub_agente_conhecimento`, `hub_agente_configuracao`, `hub_agente_identidade`, `hub_alertas`, `hub_aprovacoes`, `hub_arquivos`, `hub_atividades`, `hub_auditoria_seguranca`, `hub_cargos_catalogo`, `hub_ciclos_ia`, `hub_ciclos_log`, `hub_contatos_notificacao`, `hub_conversas`, `hub_conversas_log`, `hub_cotacoes_pedidos`, `hub_cotacoes_respostas`, `hub_decision_logs`, `hub_empresas`, `hub_encaminhamentos`, `hub_fila_mensagens`, `hub_fluxos`, `hub_followup_config`, `hub_hierarquia`, `hub_imoveis`, `hub_kpis_metas`, `hub_kpis_resultados`, `hub_leads`, `hub_leads_crm`, `hub_links_cadastro`, `hub_memorias_lead`, `hub_mensagens`, `hub_mercados`, `hub_metricas_trafego`, `hub_ml_historico`, `hub_ml_observacoes`, `hub_ml_padroes`, `hub_ml_sugestoes`, `hub_modulos_template`, `hub_negocios`, `hub_notas`, `hub_parceiros`, `hub_parceiros_captacao`, `hub_parceiros_documentos`, `hub_parceiros_homologacao`, `hub_parceiros_log`, `hub_parceiros_modulos`, `hub_parceiros_referencias`, `hub_perfis_personalidade`, `hub_pessoas`, `hub_personalidade`, `hub_profissionais`, `hub_prompt_logs`, `hub_regras_ia`, `hub_responsabilidades`, `hub_scripts`, `hub_servicos`, `hub_tenants` (só migração; não grep em TS necessariamente)
+`hub_acoes_ia`, `hub_agente_conhecimento`, `hub_agente_configuracao`, `hub_agente_identidade`, `hub_alertas`, `hub_aprovacoes`, `hub_arquivos`, `hub_atividades`, `hub_auditoria_seguranca`, `hub_autonomia_matriz`, `hub_cargos_catalogo`, `hub_ciclos_ia`, `hub_ciclos_log`, `hub_contatos_notificacao`, `hub_conversas`, `hub_conversas_log`, `hub_cotacoes_pedidos`, `hub_cotacoes_respostas`, `hub_decision_logs`, `hub_empresas`, `hub_encaminhamentos`, `hub_fila_mensagens`, `hub_fluxos`, `hub_followup_config`, `hub_hierarquia`, `hub_imoveis`, `hub_kpis_metas`, `hub_kpis_resultados`, `hub_leads`, `hub_leads_crm`, `hub_links_cadastro`, `hub_memorias_lead`, `hub_mensagens`, `hub_mercados`, `hub_metricas_trafego`, `hub_ml_historico`, `hub_ml_observacoes`, `hub_ml_padroes`, `hub_ml_sugestoes`, `hub_modulos_template`, `hub_negocios`, `hub_notas`, `hub_parceiros`, `hub_parceiros_captacao`, `hub_parceiros_documentos`, `hub_parceiros_homologacao`, `hub_parceiros_log`, `hub_parceiros_modulos`, `hub_parceiros_referencias`, `hub_perfis_personalidade`, `hub_pessoas`, `hub_personalidade`, `hub_profissionais`, `hub_prompt_logs`, `hub_regras_ia`, `hub_responsabilidades`, `hub_scripts`, `hub_servicos`, `hub_tenants` (só migração; não grep em TS necessariamente)
 
 **Tabelas usadas no código mas sem `CREATE TABLE` encontrado neste repo** (provavelmente criadas noutro script ou só no projeto remoto):  
 `hub_alertas`, `hub_ciclos_ia`, `hub_ciclos_log`, `hub_decision_logs`, `hub_empresas`, `hub_encaminhamentos`, `hub_fluxos`, `hub_followup_config`, `hub_hierarquia`, `hub_imoveis`, `hub_links_cadastro`, `hub_mercados`, `hub_modulos_template`, `hub_negocios`, `hub_parceiros` (+ satélites `hub_parceiros_*`), `hub_perfis_personalidade`, `hub_profissionais`, `hub_regras_ia`, `hub_contatos_notificacao`, … — confirma no **live DB** com `information_schema` ou MCP `list_tables`.

@@ -17,8 +17,8 @@ function timingSafeStringEqual(a: string, b: string): boolean {
   }
 }
 
-/** Verifica origem do webhook quando WEBHOOK_SECRET está definido (HMAC ou segredo em header/Bearer). */
-function webhookAutenticado(request: NextRequest, rawBody: string, secret: string): boolean {
+/** Verifica origem do webhook quando WEBHOOK_SECRET está definido (HMAC ou segredo em header/Bearer). Exportado apenas para testes. */
+export function webhookAutenticado(request: NextRequest, rawBody: string, secret: string): boolean {
   const sig =
     request.headers.get("x-hub-signature-256") ||
     request.headers.get("x-signature") ||
@@ -359,8 +359,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = db();
-
   try {
     const rawBody = await request.text();
 
@@ -370,13 +368,21 @@ export async function POST(request: NextRequest) {
     if (secret && !skipVerify) {
       if (!webhookAutenticado(request, rawBody, secret)) {
         console.warn("[WEBHOOK] Falha na verificação (HMAC ou header/Bearer)");
-        return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+        return NextResponse.json(
+          {
+            error: "Não autorizado",
+            code: "WEBHOOK_AUTH_FAILED",
+            message:
+              "Falha na verificação do webhook (HMAC SHA-256 ou credencial Bearer/cabeçalho não confere com WEBHOOK_SECRET).",
+          },
+          { status: 401 }
+        );
       }
     } else if (!secret && !skipVerify) {
       if (!warnedMissingWebhookSecret) {
         warnedMissingWebhookSecret = true;
         console.warn(
-          "[WEBHOOK] WEBHOOK_SECRET não definido — webhook aceita qualquer origem. Defina WEBHOOK_SECRET e configure Evolution (header ou HMAC). Em emergência local: WEBHOOK_SKIP_SIGNATURE_VERIFY=true"
+          "[WEBHOOK] WEBHOOK_SECRET não definido — webhook aceita qualquer origem. Defina WEBHOOK_SECRET e configure Evolution (header ou HMAC). Em urgência local: WEBHOOK_SKIP_SIGNATURE_VERIFY=true"
         );
       }
     }
@@ -387,6 +393,8 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
     }
+
+    const supabase = db();
 
     const event    = body.event as string | undefined;
     const data     = body.data as Record<string, unknown> | undefined;

@@ -103,6 +103,7 @@ export default function CiclosPage() {
   const [alertas, setAlertas] = useState<Record<string, unknown>[]>([]);
   const [aba, setAba] = useState<"ciclos" | "logs" | "alertas">("ciclos");
   const [modoLista, setModoLista] = useState<ListMode>("todos");
+  const [filtroAgenteSlug, setFiltroAgenteSlug] = useState("");
   const [busca, setBusca] = useState("");
   const [drawerSubTab, setDrawerSubTab] = useState<DrawerSubTab>("dados");
   const [timelineLogs, setTimelineLogs] = useState<Record<string, unknown>[]>([]);
@@ -170,21 +171,32 @@ export default function CiclosPage() {
     };
   }, [ciclosTodos]);
 
+  const agentesNosCiclos = useMemo(() => {
+    const s = new Set(ciclosTodos.map((c) => c.agente_slug).filter(Boolean));
+    return [...s].sort((a, b) => a.localeCompare(b));
+  }, [ciclosTodos]);
+
   const ciclosFiltrados = useMemo(() => {
     let list = ciclosTodos;
     if (modoLista === "ativos") list = list.filter((c) => c.ativo);
     if (modoLista === "inativos") list = list.filter((c) => !c.ativo);
+    if (filtroAgenteSlug) list = list.filter((c) => c.agente_slug === filtroAgenteSlug);
     const q = busca.trim().toLowerCase();
     if (q) {
       list = list.filter(
         (c) =>
           c.nome.toLowerCase().includes(q) ||
-          c.agente_slug.toLowerCase().includes(q) ||
           (c.descricao && String(c.descricao).toLowerCase().includes(q))
       );
     }
     return list;
-  }, [ciclosTodos, modoLista, busca]);
+  }, [ciclosTodos, modoLista, busca, filtroAgenteSlug]);
+
+  useEffect(() => {
+    if (filtroAgenteSlug && !agentesNosCiclos.includes(filtroAgenteSlug)) {
+      setFiltroAgenteSlug("");
+    }
+  }, [filtroAgenteSlug, agentesNosCiclos]);
 
   const carregar = useCallback(async () => {
     const [cRes, l, a] = await Promise.all([
@@ -574,11 +586,37 @@ export default function CiclosPage() {
                     </button>
                   );
                 })}
+                {agentesNosCiclos.length > 0 && (
+                  <select
+                    aria-label="Filtrar por agente"
+                    value={filtroAgenteSlug}
+                    onChange={(e) => setFiltroAgenteSlug(e.target.value)}
+                    style={{
+                      marginLeft: 8,
+                      minWidth: 200,
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      background: "#121923",
+                      border: "1px solid #293241",
+                      color: "#e6edf3",
+                    }}
+                  >
+                    <option value="">Todos os agentes</option>
+                    {agentesNosCiclos.map((slug) => (
+                      <option key={slug} value={slug}>
+                        {slug}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <input
                   type="search"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Buscar nome ou agente…"
+                  placeholder="Buscar nome ou descrição…"
                   style={{
                     marginLeft: 8,
                     minWidth: 200,

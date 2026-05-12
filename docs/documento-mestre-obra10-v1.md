@@ -316,20 +316,18 @@ identifica intenção/mercado
     ↓
 busca ou cria lead em hub_leads_crm
     ↓
-busca agente apropriado em hub_agente_identidade
+resolve agente (mercado / hub_agente_identidade)
     ↓
-constrói prompt em camadas (lib/ia/prompt-builder.ts)
-    ↓ (chama Anthropic)
-Claude API (Haiku ou Sonnet)
+processarMensagem (lib/ia/engine.ts)
+    → autonomia (hub_autonomia_matriz + hub_hierarquia, conforme dados no banco)
+    → construirPrompt (lib/ia/prompt-builder.ts)
+    → Claude API via Anthropic (Haiku ou Sonnet)
     ↓
 recebe resposta
     ↓
-grava nas tabelas (após CMD-OBS-1, quando ativo), por exemplo:
-    - hub_prompt_logs
-    - hub_conversas
-    - hub_mensagens
-    - hub_ciclos_log
-    - hub_ciclos_ia (incrementa total_execucoes)
+observabilidade CMD-OBS-1 (quando ativo), por exemplo:
+    - hub_prompt_logs (engine)
+    - hub_conversas / hub_mensagens / hub_ciclos_log / hub_ciclos_ia (webhook após envio, onde aplicável)
     - hub_fila_mensagens
     - hub_acoes_ia
     - hub_memorias_lead
@@ -340,7 +338,7 @@ envia resposta de volta
 Evolution API → WhatsApp do cliente
 ```
 
-Resumo: WhatsApp → Evolution API → `POST` webhook Next.js (**`/api/whatsapp/webhook`**) → identificação de intenção/mercado → lead em **`hub_leads_crm`** → agente em **`hub_agente_identidade`** → **`lib/ia/prompt-builder.ts`** → Anthropic (Claude) → resposta persistida (pós **CMD-OBS-1**, quando ativo), incluindo entre outras:
+Resumo: WhatsApp → Evolution API → `POST` webhook Next.js (**`/api/whatsapp/webhook`**) → identificação de intenção/mercado → lead em **`hub_leads_crm`** → **`processarMensagem`** em **`lib/ia/engine.ts`** (router/agente, autonomia com **`hub_autonomia_matriz`**/**`hub_hierarquia`** quando aplicável no banco, **`lib/ia/prompt-builder.ts`**, Claude via Anthropic — sem chamada Anthropic duplicada no webhook) → envio da resposta via Evolution → persistências **CMD-OBS-1** quando ativo: **`hub_prompt_logs`** no engine; **`hub_conversas`**, **`hub_mensagens`**, **`hub_ciclos_log`**, **`hub_ciclos_ia`** no webhook onde aplicável; entre outras já existentes no fluxo:
 
 - `hub_prompt_logs`  
 - `hub_conversas`  
@@ -582,7 +580,7 @@ Sequência idealizada de uma obra ponta a ponta:
 
 ### 6.6 Webhook WhatsApp
 
-- **`app/api/whatsapp/webhook/route.ts`** — recebe Evolution API; intenção/mercado; lead em `hub_leads_crm`; agente; prompt em camadas; Anthropic; resposta via Evolution; (CMD-OBS-1) observabilidade em 5 tabelas.
+- **`app/api/whatsapp/webhook/route.ts`** — recebe Evolution API; intenção/mercado; lead em `hub_leads_crm`; chama **`processarMensagem`** (`lib/ia/engine.ts`): autonomia (**`hub_autonomia_matriz`** + **`hub_hierarquia`**, conforme dados no banco / migração aplicada), prompt em camadas (`prompt-builder`), Claude (Anthropic); resposta via Evolution. **CMD-OBS-1:** `hub_prompt_logs` no engine; `hub_conversas`, `hub_mensagens`, `hub_ciclos_log`, `hub_ciclos_ia` no webhook após sucesso, onde aplicável.
 
 ### 6.7 Outras APIs
 
@@ -598,12 +596,14 @@ Sequência idealizada de uma obra ponta a ponta:
 ### 7.1 Observabilidade do webhook (CMD-OBS-1)
 
 - **Status:** código pronto (commit `0978a3e`), aguardando deploy no Vercel.  
-- Após chamada bem-sucedida à Anthropic: `hub_prompt_logs`, `hub_conversas`, `hub_mensagens` (2 inserts), `hub_ciclos_log`, `hub_ciclos_ia` (incremento).  
+- **`hub_prompt_logs`:** escrito no **`lib/ia/engine.ts`** após a chamada ao Claude (fluxo unificado com outros canais).  
+- **`hub_conversas`**, **`hub_mensagens`** (2 inserts), **`hub_ciclos_log`**, **`hub_ciclos_ia`** (incremento): no webhook WhatsApp após envio bem-sucedido pela Evolution, onde aplicável.  
 - Cada `INSERT` em try/catch isolado — falha silenciosa não interrompe o webhook.
 
 ### 7.2 Resposta automática da IA
 
 - **Status:** bloqueado por configuração — falta `ANTHROPIC_API_KEY` no Vercel (produção).  
+- O WhatsApp usa o mesmo caminho de IA que o restante do produto: webhook → **`processarMensagem`** (`lib/ia/engine.ts`), sem segunda chamada Anthropic inline no `route.ts`.  
 - Comando sugerido: `npx vercel env add ANTHROPIC_API_KEY production` → redeploy → teste com lead real.
 
 ---

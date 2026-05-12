@@ -91,7 +91,8 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
     const autonomia = await verificarAutonomia(
       agente.slug,
       ctx.mensagem,
-      ctx.valorEstimado || 0
+      ctx.valorEstimado || 0,
+      ctx.canal
     );
 
     if (!autonomia.podeAgir) {
@@ -395,7 +396,7 @@ export async function processarDemandaInterna(demanda: Demanda & {
     if (!agente) return { sucesso: false, erro: "Nenhum agente disponível" };
 
     // Verifica autonomia
-    const autonomia = await verificarAutonomia(agente.slug, demanda.tipo, 0);
+    const autonomia = await verificarAutonomia(agente.slug, demanda.tipo, 0, demanda.canal);
 
     if (!autonomia.podeAgir) {
       const aprovacaoId = await criarAprovacao({
