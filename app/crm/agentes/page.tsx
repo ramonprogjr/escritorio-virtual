@@ -1357,7 +1357,7 @@ function AgentesView() {
                       <p style={{ margin: "0 0 10px", color: "#9cb0c9", fontSize: 11, lineHeight: 1.5 }}>
                         {saudeAgente === "ok" && "Execuções e ações recentes dentro do esperado."}
                         {saudeAgente === "degradado" &&
-                          "Há erros em ciclos, ausência de logs com ciclos ativos ou atividade antiga. Revise Ciclos IA e logs."}
+                          "Há erro recente nas execuções de ciclo, várias falhas seguidas, última corrida muito antiga ou silêncio prolongado (ciclos ativos sem log e sem prompt recente). Revise Ciclos IA e o fluxo WhatsApp/cron."}
                         {saudeAgente === "parado" && "Agente inativo ou arquivado — não há operação esperada."}
                         {!saudeAgente && "—"}
                       </p>
@@ -1561,12 +1561,15 @@ function AgentesView() {
                         </div>
                       )}
 
-                      <p style={{ color: "#c4d2e5", fontSize: 12, fontWeight: 700, margin: "14px 0 8px" }}>
-                        Execuções de ciclo (recentes)
+                      <p style={{ color: "#c4d2e5", fontSize: 12, fontWeight: 700, margin: "14px 0 4px" }}>
+                        Execuções de ciclo
+                      </p>
+                      <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 10 }}>
+                        Até 150 últimas linhas de hub_ciclos_log para este agente (painel; não substitui relatório completo).
                       </p>
                       {operacao.execucoes_ciclo.length === 0 ? (
                         <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>
-                          Nenhum registro em hub_ciclos_log para este agente.
+                          Nenhuma execução em hub_ciclos_log ainda — comum antes da primeira corrida (cron ou webhook após resposta no WhatsApp).
                         </p>
                       ) : (
                         <div style={{ position: "relative", paddingLeft: 14 }}>
@@ -1582,7 +1585,7 @@ function AgentesView() {
                             }}
                           />
                           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            {operacao.execucoes_ciclo.slice(0, 8).map((ex, i) => {
+                            {operacao.execucoes_ciclo.map((ex, i) => {
                               const row = ex as {
                                 id?: string;
                                 status?: string;
