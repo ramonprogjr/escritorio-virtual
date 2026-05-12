@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Bot, CalendarClock, Webhook } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
@@ -109,10 +110,10 @@ function tempoOpRelativo(iso?: string | null): string {
   return `${Math.round(diff / 1440)}d`;
 }
 
-const TIPO_CICLO_OPERACAO: Record<string, { cor: string; abbr: string }> = {
-  continuo: { cor: "#22c55e", abbr: "Co" },
-  programado: { cor: "#c9a24a", abbr: "Pr" },
-  gatilho: { cor: "#64748b", abbr: "Gt" },
+const TIPO_CICLO_OPERACAO: Record<string, { cor: string }> = {
+  continuo: { cor: "#22c55e" },
+  programado: { cor: "#c9a24a" },
+  gatilho: { cor: "#94a3b8" },
 };
 
 function corUltimoCicloStatus(st?: string): string {
@@ -160,11 +161,127 @@ function rotuloCadenciaCron(intervalMin: number | null, cron?: string | null, ti
     if (intervalMin < 1440) return `a cada ${Math.round(intervalMin / 60)} h`;
     return "≈ 1× ao dia";
   }
-  const t = String(tipo || "");
+  const t = String(tipo || "").toLowerCase();
+  if (t === "continuo") return "Contínuo (tempo real)";
+  if (t === "programado") return "Programado (cron)";
   if (t === "gatilho") return "Sob gatilho";
   const cr = String(cron || "").trim();
   if (cr) return cr.length > 28 ? `${cr.slice(0, 28)}…` : cr;
   return t || "—";
+}
+
+function cicloOperacionalIcon(tipoKey: string) {
+  if (tipoKey === "programado") return CalendarClock;
+  if (tipoKey === "gatilho") return Webhook;
+  return Bot;
+}
+
+/** Mascote + anel de cadência (SVG), com pulso quando ainda não houve execução. */
+function CicloOperacionalAvatar({
+  tipoKey,
+  accent,
+  progress01,
+  ativo,
+  aguardandoPrimeira,
+  labelTimer,
+}: {
+  tipoKey: string;
+  accent: string;
+  progress01: number;
+  ativo: boolean;
+  aguardandoPrimeira: boolean;
+  labelTimer: string;
+}) {
+  const Icon = cicloOperacionalIcon(tipoKey);
+  const r = 24;
+  const cx = 29;
+  const cy = 29;
+  const circ = 2 * Math.PI * r;
+  const p = Math.min(1, Math.max(0, progress01));
+  const strokeShown = Math.max(circ * 0.08, circ * p);
+  const strokeHide = circ - strokeShown;
+  const dim = !ativo;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+        flexShrink: 0,
+        width: 62,
+      }}
+    >
+      <div style={{ position: "relative", width: 58, height: 58 }}>
+        <svg width="58" height="58" viewBox="0 0 58 58" style={{ display: "block" }} aria-hidden>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e293b" strokeWidth="2.5" opacity={dim ? 0.45 : 1} />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke={accent}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray={`${strokeShown} ${strokeHide}`}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            opacity={dim ? 0.35 : 0.95}
+            style={{ transition: "stroke-dasharray 0.65s ease, opacity 0.3s ease" }}
+          />
+          {ativo && aguardandoPrimeira ? (
+            <circle cx={cx} cy={cy} r={r + 3} fill="none" stroke={accent} strokeWidth="1.2" opacity={0.5}>
+              <animate attributeName="r" values={`${r + 2};${r + 5};${r + 2}`} dur="2.4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.45;0.06;0.45" dur="2.4s" repeatCount="indefinite" />
+            </circle>
+          ) : null}
+          {ativo && !aguardandoPrimeira && p > 0.02 ? (
+            <circle cx={cx} cy={cy} r={r + 2.5} fill="none" stroke={accent} strokeWidth="1" strokeDasharray="4 7" opacity={0.35}>
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from={`0 ${cx} ${cy}`}
+                to={`360 ${cx} ${cy}`}
+                dur="14s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          ) : null}
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: `linear-gradient(165deg, ${accent}26 0%, #0d1117 50%, #0d1117 100%)`,
+            border: `1px solid ${accent}55`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: aguardandoPrimeira ? `0 0 14px ${accent}33` : `0 0 0 1px #00000040 inset`,
+          }}
+        >
+          <Icon size={19} color={dim ? "#64748b" : accent} strokeWidth={2} aria-hidden />
+        </div>
+      </div>
+      <span
+        style={{
+          fontSize: 9,
+          fontWeight: 700,
+          color: dim ? "#475569" : "#7f90a8",
+          textAlign: "center",
+          lineHeight: 1.2,
+          maxWidth: 62,
+        }}
+      >
+        {labelTimer}
+      </span>
+    </div>
+  );
 }
 
 function matchesModo(agente: Pick<Agente, "ativo" | "arquivado_em">, modo: ListMode): boolean {
@@ -1288,11 +1405,9 @@ function AgentesView() {
                             const tipoKey = String(row.tipo || "").toLowerCase();
                             const metaTipo = TIPO_CICLO_OPERACAO[tipoKey] || {
                               cor: "#7d8a9a",
-                              abbr: (row.tipo || "—").slice(0, 2).toUpperCase() || "—",
                             };
                             const intervalMin = estimateIntervalMinutes(row.cron_expressao, row.intervalo_minutos);
                             const prog = progressoAnelCiclo(row.ultimo_ciclo, intervalMin);
-                            const graus = Math.round(prog * 360);
                             const ultimoIso = row.ultimo_ciclo ? String(row.ultimo_ciclo) : "";
                             const temExecucao = ultimoIso && !Number.isNaN(new Date(ultimoIso).getTime());
                             const st = String(row.ultimo_status || "nunca_executado");
@@ -1300,12 +1415,21 @@ function AgentesView() {
                             const cadencia = rotuloCadenciaCron(intervalMin, row.cron_expressao, row.tipo);
                             const execN = row.total_execucoes != null ? Number(row.total_execucoes) : null;
 
+                            const labelTimer =
+                              row.ativo === false
+                                ? "pausado"
+                                : !temExecucao
+                                  ? "1ª execução…"
+                                  : intervalMin != null
+                                    ? `${Math.round(prog * 100)}% da volta`
+                                    : "rodando";
+
                             return (
                               <div
                                 key={String(row.id || row.nome)}
                                 style={{
                                   display: "flex",
-                                  gap: 12,
+                                  gap: 14,
                                   alignItems: "stretch",
                                   background: "#101822",
                                   border: "1px solid #253042",
@@ -1313,46 +1437,14 @@ function AgentesView() {
                                   padding: "10px 12px",
                                 }}
                               >
-                                <div
-                                  title="Cadência do ciclo (anel)"
-                                  style={{
-                                    width: 52,
-                                    height: 52,
-                                    borderRadius: "50%",
-                                    flexShrink: 0,
-                                    background: `conic-gradient(from -90deg, ${metaTipo.cor} 0deg, ${metaTipo.cor} ${graus}deg, #2a3545 ${graus}deg)`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    alignSelf: "center",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: 40,
-                                      height: 40,
-                                      borderRadius: "50%",
-                                      background: "#0d1117",
-                                      border: `2px solid ${metaTipo.cor}33`,
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      gap: 1,
-                                    }}
-                                  >
-                                    <span style={{ fontSize: 9, fontWeight: 800, color: metaTipo.cor, letterSpacing: 0.3 }}>
-                                      {metaTipo.abbr}
-                                    </span>
-                                    {intervalMin != null && temExecucao ? (
-                                      <span style={{ fontSize: 8, fontWeight: 700, color: "#64748b" }}>
-                                        {Math.round(prog * 100)}%
-                                      </span>
-                                    ) : (
-                                      <span style={{ fontSize: 8, fontWeight: 700, color: "#475569" }}>—</span>
-                                    )}
-                                  </div>
-                                </div>
+                                <CicloOperacionalAvatar
+                                  tipoKey={tipoKey || "continuo"}
+                                  accent={metaTipo.cor}
+                                  progress01={prog}
+                                  ativo={row.ativo !== false}
+                                  aguardandoPrimeira={!temExecucao && row.ativo !== false}
+                                  labelTimer={labelTimer}
+                                />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 6 }}>
                                     <strong style={{ color: "#e6edf3", fontSize: 13 }}>{String(row.nome || "—")}</strong>
