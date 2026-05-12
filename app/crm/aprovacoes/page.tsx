@@ -79,6 +79,7 @@ function AprovacoesInner() {
   const [aprovacoes, setAprovacoes] = useState<Aprovacao[]>([]);
   const [filtro, setFiltro]         = useState(tipoParam);
   const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [processando, setProcessando] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; tipo: "ok" | "erro" } | null>(null);
 
@@ -100,43 +101,66 @@ function AprovacoesInner() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function carregar() {
-    const { data } = await supabase
-      .from("hub_aprovacoes")
-      .select("*")
-      .eq("status", "pendente")
-      .order("criado_em", { ascending: false });
-    if (data) setAprovacoes(data as Aprovacao[]);
-    setCarregando(false);
+    setErro(null);
+    try {
+      const res = await fetch("/api/hub/aprovacoes?status=pendente", {
+        headers: internalApiHeaders(),
+        cache: "no-store",
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErro(typeof payload.error === "string" ? payload.error : `Erro ao carregar (${res.status})`);
+        setAprovacoes([]);
+        return;
+      }
+      const list = Array.isArray(payload.aprovacoes) ? payload.aprovacoes : [];
+      setAprovacoes(list as Aprovacao[]);
+    } catch {
+      setErro("Falha de rede ao carregar aprovações");
+      setAprovacoes([]);
+    } finally {
+      setCarregando(false);
+    }
   }
 
   async function aprovar(id: string) {
     setProcessando(id);
-    const res = await fetch(`/api/aprovacoes/${id}`, {
-      method: "PATCH",
-      headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "aprovado", aprovado_por: "wendel" }),
-    });
-    if (res.ok) {
-      setAprovacoes(prev => prev.filter(a => a.id !== id));
-      showToast("Aprovado com sucesso");
-    } else {
-      showToast("Erro ao aprovar", "erro");
+    try {
+      const res = await fetch(`/api/hub/aprovacoes/${id}`, {
+        method: "PATCH",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "aprovado" }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setAprovacoes(prev => prev.filter(a => a.id !== id));
+        showToast("Aprovado com sucesso");
+      } else {
+        showToast(typeof payload.error === "string" ? payload.error : "Erro ao aprovar", "erro");
+      }
+    } catch {
+      showToast("Falha de rede ao aprovar", "erro");
     }
     setProcessando(null);
   }
 
   async function rejeitar(id: string) {
     setProcessando(id);
-    const res = await fetch(`/api/aprovacoes/${id}`, {
-      method: "PATCH",
-      headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "rejeitado", aprovado_por: "wendel" }),
-    });
-    if (res.ok) {
-      setAprovacoes(prev => prev.filter(a => a.id !== id));
-      showToast("Reprovado");
-    } else {
-      showToast("Erro", "erro");
+    try {
+      const res = await fetch(`/api/hub/aprovacoes/${id}`, {
+        method: "PATCH",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "rejeitado" }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setAprovacoes(prev => prev.filter(a => a.id !== id));
+        showToast("Reprovado");
+      } else {
+        showToast(typeof payload.error === "string" ? payload.error : "Erro ao rejeitar", "erro");
+      }
+    } catch {
+      showToast("Falha de rede ao rejeitar", "erro");
     }
     setProcessando(null);
   }
@@ -206,12 +230,46 @@ function AprovacoesInner() {
 
       {/* ── Content ─── */}
       <div style={{ flex: 1, padding: "24px" }}>
+        {erro && !carregando && (
+          <div style={{
+            marginBottom: 16,
+            padding: "12px 16px",
+            borderRadius: 10,
+            background: C.redSoft,
+            border: `1px solid ${C.red}44`,
+            color: C.red,
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}>
+            <span>{erro}</span>
+            <button
+              type="button"
+              onClick={() => { setCarregando(true); carregar(); }}
+              style={{
+                flexShrink: 0,
+                padding: "6px 12px",
+                borderRadius: 8,
+                border: `1px solid ${C.red}66`,
+                background: C.white,
+                color: C.red,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Tentar de novo
+            </button>
+          </div>
+        )}
         {carregando ? (
           <div style={{ textAlign: "center", marginTop: 48 }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
             <p style={{ color: C.muted, fontSize: 14 }}>Carregando aprovações...</p>
           </div>
-        ) : filtradas.length === 0 ? (
+        ) : erro ? null : filtradas.length === 0 ? (
           <div style={{ textAlign: "center", marginTop: 48 }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
             <p style={{ color: C.green, fontWeight: 700, fontSize: 16, margin: 0 }}>Nenhuma aprovação pendente</p>
