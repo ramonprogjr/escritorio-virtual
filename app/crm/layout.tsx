@@ -23,13 +23,14 @@ import {
   Shield,
   Plus,
   X,
-  ChevronRight,
   ChevronDown,
 } from "lucide-react";
 import { Obra10LogoBadge, Obra10BrandHeader } from "@/components/brand/Obra10Brand";
 import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
 import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
+import { CrmShellProvider } from "@/components/crm/CrmShellContext";
+import { CrmSidebarToggleButton } from "@/components/crm/CrmSidebarToggleButton";
 import { CRM_HEADER_BAR_GRADIENT, CRM_SIDEBAR_GRADIENT } from "@/lib/crm-shell-theme";
 
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
@@ -207,7 +208,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <CrmHeaderProvider>
-      <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
+      <CrmShellProvider value={{ sidebarExpanded, toggleSidebar }}>
+        <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:gap-2">
           {!shouldHideCrmUniversalHeader(pathname) ? (
             <div
@@ -224,30 +226,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             ref={miniSidebarShellRef}
             className="relative z-20 hidden md:flex md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] flex-shrink-0 self-stretch"
           >
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="absolute right-0 top-2 z-30 flex h-7 w-7 translate-x-1/2 touch-manipulation items-center justify-center rounded-full shadow-md transition-transform hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24a] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]"
-          style={{
-            background: "linear-gradient(180deg, #3fb950 0%, #238636 100%)",
-            color: "#ffffff",
-            border: "1.5px solid #0d1117",
-            boxShadow: "0 3px 10px rgba(63,185,80,0.4)",
-          }}
-          title={sidebarExpanded ? "Recolher menu" : "Expandir menu"}
-          aria-expanded={sidebarExpanded}
-          aria-label={sidebarExpanded ? "Recolher menu lateral" : "Expandir menu lateral"}
-        >
-          <ChevronRight
-            size={14}
-            strokeWidth={2.5}
-            className={`text-white transition-transform duration-200 ${sidebarExpanded ? "rotate-180" : ""}`}
-            aria-hidden
-          />
-        </button>
-
         <aside
-          className={`flex h-full flex-col gap-1 overflow-hidden rounded-xl border py-3 transition-[width] duration-200 ease-out ${
+          className={`flex h-full flex-col gap-1 overflow-hidden rounded-xl border py-2 transition-[width] duration-200 ease-out ${
             sidebarExpanded ? "w-72 items-stretch px-2" : "w-[4.25rem] items-center px-0"
           }`}
           style={{
@@ -257,14 +237,16 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           }}
         >
           <div
-            className={`flex min-h-0 flex-shrink-0 items-start ${sidebarExpanded ? "mb-1 w-full flex-row gap-1 pt-0.5 pl-1 pr-10 md:pr-11" : "mb-1 mt-2 flex-col items-center gap-1 px-0 pb-0.5 pr-3"}`}
+            className={`mb-1 flex min-h-0 w-full flex-shrink-0 px-0.5 pt-0.5 ${
+              sidebarExpanded ? "flex-row items-center" : "flex-col items-center"
+            }`}
           >
             {sidebarExpanded ? (
-              <div className="min-w-0 flex-1 px-1 py-1">
+              <div className="min-w-0 flex-1 px-1 py-0.5">
                 <Obra10BrandHeader size="sm" />
               </div>
             ) : (
-              <div className="flex justify-center rounded-xl p-1" title="Obra10+">
+              <div className="flex justify-center rounded-xl p-0.5" title="Obra10+">
                 <Obra10LogoBadge size="md" />
               </div>
             )}
@@ -544,6 +526,12 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
+        {shouldHideCrmUniversalHeader(pathname) ? (
+          <div className="relative z-[12] hidden min-h-[4.25rem] flex-shrink-0 items-center border-b px-3 py-3.5 md:flex md:min-h-[4.5rem] md:border-b-0 md:px-2 md:py-4">
+            <CrmSidebarToggleButton variant="header" />
+          </div>
+        ) : null}
+
         <CrmUniversalHeader />
 
         <div
@@ -667,7 +655,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </CrmShellProvider>
     </CrmHeaderProvider>
   );
 }
