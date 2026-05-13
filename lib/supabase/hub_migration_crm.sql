@@ -152,10 +152,24 @@ CREATE POLICY "hub_acesso_total" ON hub_propostas FOR ALL USING (true);
 CREATE POLICY "hub_acesso_total" ON hub_agente_conhecimento FOR ALL USING (true);
 CREATE POLICY "hub_acesso_total" ON hub_memorias_lead FOR ALL USING (true);
 
--- REALTIME
-ALTER PUBLICATION supabase_realtime ADD TABLE hub_leads_crm;
-ALTER PUBLICATION supabase_realtime ADD TABLE hub_atividades;
-ALTER PUBLICATION supabase_realtime ADD TABLE hub_propostas;
+-- REALTIME (idempotente: no Supabase, reler o script falha com 42710 se a tabela já estiver na publicação)
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['hub_leads_crm', 'hub_atividades', 'hub_propostas']
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime'
+        AND schemaname = 'public'
+        AND tablename = t
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I', t);
+    END IF;
+  END LOOP;
+END $$;
 
 -- SEED SERVICES
 INSERT INTO hub_servicos (nome, descricao, categoria, faixa_preco_min, faixa_preco_max, publico_alvo, entregaveis, prazo_medio_dias) VALUES

@@ -26,6 +26,10 @@ type Lead = {
   tags: string[];
   criado_em: string;
   atualizado_em: string;
+  pessoa_id?: string | null;
+  /** Enriquecimento (hub_pessoas) — só leitura na UI */
+  _pessoa_codigo?: string | null;
+  _email_exibicao?: string | null;
 };
 
 type Atividade = {
@@ -128,8 +132,61 @@ export default function LeadsPage() {
   const [dragOver, setDragOver] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
+    const vw = await supabase
+      .from("vw_hub_leads_crm_enriquecido")
+      .select("*")
+      .order("criado_em", { ascending: false });
+
+    if (!vw.error && vw.data) {
+      const merged: Lead[] = (vw.data as Record<string, unknown>[]).map((r) => {
+        const {
+          pessoa_codigo,
+          pessoa_nome_completo: _pn,
+          email_exibicao,
+          pessoa_cidade: _pc,
+          pessoa_estado: _pe,
+          ultima_mensagem_fila: _umf,
+          ultima_mensagem_fila_em: _umfe,
+          ...base
+        } = r;
+        const emailDisp =
+          email_exibicao != null && String(email_exibicao).trim()
+            ? String(email_exibicao).trim()
+            : null;
+        return {
+          ...(base as Omit<Lead, "_pessoa_codigo" | "_email_exibicao">),
+          _pessoa_codigo: pessoa_codigo != null ? String(pessoa_codigo) : null,
+          _email_exibicao: emailDisp,
+        };
+      });
+      setLeads(merged);
+      return;
+    }
+
     const { data } = await supabase.from("hub_leads_crm").select("*").order("criado_em", { ascending: false });
-    if (data) setLeads(data as Lead[]);
+    const raw = (data || []) as Lead[];
+    const pids = [...new Set(raw.map((r) => r.pessoa_id).filter(Boolean))] as string[];
+    const map = new Map<string, { codigo: string | null; email: string | null }>();
+    if (pids.length) {
+      const { data: pes } = await supabase.from("hub_pessoas").select("id, codigo, email").in("id", pids);
+      for (const p of pes || []) {
+        map.set(String(p.id), {
+          codigo: p.codigo != null ? String(p.codigo) : null,
+          email: p.email != null ? String(p.email) : null,
+        });
+      }
+    }
+    const merged: Lead[] = raw.map((r) => {
+      const pe = r.pessoa_id ? map.get(r.pessoa_id) : undefined;
+      const emailLead = (r.email && String(r.email).trim()) || "";
+      const emailP = (pe?.email && String(pe.email).trim()) || "";
+      return {
+        ...r,
+        _pessoa_codigo: pe?.codigo ?? null,
+        _email_exibicao: emailLead || emailP || null,
+      };
+    });
+    setLeads(merged);
   }, []);
 
   useEffect(() => {
@@ -203,7 +260,14 @@ export default function LeadsPage() {
   }
 
   const filtrados = leads.filter(l => {
-    if (busca && !l.nome.toLowerCase().includes(busca.toLowerCase()) && !(l.telefone || "").includes(busca)) return false;
+    if (
+      busca &&
+      !l.nome.toLowerCase().includes(busca.toLowerCase()) &&
+      !(l.telefone || "").includes(busca) &&
+      !(l._pessoa_codigo || "").toLowerCase().includes(busca.toLowerCase())
+    ) {
+      return false;
+    }
     if (filtroEstagio && l.estagio !== filtroEstagio) return false;
     return true;
   });
@@ -318,6 +382,9 @@ export default function LeadsPage() {
                         className="bg-gray-900 rounded-xl p-3 cursor-grab active:cursor-grabbing hover:bg-gray-800 transition-all"
                         style={{ borderWidth: 1, borderStyle: "solid", borderColor: "#374151", borderLeftWidth: 3, borderLeftColor: borderColor(lead.atualizado_em), opacity: leadDragId === lead.id ? 0.5 : 1 }}>
                         <p className="text-white text-xs font-bold truncate leading-tight">{lead.nome}</p>
+                        {lead._pessoa_codigo && (
+                          <p className="text-[10px] font-mono text-[#c9a24a]/90 truncate mt-0.5">{lead._pessoa_codigo}</p>
+                        )}
                         {lead.valor_estimado > 0 && <p className="text-xs font-bold mt-1" style={{ color: "#22C55E" }}>{moeda(lead.valor_estimado)}</p>}
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                           {lead.origem && (
@@ -359,6 +426,9 @@ export default function LeadsPage() {
                       className="border-b border-gray-800/50 hover:bg-gray-900/60 cursor-pointer transition-colors">
                       <td className="px-4 py-3">
                         <p className="text-white font-bold">{lead.nome}</p>
+                        {lead._pessoa_codigo && (
+                          <p className="text-[#c9a24a] font-mono text-xs mt-0.5">{lead._pessoa_codigo}</p>
+                        )}
                         {lead.telefone && <p className="text-gray-500 text-xs">{lead.telefone}</p>}
                       </td>
                       <td className="px-4 py-3">
