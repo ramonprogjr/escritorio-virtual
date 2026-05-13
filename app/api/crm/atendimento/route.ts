@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { tenantIdFromRequest } from "@/lib/tenant-default";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,12 +11,14 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const estagio = searchParams.get("estagio");
+    const tenantId = tenantIdFromRequest(request.headers);
 
     let query = supabase
       .from("hub_leads_crm")
       .select(
         "id, nome, telefone, email, origem, estagio, score, valor_estimado, criado_em, atualizado_em, agente_responsavel, humano_responsavel, ultimo_contato, campanha, proxima_acao, data_proxima_acao, interesse_principal, tags, observacoes, metadata"
       )
+      .eq("tenant_id", tenantId)
       .order("criado_em", { ascending: false });
 
     if (estagio && estagio !== "todos") {
