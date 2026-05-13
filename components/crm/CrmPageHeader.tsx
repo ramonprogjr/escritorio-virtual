@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { CrmHeaderActionsRow } from "@/components/crm/CrmHeaderActionsRow";
 import { CrmSidebarToggleButton } from "@/components/crm/CrmSidebarToggleButton";
-import { CRM_HEADER_BAR_GRADIENT } from "@/lib/crm-shell-theme";
+import { CRM_CHROME_SOLID, CRM_HEADER_BAR_GRADIENT } from "@/lib/crm-shell-theme";
 
 export type CrmPageHeaderProps = {
   title: string;
@@ -33,6 +33,7 @@ export function CrmPageHeader({
   const barStyle = blendDesktopUnderlap
     ? ({
         ["--crm-header-grad" as string]: CRM_HEADER_BAR_GRADIENT,
+        ["--crm-header-chrome-solid" as string]: CRM_CHROME_SOLID,
       } as CSSProperties)
     : ({
         background: CRM_HEADER_BAR_GRADIENT,
@@ -44,9 +45,9 @@ export function CrmPageHeader({
 
   return (
     <header
-      className={`relative z-[12] flex min-h-[4.25rem] flex-shrink-0 items-start justify-between gap-3 border-b px-3 py-3.5 md:min-h-[4.5rem] md:items-center md:gap-4 md:pl-2 md:pr-6 md:py-4 ${
+      className={`relative z-[12] flex min-h-[4.25rem] flex-shrink-0 items-start justify-between gap-3 border-b border-[rgba(48,54,61,0.45)] px-3 py-3.5 md:min-h-[4.5rem] md:items-center md:gap-4 md:border-b md:border-[rgba(48,54,61,0.35)] md:pl-2 md:pr-6 md:py-4 ${
         blendDesktopUnderlap
-          ? "max-md:[background:var(--crm-header-grad)] max-md:[box-shadow:inset_0_-1px_0_rgba(0,0,0,0.22)] md:!border-b-0 md:!bg-transparent md:!shadow-none"
+          ? "max-md:[background:var(--crm-header-grad)] max-md:[box-shadow:inset_0_-1px_0_rgba(0,0,0,0.22)] md:!bg-[var(--crm-header-chrome-solid)] md:!shadow-none"
           : ""
       } ${className}`}
       style={barStyle}
