@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Bot, CalendarClock, Webhook } from "lucide-react";
+import { CalendarClock, Webhook, X, Zap } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
@@ -173,10 +173,10 @@ function rotuloCadenciaCron(intervalMin: number | null, cron?: string | null, ti
 function cicloOperacionalIcon(tipoKey: string) {
   if (tipoKey === "programado") return CalendarClock;
   if (tipoKey === "gatilho") return Webhook;
-  return Bot;
+  return Zap;
 }
 
-/** Mascote + anel de cadência (SVG), com pulso quando ainda não houve execução. */
+/** Indicador de tipo de ciclo + progresso na cadência (visual sóbrio, sem animação chamativa). */
 function CicloOperacionalAvatar({
   tipoKey,
   accent,
@@ -230,22 +230,7 @@ function CicloOperacionalAvatar({
             style={{ transition: "stroke-dasharray 0.65s ease, opacity 0.3s ease" }}
           />
           {ativo && aguardandoPrimeira ? (
-            <circle cx={cx} cy={cy} r={r + 3} fill="none" stroke={accent} strokeWidth="1.2" opacity={0.5}>
-              <animate attributeName="r" values={`${r + 2};${r + 5};${r + 2}`} dur="2.4s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.45;0.06;0.45" dur="2.4s" repeatCount="indefinite" />
-            </circle>
-          ) : null}
-          {ativo && !aguardandoPrimeira && p > 0.02 ? (
-            <circle cx={cx} cy={cy} r={r + 2.5} fill="none" stroke={accent} strokeWidth="1" strokeDasharray="4 7" opacity={0.35}>
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from={`0 ${cx} ${cy}`}
-                to={`360 ${cx} ${cy}`}
-                dur="14s"
-                repeatCount="indefinite"
-              />
-            </circle>
+            <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke={accent} strokeWidth="1" opacity={0.35} />
           ) : null}
         </svg>
         <div
@@ -262,10 +247,10 @@ function CicloOperacionalAvatar({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: aguardandoPrimeira ? `0 0 14px ${accent}33` : `0 0 0 1px #00000040 inset`,
+            boxShadow: "0 0 0 1px #00000040 inset",
           }}
         >
-          <Icon size={19} color={dim ? "#64748b" : accent} strokeWidth={2} aria-hidden />
+          <Icon size={18} color={dim ? "#64748b" : accent} strokeWidth={2} aria-hidden />
         </div>
       </div>
       <span
@@ -1290,9 +1275,10 @@ function AgentesView() {
                   <button
                     type="button"
                     onClick={() => setSelectedSlug(null)}
-                    style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, width: 34, cursor: "pointer" }}
+                    style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, width: 34, height: 34, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    aria-label="Fechar"
                   >
-                    ✕
+                    <X size={16} strokeWidth={2} />
                   </button>
                 </div>
               </div>
@@ -1352,6 +1338,37 @@ function AgentesView() {
                       <p style={{ color: "#8ea1ba", fontSize: 11, margin: "0 0 10px", fontWeight: 700 }}>
                         Visão operacional
                       </p>
+                      <div
+                        style={{
+                          margin: "0 0 12px",
+                          padding: "10px 12px",
+                          borderRadius: 8,
+                          border: "1px solid #2c384b",
+                          background: "#0f1620",
+                        }}
+                      >
+                        <p style={{ margin: "0 0 6px", color: "#94a3b8", fontSize: 10, fontWeight: 700, letterSpacing: 0.4 }}>
+                          Origem dos dados neste painel
+                        </p>
+                        <ul style={{ margin: 0, paddingLeft: 18, color: "#7f90a8", fontSize: 10, lineHeight: 1.55 }}>
+                          <li>
+                            <strong style={{ color: "#aebccf" }}>hub_ciclos_ia</strong> — ciclos ligados ao agente (cadência, totais,
+                            último status)
+                          </li>
+                          <li>
+                            <strong style={{ color: "#aebccf" }}>hub_ciclos_log</strong> — histórico de execuções de ciclos
+                            (até 150 linhas)
+                          </li>
+                          <li>
+                            <strong style={{ color: "#aebccf" }}>hub_acoes_ia</strong> — ações da IA (ex.: qualificação, eventos
+                            após webhook)
+                          </li>
+                          <li>
+                            <strong style={{ color: "#aebccf" }}>hub_prompt_logs</strong> — carimbo da última resposta modelo
+                            (métrica de atividade)
+                          </li>
+                        </ul>
+                      </div>
                       <p style={{ margin: "0 0 10px", color: "#9cb0c9", fontSize: 11, lineHeight: 1.5 }}>
                         {saudeAgente === "ok" && "Execuções e ações recentes dentro do esperado."}
                         {saudeAgente === "degradado" &&
@@ -1370,17 +1387,17 @@ function AgentesView() {
                           type="button"
                           onClick={() => selectedSlug && router.push(`/crm/ciclos?q=${encodeURIComponent(selectedSlug)}`)}
                           style={{
-                            border: "1px solid #c9a24a55",
-                            background: "#c9a24a18",
+                            border: "1px solid rgba(201, 162, 74, 0.35)",
+                            background: "rgba(201, 162, 74, 0.08)",
                             color: "#d6b976",
-                            borderRadius: 8,
-                            padding: "5px 10px",
+                            borderRadius: 6,
+                            padding: "6px 12px",
                             fontSize: 11,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             cursor: "pointer",
                           }}
                         >
-                          Abrir Ciclos IA (filtro)
+                          Ciclos IA
                         </button>
                       </div>
                       {operacao.ciclos.length === 0 ? (
@@ -1415,12 +1432,12 @@ function AgentesView() {
 
                             const labelTimer =
                               row.ativo === false
-                                ? "pausado"
+                                ? "Pausado"
                                 : !temExecucao
-                                  ? "1ª execução…"
+                                  ? "Aguardando 1ª exec."
                                   : intervalMin != null
-                                    ? `${Math.round(prog * 100)}% da volta`
-                                    : "rodando";
+                                    ? `${Math.round(prog * 100)}% período`
+                                    : "Ativo";
 
                             return (
                               <div
@@ -1520,7 +1537,10 @@ function AgentesView() {
 
                       <p style={{ color: "#c4d2e5", fontSize: 12, fontWeight: 700, margin: "14px 0 8px" }}>Últimas ações (IA)</p>
                       {operacao.acoes.length === 0 ? (
-                        <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>Nenhuma linha em hub_acoes_ia ainda.</p>
+                        <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>
+                          Nenhuma ação recente. Ações aparecem quando a IA registra eventos (base{" "}
+                          <code style={{ fontSize: 10 }}>hub_acoes_ia</code>).
+                        </p>
                       ) : (
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                           {operacao.acoes.map((a, i) => {
@@ -1563,11 +1583,14 @@ function AgentesView() {
                         Execuções de ciclo
                       </p>
                       <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 10 }}>
-                        Até 150 últimas linhas de hub_ciclos_log para este agente (painel; não substitui relatório completo).
+                        Últimas execuções em{" "}
+                        <code style={{ fontSize: 10 }}>hub_ciclos_log</code> para este agente (amostra; não substitui relatório
+                        completo).
                       </p>
                       {operacao.execucoes_ciclo.length === 0 ? (
                         <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>
-                          Nenhuma execução em hub_ciclos_log ainda — comum antes da primeira corrida (cron ou webhook após resposta no WhatsApp).
+                          Nenhuma linha em <code style={{ fontSize: 10 }}>hub_ciclos_log</code> — normal antes da primeira
+                          corrida (cron ou webhook).
                         </p>
                       ) : (
                         <div style={{ position: "relative", paddingLeft: 14 }}>
@@ -1660,10 +1683,60 @@ function AgentesView() {
                   )}
 
                   <div style={{ background: "#141d29", border: "1px solid #2c384b", borderRadius: 10, padding: 12 }}>
-                    <p style={{ color: "#8ea1ba", fontSize: 11, margin: "0 0 8px", fontWeight: 700 }}>FIXO</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                      <input value={String(detailAgente.cargo || "-")} readOnly style={{ background: "#0f1620", border: "1px solid #2e3948", color: "#8ea1ba", borderRadius: 8, padding: "8px 10px", fontSize: 12 }} />
-                      <input value={String(detailAgente.modelo_padrao || "-")} readOnly style={{ background: "#0f1620", border: "1px solid #2e3948", color: "#8ea1ba", borderRadius: 8, padding: "8px 10px", fontSize: 12 }} />
+                    <p style={{ color: "#8ea1ba", fontSize: 11, margin: "0 0 8px", fontWeight: 700 }}>
+                      Identidade · hub_agente_identidade
+                    </p>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 8,
+                      }}
+                    >
+                      {(
+                        [
+                          { k: "Slug", v: detailAgente.agente_slug },
+                          { k: "Cargo", v: detailAgente.cargo },
+                          { k: "Área", v: detailAgente.area },
+                          { k: "Segmento", v: detailAgente.segmento },
+                          { k: "Nível", v: detailAgente.nivel != null ? String(detailAgente.nivel) : "—" },
+                          { k: "Modelo padrão", v: detailAgente.modelo_padrao },
+                          {
+                            k: "Mercados (prefixo)",
+                            v: detailAgente.prefixo_mercado || "—",
+                          },
+                          {
+                            k: "Status cadastro",
+                            v: detailAgente.arquivado_em
+                              ? "Arquivado"
+                              : detailAgente.ativo === false
+                                ? "Inativo"
+                                : "Ativo",
+                          },
+                        ] as { k: string; v: string | undefined }[]
+                      ).map((row) => (
+                        <div key={row.k} style={{ minWidth: 0 }}>
+                          <label style={{ display: "block", fontSize: 9, fontWeight: 700, color: "#64748b", marginBottom: 3 }}>
+                            {row.k}
+                          </label>
+                          <input
+                            value={String(row.v ?? "—")}
+                            readOnly
+                            title={String(row.v ?? "")}
+                            style={{
+                              width: "100%",
+                              background: "#0f1620",
+                              border: "1px solid #2e3948",
+                              color: "#c8d4e6",
+                              borderRadius: 8,
+                              padding: "7px 9px",
+                              fontSize: 11,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
 

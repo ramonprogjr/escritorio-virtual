@@ -23,14 +23,15 @@ import {
   Shield,
   Plus,
   X,
-  ChevronRight,
   ChevronDown,
 } from "lucide-react";
 import { Obra10LogoBadge, Obra10BrandHeader } from "@/components/brand/Obra10Brand";
 import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
 import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
-import { CRM_HEADER_BAR_GRADIENT, CRM_SIDEBAR_GRADIENT } from "@/lib/crm-shell-theme";
+import { CrmShellProvider } from "@/components/crm/CrmShellContext";
+import { CrmSidebarToggleButton } from "@/components/crm/CrmSidebarToggleButton";
+import { CRM_CHROME_SOLID } from "@/lib/crm-shell-theme";
 
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
 
@@ -127,8 +128,6 @@ function findGroupIdForPath(pathname: string): string {
   return NAV_GROUPS[0]?.id ?? "inicio";
 }
 
-const SIDEBAR_GRADIENT = CRM_SIDEBAR_GRADIENT;
-
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -207,64 +206,34 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <CrmHeaderProvider>
-      <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:gap-2">
-          {!shouldHideCrmUniversalHeader(pathname) ? (
-            <div
-              className="pointer-events-none absolute left-0 right-0 top-0 z-[8] hidden min-h-[4.25rem] border-b md:block"
-              style={{
-                background: CRM_HEADER_BAR_GRADIENT,
-                borderBottomColor: "rgba(48, 54, 61, 0.65)",
-                boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.05)",
-              }}
-              aria-hidden
-            />
-          ) : null}
+      <CrmShellProvider value={{ sidebarExpanded, toggleSidebar }}>
+        <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:gap-0">
           <div
             ref={miniSidebarShellRef}
             className="relative z-20 hidden md:flex md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] flex-shrink-0 self-stretch"
           >
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="absolute right-0 top-2 z-30 flex h-7 w-7 translate-x-1/2 touch-manipulation items-center justify-center rounded-full shadow-md transition-transform hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24a] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]"
-          style={{
-            background: "linear-gradient(180deg, #3fb950 0%, #238636 100%)",
-            color: "#ffffff",
-            border: "1.5px solid #0d1117",
-            boxShadow: "0 3px 10px rgba(63,185,80,0.4)",
-          }}
-          title={sidebarExpanded ? "Recolher menu" : "Expandir menu"}
-          aria-expanded={sidebarExpanded}
-          aria-label={sidebarExpanded ? "Recolher menu lateral" : "Expandir menu lateral"}
-        >
-          <ChevronRight
-            size={14}
-            strokeWidth={2.5}
-            className={`text-white transition-transform duration-200 ${sidebarExpanded ? "rotate-180" : ""}`}
-            aria-hidden
-          />
-        </button>
-
         <aside
-          className={`flex h-full flex-col gap-1 overflow-hidden rounded-xl border py-3 transition-[width] duration-200 ease-out ${
+          className={`flex h-full flex-col gap-1 overflow-hidden pb-2 pt-3.5 transition-[width] duration-200 ease-out md:rounded-l-xl md:rounded-r-none md:border-0 md:pb-2 md:pt-4 md:shadow-none ${
             sidebarExpanded ? "w-72 items-stretch px-2" : "w-[4.25rem] items-center px-0"
           }`}
           style={{
-            background: SIDEBAR_GRADIENT,
-            borderColor: "var(--obra-borda, #30363d)",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05) inset",
+            background: CRM_CHROME_SOLID,
+            borderColor: "transparent",
+            boxShadow: "none",
           }}
         >
           <div
-            className={`flex min-h-0 flex-shrink-0 items-start ${sidebarExpanded ? "mb-1 w-full flex-row gap-1 pt-0.5 pl-1 pr-10 md:pr-11" : "mb-1 mt-2 flex-col items-center gap-1 px-0 pb-0.5 pr-3"}`}
+            className={`mb-1 flex min-h-0 w-full flex-shrink-0 px-0.5 ${
+              sidebarExpanded ? "flex-row items-center" : "flex-col items-center"
+            }`}
           >
             {sidebarExpanded ? (
-              <div className="min-w-0 flex-1 px-1 py-1">
+              <div className="min-w-0 flex-1 px-1 py-0.5">
                 <Obra10BrandHeader size="sm" />
               </div>
             ) : (
-              <div className="flex justify-center rounded-xl p-1" title="Obra10+">
+              <div className="flex justify-center rounded-xl p-0.5" title="Obra10+">
                 <Obra10LogoBadge size="md" />
               </div>
             )}
@@ -423,9 +392,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                   className="pointer-events-auto absolute z-[60] flex max-h-[min(72vh,calc(100%-4.75rem))] w-72 flex-col overflow-hidden rounded-xl border shadow-2xl"
                   style={{
                     left: "100%",
-                    top: "2.25rem",
+                    top: "3.75rem",
                     marginLeft: "0.35rem",
-                    background: SIDEBAR_GRADIENT,
+                    background: CRM_CHROME_SOLID,
                     borderColor: "var(--obra-borda, #30363d)",
                     boxShadow: "0 16px 48px rgba(0,0,0,0.45)",
                   }}
@@ -495,7 +464,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           : null}
       </div>
 
-      <div className="relative z-[12] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] md:self-stretch">
+      <div className="relative z-[12] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] md:self-stretch md:rounded-r-xl md:bg-[#0d1117]">
         <div
           className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2 md:hidden sticky top-0 z-30 backdrop-blur-md supports-[backdrop-filter]:bg-[#161b22]/90"
           style={{
@@ -544,6 +513,15 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
+        {shouldHideCrmUniversalHeader(pathname) ? (
+          <div
+            className="relative z-[12] hidden min-h-[4.25rem] flex-shrink-0 items-center border-b border-[rgba(48,54,61,0.45)] px-3 py-3.5 md:flex md:min-h-[4.5rem] md:px-2 md:py-4"
+            style={{ backgroundColor: CRM_CHROME_SOLID }}
+          >
+            <CrmSidebarToggleButton variant="header" />
+          </div>
+        ) : null}
+
         <CrmUniversalHeader />
 
         <div
@@ -566,7 +544,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           <div
             className="relative flex h-full w-[min(100%,20rem)] max-w-[85vw] flex-col border-r shadow-2xl"
             style={{
-              background: SIDEBAR_GRADIENT,
+              background: CRM_CHROME_SOLID,
               borderColor: "var(--obra-borda, #30363d)",
               paddingTop: "env(safe-area-inset-top, 0px)",
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -667,7 +645,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </CrmShellProvider>
     </CrmHeaderProvider>
   );
 }

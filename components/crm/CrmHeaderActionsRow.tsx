@@ -52,9 +52,9 @@ export function CrmHeaderActionsRow({ children }: { children: ReactNode }) {
       continue;
     }
 
-    const run: ReactElement[] = [];
+    const run: ReactElement<{ style?: CSSProperties }>[] = [];
     while (i < items.length && isNativeButton(items[i])) {
-      run.push(items[i] as ReactElement);
+      run.push(items[i] as ReactElement<{ style?: CSSProperties }>);
       i += 1;
     }
 

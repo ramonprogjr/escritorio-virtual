@@ -15,6 +15,11 @@ type CrmStickyTabsProps = {
   onChange: (id: string) => void;
   /** Abas largas: rolagem horizontal em vez de dividir espaço igualmente. */
   scrollable?: boolean;
+  /**
+   * Três (ou N) abas em colunas iguais, centro, sem scroll horizontal — útil na ficha do lead.
+   * Quando true, `scrollable` é ignorado.
+   */
+  equalColumns?: boolean;
   className?: string;
   style?: CSSProperties;
 };
@@ -37,9 +42,12 @@ export function CrmStickyTabs({
   activeId,
   onChange,
   scrollable = false,
+  equalColumns = false,
   className,
   style,
 }: CrmStickyTabsProps) {
+  const useScroll = scrollable && !equalColumns;
+
   return (
     <div
       role="tablist"
@@ -52,13 +60,14 @@ export function CrmStickyTabs({
           display: "flex",
           width: "100%",
           minWidth: 0,
-          overflowX: scrollable ? "auto" : undefined,
+          overflowX: useScroll ? "auto" : "hidden",
           WebkitOverflowScrolling: "touch",
         }}
       >
         {tabs.map((t) => {
           const active = activeId === t.id;
           const Icon = t.icon;
+          const equal = equalColumns;
           return (
             <button
               key={t.id}
@@ -67,12 +76,12 @@ export function CrmStickyTabs({
               aria-selected={active}
               id={`crm-tab-${t.id}`}
               onClick={() => onChange(t.id)}
-              className="flex items-center justify-center gap-2 py-3 text-sm transition-colors"
+              className={`transition-colors ${equal ? "flex flex-col items-center justify-center gap-1 px-1 py-2.5 sm:flex-row sm:gap-2 sm:py-3" : "flex items-center justify-center gap-2 py-3 text-sm"}`}
               style={{
-                flex: scrollable ? "0 0 auto" : 1,
-                minWidth: scrollable ? undefined : 0,
-                paddingLeft: scrollable ? 14 : undefined,
-                paddingRight: scrollable ? 14 : undefined,
+                flex: useScroll ? "0 0 auto" : 1,
+                minWidth: useScroll ? undefined : 0,
+                paddingLeft: useScroll ? 14 : undefined,
+                paddingRight: useScroll ? 14 : undefined,
                 color: active ? "#c9a24a" : "#8b949e",
                 background: "transparent",
                 cursor: "pointer",
@@ -83,11 +92,14 @@ export function CrmStickyTabs({
                 borderRight: "none",
                 borderBottom: active ? "2px solid #c9a24a" : "2px solid transparent",
                 marginBottom: -1,
-                whiteSpace: "nowrap",
+                whiteSpace: equal ? "normal" : "nowrap",
+                textAlign: equal ? "center" : undefined,
+                fontSize: equal ? 12 : 14,
+                lineHeight: equal ? 1.25 : undefined,
               }}
             >
-              <Icon size={18} strokeWidth={2} className="flex-shrink-0" aria-hidden />
-              <span className="truncate">{t.label}</span>
+              <Icon size={equal ? 16 : 18} strokeWidth={2} className="flex-shrink-0" aria-hidden />
+              <span className={equal ? "max-w-full break-words" : "truncate"}>{t.label}</span>
             </button>
           );
         })}
