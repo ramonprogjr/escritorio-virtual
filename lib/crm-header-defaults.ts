@@ -74,8 +74,8 @@ export function defaultCrmHeaderForPath(pathname: string): CrmHeaderDefault {
     },
     agentes: { title: "Modelos IA", subtitle: "Assistentes e templates por agente" },
     "agentes-reais": {
-      title: "Workflows",
-      subtitle: "Orquestração de fluxos com modelos IA e ciclos — em preparação",
+      title: "Copiloto Global",
+      subtitle: "Orquestração de fluxos internos com modelos IA, playbooks e ciclos",
     },
     ciclos: { title: "Central de Ciclos IA" },
     contatos: {

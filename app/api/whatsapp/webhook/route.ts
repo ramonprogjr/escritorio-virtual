@@ -4,7 +4,8 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { identificarMercado, identificarIntencao } from "@/lib/ia/agentes-config";
 import { defaultTenantId } from "@/lib/tenant-default";
 import { whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
-import { parseWhatsappWebhookBody } from "@/lib/whatsapp/webhook-inbound";
+import { resolverLinhaWhatsAppInbound } from "@/lib/whatsapp/resolver-linha-whatsapp";
+import { normalizeWebhookInstanceId, parseWhatsappWebhookBody } from "@/lib/whatsapp/webhook-inbound";
 
 let warnedMissingWebhookSecret = false;
 
@@ -96,8 +97,12 @@ async function encontrarOuCriarPessoa(telefone: string, nome: string, origem: st
   return novaPessoa;
 }
 
-async function enviarMensagemWhatsApp(telefone: string, mensagem: string) {
-  const r = await whatsappSendText(telefone, mensagem);
+async function enviarMensagemWhatsApp(
+  telefone: string,
+  mensagem: string,
+  opts?: { instanceToken?: string | null }
+) {
+  const r = await whatsappSendText(telefone, mensagem, { instanceToken: opts?.instanceToken });
   if (!r.ok) {
     console.error("[WEBHOOK] Erro ao enviar mensagem:", r.provider, r.error, r.status, r.body);
     return null;
@@ -287,6 +292,33 @@ async function buscarAgente(mercado: string) {
   return sdr;
 }
 
+async function buscarAgentePorSlug(supabase: ReturnType<typeof db>, slug: string) {
+  const tenantId = defaultTenantId();
+  let data: Record<string, unknown> | null = null;
+  {
+    const r = await supabase
+      .from("hub_agente_identidade")
+      .select("*")
+      .eq("agente_slug", slug)
+      .eq("tenant_id", tenantId)
+      .eq("ativo", true)
+      .is("arquivado_em", null)
+      .maybeSingle();
+    data = (r.data as Record<string, unknown> | null) ?? null;
+    if (!data && r.error?.message?.includes("tenant_id")) {
+      const fallback = await supabase
+        .from("hub_agente_identidade")
+        .select("*")
+        .eq("agente_slug", slug)
+        .eq("ativo", true)
+        .is("arquivado_em", null)
+        .maybeSingle();
+      data = (fallback.data as Record<string, unknown> | null) ?? null;
+    }
+  }
+  return data;
+}
+
 async function enviarFallbackIA(params: {
   supabase: ReturnType<typeof db>;
   leadId: string;
@@ -294,6 +326,7 @@ async function enviarFallbackIA(params: {
   agenteSlug?: string;
   motivo: string;
   mensagemOriginal: string;
+  waSendOpts?: { instanceToken?: string | null };
 }) {
   const mensagem = "Recebi sua mensagem e já encaminhei para revisão do time. Retornaremos em breve por aqui.";
 
@@ -325,7 +358,7 @@ async function enviarFallbackIA(params: {
     console.error("[WEBHOOK][FALLBACK] Erro ao registrar alerta:", e);
   }
 
-  await enviarMensagemWhatsApp(params.telefone, mensagem);
+  await enviarMensagemWhatsApp(params.telefone, mensagem, params.waSendOpts);
 }
 
 export async function GET(request: NextRequest) {
@@ -406,6 +439,18 @@ export async function POST(request: NextRequest) {
       instance,
     } = inbound.value;
 
+    const instanceKey = instance ?? normalizeWebhookInstanceId(body);
+    const linhaWa = await resolverLinhaWhatsAppInbound(supabase, instanceKey);
+    if (linhaWa.kind === "ignored") {
+      console.log("[WEBHOOK] ignorado:", linhaWa.reason, instanceKey ? `(instance=${instanceKey})` : "");
+      return NextResponse.json({ status: "ignored", reason: linhaWa.reason }, { status: 200 });
+    }
+
+    const waSendOpts =
+      linhaWa.kind === "agent_instance"
+        ? { instanceToken: linhaWa.instanceToken as string }
+        : {};
+
     console.log(`[WEBHOOK] ${pushName || telefone}: ${mensagemFinal.slice(0, 80)}`);
 
     const intencao = identificarIntencao(mensagemFinal);
@@ -445,7 +490,7 @@ export async function POST(request: NextRequest) {
           });
 
           const boas_vindas = `Olá${pushName ? `, ${pushName.split(" ")[0]}` : ""}! 👋\n\nQue ótimo que você tem interesse em ser parceiro da Obra10+!\n\nVou te enviar o link de cadastro em instantes. Um de nossos consultores também vai entrar em contato para explicar como funciona o programa.\n\nAté já! 🏆`;
-          await enviarMensagemWhatsApp(telefone, boas_vindas);
+          await enviarMensagemWhatsApp(telefone, boas_vindas, waSendOpts);
         }
       }
 
@@ -467,35 +512,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: "erro", erro: "Falha ao criar lead" }, { status: 500 });
     }
 
+    let agenteResponsavelLead =
+      typeof lead.agente_responsavel === "string" && lead.agente_responsavel.trim()
+        ? lead.agente_responsavel.trim()
+        : "sdr";
+
+    if (linhaWa.kind === "agent_instance") {
+      agenteResponsavelLead = linhaWa.agenteSlug;
+      await supabase.from("hub_leads_crm").update({ agente_responsavel: linhaWa.agenteSlug }).eq("id", lead.id);
+    }
+
     // TABELA 3: hub_fila_mensagens
     await supabase.from("hub_fila_mensagens").insert({
-      lead_id:   lead.id,
-      agente_id: lead.agente_responsavel || "sdr",
-      canal:     "whatsapp",
-      direcao:   "entrada",
-      conteudo:  mensagemFinal,
-      status:    "pendente",
+      lead_id: lead.id,
+      agente_id: agenteResponsavelLead,
+      canal: "whatsapp",
+      direcao: "entrada",
+      conteudo: mensagemFinal,
+      status: "pendente",
       tenant_id: defaultTenantId(),
-      metadata:  { telefone, pushName, messageId, timestamp, mercado, instance, isNovo, tipoMidia },
+      metadata: {
+        telefone,
+        pushName,
+        messageId,
+        timestamp,
+        mercado,
+        instance: instanceKey,
+        isNovo,
+        tipoMidia,
+      },
     });
 
     // TABELA 4: hub_acoes_ia
-    const agente = await buscarAgente(mercado);
+    const agente =
+      linhaWa.kind === "agent_instance"
+        ? await buscarAgentePorSlug(supabase, linhaWa.agenteSlug)
+        : await buscarAgente(mercado);
 
     await supabase.from("hub_acoes_ia").insert({
       agente_slug: agente?.agente_slug || "sdr",
-      tipo:        isNovo ? "novo_lead" : "lead_retornou",
-      descricao:   `${isNovo ? "Novo lead" : "Lead retornou"} — mercado: ${mercado} — "${mensagemFinal.slice(0, 50)}"`,
-      lead_id:     lead.id,
-      sucesso:     true,
-      metadata:    { telefone, mercado, isNovo, agente: agente?.agente_slug },
+      tipo: isNovo ? "novo_lead" : "lead_retornou",
+      descricao: `${isNovo ? "Novo lead" : "Lead retornou"} — mercado: ${mercado} — "${mensagemFinal.slice(0, 50)}"`,
+      lead_id: lead.id,
+      sucesso: true,
+      metadata: { telefone, mercado, isNovo, agente: agente?.agente_slug },
     });
 
-    if (agente && lead.agente_responsavel !== agente.agente_slug) {
-      await supabase
-        .from("hub_leads_crm")
-        .update({ agente_responsavel: agente.agente_slug })
-        .eq("id", lead.id);
+    if (
+      agente &&
+      agente.agente_slug &&
+      linhaWa.kind !== "agent_instance" &&
+      agenteResponsavelLead !== agente.agente_slug
+    ) {
+      await supabase.from("hub_leads_crm").update({ agente_responsavel: agente.agente_slug }).eq("id", lead.id);
+      agenteResponsavelLead = agente.agente_slug as string;
     }
 
     if (isNovo) {
@@ -511,7 +581,7 @@ export async function POST(request: NextRequest) {
           await Promise.allSettled(
             contatos
               .filter(c => c.canal === "whatsapp" || c.canal === "ambos")
-              .map((c) => enviarMensagemWhatsApp(c.telefone, msg))
+              .map((c) => enviarMensagemWhatsApp(c.telefone, msg, waSendOpts))
           );
         }
       } catch (e) { console.error("[WEBHOOK] Erro notificação:", e); }
@@ -554,7 +624,7 @@ export async function POST(request: NextRequest) {
             messageId,
             timestamp,
             mercado,
-            instance,
+            instance: instanceKey,
             isNovo,
             tipoMidia,
           },
@@ -568,16 +638,14 @@ export async function POST(request: NextRequest) {
             agenteSlug,
             motivo: resultado.erro || "engine_sem_resposta",
             mensagemOriginal: mensagemFinal,
+            waSendOpts,
           });
         } else {
-          if (resultado.agenteSlug && lead.agente_responsavel !== resultado.agenteSlug) {
-            await supabase
-              .from("hub_leads_crm")
-              .update({ agente_responsavel: resultado.agenteSlug })
-              .eq("id", lead.id);
+          if (resultado.agenteSlug && agenteResponsavelLead !== resultado.agenteSlug) {
+            await supabase.from("hub_leads_crm").update({ agente_responsavel: resultado.agenteSlug }).eq("id", lead.id);
           }
 
-          await enviarMensagemWhatsApp(telefone, resultado.resposta);
+          await enviarMensagemWhatsApp(telefone, resultado.resposta, waSendOpts);
 
           if (!resultado.precisaAprovacao) {
             const slugEfetivo = resultado.agenteSlug || agenteSlug;
@@ -693,6 +761,7 @@ export async function POST(request: NextRequest) {
           agenteSlug,
           motivo: e instanceof Error ? e.message : "erro_ia_desconhecido",
           mensagemOriginal: mensagemFinal,
+          waSendOpts,
         });
       }
     } else if (!humanoResponsavelAtivo) {
@@ -703,6 +772,7 @@ export async function POST(request: NextRequest) {
         agenteSlug: agente?.agente_slug as string | undefined,
         motivo: IA_ATIVA ? "agente_nao_encontrado" : "ia_api_key_ausente",
         mensagemOriginal: mensagemFinal,
+        waSendOpts,
       });
     }
 

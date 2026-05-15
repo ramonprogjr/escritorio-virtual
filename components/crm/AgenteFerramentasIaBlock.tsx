@@ -1,0 +1,446 @@
+"use client";
+
+import type { CSSProperties } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Brain,
+  Cloud,
+  Cpu,
+  FileCode2,
+  PieChart,
+  StickyNote,
+  UserRound,
+  Users,
+  ClipboardPenLine,
+} from "lucide-react";
+import type { HubAgenteFerramentaId, HubFerramentaCategoria } from "@/lib/hub/agente-ferramentas-registry";
+import {
+  HUB_AGENTE_FERRAMENTAS_CATALOGO,
+  HUB_FERRAMENTA_SECAO_LABEL,
+  mergeUsoFerramentasComPadrao,
+} from "@/lib/hub/agente-ferramentas-registry";
+
+const ORDEM_SECOES: HubFerramentaCategoria[] = ["cliente", "analise", "registos"];
+
+const ICONE_SECAO: Record<HubFerramentaCategoria, LucideIcon> = {
+  cliente: Users,
+  analise: PieChart,
+  registos: ClipboardPenLine,
+};
+
+const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
+  hub_lead_resumo: UserRound,
+  hub_lead_memorias: Brain,
+  hub_metricas_escritorio: BarChart3,
+  hub_relatorio_html_simples: FileCode2,
+  hub_registar_nota_lead: StickyNote,
+};
+
+function ToggleSwitch({
+  checked,
+  onCheckedChange,
+  disabled,
+  labelledBy,
+}: {
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+  disabled?: boolean;
+  labelledBy?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => !disabled && onCheckedChange(!checked)}
+      style={{
+        width: 46,
+        height: 26,
+        borderRadius: 999,
+        border: "none",
+        cursor: disabled ? "not-allowed" : "pointer",
+        background: checked ? "linear-gradient(180deg, #3fb950 0%, #2ea043 100%)" : "#21262d",
+        boxShadow: checked ? "inset 0 1px 0 rgba(255,255,255,0.12)" : "inset 0 1px 0 rgba(0,0,0,0.2)",
+        position: "relative",
+        flexShrink: 0,
+        transition: "background 0.18s ease, opacity 0.15s",
+        opacity: disabled ? 0.45 : 1,
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: 3,
+          left: checked ? 23 : 3,
+          width: 20,
+          height: 20,
+          borderRadius: "50%",
+          background: "#f0f6fc",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
+          transition: "left 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      />
+    </button>
+  );
+}
+
+export type AgenteFerramentasIaBlockProps = {
+  motorHabilitado: boolean;
+  onMotorChange: (v: boolean) => void;
+  mistralSyncHabilitado: boolean;
+  onMistralSyncChange: (v: boolean) => void;
+  usoFerramentas: Record<HubAgenteFerramentaId, boolean>;
+  onUsoChange: (id: HubAgenteFerramentaId, ativo: boolean) => void;
+  mistralAgentId?: string | null;
+  mistralSyncEm?: string | null;
+  mistralSyncErro?: string | null;
+  destacarWhatsApp?: boolean;
+  modoCompacto?: boolean;
+};
+
+export function AgenteFerramentasIaBlock({
+  motorHabilitado,
+  onMotorChange,
+  mistralSyncHabilitado,
+  onMistralSyncChange,
+  usoFerramentas,
+  onUsoChange,
+  mistralAgentId,
+  mistralSyncEm,
+  mistralSyncErro,
+  destacarWhatsApp,
+  modoCompacto,
+}: AgenteFerramentasIaBlockProps) {
+  const uso = mergeUsoFerramentasComPadrao(usoFerramentas);
+  const nAtivas = Object.values(uso).filter(Boolean).length;
+  const motorSemTools = motorHabilitado && nAtivas === 0;
+
+  function activarPacoteWhatsApp() {
+    onMotorChange(true);
+    for (const t of HUB_AGENTE_FERRAMENTAS_CATALOGO) {
+      if (t.recomendadoWhatsApp) onUsoChange(t.id, true);
+    }
+  }
+
+  const rowBase: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #30363d",
+    background: "#161b22",
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: modoCompacto ? 0 : 12,
+        padding: modoCompacto ? 0 : 14,
+        borderRadius: 12,
+        border: modoCompacto ? undefined : "1px solid #30363d",
+        background: modoCompacto ? undefined : "#0d1117",
+      }}
+    >
+      {!modoCompacto ? (
+        <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 4px", letterSpacing: 0.06 }}>
+          FUNÇÕES DO MODELO NO HUB (MISTRAL)
+        </p>
+      ) : null}
+
+      <ol
+        style={{
+          color: "#6e7781",
+          fontSize: 12,
+          margin: modoCompacto ? "0 0 12px" : "0 0 14px",
+          lineHeight: 1.55,
+          paddingLeft: 18,
+        }}
+      >
+        <li style={{ marginBottom: 6 }}>
+          Use os <strong style={{ color: "#aebccf" }}>interruptores</strong> para o modelo pedir dados ao servidor com{" "}
+          <strong style={{ color: "#aebccf" }}>lead activo</strong>.
+        </li>
+        <li style={{ marginBottom: 6 }}>
+          Só as funções <strong style={{ color: "#aebccf" }}>activas</strong> são enviadas ao modelo Mistral.
+        </li>
+        <li>Opcional: sincronizar o mesmo agente na nuvem Mistral.</li>
+      </ol>
+
+      {destacarWhatsApp ? (
+        <p style={{ color: "#c9a24a", fontSize: 11, margin: "0 0 10px", lineHeight: 1.45 }}>
+          Canal WhatsApp: convém activar funções sobre o cliente para não inventar estágio ou responsável.
+        </p>
+      ) : null}
+
+      {motorSemTools ? (
+        <div
+          role="status"
+          style={{
+            marginBottom: 12,
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "1px solid rgba(248,187,92,0.35)",
+            background: "rgba(248,187,92,0.08)",
+            color: "#e6c06a",
+            fontSize: 12,
+            lineHeight: 1.45,
+          }}
+        >
+          O motor está ligado mas <strong>nenhuma função está activa</strong>. Active pelo menos um interruptor na
+          lista ou use o atalho abaixo.
+        </div>
+      ) : null}
+
+      {destacarWhatsApp ? (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            onClick={activarPacoteWhatsApp}
+            style={{
+              cursor: "pointer",
+              borderRadius: 8,
+              border: "1px solid #388bfd66",
+              background: "#388bfd22",
+              color: "#79c0ff",
+              fontSize: 12,
+              fontWeight: 700,
+              padding: "8px 12px",
+            }}
+          >
+            Activar pacote recomendado (WhatsApp)
+          </button>
+          <span style={{ display: "block", color: "#6e7781", fontSize: 11, marginTop: 6 }}>
+            Liga o motor e activa resumo, memórias e registo de nota na timeline.
+          </span>
+        </div>
+      ) : null}
+
+      <div style={{ ...rowBase, marginBottom: 10, borderColor: motorHabilitado ? "#388bfd55" : "#30363d" }}>
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: motorHabilitado ? "rgba(56,139,253,0.15)" : "#21262d",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            color: motorHabilitado ? "#79c0ff" : "#8b949e",
+          }}
+        >
+          <Cpu size={20} strokeWidth={2} aria-hidden />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span id="label-motor-hub" style={{ color: "#e6edf3", fontSize: 13, fontWeight: 700 }}>
+            Funções no Hub durante a conversa
+          </span>
+          <span style={{ display: "block", color: "#8b949e", fontWeight: 400, fontSize: 12, marginTop: 2 }}>
+            Modelo Mistral com lead na sessão ·{" "}
+            <strong style={{ color: motorSemTools ? "#f85149" : "#8b949e" }}>{nAtivas}</strong> de{" "}
+            {HUB_AGENTE_FERRAMENTAS_CATALOGO.length} funções activas
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: motorHabilitado ? "#3fb950" : "#6e7781" }}>
+            {motorHabilitado ? "ACTIVO" : "INACTIVO"}
+          </span>
+          <ToggleSwitch
+            checked={motorHabilitado}
+            onCheckedChange={onMotorChange}
+            labelledBy="label-motor-hub"
+          />
+        </div>
+      </div>
+
+      <div style={{ ...rowBase, marginBottom: 16, borderColor: mistralSyncHabilitado ? "#a371f755" : "#30363d" }}>
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: mistralSyncHabilitado ? "rgba(163,113,247,0.12)" : "#21262d",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            color: mistralSyncHabilitado ? "#d2a8ff" : "#8b949e",
+          }}
+        >
+          <Cloud size={20} strokeWidth={2} aria-hidden />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span id="label-mistral-sync" style={{ color: "#e6edf3", fontSize: 13, fontWeight: 700 }}>
+            Sincronizar com a nuvem Mistral ao guardar
+          </span>
+          <span style={{ display: "block", color: "#8b949e", fontWeight: 400, fontSize: 12, marginTop: 2 }}>
+            Mesmo modelo e {nAtivas} função(ões) activa(s) noutros fluxos (ex. Studio).
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: mistralSyncHabilitado ? "#a371f7" : "#6e7781" }}>
+            {mistralSyncHabilitado ? "ACTIVO" : "INACTIVO"}
+          </span>
+          <ToggleSwitch
+            checked={mistralSyncHabilitado}
+            onCheckedChange={onMistralSyncChange}
+            labelledBy="label-mistral-sync"
+          />
+        </div>
+      </div>
+
+      <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 10px", letterSpacing: 0.04 }}>
+        FUNÇÕES DISPONÍVEIS
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {ORDEM_SECOES.map((cat) => {
+          const tools = HUB_AGENTE_FERRAMENTAS_CATALOGO.filter((t) => t.categoria === cat);
+          if (!tools.length) return null;
+          const SecIcon = ICONE_SECAO[cat];
+          return (
+            <div key={cat}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 10,
+                }}
+              >
+                <SecIcon size={14} strokeWidth={2.25} style={{ color: "#8b949e" }} aria-hidden />
+                <p
+                  style={{
+                    color: "#aebccf",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: 0.04,
+                    textTransform: "uppercase",
+                    margin: 0,
+                  }}
+                >
+                  {HUB_FERRAMENTA_SECAO_LABEL[cat]}
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {tools.map((tool) => {
+                  const ligado = uso[tool.id] === true;
+                  const ToolIcon = ICONE_FERRAMENTA[tool.id];
+                  const labelId = `tool-label-${tool.id}`;
+                  return (
+                    <div
+                      key={tool.id}
+                      style={{
+                        ...rowBase,
+                        borderColor: ligado ? "#388bfd44" : "#30363d",
+                        background: ligado ? "rgba(56,139,253,0.06)" : "#161b22",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 10,
+                          background: ligado ? "rgba(56,139,253,0.18)" : "#21262d",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          color: ligado ? "#79c0ff" : "#8b949e",
+                          marginTop: 2,
+                        }}
+                      >
+                        <ToolIcon size={21} strokeWidth={2} aria-hidden />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0, paddingRight: 4 }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                          <span id={labelId} style={{ color: "#e6edf3", fontSize: 13, fontWeight: 700 }}>
+                            {tool.titulo}
+                          </span>
+                          {tool.recomendadoWhatsApp && destacarWhatsApp ? (
+                            <span
+                              style={{
+                                fontSize: 9,
+                                fontWeight: 800,
+                                letterSpacing: 0.06,
+                                color: "#79c0ff",
+                                border: "1px solid rgba(121,192,255,0.35)",
+                                borderRadius: 4,
+                                padding: "2px 6px",
+                              }}
+                            >
+                              WHATSAPP
+                            </span>
+                          ) : null}
+                        </div>
+                        <span style={{ display: "block", color: "#8b949e", fontSize: 12, lineHeight: 1.45, marginTop: 4 }}>
+                          {tool.descricao}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          gap: 4,
+                          flexShrink: 0,
+                          paddingTop: 4,
+                        }}
+                      >
+                        <span style={{ fontSize: 10, fontWeight: 700, color: ligado ? "#3fb950" : "#6e7781" }}>
+                          {ligado ? "ACTIVO" : "INACTIVO"}
+                        </span>
+                        <ToggleSwitch
+                          checked={ligado}
+                          onCheckedChange={(v) => onUsoChange(tool.id, v)}
+                          labelledBy={labelId}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {mistralAgentId || mistralSyncEm || mistralSyncErro ? (
+        <div
+          style={{
+            marginTop: 14,
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "1px solid #30363d",
+            background: "#161b22",
+          }}
+        >
+          <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 6px" }}>
+            Estado Mistral (Hub)
+          </p>
+          {mistralAgentId ? (
+            <p style={{ color: "#8b949e", fontSize: 11, margin: 0 }}>
+              Agent ID: <code style={{ color: "#aebccf", fontSize: 11 }}>{mistralAgentId}</code>
+            </p>
+          ) : null}
+          {mistralSyncEm ? (
+            <p style={{ color: "#8b949e", fontSize: 11, margin: "4px 0 0" }}>
+              Última sync: {new Date(mistralSyncEm).toLocaleString()}
+            </p>
+          ) : null}
+          {mistralSyncErro ? (
+            <p style={{ color: "#f85149", fontSize: 11, margin: "6px 0 0", lineHeight: 1.45 }}>
+              {mistralSyncErro}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}

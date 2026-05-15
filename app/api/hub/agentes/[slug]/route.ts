@@ -2,6 +2,21 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse, after } from "next/server";
 import { runPlaybookPipeline } from "@/lib/playbook/orchestrate";
 import { deleteAgenteHubCompleto } from "@/lib/hub/delete-agente-completo";
+import {
+  serializarUsoFerramentasParaDb,
+  syncHubAgenteParaMistral,
+} from "@/lib/mistral/sync-hub-agent";
+import { sanitizarAgenteHubParaCliente } from "@/lib/hub/sanitize-agente-hub-public";
+import {
+  isHubAgenteFerramentasColumnsMissing,
+  omitHubAgenteFerramentasMigrationKeys,
+} from "@/lib/hub/hub-agente-ferramentas-columns";
+
+function parseBoolPatch(v: unknown): boolean | undefined {
+  if (v === true || v === "true") return true;
+  if (v === false || v === "false") return false;
+  return undefined;
+}
 
 function db() {
   return createClient(
@@ -35,7 +50,7 @@ export async function GET(
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json(sanitizarAgenteHubParaCliente(data as Record<string, unknown>));
 }
 
 export async function PATCH(
@@ -78,6 +93,27 @@ export async function PATCH(
     if (key in body) patch[key] = body[key];
   }
 
+  if ("motor_ferramentas_habilitado" in body) {
+    const v = parseBoolPatch(body.motor_ferramentas_habilitado);
+    if (v !== undefined) patch.motor_ferramentas_habilitado = v;
+  }
+  if ("mistral_agent_sync_habilitado" in body) {
+    const v = parseBoolPatch(body.mistral_agent_sync_habilitado);
+    if (v !== undefined) patch.mistral_agent_sync_habilitado = v;
+  }
+  if ("uso_ferramentas_ia" in body && body.uso_ferramentas_ia !== undefined) {
+    patch.uso_ferramentas_ia = serializarUsoFerramentasParaDb(body.uso_ferramentas_ia);
+  }
+
+  const syncTriggers = [
+    "motor_ferramentas_habilitado",
+    "mistral_agent_sync_habilitado",
+    "uso_ferramentas_ia",
+    "system_prompt_base",
+  ] as const;
+
+  const patchAfetaSyncMistral = syncTriggers.some((k) => k in patch);
+
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nenhum campo válido para atualizar." }, { status: 400 });
   }
@@ -109,12 +145,28 @@ export async function PATCH(
     if (arquivado) patch.ativo = false;
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("hub_agente_identidade")
     .update(patch)
     .eq("agente_slug", slug)
     .select()
     .maybeSingle();
+
+  if (error && isHubAgenteFerramentasColumnsMissing(error.message)) {
+    console.warn(
+      "[hub/agentes/:slug] hub_agente_identidade sem colunas ferramentas/Mistral; aplicar 20260516120000_hub_agente_ferramentas_mistral. Retrying update."
+    );
+    const patchSemFerr = omitHubAgenteFerramentasMigrationKeys(patch);
+    if (Object.keys(patchSemFerr).length === 0) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    ({ data, error } = await supabase
+      .from("hub_agente_identidade")
+      .update(patchSemFerr)
+      .eq("agente_slug", slug)
+      .select()
+      .maybeSingle());
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -123,8 +175,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
-  const updated = data as { agente_slug: string };
+  const updated = data as {
+    agente_slug: string;
+    mistral_agent_sync_habilitado?: boolean;
+  };
   const sb = supabase;
+
   after(async () => {
     try {
       const out = await runPlaybookPipeline(sb, updated.agente_slug);
@@ -134,9 +190,22 @@ export async function PATCH(
     } catch (e) {
       console.error("[playbook] pós-atualização agente (exceção):", updated.agente_slug, e);
     }
+    if (
+      patchAfetaSyncMistral &&
+      updated.mistral_agent_sync_habilitado === true
+    ) {
+      try {
+        const syn = await syncHubAgenteParaMistral(sb, updated.agente_slug);
+        if (!syn.ok) {
+          console.warn("[mistral-agents] pós-patch sync:", updated.agente_slug, syn.error);
+        }
+      } catch (e) {
+        console.error("[mistral-agents] pós-patch sync (exceção):", updated.agente_slug, e);
+      }
+    }
   });
 
-  return NextResponse.json(data);
+  return NextResponse.json(sanitizarAgenteHubParaCliente(data as Record<string, unknown>));
 }
 
 export async function DELETE(

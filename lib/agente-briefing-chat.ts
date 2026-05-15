@@ -9,6 +9,7 @@ const MAX_SNAPSHOT_PROMPTS = 20;
 export const BRIEFING_SYSTEM_PREAMBLE = `Você está no MODO BRIEFING INTERNO do CRM Obra10 (equipe), em conversa com um colega humano.
 Regras absolutas:
 - Use apenas os dados fornecidos no bloco "DADOS_OPERACIONAIS (somente leitura)" para falar sobre execuções, leads e ciclos. Se algo não aparecer lá, diga que não há registro — não invente.
+- Esse bloco são **extractos internos de apoio** (ficheiros de registo no sistema), **não** são "ferramentas" do modelo nem botões que o colega possa clicar. Não os apresente como lista de ferramentas com nomes técnicos de tabela; diga apenas que tem acesso a dados de revisão interna.
 - Você NÃO está atendendo cliente final. NÃO simule WhatsApp, NÃO prometa envio de mensagens, NÃO altere CRM. Apenas explique, resuma e oriente revisão humana.
 - Cite nomes de leads quando aparecerem nos dados (contexto interno autorizado).
 - Seja objetivo e útil para operação: status, últimos erros, o que revisar em Ciclos IA / logs.
@@ -71,7 +72,7 @@ export async function montarSnapshotOperacionalReadOnly(
       .order("iniciado_em", { ascending: false })
       .limit(MAX_SNAPSHOT_CICLO_LOG);
     if (logs?.length) {
-      blocos.push("\n## Últimas execuções hub_ciclos_log");
+      blocos.push("\n## Histórico de corridas automáticas (últimas execuções)");
       for (const row of logs as Record<string, unknown>[]) {
         const ac = row.acoes_tomadas && typeof row.acoes_tomadas === "object" ? JSON.stringify(row.acoes_tomadas) : "";
         blocos.push(
@@ -79,10 +80,10 @@ export async function montarSnapshotOperacionalReadOnly(
         );
       }
     } else {
-      blocos.push("\n## hub_ciclos_log: sem linhas (normal antes da 1ª execução).");
+      blocos.push("\n## Histórico de corridas: ainda sem linhas (normal antes da 1ª execução).");
     }
   } catch {
-    blocos.push("\n## hub_ciclos_log: falha ao ler.");
+    blocos.push("\n## Histórico de corridas: falha ao ler.");
   }
 
   try {
@@ -103,7 +104,7 @@ export async function montarSnapshotOperacionalReadOnly(
     }
 
     if (acoes?.length) {
-      blocos.push("\n## Últimas ações hub_acoes_ia");
+      blocos.push("\n## Últimas acções registadas pela IA para leads");
       for (const a of acoes as { tipo?: string; descricao?: string; lead_id?: string; sucesso?: boolean; erro?: string; criado_em?: string }[]) {
         const nomeLead = a.lead_id ? nomesPorLead[a.lead_id] || `(lead ${String(a.lead_id).slice(0, 8)}…)` : "—";
         blocos.push(
@@ -111,10 +112,10 @@ export async function montarSnapshotOperacionalReadOnly(
         );
       }
     } else {
-      blocos.push("\n## hub_acoes_ia: sem linhas.");
+      blocos.push("\n## Acções IA: sem linhas recentes.");
     }
   } catch {
-    blocos.push("\n## hub_acoes_ia: falha ao ler.");
+    blocos.push("\n## Acções IA: falha ao ler.");
   }
 
   try {
@@ -125,17 +126,17 @@ export async function montarSnapshotOperacionalReadOnly(
       .order("criado_em", { ascending: false })
       .limit(MAX_SNAPSHOT_PROMPTS);
     if (prompts?.length) {
-      blocos.push("\n## Últimas respostas engine hub_prompt_logs (trechos)");
+      blocos.push("\n## Últimas interações da engine com clientes (trechos)");
       for (const p of prompts as Record<string, unknown>[]) {
         blocos.push(
           `- ${p.criado_em} | modelo=${p.modelo_usado ?? "—"} | lead_id=${p.lead_id ?? "—"} | tok in/out=${p.tokens_input ?? "—"}/${p.tokens_output ?? "—"} | usr=${trunc(String(p.mensagem_usuario || ""), 100)}`
         );
       }
     } else {
-      blocos.push("\n## hub_prompt_logs: sem linhas para este agente_slug.");
+      blocos.push("\n## Logs de pedidos ao modelo: sem linhas para este agente.");
     }
   } catch {
-    blocos.push("\n## hub_prompt_logs: falha ao ler (ou coluna divergente no banco).");
+    blocos.push("\n## Logs de pedidos ao modelo: falha ao ler (schema ou permissões).");
   }
 
   return `### DADOS_OPERACIONAIS (somente leitura)\n${blocos.join("\n")}`;

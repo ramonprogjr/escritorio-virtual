@@ -3,7 +3,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
+import { AgenteFerramentasIaBlock } from "@/components/crm/AgenteFerramentasIaBlock";
+import { AgenteUazapiBlock } from "@/components/crm/AgenteUazapiBlock";
 import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
+import {
+  mergeUsoFerramentasComPadrao,
+  normalizarUsoFerramentasIa,
+  type HubAgenteFerramentaId,
+} from "@/lib/hub/agente-ferramentas-registry";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -167,6 +174,13 @@ export default function AgentePage() {
   const [estiloComunicacao, setEstiloComunicacao] = useState("");
   const [systemPromptBase, setSystemPromptBase] = useState("");
 
+  const [motorFerramentasHub, setMotorFerramentasHub] = useState(false);
+  const [mistralProvisionar, setMistralProvisionar] = useState(false);
+  const [usoFerramentasIa, setUsoFerramentasIa] = useState<
+    Partial<Record<HubAgenteFerramentaId, boolean>>
+  >(() => mergeUsoFerramentasComPadrao({}));
+  const [syncMistralLoading, setSyncMistralLoading] = useState(false);
+
   // UI state
   const [showArquivar, setShowArquivar] = useState(false);
   const [motivoArquivamento, setMotivoArquivamento] = useState("");
@@ -201,6 +215,11 @@ export default function AgentePage() {
         setTomVoz(data.tom_voz || "");
         setEstiloComunicacao(data.estilo_comunicacao || "");
         setSystemPromptBase(data.system_prompt_base || "");
+        setMotorFerramentasHub(data.motor_ferramentas_habilitado === true);
+        setMistralProvisionar(data.mistral_agent_sync_habilitado === true);
+        setUsoFerramentasIa(
+          mergeUsoFerramentasComPadrao(normalizarUsoFerramentasIa(data.uso_ferramentas_ia))
+        );
       }
     } catch {
       // silencioso
@@ -276,6 +295,9 @@ export default function AgentePage() {
           tom_voz: tomVoz,
           estilo_comunicacao: estiloComunicacao,
           system_prompt_base: systemPromptBase,
+          motor_ferramentas_habilitado: motorFerramentasHub,
+          mistral_agent_sync_habilitado: mistralProvisionar,
+          uso_ferramentas_ia: mergeUsoFerramentasComPadrao(usoFerramentasIa),
         }),
       });
       if (res.ok) {
@@ -293,6 +315,30 @@ export default function AgentePage() {
       setShowConfirmSalvar(false);
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function sincronizarMistralAgora() {
+    if (!agente) return;
+    setSyncMistralLoading(true);
+    setErro("");
+    try {
+      const res = await fetch(`/api/hub/agentes/${slug}/mistral-sync`, {
+        method: "POST",
+        headers: internalApiHeaders(),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; mistral_agent_id?: string };
+      if (res.ok) {
+        setToast("✓ Agent Mistral sincronizado");
+        setTimeout(() => setToast(""), 3500);
+        await carregar();
+      } else {
+        setErro(data.error || "Falha ao sincronizar com Mistral.");
+      }
+    } catch {
+      setErro("Falha na requisição de sync Mistral.");
+    } finally {
+      setSyncMistralLoading(false);
     }
   }
 
@@ -810,6 +856,72 @@ export default function AgentePage() {
               rows={6}
               style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
             />
+          </div>
+
+          <div
+            style={{
+              borderTop: "1px solid #30363d",
+              paddingTop: 18,
+            }}
+          >
+            {agente.modo_operacao === "canal_whatsapp" ? (
+              <AgenteUazapiBlock
+                agenteSlug={slug}
+                snapshot={{
+                  uazapi_instance_id:
+                    typeof agente.uazapi_instance_id === "string" ? agente.uazapi_instance_id : null,
+                  uazapi_instance_name:
+                    typeof agente.uazapi_instance_name === "string" ? agente.uazapi_instance_name : null,
+                  uazapi_connection_status:
+                    typeof agente.uazapi_connection_status === "string"
+                      ? agente.uazapi_connection_status
+                      : null,
+                  uazapi_has_instance_token: agente.uazapi_has_instance_token === true,
+                }}
+                onRefresh={carregar}
+              />
+            ) : null}
+            <AgenteFerramentasIaBlock
+              motorHabilitado={motorFerramentasHub}
+              onMotorChange={setMotorFerramentasHub}
+              mistralSyncHabilitado={mistralProvisionar}
+              onMistralSyncChange={setMistralProvisionar}
+              usoFerramentas={mergeUsoFerramentasComPadrao(usoFerramentasIa)}
+              onUsoChange={(id, ativo) =>
+                setUsoFerramentasIa((prev) => ({
+                  ...mergeUsoFerramentasComPadrao(prev),
+                  [id]: ativo,
+                }))
+              }
+              mistralAgentId={typeof agente.mistral_agent_id === "string" ? agente.mistral_agent_id : null}
+              mistralSyncEm={typeof agente.mistral_agent_sync_em === "string" ? agente.mistral_agent_sync_em : null}
+              mistralSyncErro={
+                typeof agente.mistral_agent_sync_erro === "string" ? agente.mistral_agent_sync_erro : null
+              }
+              destacarWhatsApp={agente.modo_operacao === "canal_whatsapp"}
+            />
+            <button
+              type="button"
+              onClick={sincronizarMistralAgora}
+              disabled={syncMistralLoading || !mistralProvisionar}
+              style={{
+                marginTop: 12,
+                padding: "10px 16px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: mistralProvisionar && !syncMistralLoading ? "pointer" : "not-allowed",
+                border: "1px solid #30363d",
+                background: mistralProvisionar ? "#161b22" : "#0d1117",
+                color: mistralProvisionar ? "#c9a24a" : "#484f58",
+              }}
+            >
+              {syncMistralLoading ? "A sincronizar…" : "Sincronizar com Mistral agora"}
+            </button>
+            <p style={{ color: "#484f58", fontSize: 11, margin: "8px 0 0", lineHeight: 1.45 }}>
+              Requer chave <code style={{ fontSize: 10 }}>MISTRAL_API_KEY</code> no servidor e opção de provisionamento
+              ativa.
+            </p>
           </div>
 
           {/* Botão salvar */}

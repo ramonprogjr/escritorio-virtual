@@ -24,6 +24,17 @@ function stripJidToDigits(jid: string): string {
   return jid.replace("@s.whatsapp.net", "").replace("@g.us", "").replace("@lid", "").replace(/\D/g, "");
 }
 
+/** ID da instância no webhook global UAZAPI (string ou objeto com id). */
+export function normalizeWebhookInstanceId(body: Record<string, unknown>): string | undefined {
+  const raw = body.instance;
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  if (raw && typeof raw === "object" && raw !== null && "id" in raw) {
+    const id = (raw as { id?: unknown }).id;
+    if (typeof id === "string" && id.trim()) return id.trim();
+  }
+  return undefined;
+}
+
 function parseUazapi(body: Record<string, unknown>): WhatsappWebhookParseResult | null {
   const eventRaw = (body.event as string) || (body.EventType as string) || (body.type as string) || "";
   const ev = eventRaw.toLowerCase();
@@ -90,7 +101,7 @@ function parseUazapi(body: Record<string, unknown>): WhatsappWebhookParseResult 
       tipoMidia,
       texto,
       mensagemFinal,
-      instance: (body.instance as string) || undefined,
+      instance: normalizeWebhookInstanceId(body),
     },
   };
 }

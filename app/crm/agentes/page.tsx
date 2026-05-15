@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { AgenteNovoWizard } from "@/components/crm/AgenteNovoWizard";
+import { CrmCargosCatalogDrawer } from "@/components/crm/CrmCargosCatalogDrawer";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { CrmBotRingAvatar } from "@/components/crm/CrmBotRingAvatar";
 import { CRM_ENTITY_GRID, crmGlassCardSurface } from "@/lib/crm-glass-card";
@@ -56,17 +57,6 @@ type AgenteLog = {
   tokens_input?: number;
   tokens_output?: number;
   custo_estimado_brl?: number;
-  [key: string]: unknown;
-};
-
-type CargoCatalogo = {
-  slug: string;
-  titulo?: string;
-  segmento?: string;
-  especialidade?: string;
-  nivel?: string | number;
-  ativo?: boolean;
-  descricao_curta?: string;
   [key: string]: unknown;
 };
 
@@ -280,18 +270,6 @@ function AgentesView() {
   const [alternandoAtivoSlug, setAlternandoAtivoSlug] = useState<string | null>(null);
   const [excluindoAgenteSlug, setExcluindoAgenteSlug] = useState<string | null>(null);
   const [dialogExcluirAgente, setDialogExcluirAgente] = useState<Agente | null>(null);
-  const [cargos, setCargos] = useState<CargoCatalogo[]>([]);
-  const [carregandoCargos, setCarregandoCargos] = useState(false);
-  const [erroCargos, setErroCargos] = useState<string | null>(null);
-  const [alternandoCargoSlug, setAlternandoCargoSlug] = useState<string | null>(null);
-  const [cargosBulkLoading, setCargosBulkLoading] = useState(false);
-  const [editandoCargoSlug, setEditandoCargoSlug] = useState<string | null>(null);
-  const [cargoDraft, setCargoDraft] = useState<{ titulo: string; segmento: string; especialidade: string; descricao_curta: string }>({
-    titulo: "",
-    segmento: "",
-    especialidade: "",
-    descricao_curta: "",
-  });
 
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("editar");
@@ -376,31 +354,6 @@ function AgentesView() {
       .finally(() => setCarregando(false));
   }, [modoLista]);
 
-  const carregarCargos = useCallback(() => {
-    setCarregandoCargos(true);
-    setErroCargos(null);
-    fetch("/api/hub/cargos?all=true", { headers: internalApiHeaders() })
-      .then(async (r) => {
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          setErroCargos(typeof data?.error === "string" ? data.error : `Erro ${r.status} ao carregar cargos.`);
-          setCargos([]);
-          return;
-        }
-        if (Array.isArray(data)) setCargos(data);
-        else if (Array.isArray(data?.cargos)) setCargos(data.cargos);
-        else {
-          setErroCargos("Resposta inesperada ao carregar cargos.");
-          setCargos([]);
-        }
-      })
-      .catch((e: Error) => {
-        setErroCargos(e?.message || "Falha de rede ao carregar cargos.");
-        setCargos([]);
-      })
-      .finally(() => setCarregandoCargos(false));
-  }, []);
-
   const carregarDetalhe = useCallback(async (slug: string) => {
     setDetailLoading(true);
     setDetailErro(null);
@@ -483,130 +436,9 @@ function AgentesView() {
     }
   }, []);
 
-  async function alternarCargoAtivo(cargo: CargoCatalogo) {
-    const slug = String(cargo.slug || "").trim();
-    if (!slug) return;
-    const proximo = cargo.ativo === false;
-    setAlternandoCargoSlug(slug);
-    try {
-      const res = await fetch("/api/hub/cargos", {
-        method: "PATCH",
-        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, ativo: proximo }),
-      });
-      if (!res.ok) return;
-      setCargos((prev) => prev.map((c) => (c.slug === slug ? { ...c, ativo: proximo } : c)));
-    } finally {
-      setAlternandoCargoSlug(null);
-    }
-  }
-
-  function iniciarEdicaoCargo(cargo: CargoCatalogo) {
-    setEditandoCargoSlug(String(cargo.slug || ""));
-    setCargoDraft({
-      titulo: String(cargo.titulo || ""),
-      segmento: String(cargo.segmento || ""),
-      especialidade: String(cargo.especialidade || ""),
-      descricao_curta: String(cargo.descricao_curta || ""),
-    });
-  }
-
-  function cancelarEdicaoCargo() {
-    setEditandoCargoSlug(null);
-    setCargoDraft({ titulo: "", segmento: "", especialidade: "", descricao_curta: "" });
-  }
-
-  async function salvarEdicaoCargo(slug: string) {
-    if (!slug) return;
-    setAlternandoCargoSlug(slug);
-    try {
-      const res = await fetch("/api/hub/cargos", {
-        method: "PATCH",
-        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, ...cargoDraft }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setErroCargos(typeof data?.error === "string" ? data.error : "Falha ao salvar cargo.");
-        return;
-      }
-      setCargos((prev) => prev.map((c) => (c.slug === slug ? { ...c, ...data } : c)));
-      cancelarEdicaoCargo();
-    } finally {
-      setAlternandoCargoSlug(null);
-    }
-  }
-
-  const cargosPorSegmento = useMemo(() => {
-    const m = new Map<string, CargoCatalogo[]>();
-    for (const c of cargos) {
-      const seg = String(c.segmento || "").trim() || "Outros";
-      const bucket = m.get(seg);
-      if (bucket) bucket.push(c);
-      else m.set(seg, [c]);
-    }
-    const keys = [...m.keys()].sort((a, b) => {
-      if (a === "Outros") return 1;
-      if (b === "Outros") return -1;
-      return a.localeCompare(b, "pt-BR", { sensitivity: "base" });
-    });
-    return keys.map((k) => {
-      const list = [...(m.get(k) || [])];
-      list.sort((a, b) =>
-        String(a.titulo || a.slug).localeCompare(String(b.titulo || b.slug), "pt-BR", { sensitivity: "base" })
-      );
-      return [k, list] as const;
-    });
-  }, [cargos]);
-
-  async function definirTodosCargosAtivos(ativoAlvo: boolean) {
-    if (cargos.length === 0) return;
-    setCargosBulkLoading(true);
-    setErroCargos(null);
-    try {
-      const outcomes = await Promise.all(
-        cargos.map(async (c) => {
-          const slug = String(c.slug || "").trim();
-          if (!slug) return false;
-          const res = await fetch("/api/hub/cargos", {
-            method: "PATCH",
-            headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify({ slug, ativo: ativoAlvo }),
-          });
-          return res.ok;
-        })
-      );
-      const allOk = outcomes.every(Boolean);
-      if (allOk) {
-        setCargos((prev) => prev.map((c) => ({ ...c, ativo: ativoAlvo })));
-      } else {
-        setErroCargos("Não foi possível atualizar todos os cargos. Tente novamente.");
-        carregarCargos();
-      }
-    } catch (e) {
-      setErroCargos((e as Error)?.message || "Falha ao atualizar cargos em lote.");
-      carregarCargos();
-    } finally {
-      setCargosBulkLoading(false);
-    }
-  }
-
-  const cargosPainelBusy = carregandoCargos || cargosBulkLoading || alternandoCargoSlug !== null;
-
   useEffect(() => {
     carregarAgentes();
   }, [carregarAgentes]);
-
-  useEffect(() => {
-    if (!drawerCargosOpen) return;
-    carregarCargos();
-  }, [drawerCargosOpen, carregarCargos]);
-
-  useEffect(() => {
-    if (editandoCargoSlug && !drawerCargosOpen) {
-      cancelarEdicaoCargo();
-    }
-  }, [editandoCargoSlug, drawerCargosOpen]);
 
   useEffect(() => {
     if (openedFromQuery.current) return;
@@ -1205,250 +1037,7 @@ function AgentesView() {
         </>
       )}
 
-      {drawerCargosOpen && (
-        <>
-          <button
-            type="button"
-            aria-label="Fechar gerenciamento de cargos"
-            onClick={() => setDrawerCargosOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 52, background: "rgba(0,0,0,0.55)", border: "none", padding: 0 }}
-          />
-          <aside
-            style={{
-              position: "fixed",
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: "min(560px, 100vw)",
-              zIndex: 53,
-              background: "#0f1620",
-              borderLeft: "1px solid #2d394b",
-              boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
-              display: "flex",
-              flexDirection: "column",
-              minHeight: 0,
-            }}
-          >
-            <div style={{ borderBottom: "1px solid #2d394b", padding: 16, background: "linear-gradient(180deg,#121a26 0%, #101722 100%)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                <div>
-                  <p style={{ margin: 0, color: "#8ea1ba", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>ADMINISTRAÇÃO</p>
-                  <h3 style={{ margin: "3px 0 0", color: "#e6edf3", fontSize: 17 }}>Gerenciar cargos</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setDrawerCargosOpen(false)}
-                  style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, width: 34, cursor: "pointer" }}
-                >
-                  ✕
-                </button>
-              </div>
-              <p style={{ margin: "8px 0 0", color: "#8092a9", fontSize: 12 }}>
-                Controle quais cargos ficam disponíveis no cadastro de novos agentes.
-              </p>
-              {!carregandoCargos && cargos.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 12 }}>
-                  <button
-                    type="button"
-                    onClick={() => definirTodosCargosAtivos(true)}
-                    disabled={cargosPainelBusy}
-                    style={{
-                      border: "1px solid #22c55e55",
-                      background: cargosPainelBusy ? "#1a2e22" : "#22c55e18",
-                      color: cargosPainelBusy ? "#647d6b" : "#22c55e",
-                      borderRadius: 8,
-                      padding: "7px 12px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: cargosPainelBusy ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    Ativar todos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => definirTodosCargosAtivos(false)}
-                    disabled={cargosPainelBusy}
-                    style={{
-                      border: "1px solid #ef444455",
-                      background: cargosPainelBusy ? "#2e1a1a" : "#ef444418",
-                      color: cargosPainelBusy ? "#7a6565" : "#ef4444",
-                      borderRadius: 8,
-                      padding: "7px 12px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: cargosPainelBusy ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    Desativar todos
-                  </button>
-                  {cargosBulkLoading && (
-                    <span style={{ fontSize: 11, color: "#7a8ca3" }}>Aplicando em todos os cargos…</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-              {erroCargos && (
-                <div style={{ color: "#f87171", background: "#3a1518", border: "1px solid #7f1d1d", borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12 }}>
-                  {erroCargos}
-                </div>
-              )}
-              {carregandoCargos ? (
-                <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando cargos...</p>
-              ) : cargos.length === 0 ? (
-                <p style={{ color: "#8b949e", fontSize: 13 }}>Nenhum cargo encontrado.</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {cargosPorSegmento.map(([segmentoLabel, lista], secIdx) => {
-                    const corBarra = SEGMENTO_COR[segmentoLabel] || "#64748b";
-                    return (
-                      <div key={segmentoLabel} style={{ marginTop: secIdx === 0 ? 0 : 20 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            marginBottom: 10,
-                            paddingBottom: 6,
-                            borderBottom: "1px solid #243042",
-                          }}
-                        >
-                          <span style={{ width: 3, minWidth: 3, height: 16, borderRadius: 2, background: corBarra }} />
-                          <span style={{ fontSize: 12, fontWeight: 800, color: "#b8c5d6", letterSpacing: 0.4 }}>{segmentoLabel}</span>
-                          <span style={{ fontSize: 11, color: "#5c6b80" }}>({lista.length})</span>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {lista.map((cargo) => {
-                      const ativo = cargo.ativo !== false;
-                    const slug = String(cargo.slug || "");
-                    const emEdicao = editandoCargoSlug === slug;
-                    return (
-                      <div
-                        key={slug}
-                        style={{
-                          background: "#131c28",
-                          border: "1px solid #2d3a4d",
-                          borderRadius: 10,
-                          padding: "10px 12px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 10,
-                        }}
-                      >
-                        {!emEdicao ? (
-                          <>
-                            <div style={{ minWidth: 0 }}>
-                              <p style={{ margin: 0, color: "#e6edf3", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                {String(cargo.titulo || slug)}
-                              </p>
-                              <p style={{ margin: "2px 0 0", color: "#8394ab", fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                @{slug}
-                                {cargo.segmento ? ` · ${String(cargo.segmento)}` : ""}
-                                {cargo.especialidade ? ` · ${String(cargo.especialidade)}` : ""}
-                              </p>
-                            </div>
-                            <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-                              <button
-                                type="button"
-                                onClick={() => iniciarEdicaoCargo(cargo)}
-                                disabled={cargosBulkLoading}
-                                style={{
-                                  border: "1px solid #334155",
-                                  background: "#1e293b",
-                                  color: cargosBulkLoading ? "#556273" : "#94a3b8",
-                                  borderRadius: 8,
-                                  padding: "6px 9px",
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  cursor: cargosBulkLoading ? "not-allowed" : "pointer",
-                                }}
-                              >
-                                Editar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => alternarCargoAtivo(cargo)}
-                                disabled={cargosBulkLoading || alternandoCargoSlug === slug}
-                                style={{
-                                  border: `1px solid ${ativo ? "#ef444455" : "#22c55e55"}`,
-                                  background: ativo ? "#ef444420" : "#22c55e20",
-                                  color: ativo ? "#ef4444" : "#22c55e",
-                                  borderRadius: 999,
-                                  padding: "6px 10px",
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  cursor: cargosBulkLoading || alternandoCargoSlug === slug ? "wait" : "pointer",
-                                }}
-                              >
-                                {alternandoCargoSlug === slug ? "..." : ativo ? "Desativar" : "Ativar"}
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                              <input
-                                value={cargoDraft.titulo}
-                                onChange={(e) => setCargoDraft((p) => ({ ...p, titulo: e.target.value }))}
-                                placeholder="Título"
-                                style={{ background: "#0f1724", border: "1px solid #334155", color: "#e6edf3", borderRadius: 8, padding: "7px 9px", fontSize: 12 }}
-                              />
-                              <input
-                                value={cargoDraft.segmento}
-                                onChange={(e) => setCargoDraft((p) => ({ ...p, segmento: e.target.value }))}
-                                placeholder="Segmento"
-                                style={{ background: "#0f1724", border: "1px solid #334155", color: "#e6edf3", borderRadius: 8, padding: "7px 9px", fontSize: 12 }}
-                              />
-                            </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                              <input
-                                value={cargoDraft.especialidade}
-                                onChange={(e) => setCargoDraft((p) => ({ ...p, especialidade: e.target.value }))}
-                                placeholder="Especialidade"
-                                style={{ background: "#0f1724", border: "1px solid #334155", color: "#e6edf3", borderRadius: 8, padding: "7px 9px", fontSize: 12 }}
-                              />
-                              <input
-                                value={cargoDraft.descricao_curta}
-                                onChange={(e) => setCargoDraft((p) => ({ ...p, descricao_curta: e.target.value }))}
-                                placeholder="Descrição curta"
-                                style={{ background: "#0f1724", border: "1px solid #334155", color: "#e6edf3", borderRadius: 8, padding: "7px 9px", fontSize: 12 }}
-                              />
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                              <button
-                                type="button"
-                                onClick={cancelarEdicaoCargo}
-                                style={{ border: "1px solid #334155", background: "#1e293b", color: "#94a3b8", borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
-                              >
-                                Cancelar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => salvarEdicaoCargo(slug)}
-                                disabled={alternandoCargoSlug === slug}
-                                style={{ border: "none", background: "#003b26", color: "#c9a24a", borderRadius: 8, padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: alternandoCargoSlug === slug ? "wait" : "pointer" }}
-                              >
-                                {alternandoCargoSlug === slug ? "..." : "Salvar"}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </aside>
-        </>
-      )}
+      <CrmCargosCatalogDrawer open={drawerCargosOpen} onClose={() => setDrawerCargosOpen(false)} />
 
       {detalheAberto && (
         <>
@@ -1551,7 +1140,7 @@ function AgentesView() {
                         cursor: "pointer",
                       }}
                     >
-                      {tab === "editar" ? "Editar modelo" : "Logs timeline"}
+                      {tab === "editar" ? "Editar modelo" : "Histórico de prompts"}
                     </button>
                   );
                 })}
@@ -1597,7 +1186,7 @@ function AgentesView() {
                         <p style={{ margin: "8px 0 0", color: "#9cb0c9", fontSize: 11, lineHeight: 1.5 }}>
                           {saudeAgente === "ok" && "Execuções e ações recentes dentro do esperado."}
                           {saudeAgente === "degradado" &&
-                            "Há erro recente nas execuções de ciclo, várias falhas seguidas, última corrida muito antiga ou silêncio prolongado (ciclos ativos sem log e sem prompt recente). Revise Ciclos IA e o fluxo WhatsApp/cron."}
+                            "Alguma coisa está fora do esperado: falhas recentes nas tarefas automáticas, ou há tempo sem corridas quando os ciclos estão ligados. Vale rever em Ciclos IA e no fluxo WhatsApp/agenda."}
                           {saudeAgente === "parado" && "Modelo inativo ou arquivado — não há operação esperada."}
                           {!saudeAgente && "—"}
                         </p>
@@ -1864,15 +1453,16 @@ function AgentesView() {
                       )}
                         </SideoverFold>
                         <SideoverFold
-                          title="Atividade recente"
+                          title="Atividade do modelo"
                           open={drawerSecAtividadeAberto}
                           onToggle={() => setDrawerSecAtividadeAberto((o) => !o)}
                         >
-                      <p style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>Últimas ações (IA)</p>
+                      <p style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
+                        Registos da IA
+                      </p>
                       {operacao.acoes.length === 0 ? (
-                        <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>
-                          Nenhuma ação recente. Ações aparecem quando a IA registra eventos (base{" "}
-                          <code style={{ fontSize: 10 }}>hub_acoes_ia</code>).
+                        <p style={{ margin: 0, color: "#7f90a8", fontSize: 12, lineHeight: 1.5 }}>
+                          Ainda não há registos visíveis. Quando o copiloto ou rotinas automáticas criarem eventos (por exemplo após WhatsApp ou tarefas internas), aparecem aqui em lista breve.
                         </p>
                       ) : (
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1904,7 +1494,9 @@ function AgentesView() {
                                   {(row.descricao as string)?.length > 200 ? "…" : ""}
                                 </p>
                                 {row.lead_id && (
-                                  <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: 10 }}>Lead: {row.lead_id}</p>
+                                  <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: 10 }}>
+                                    Referência do cliente no CRM
+                                  </p>
                                 )}
                               </div>
                             );
@@ -1915,17 +1507,14 @@ function AgentesView() {
                       <div style={{ borderTop: "1px solid rgba(37, 48, 66, 0.85)", marginTop: 12, paddingTop: 12 }} />
 
                       <p style={{ margin: "0 0 4px", color: "#94a3b8", fontSize: 11, fontWeight: 700 }}>
-                        Execuções de ciclo
+                        Tarefas automáticas (ciclos)
                       </p>
-                      <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 10 }}>
-                        Últimas execuções em{" "}
-                        <code style={{ fontSize: 10 }}>hub_ciclos_log</code> para este modelo (amostra; não substitui relatório
-                        completo).
+                      <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 11, lineHeight: 1.45 }}>
+                        Mostram-se aqui as últimas corridas dos ciclos ligados a este modelo (amostra para acompanhamento rápido).
                       </p>
                       {operacao.execucoes_ciclo.length === 0 ? (
-                        <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>
-                          Nenhuma linha em <code style={{ fontSize: 10 }}>hub_ciclos_log</code> — normal antes da primeira
-                          corrida (cron ou webhook).
+                        <p style={{ margin: 0, color: "#7f90a8", fontSize: 12, lineHeight: 1.5 }}>
+                          Ainda não há corridas registadas — é normal antes da primeira execução agendada ou antes da primeira mensagem no canal, conforme configuraste em <strong style={{ color: "#aebccf" }}>Ciclos IA</strong>.
                         </p>
                       ) : (
                         <div style={{ position: "relative", paddingLeft: 14 }}>
@@ -2030,10 +1619,13 @@ function AgentesView() {
                     <div style={{ padding: "6px 14px 12px" }}>
                       <SideoverFold
                         isFirst
-                        title="Cadastro do modelo (leitura) · hub_agente_identidade"
+                        title="Identidade fixa do modelo"
                         open={drawerSecIdentidadeAberto}
                         onToggle={() => setDrawerSecIdentidadeAberto((o) => !o)}
                       >
+                    <p style={{ margin: "0 0 12px", color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>
+                      Estes campos vêm do cargo e da configuração inicial — só alteram por fluxos específicos (ex.: página completa do modelo). Úteis para conferência rápida.
+                    </p>
                     <div
                       style={{
                         display: "grid",
@@ -2043,18 +1635,18 @@ function AgentesView() {
                     >
                       {(
                         [
-                          { k: "Slug", v: detailAgente.agente_slug },
-                          { k: "Cargo", v: detailAgente.cargo },
+                          { k: "Identificador (slug)", v: detailAgente.agente_slug },
+                          { k: "Cargo no catálogo", v: detailAgente.cargo },
                           { k: "Área", v: detailAgente.area },
                           { k: "Segmento", v: detailAgente.segmento },
                           { k: "Nível", v: detailAgente.nivel != null ? String(detailAgente.nivel) : "—" },
-                          { k: "Inferência IA", v: INFERENCIA_IA_CRM_COPIA },
+                          { k: "Motor de IA (servidor)", v: INFERENCIA_IA_CRM_COPIA },
                           {
-                            k: "Mercados (prefixo)",
+                            k: "Mercados",
                             v: detailAgente.prefixo_mercado || "—",
                           },
                           {
-                            k: "Status cadastro",
+                            k: "Estado",
                             v: detailAgente.arquivado_em
                               ? "Arquivado"
                               : detailAgente.ativo === false
@@ -2091,7 +1683,7 @@ function AgentesView() {
                   </div>
 
                   <p style={{ color: "#64748b", fontSize: 10, fontWeight: 700, margin: "4px 0 0", letterSpacing: 0.3 }}>
-                    Edição
+                    Dados editáveis neste painel
                   </p>
                   <div>
                     <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>Nome</label>
@@ -2134,7 +1726,9 @@ function AgentesView() {
                   </div>
 
                   <div>
-                    <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>System prompt base</label>
+                    <label style={{ color: "#d7e3f4", fontSize: 12, fontWeight: 700, display: "block", marginBottom: 6 }}>
+                      Instruções base para a IA
+                    </label>
                     <textarea value={editPrompt} onChange={(e) => setEditPrompt(e.target.value)} rows={7} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13, resize: "vertical", lineHeight: 1.5 }} />
                   </div>
 

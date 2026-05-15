@@ -5,23 +5,39 @@ export type WhatsappSendTextResult =
   | { ok: false; status?: number; body?: unknown; error: string; provider?: "uazapi" };
 
 export function whatsappProvider(): "uazapi" | null {
-  if (process.env.UAZAPI_BASE_URL?.trim() && process.env.UAZAPI_INSTANCE_TOKEN?.trim()) {
-    return "uazapi";
-  }
-  return null;
+  if (!process.env.UAZAPI_BASE_URL?.trim()) return null;
+  /** Permite só envio por token por linha se BASE_URL existir */
+  return "uazapi";
 }
 
-export function whatsappConfigured(): boolean {
-  return whatsappProvider() !== null;
+/** True se há base URL e token global OU se for enviado token por chamada */
+export function whatsappConfigured(opts?: { instanceToken?: string | null }): boolean {
+  if (!process.env.UAZAPI_BASE_URL?.trim()) return false;
+  if (opts?.instanceToken?.trim()) return true;
+  return Boolean(process.env.UAZAPI_INSTANCE_TOKEN?.trim());
 }
 
 /** Envia texto via UAZAPI; `numero` pode incluir máscara — normaliza para dígitos. */
-export async function whatsappSendText(numero: string, text: string): Promise<WhatsappSendTextResult> {
+export async function whatsappSendText(
+  numero: string,
+  text: string,
+  opts?: { instanceToken?: string | null }
+): Promise<WhatsappSendTextResult> {
   const provider = whatsappProvider();
   if (provider === "uazapi") {
-    const r = await uazapiSendText(numero, text);
+    if (!whatsappConfigured(opts)) {
+      return {
+        ok: false,
+        error:
+          "WhatsApp não configurado: defina UAZAPI_BASE_URL e token da instância (agente ligado à UAZAPI ou UAZAPI_INSTANCE_TOKEN)",
+      };
+    }
+    const r = await uazapiSendText(numero, text, opts?.instanceToken ?? undefined);
     if (r.ok) return { ok: true, status: r.status, body: r.body, provider: "uazapi" };
     return { ok: false, status: r.status, body: r.body, error: r.error, provider: "uazapi" };
   }
-  return { ok: false, error: "WhatsApp não configurado: defina UAZAPI_BASE_URL + UAZAPI_INSTANCE_TOKEN" };
+  return {
+    ok: false,
+    error: "WhatsApp não configurado: defina UAZAPI_BASE_URL e token da instância",
+  };
 }

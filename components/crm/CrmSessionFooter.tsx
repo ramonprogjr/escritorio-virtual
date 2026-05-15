@@ -8,6 +8,37 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/data/office-map";
 
+/** Um único `onAuthStateChange` + um `getUser` inicial para todos os footers (sidebar + drawer) — evita locks GoTrue duplicados. */
+type AuthProfileListener = (user: User | null) => void;
+
+const authProfileHub = {
+  listeners: new Set<AuthProfileListener>(),
+  subscription: null as { unsubscribe: () => void } | null,
+};
+
+function subscribeSharedAuthProfile(listener: AuthProfileListener): () => void {
+  authProfileHub.listeners.add(listener);
+  if (!authProfileHub.subscription) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null;
+      authProfileHub.listeners.forEach((fn) => fn(u));
+    });
+    authProfileHub.subscription = subscription;
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      authProfileHub.listeners.forEach((fn) => fn(user ?? null));
+    });
+  }
+  return () => {
+    authProfileHub.listeners.delete(listener);
+    if (authProfileHub.listeners.size === 0 && authProfileHub.subscription) {
+      authProfileHub.subscription.unsubscribe();
+      authProfileHub.subscription = null;
+    }
+  };
+}
+
 function displayNameFromUser(user: Pick<User, "email" | "user_metadata">): string {
   const meta = user.user_metadata as { name?: string } | undefined;
   const n = meta?.name?.trim();
@@ -72,24 +103,21 @@ export function CrmSessionFooter({
       setRole(row.data?.role != null ? String(row.data.role) : "");
     }
 
-    void supabase.auth.getUser().then(({ data: { user } }) => {
+    function onAuthUser(user: User | null) {
+      if (cancelled) return;
       if (user) void loadProfile(user);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) void loadProfile(session.user);
       else {
         setName("");
         setEmail("");
         setRole("");
       }
-    });
+    }
+
+    const unsubscribe = subscribeSharedAuthProfile(onAuthUser);
 
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 

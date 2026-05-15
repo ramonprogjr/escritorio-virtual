@@ -1,4 +1,4 @@
-/** Como o agente opera no hub: canal WhatsApp (webhook) vs jobs internos (cron/ciclos). */
+/** Como o agente opera no hub: legado canal vs jobs internos (cron/ciclos). */
 export type ModoOperacaoAgente = "canal_whatsapp" | "jobs_internos";
 
 /** Escolha no wizard ao criar agente (mapeia para hub_ciclos_ia.tipo). */
@@ -33,15 +33,15 @@ export function cicloExecucaoPadraoFromModoOperacao(modo: ModoOperacaoAgente): C
 
 /** Rótulos para UI (wizard, ciclos, listagens). */
 export const MODO_OPERACAO_LABEL: Record<ModoOperacaoAgente, string> = {
-  canal_whatsapp: "Atendimento WhatsApp",
+  canal_whatsapp: "Atendimento no WhatsApp (canal, legado)",
   jobs_internos: "Operações internas (ciclos)",
 };
 
 export const MODO_OPERACAO_DESCRICAO: Record<ModoOperacaoAgente, string> = {
   canal_whatsapp:
-    "Responde quando o cliente envia mensagem (webhook UAZAPI). Não use cron para a conversa ao vivo.",
+    "O agente passa a operar no atendimento: conversas entram pelo canal (webhook legado, ex. WhatsApp) e disparam o copiloto por mensagem. Para rotinas de escritório sem fila ao vivo no canal, prefira operações internas.",
   jobs_internos:
-    "Relatórios, análises e cadências via hub_ciclos_ia e /api/cron/dispatch-ciclos (tipos contínuo ou programado).",
+    "Sem atendimento ao vivo no canal: relatórios, análises e cadências via hub_ciclos_ia e /api/cron/dispatch-ciclos (tipos contínuo ou programado).",
 };
 
 type AgenteModoRow = {
