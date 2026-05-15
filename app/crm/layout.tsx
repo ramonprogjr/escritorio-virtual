@@ -99,11 +99,6 @@ const NAV_GROUPS: { id: string; label: string; sectionIcon: LucideIcon; items: N
         label: "Modelos",
         icon: LayoutTemplate,
       },
-      {
-        href: "/crm/agentes-reais",
-        label: "Workflows",
-        icon: GitBranch,
-      },
       { href: "/crm/ciclos", label: "Ciclos IA", icon: Zap },
     ],
   },

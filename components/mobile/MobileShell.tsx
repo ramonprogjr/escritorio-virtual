@@ -2,7 +2,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Building2, Users, MessageSquare, ClipboardCheck, LayoutTemplate, Workflow, GitBranch } from "lucide-react";
+import { Building2, Users, MessageSquare, ClipboardCheck, LayoutTemplate, Workflow } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 interface Props { children: React.ReactNode; }
@@ -13,7 +13,6 @@ const ABAS: { id: string; label: string; icon: LucideIcon; rota: string }[] = [
   { id: "chat", label: "Chat", icon: MessageSquare, rota: "/crm/atendimento" },
   { id: "aprovacoes", label: "Aprov.", icon: ClipboardCheck, rota: "/crm/aprovacoes" },
   { id: "modelos", label: "Modelos", icon: LayoutTemplate, rota: "/crm/agentes" },
-  { id: "agentes-reais", label: "Workflows", icon: GitBranch, rota: "/crm/agentes-reais" },
 ];
 
 function abaAtivaPorRota(pathname: string): string {
@@ -21,7 +20,6 @@ function abaAtivaPorRota(pathname: string): string {
   if (pathname.startsWith("/crm/leads")) return "leads";
   if (pathname.startsWith("/crm/atendimento")) return "chat";
   if (pathname.startsWith("/crm/aprovacoes")) return "aprovacoes";
-  if (pathname.startsWith("/crm/agentes-reais")) return "agentes-reais";
   if (pathname.startsWith("/crm/agentes")) return "modelos";
   return "office";
 }
@@ -32,8 +30,7 @@ function mostrarFaixaEscritorio(pathname: string): boolean {
     pathname === "/crm/leads" ||
     pathname === "/crm/atendimento" ||
     pathname === "/crm/aprovacoes" ||
-    pathname === "/crm/agentes" ||
-    pathname === "/crm/agentes-reais"
+    pathname === "/crm/agentes"
   );
 }
 
@@ -106,7 +103,6 @@ export default function MobileShell({ children }: Props) {
     if (pathname === "/crm/atendimento") return "Atendimento";
     if (pathname === "/crm/aprovacoes") return "Aprovações";
     if (pathname === "/crm/agentes") return "Modelos";
-    if (pathname.startsWith("/crm/agentes-reais")) return "Workflows";
     if (pathname.startsWith("/crm/agentes/")) return "Modelo";
     if (pathname === "/crm/parceiros") return "Parceiros";
     if (pathname === "/crm/ciclos") return "Ciclos IA";

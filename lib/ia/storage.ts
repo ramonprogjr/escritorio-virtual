@@ -69,6 +69,8 @@ export async function uploadArquivo(dados: {
   agenteSlug?: string;
   campanhaId?: string;
   metadata?: Record<string, unknown>;
+  /** Ex.: text/html para relatórios gerados pela IA */
+  contentType?: string;
 }): Promise<ArquivoMidia | null> {
   const db = supabase();
   const bucket = selecionarBucket(dados.tipo);
@@ -76,7 +78,10 @@ export async function uploadArquivo(dados: {
 
   const { error: uploadError } = await db.storage
     .from(bucket)
-    .upload(caminhoArquivo, dados.arquivo, { upsert: true });
+    .upload(caminhoArquivo, dados.arquivo, {
+      upsert: true,
+      ...(dados.contentType ? { contentType: dados.contentType } : {}),
+    });
 
   if (uploadError) {
     console.error("[STORAGE] Erro no upload:", uploadError);

@@ -149,7 +149,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
           }}
         >
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h2 style={{ color: "#e6edf3", fontSize: 15, fontWeight: 700, margin: 0 }}>AI — Funcionários</h2>
+            <h2 style={{ color: "#e6edf3", fontSize: 15, fontWeight: 700, margin: 0 }}>Copiloto IA</h2>
             <p
               style={{
                 color: "#8b949e",
@@ -203,13 +203,13 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                   cursor: enviando ? "not-allowed" : "pointer",
                 }}
               >
-                Simulação (canal)
+                Simulação interna
               </button>
             </div>
             <p style={{ fontSize: 10, color: "#6e7681", margin: "8px 0 0", lineHeight: 1.45 }}>
               {modoChat === "briefing_interno"
                 ? "Visão de operação: ciclos, logs e ações (dados reais, só leitura) — não simula conversa com lead."
-                : "Como no canal: identidade + conhecimento + regras do hub; respostas como no contacto ao vivo."}
+                : "Simulação de prompts internos: identidade + conhecimento + regras do hub para validar o comportamento do copiloto."}
             </p>
           </div>
           <button
@@ -263,8 +263,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                   </>
                 ) : (
                   <>
-                    Fale como <strong style={{ color: "#aebccf" }}>lead ou cliente</strong>: o funcionário IA usa o mesmo
-                    bloco de instruções que em produção (playbook / conhecimento / regras), sem o painel interno de logs.
+                    Faça uma simulação operacional: o funcionário IA usa o mesmo bloco de instruções
+                    (playbook / conhecimento / regras), sem o painel interno de logs.
                   </>
                 )}
               </p>
@@ -479,7 +479,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Mensagem para o funcionário IA (operação ou simulação de cliente)…"
+                placeholder="Mensagem para o funcionário IA (revisão ou simulação interna)…"
                 rows={2}
                 disabled={enviando}
                 onKeyDown={(e) => {

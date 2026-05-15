@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, MessageSquare, Zap, Webhook } from "lucide-react";
+import { Clock, MessageSquare, Webhook, Zap } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import {
   CONHECIMENTO_SECAO_ORDER,
@@ -13,6 +13,11 @@ import {
   MODO_OPERACAO_LABEL,
   type ModoOperacaoAgente,
 } from "@/lib/hub/agente-modo-operacao";
+import { AgenteFerramentasIaBlock } from "@/components/crm/AgenteFerramentasIaBlock";
+import {
+  mergeUsoFerramentasComPadrao,
+  type HubAgenteFerramentaId,
+} from "@/lib/hub/agente-ferramentas-registry";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -181,12 +186,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [gerandoIaConhecimento, setGerandoIaConhecimento] = useState<string | null>(null);
   const [erroIaConhecimento, setErroIaConhecimento] = useState("");
 
-  /** Atendimento WhatsApp vs operações internas (cron/ciclos). */
-  const [modoOperacao, setModoOperacao] = useState<ModoOperacaoAgente>("canal_whatsapp");
-  /** Onde/quando opera: gravado como hub_ciclos_ia (tipo gatilho / continuo / programado). */
-  const [modoExecucao, setModoExecucao] = useState<"interacao" | "tempo_real" | "agenda">(
-    "interacao"
-  );
+  /** Padrão recomendado: copiloto interno. */
+  const [modoOperacao, setModoOperacao] = useState<ModoOperacaoAgente>("jobs_internos");
+  /** Onde/quando opera: gravado como hub_ciclos_ia. */
+  const [modoExecucao, setModoExecucao] = useState<"interacao" | "tempo_real" | "agenda">("agenda");
   const [agendaIntervalMin, setAgendaIntervalMin] = useState<15 | 60 | 360 | 1440>(60);
 
   /** `provisionar`: cria linha padrão + opcional vincular mais; `somente_vincular`: só atualiza slugs em hub_ciclos_ia. */
@@ -197,6 +200,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [hubCiclosCarregando, setHubCiclosCarregando] = useState(false);
   const [hubCiclosVincularIds, setHubCiclosVincularIds] = useState<string[]>([]);
   const hubCiclosLoadRef = useRef(false);
+
+  const [motorFerramentasHub, setMotorFerramentasHub] = useState(false);
+  const [mistralProvisionar, setMistralProvisionar] = useState(false);
+  const [usoFerramentasIa, setUsoFerramentasIa] = useState<
+    Partial<Record<HubAgenteFerramentaId, boolean>>
+  >(() => mergeUsoFerramentasComPadrao({}));
 
   const [erroCargos, setErroCargos] = useState(false);
 
@@ -359,6 +368,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         bio: (conhecimento.empresa?.trim() || conhecimento.fluxo_sdr?.trim() || "").slice(0, 200),
         horario_inicio: "08:00",
         horario_fim: "22:00",
+        motor_ferramentas_habilitado: motorFerramentasHub,
+        mistral_agent_sync_habilitado: mistralProvisionar,
+        uso_ferramentas_ia: mergeUsoFerramentasComPadrao(usoFerramentasIa),
       };
 
       if (hubCicloEstrategia === "somente_vincular") {
@@ -1001,8 +1013,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     }}
                   >
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", margin: 0 }}>
-                      {s.label}
-                    </label>
+                    {s.label}
+                  </label>
                     <button
                       type="button"
                       onClick={() => gerarSecaoComIa(s.id)}
@@ -1145,7 +1157,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               </div>
 
               <div
-                style={{
+                    style={{
                   background: "#161b22",
                   border: "1px solid #30363d",
                   borderRadius: 12,
@@ -1153,31 +1165,33 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 }}
               >
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>
-                  QUANDO O AGENTE ATUA
+                  COMO O COPILOTO RODA
                 </p>
                 <p style={{ color: "#6e7781", fontSize: 12, margin: "0 0 14px", lineHeight: 1.5 }}>
-                  Defina primeiro o <strong style={{ color: "#aebccf" }}>tipo de operação</strong>. Agentes de
-                  atendimento respondem no WhatsApp (webhook UAZAPI); agentes internos usam ciclos e cron no
-                  hub.
+                  Aqui você define se o modelo <strong style={{ color: "#aebccf" }}>atende no canal</strong> (WhatsApp
+                  legado) ou se fica só em <strong style={{ color: "#aebccf" }}>operações internas</strong> por ciclos.
+                  Por padrão recomendamos o copiloto interno; use o canal quando precisar de fila de atendimento ao vivo.
                 </p>
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
-                  TIPO DE OPERAÇÃO
+                  ONDE O AGENTE OPERA
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
                   {(
                     [
-                      {
-                        id: "canal_whatsapp" as const,
-                        Icon: MessageSquare,
-                        titulo: MODO_OPERACAO_LABEL.canal_whatsapp,
-                        texto: MODO_OPERACAO_DESCRICAO.canal_whatsapp,
-                      },
                       {
                         id: "jobs_internos" as const,
                         Icon: Zap,
                         titulo: MODO_OPERACAO_LABEL.jobs_internos,
                         texto: MODO_OPERACAO_DESCRICAO.jobs_internos,
+                        badge: "Recomendado",
+                      },
+                      {
+                        id: "canal_whatsapp" as const,
+                        Icon: MessageSquare,
+                        titulo: MODO_OPERACAO_LABEL.canal_whatsapp,
+                        texto: MODO_OPERACAO_DESCRICAO.canal_whatsapp,
+                        badge: null,
                       },
                     ] as const
                   ).map((opt) => {
@@ -1210,17 +1224,35 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           strokeWidth={2}
                           aria-hidden
                         />
-                        <span>
+                        <span style={{ minWidth: 0 }}>
                           <span
                             style={{
-                              display: "block",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
                               color: "#e6edf3",
                               fontWeight: 700,
                               fontSize: 13,
                               marginBottom: 4,
+                              flexWrap: "wrap",
                             }}
                           >
                             {opt.titulo}
+                            {opt.badge ? (
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  padding: "2px 8px",
+                                  borderRadius: 999,
+                                  background: "#23863633",
+                                  color: "#3fb950",
+                                  border: "1px solid #23863666",
+                                }}
+                              >
+                                {opt.badge}
+                              </span>
+                            ) : null}
                           </span>
                           <span style={{ color: "#8b949e", fontSize: 12, lineHeight: 1.5 }}>
                             {opt.texto}
@@ -1230,6 +1262,51 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     );
                   })}
                 </div>
+
+                <AgenteFerramentasIaBlock
+                  motorHabilitado={motorFerramentasHub}
+                  onMotorChange={setMotorFerramentasHub}
+                  mistralSyncHabilitado={mistralProvisionar}
+                  onMistralSyncChange={setMistralProvisionar}
+                  usoFerramentas={mergeUsoFerramentasComPadrao(usoFerramentasIa)}
+                  onUsoChange={(id, ativo) =>
+                    setUsoFerramentasIa((prev) => ({
+                      ...mergeUsoFerramentasComPadrao(prev),
+                      [id]: ativo,
+                    }))
+                  }
+                  destacarWhatsApp={modoOperacao === "canal_whatsapp"}
+                  modoCompacto
+                />
+
+                <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
+                  TIPO DE EXECUÇÃO DO CICLO PADRÃO
+                </p>
+                <p
+                  style={{
+                    color: "#8b949e",
+                    fontSize: 12,
+                    margin: "0 0 12px",
+                    lineHeight: 1.5,
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1px solid #30363d",
+                    background: "#0d1117",
+                  }}
+                >
+                  {modoOperacao === "jobs_internos" ? (
+                    <>
+                      O modelo será salvo como <strong style={{ color: "#c9a24a" }}>jobs_internos</strong> e já
+                      provisiona um ciclo padrão em <code style={{ color: "#8b949e" }}>hub_ciclos_ia</code>.
+                    </>
+                  ) : (
+                    <>
+                      O modelo será salvo como <strong style={{ color: "#c9a24a" }}>canal_whatsapp</strong> —
+                      modo <strong style={{ color: "#c9a24a" }}>atendimento no canal</strong> — e provisiona ciclo de{" "}
+                      <strong style={{ color: "#c9a24a" }}>gatilho por interação</strong> (cada mensagem no webhook).
+                    </>
+                  )}
+                </p>
 
                 <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
                   {(
@@ -1284,9 +1361,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           background: "#0d1117",
                         }}
                       >
-                        Será criado um ciclo <strong style={{ color: "#c9a24a" }}>gatilho</strong> (sob
-                        interação). A conversa ao vivo é acionada pelo webhook UAZAPI — não precisa de cron
-                        para cada mensagem.
+                        Para atendimento no WhatsApp (legado), o ciclo padrão é{" "}
+                        <strong style={{ color: "#c9a24a" }}>sob interação</strong> (gatilho a cada mensagem no canal).
                       </p>
                     ) : null}
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1297,9 +1373,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                 {
                                   id: "interacao" as const,
                                   Icon: Webhook,
-                                  titulo: "Sob interação (WhatsApp)",
+                                  titulo: "Sob interação",
                                   texto:
-                                    "Responde quando o cliente envia mensagem — padrão para atendimento no canal.",
+                                    "Dispara por interação no canal; não depende de cron para cada mensagem.",
                                 },
                               ] as const)
                             : ([
@@ -1308,14 +1384,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                   Icon: Zap,
                                   titulo: "Automático contínuo",
                                   texto:
-                                    "Motor interno / relatórios — ciclo contínuo no hub (dispatch só trata programado).",
+                                    "Motor interno em ciclo contínuo. Útil para supervisão e rotinas sem horário fixo.",
                                 },
                                 {
                                   id: "agenda" as const,
                                   Icon: Clock,
-                                  titulo: "Agenda fixa",
+                                  titulo: "Horário fixo / recorrente",
                                   texto:
-                                    "Ciclo programado (em pausa) com intervalo abaixo; configure dispatch e ative.",
+                                    "Ciclo programado (inicia em pausa) com intervalo abaixo; depois configure cron/dispatch e ative.",
                                 },
                               ] as const)),
                         ] as const
@@ -1475,8 +1551,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           </label>
                         );
                       })}
-                    </div>
-                  )}
+                </div>
+              )}
                 </div>
               </div>
 

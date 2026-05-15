@@ -9,6 +9,14 @@ import { salvarConversa } from "./storage";
 import { FLUXO_IMOBILIARIO, FLUXO_ARQUITETURA, MARI_CONFIG, identificarMercado, gerarSystemPromptCompleto } from "./agentes-config";
 import { construirPrompt } from "./prompt-builder";
 import { completarChatPreferindoMistral } from "./llm-completion";
+import { completarChatComFerramentasMistral } from "./llm-completion-tools";
+import { resolveInferenceModelId, isMistralFamilyModelId } from "./hub-model-defaults";
+import {
+  ferramentasMistralParaAgente,
+  mergeUsoFerramentasComPadrao,
+  normalizarUsoFerramentasIa,
+} from "@/lib/hub/agente-ferramentas-registry";
+import { executarFerramentaHub } from "@/lib/hub/executar-ferramenta-ia";
 
 function supabase() {
   return createClient(
@@ -162,12 +170,48 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
 
     mensagens.push({ role: "user", content: ctx.mensagem });
 
-    const out = await completarChatPreferindoMistral({
-      systemPrompt,
-      mensagens,
-      modeloFromDb: modelo,
-      maxTokens: 1024,
-    });
+    const { data: ferrIaRow } = await db
+      .from("hub_agente_identidade")
+      .select("motor_ferramentas_habilitado, uso_ferramentas_ia, modo_operacao")
+      .eq("agente_slug", agente.slug)
+      .maybeSingle();
+
+    const motorFerramentas = ferrIaRow?.motor_ferramentas_habilitado === true;
+    const usoMap = mergeUsoFerramentasComPadrao(
+      normalizarUsoFerramentasIa(ferrIaRow?.uso_ferramentas_ia ?? {})
+    );
+    const mistralTools = ferramentasMistralParaAgente(usoMap);
+    const modeloResolved = resolveInferenceModelId(modelo);
+    const temMistralKey = Boolean(process.env.MISTRAL_API_KEY?.trim());
+    const podeToolsMistral =
+      temMistralKey &&
+      motorFerramentas &&
+      mistralTools.length > 0 &&
+      Boolean(ctx.leadId) &&
+      isMistralFamilyModelId(modeloResolved);
+
+    const out = podeToolsMistral
+      ? await completarChatComFerramentasMistral({
+          systemPrompt,
+          mensagens,
+          modeloFromDb: modelo,
+          tools: mistralTools,
+          maxTokens: 1024,
+          executarTool: (nome, argumentosSerializados) =>
+            executarFerramentaHub(nome, argumentosSerializados, {
+              leadId: ctx.leadId!,
+              agenteSlug: agente.slug,
+              tenantId: ctx.tenantId,
+              modoOperacao:
+                (ferrIaRow as { modo_operacao?: string | null } | null | undefined)?.modo_operacao ?? null,
+            }),
+        })
+      : await completarChatPreferindoMistral({
+          systemPrompt,
+          mensagens,
+          modeloFromDb: modelo,
+          maxTokens: 1024,
+        });
     if (!out.ok) {
       return { sucesso: false, erro: out.erro };
     }

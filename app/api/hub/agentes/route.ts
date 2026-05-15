@@ -21,6 +21,19 @@ import {
   type CicloExecucaoPadrao,
   type ModoOperacaoAgente,
 } from "@/lib/hub/agente-modo-operacao";
+import { serializarUsoFerramentasParaDb, syncHubAgenteParaMistral } from "@/lib/mistral/sync-hub-agent";
+import {
+  isHubAgenteFerramentasColumnsMissing,
+  omitHubAgenteFerramentasMigrationKeys,
+} from "@/lib/hub/hub-agente-ferramentas-columns";
+import { sanitizarAgenteHubParaCliente } from "@/lib/hub/sanitize-agente-hub-public";
+import { slugifyCargoSlug } from "@/lib/hub/cargo-slug";
+
+function parseBoolFerr(v: unknown, defaultVal: boolean): boolean {
+  if (v === true || v === "true") return true;
+  if (v === false || v === "false") return false;
+  return defaultVal;
+}
 
 const CICLO_EXECUCAO_OPCOES = ["interacao", "tempo_real", "agenda"] as const;
 type CicloExecucaoCliente = (typeof CICLO_EXECUCAO_OPCOES)[number];
@@ -51,7 +64,7 @@ async function provisionHubCicloPadrao(
     ativo = true;
     baseCfg.ciclo_origem_provisionamento = "wizard_agente_v1";
   } else if (modo === "tempo_real") {
-    nomeLinha = "Tempo real (canal)";
+    nomeLinha = "Automático contínuo";
     tipo = "continuo";
     ativo = true;
     baseCfg.ciclo_origem_provisionamento = "wizard_agente_v1";
@@ -63,7 +76,7 @@ async function provisionHubCicloPadrao(
     baseCfg.ciclo_origem_provisionamento = "wizard_agente_v1";
     baseCfg.dispatch_pendente = true;
     baseCfg.dica =
-      "Defina configuracoes.dispatch { api: diretor|gerente|atendente, ciclo: <chave do runner> } antes de ativar.";
+      "Defina configuracoes.dispatch { api: diretor|gerente, ciclo: <chave do runner> } antes de ativar.";
   }
 
   const descricao =
@@ -107,14 +120,6 @@ function db() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-}
-
-function slugify(s: string) {
-  return s.toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "")
-    .slice(0, 40);
 }
 
 function isTenantColumnMissing(message?: string): boolean {
@@ -178,7 +183,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json((data ?? []).map((row) => sanitizarAgenteHubParaCliente(row as Record<string, unknown>)));
 }
 
 export async function POST(request: NextRequest) {
@@ -254,7 +259,7 @@ export async function POST(request: NextRequest) {
     `Agente ${nome} — ${cat.titulo}. Siga as regras do Obra10+ e escale decisões críticas para humano.`;
 
   // Gerar slug único
-  const baseSlug = slugify(nome);
+  const baseSlug = slugifyCargoSlug(nome);
   let agente_slug = baseSlug;
   let sufixo = 2;
 
@@ -334,6 +339,9 @@ export async function POST(request: NextRequest) {
   if (!Number.isFinite(agendaMinutes) || agendaMinutes <= 0) agendaMinutes = 60;
   if (agendaMinutes > 10080) agendaMinutes = 10080;
 
+  const motorFerramentasHub = parseBoolFerr(body.motor_ferramentas_habilitado, false);
+  const mistralAgentSyncHabilitado = parseBoolFerr(body.mistral_agent_sync_habilitado, false);
+
   const avatarTrim = avatar_url != null ? String(avatar_url).trim() : "";
   if (avatarTrim.length > 600_000) {
     return NextResponse.json(
@@ -345,14 +353,36 @@ export async function POST(request: NextRequest) {
     row.avatar_url = avatarTrim;
   }
 
-  let { data, error } = await supabase.from("hub_agente_identidade").insert(row).select().single();
+  row.motor_ferramentas_habilitado = motorFerramentasHub;
+  row.mistral_agent_sync_habilitado = mistralAgentSyncHabilitado;
+  row.uso_ferramentas_ia = serializarUsoFerramentasParaDb(body.uso_ferramentas_ia);
+
+  let rowInsert: Record<string, unknown> = row;
+  let { data, error } = await supabase
+    .from("hub_agente_identidade")
+    .insert(rowInsert)
+    .select()
+    .single();
 
   // Compatibilidade com bases antigas que ainda não têm tenant_id.
   if (error && isTenantColumnMissing(error.message)) {
-    const { tenant_id, ...rowWithoutTenant } = row;
+    const { tenant_id, ...rowWithoutTenant } = rowInsert;
+    rowInsert = rowWithoutTenant;
     ({ data, error } = await supabase
       .from("hub_agente_identidade")
-      .insert(rowWithoutTenant)
+      .insert(rowInsert)
+      .select()
+      .single());
+  }
+
+  if (error && isHubAgenteFerramentasColumnsMissing(error.message)) {
+    console.warn(
+      "[hub/agentes] hub_agente_identidade sem colunas ferramentas/Mistral; aplicar 20260516120000_hub_agente_ferramentas_mistral. Retrying insert."
+    );
+    rowInsert = omitHubAgenteFerramentasMigrationKeys(rowInsert);
+    ({ data, error } = await supabase
+      .from("hub_agente_identidade")
+      .insert(rowInsert)
       .select()
       .single());
   }
@@ -402,6 +432,19 @@ export async function POST(request: NextRequest) {
     }
   });
 
+  if (mistralAgentSyncHabilitado) {
+    after(async () => {
+      try {
+        const syn = await syncHubAgenteParaMistral(supabase, created.agente_slug);
+        if (!syn.ok) {
+          console.warn("[mistral-agents] pós-criação sync:", created.agente_slug, syn.error);
+        }
+      } catch (e) {
+        console.error("[mistral-agents] pós-criação sync (exceção):", created.agente_slug, e);
+      }
+    });
+  }
+
   let ciclo_aviso: string | undefined;
   let ciclo_erro: string | undefined;
 
@@ -443,7 +486,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(
     {
-      ...data,
+      ...sanitizarAgenteHubParaCliente(data as Record<string, unknown>),
       ...(ciclo_aviso ? { ciclo_aviso } : {}),
       ...(ciclo_erro ? { ciclo_erro } : {}),
     },

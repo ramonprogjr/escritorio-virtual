@@ -79,15 +79,16 @@ export function installCrmAuthBridge(client: SupabaseClient) {
   if (g.__obraCrmAuthBridge) return;
   g.__obraCrmAuthBridge = true;
 
-  void client.auth.getSession().then(({ data: { session }, error }) => {
-    if (error && isRefreshOrSessionFailure(error)) {
-      void recoverStaleAuth(client);
+  /**
+   * Evitar `getSession()` em paralelo com `getUser()` / outras rotas na primeira pintura — o cliente Supabase v2
+   * usa um lock por projeto (`lock:sb-…-auth-token`) e corridas disparam «another request stole it» no Turbopack/Strict Mode.
+   * `INITIAL_SESSION` já transporta a sessão hidratada do armazenamento.
+   */
+  client.auth.onAuthStateChange((event, session) => {
+    if (event === "INITIAL_SESSION") {
+      if (session?.access_token) void postCrmAccessFromSession(session);
       return;
     }
-    if (session?.access_token) void postCrmAccessFromSession(session);
-  });
-
-  client.auth.onAuthStateChange((event, session) => {
     if (event === "TOKEN_REFRESHED" || event === "SIGNED_IN") {
       if (session) void postCrmAccessFromSession(session);
       return;
