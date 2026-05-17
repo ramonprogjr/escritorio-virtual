@@ -1,6 +1,27 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  extrairPaircodeDePayloadUazapi,
+  extrairQrcodeDePayloadUazapi,
+  normalizarSrcImagemQrUazapi,
+} from "@/lib/whatsapp/qr-uazapi";
 import { uazapiFetchJson } from "@/lib/whatsapp/uazapi-http";
+import {
+  pickInstanceFromResponse,
+  statusFromPayloadUazapi,
+} from "@/lib/whatsapp/uazapi-instance-status";
+
+function jsonErroUazapi(out: {
+  error: string;
+  data: unknown;
+  request?: { origin: string; pathname: string };
+}) {
+  return {
+    error: out.error,
+    uazapi: out.data,
+    ...(out.request ? { uazapi_request: out.request } : {}),
+  };
+}
 
 function db() {
   return createClient(
@@ -9,18 +30,49 @@ function db() {
   );
 }
 
-function pickInstanceFromResponse(payload: unknown): Record<string, unknown> | null {
-  if (!payload || typeof payload !== "object") return null;
-  const p = payload as Record<string, unknown>;
-  const inst = p.instance;
-  if (inst && typeof inst === "object") return inst as Record<string, unknown>;
-  return null;
+function pickPublicAppOrigin(request: NextRequest): string | null {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const candidate = envUrl && envUrl.length > 0 ? envUrl : request.nextUrl.origin;
+  if (!candidate) return null;
+
+  try {
+    const u = new URL(candidate);
+    const h = u.hostname.toLowerCase();
+    if (h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0") return null;
+    u.pathname = "";
+    u.search = "";
+    u.hash = "";
+    return u.toString().replace(/\/+$/, "");
+  } catch {
+    return null;
+  }
 }
 
-function statusFromPayload(payload: unknown): string {
-  const inst = pickInstanceFromResponse(payload);
-  const s = inst?.status;
-  return typeof s === "string" ? s : "disconnected";
+async function syncWebhookDaInstancia(
+  request: NextRequest,
+  instanceToken: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const origin = pickPublicAppOrigin(request);
+  if (!origin) {
+    return { ok: false, error: "NEXT_PUBLIC_APP_URL ausente/inválido para webhook público" };
+  }
+
+  const webhookUrl = `${origin}/api/whatsapp/webhook`;
+  const out = await uazapiFetchJson<Record<string, unknown>>("/webhook", {
+    method: "POST",
+    instanceToken,
+    body: {
+      enabled: true,
+      url: webhookUrl,
+      events: ["messages", "connection"],
+      excludeMessages: ["wasSentByApi", "isGroupYes"],
+      addUrlEvents: false,
+      addUrlTypesMessages: false,
+    },
+  });
+
+  if (!out.ok) return { ok: false, error: out.error };
+  return { ok: true };
 }
 
 export async function POST(
@@ -101,7 +153,7 @@ export async function POST(
       });
 
       if (!out.ok) {
-        return NextResponse.json({ error: out.error, uazapi: out.data }, { status: 502 });
+        return NextResponse.json(jsonErroUazapi(out), { status: 502 });
       }
 
       const data = out.data as Record<string, unknown>;
@@ -119,7 +171,7 @@ export async function POST(
         );
       }
 
-      const st = statusFromPayload(data);
+      const st = statusFromPayloadUazapi(data);
 
       await persistUazapi({
         uazapi_instance_id: id,
@@ -128,11 +180,16 @@ export async function POST(
         uazapi_connection_status: st,
       });
 
+      const webhookSync = await syncWebhookDaInstancia(request, token);
+
       return NextResponse.json({
         ok: true,
         action: "create",
         uazapi_instance_id: id,
         uazapi_connection_status: st,
+        ...(webhookSync.ok
+          ? {}
+          : { webhook_warning: `Instância criada, mas webhook não sincronizado: ${webhookSync.error}` }),
       });
     }
 
@@ -154,19 +211,25 @@ export async function POST(
       });
 
       if (!out.ok) {
-        return NextResponse.json({ error: out.error, uazapi: out.data }, { status: 502 });
+        return NextResponse.json(jsonErroUazapi(out), { status: 502 });
       }
 
-      const st = statusFromPayload(out.data);
+      const st = statusFromPayloadUazapi(out.data);
       await persistUazapi({ uazapi_connection_status: st });
+      const webhookSync = await syncWebhookDaInstancia(request, tokenInst);
 
-      const inst = pickInstanceFromResponse(out.data);
+      const qrRaw = extrairQrcodeDePayloadUazapi(out.data);
+      const qrcode = qrRaw ? normalizarSrcImagemQrUazapi(qrRaw) : undefined;
+      const paircode = extrairPaircodeDePayloadUazapi(out.data);
       return NextResponse.json({
         ok: true,
         action: "connect",
         uazapi_connection_status: st,
-        qrcode: typeof inst?.qrcode === "string" ? inst.qrcode : undefined,
-        paircode: typeof inst?.paircode === "string" ? inst.paircode : undefined,
+        ...(qrcode ? { qrcode } : {}),
+        ...(paircode ? { paircode } : {}),
+        ...(webhookSync.ok
+          ? {}
+          : { webhook_warning: `Conectado, mas webhook não sincronizado: ${webhookSync.error}` }),
       });
     }
 
@@ -177,19 +240,22 @@ export async function POST(
       });
 
       if (!out.ok) {
-        return NextResponse.json({ error: out.error, uazapi: out.data }, { status: 502 });
+        return NextResponse.json(jsonErroUazapi(out), { status: 502 });
       }
 
-      const st = statusFromPayload(out.data);
+      const st = statusFromPayloadUazapi(out.data);
       await persistUazapi({ uazapi_connection_status: st });
 
       const inst = pickInstanceFromResponse(out.data);
+      const qrRaw = extrairQrcodeDePayloadUazapi(out.data);
+      const qrcode = qrRaw ? normalizarSrcImagemQrUazapi(qrRaw) : undefined;
+      const paircode = extrairPaircodeDePayloadUazapi(out.data);
       return NextResponse.json({
         ok: true,
         action: "status",
         uazapi_connection_status: st,
-        qrcode: typeof inst?.qrcode === "string" ? inst.qrcode : undefined,
-        paircode: typeof inst?.paircode === "string" ? inst.paircode : undefined,
+        ...(qrcode ? { qrcode } : {}),
+        ...(paircode ? { paircode } : {}),
         profileName: typeof inst?.profileName === "string" ? inst.profileName : undefined,
       });
     }
@@ -201,10 +267,10 @@ export async function POST(
       });
 
       if (!out.ok) {
-        return NextResponse.json({ error: out.error, uazapi: out.data }, { status: 502 });
+        return NextResponse.json(jsonErroUazapi(out), { status: 502 });
       }
 
-      const st = statusFromPayload(out.data);
+      const st = statusFromPayloadUazapi(out.data);
       await persistUazapi({ uazapi_connection_status: st || "disconnected" });
 
       return NextResponse.json({ ok: true, action: "disconnect", uazapi_connection_status: st });
@@ -217,7 +283,7 @@ export async function POST(
       });
 
       if (!out.ok) {
-        return NextResponse.json({ error: out.error, uazapi: out.data }, { status: 502 });
+        return NextResponse.json(jsonErroUazapi(out), { status: 502 });
       }
 
       await persistUazapi({
