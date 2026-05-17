@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { documentoConceitoPlaybookSecoesParaIa } from "@/lib/hub/documento-conceito-catalogo";
 import {
   CONHECIMENTO_SECAO_ORDER,
   type ConhecimentoSecaoId,
@@ -51,7 +52,10 @@ function sanitizarErroApi(raw: string, max = 280): string {
   return `${t.slice(0, max)}…`;
 }
 
-const SYSTEM_SUGERIR_CONHECIMENTO = `És um redactor técnico/comercial a configurar knowledge base para agentes de IA no ecossistema **Obra10+** (construção, reformas, operações multi-mercado no Brasil). Respeita o cargo indicado: o conteúdo deve servir para montar playbook e prompts — concreto, auditável, sem fantasía.`;
+const SYSTEM_SUGERIR_CONHECIMENTO = `És um redactor técnico/comercial a configurar knowledge base para agentes de IA no ecossistema **Obra10+** (construção, reformas, operações multi-mercado no Brasil). Respeita o cargo indicado: o conteúdo deve servir para montar playbook e prompts — concreto, auditável, sem fantasía.
+
+Segue sempre o **documento conceito** das secções de playbook (não inventes novos cabeçalhos nem IDs de secção):
+${documentoConceitoPlaybookSecoesParaIa()}`;
 
 function montarUserPrompt(opts: {
   secao: SecaoConhecimentoId;

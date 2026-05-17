@@ -13,15 +13,32 @@ import {
   MODO_OPERACAO_LABEL,
   type ModoOperacaoAgente,
 } from "@/lib/hub/agente-modo-operacao";
-import { AgenteFerramentasIaBlock } from "@/components/crm/AgenteFerramentasIaBlock";
+import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
 import {
-  mergeUsoFerramentasComPadrao,
-  type HubAgenteFerramentaId,
+  AgenteUazapiBlock,
+  type AgenteUazapiSnapshot,
+} from "@/components/crm/AgenteUazapiBlock";
+import {
+  mergeUsoFerramentasComPadraoPreservandoCustom,
+
 } from "@/lib/hub/agente-ferramentas-registry";
+import { isHubModeloIdDbCompatible } from "@/lib/ia/hub-model-defaults";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
+
+/** Passos do assistente — após «Ferramentas» e criar agente, passos 7–8 são pós-criação. */
+const WIZARD_STEP_LABELS = [
+  "Cargo",
+  "Identidade",
+  "Personalidade",
+  "Conhecimento",
+  "Revisão",
+  "Ferramentas",
+  "Materiais",
+  "Canal",
+] as const;
 
 const SEGMENTO_COR: Record<string, string> = {
   Marketing: "#3b82f6",
@@ -122,6 +139,18 @@ function montarPrompt(conhecimento: Record<string, string>): string {
     .join("\n\n");
 }
 
+/** Modelos definidos no catálogo do cargo — alguns IDs antigos são normalizados para `mistral` no servidor. */
+function cargoModelosForaDaListaHub(c: Cargo): string[] {
+  const out: string[] = [];
+  for (const key of ["modelo_padrao", "modelo_critico", "modelo_alto_valor"] as const) {
+    const v = c[key];
+    if (typeof v !== "string") continue;
+    const t = v.trim();
+    if (t && !isHubModeloIdDbCompatible(t)) out.push(`${key}: ${t}`);
+  }
+  return out;
+}
+
 export type Cargo = {
   slug: string;
   titulo: string;
@@ -131,6 +160,8 @@ export type Cargo = {
   especialidade?: string;
   nivel?: string;
   modelo_padrao?: string;
+  modelo_critico?: string;
+  modelo_alto_valor?: string;
   [key: string]: unknown;
 };
 
@@ -203,14 +234,158 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
   const [motorFerramentasHub, setMotorFerramentasHub] = useState(false);
   const [mistralProvisionar, setMistralProvisionar] = useState(false);
-  const [usoFerramentasIa, setUsoFerramentasIa] = useState<
-    Partial<Record<HubAgenteFerramentaId, boolean>>
-  >(() => mergeUsoFerramentasComPadrao({}));
+  const [usoFerramentasIa, setUsoFerramentasIa] = useState<Record<string, boolean>>(() =>
+    mergeUsoFerramentasComPadraoPreservandoCustom({})
+  );
+  const [catalogoCustomFerramentasWizard, setCatalogoCustomFerramentasWizard] = useState<
+    CatalogoFerramentaCustomLite[]
+  >([]);
 
   const [erroCargos, setErroCargos] = useState(false);
 
+  /** Preenchido após POST bem-sucedido em `/api/hub/agentes`. */
+  const [agenteSlugCriado, setAgenteSlugCriado] = useState<string | null>(null);
+  const [uazapiSnap, setUazapiSnap] = useState<AgenteUazapiSnapshot | null>(null);
+  const [playbookMetaLoading, setPlaybookMetaLoading] = useState(false);
+  const [playbookGerando, setPlaybookGerando] = useState(false);
+  const [playbookErro, setPlaybookErro] = useState("");
+  const [playbookPublicUrl, setPlaybookPublicUrl] = useState<string | null>(null);
+
   useEffect(() => {
-    if (passo !== 5) {
+    void (async () => {
+      try {
+        const r = await fetch("/api/hub/ferramentas-custom?all=true", { headers: internalApiHeaders() });
+        const d: unknown = await r.json().catch(() => null);
+        if (!r.ok || !Array.isArray(d)) return;
+        setCatalogoCustomFerramentasWizard(
+          (d as Record<string, unknown>[])
+            .map((x) => ({
+              ferramenta_key: String(x.ferramenta_key ?? ""),
+              titulo: String(x.titulo ?? ""),
+              builtin_impl: String(x.builtin_impl ?? ""),
+              smart_provider: String(x.smart_provider ?? "none"),
+              ativo: x.ativo !== false,
+              descricao_curta:
+                x.descricao_curta != null && String(x.descricao_curta).trim()
+                  ? String(x.descricao_curta).trim()
+                  : null,
+            }))
+            .filter((c) => c.ferramenta_key.length > 0 && c.ativo)
+        );
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, []);
+
+  const refreshSnapshotUazapi = useCallback(async () => {
+    if (!agenteSlugCriado) return;
+    try {
+      const r = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlugCriado)}`, {
+        headers: internalApiHeaders(),
+      });
+      const d = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!r.ok) return;
+      setUazapiSnap({
+        uazapi_instance_id:
+          typeof d.uazapi_instance_id === "string" ? d.uazapi_instance_id : null,
+        uazapi_instance_name:
+          typeof d.uazapi_instance_name === "string" ? d.uazapi_instance_name : null,
+        uazapi_connection_status:
+          typeof d.uazapi_connection_status === "string" ? d.uazapi_connection_status : null,
+        uazapi_has_instance_token: d.uazapi_has_instance_token === true,
+      });
+    } catch {
+      /* ignore */
+    }
+  }, [agenteSlugCriado]);
+
+  useEffect(() => {
+    if (passo !== 8 || !agenteSlugCriado || modoOperacao !== "canal_whatsapp") return;
+    void refreshSnapshotUazapi();
+  }, [passo, agenteSlugCriado, modoOperacao, refreshSnapshotUazapi]);
+
+  useEffect(() => {
+    if (passo !== 7 || !agenteSlugCriado) return;
+    let cancel = false;
+    setPlaybookMetaLoading(true);
+    setPlaybookErro("");
+    (async () => {
+      try {
+        const r = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlugCriado)}/playbook`, {
+          headers: internalApiHeaders(),
+        });
+        const d = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+        if (cancel) return;
+        if (!r.ok) {
+          setPlaybookErro(typeof d.error === "string" ? d.error : "Sem metadados de playbook.");
+          setPlaybookPublicUrl(null);
+          return;
+        }
+        setPlaybookErro("");
+        setPlaybookPublicUrl(
+          typeof d.playbook_public_url === "string" && d.playbook_public_url.trim()
+            ? d.playbook_public_url.trim()
+            : null
+        );
+      } catch {
+        if (!cancel) setPlaybookErro("Falha ao ler playbook.");
+      } finally {
+        if (!cancel) setPlaybookMetaLoading(false);
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [passo, agenteSlugCriado]);
+
+  async function gerarPlaybookNoStorage() {
+    if (!agenteSlugCriado) return;
+    setPlaybookGerando(true);
+    setPlaybookErro("");
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlugCriado)}/playbook`, {
+        method: "POST",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ force: true }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setPlaybookErro(typeof data.error === "string" ? data.error : `Erro HTTP ${res.status}`);
+        return;
+      }
+      setPlaybookMetaLoading(true);
+      try {
+        const r2 = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlugCriado)}/playbook`, {
+          headers: internalApiHeaders(),
+        });
+        const d2 = (await r2.json().catch(() => ({}))) as Record<string, unknown>;
+        if (r2.ok) {
+          setPlaybookErro("");
+          setPlaybookPublicUrl(
+            typeof d2.playbook_public_url === "string" && d2.playbook_public_url.trim()
+              ? d2.playbook_public_url.trim()
+              : null
+          );
+        }
+      } finally {
+        setPlaybookMetaLoading(false);
+      }
+    } catch {
+      setPlaybookErro("Falha ao gerar playbook.");
+    } finally {
+      setPlaybookGerando(false);
+      setPlaybookMetaLoading(false);
+    }
+  }
+
+  function concluirPosCriacao() {
+    if (variant === "drawer" && onClose) onClose();
+    else router.push("/crm/agentes");
+  }
+
+  useEffect(() => {
+    if (passo !== 6) {
       hubCiclosLoadRef.current = false;
       return;
     }
@@ -294,6 +469,15 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   }
 
   function handleBackClick() {
+    if (agenteSlugCriado && passo >= 7) {
+      if (
+        !window.confirm(
+          "Fechar o assistente? O agente já foi criado — pode ligar o WhatsApp e gerar playbook mais tarde na ficha."
+        )
+      ) {
+        return;
+      }
+    }
     if (variant === "drawer" && onClose) onClose();
     else router.back();
   }
@@ -370,12 +554,18 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         horario_fim: "22:00",
         motor_ferramentas_habilitado: motorFerramentasHub,
         mistral_agent_sync_habilitado: mistralProvisionar,
-        uso_ferramentas_ia: mergeUsoFerramentasComPadrao(usoFerramentasIa),
+        uso_ferramentas_ia: usoFerramentasIa,
       };
 
       if (hubCicloEstrategia === "somente_vincular") {
         payload.omit_hub_ciclo_padrao = true;
         payload.ciclos_vincular_ids = hubCiclosVincularIds;
+        payload.modo_operacao = modoOperacao;
+        payload.ciclo_execucao =
+          modoOperacao === "canal_whatsapp" ? "interacao" : modoExecucao;
+        if (modoExecucao === "agenda" && modoOperacao !== "canal_whatsapp") {
+          payload.ciclo_intervalo_minutos = agendaIntervalMin;
+        }
       } else {
         payload.modo_operacao = modoOperacao;
         payload.ciclo_execucao =
@@ -396,6 +586,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           agente_slug?: string;
           ciclo_aviso?: string;
           ciclo_erro?: string;
+          motor_ferramentas_habilitado?: boolean;
+          mistral_agent_sync_habilitado?: boolean;
+          uso_ferramentas_ia?: unknown;
         };
         const slug = data.agente_slug;
         if (data.ciclo_erro) {
@@ -403,9 +596,46 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         } else if (data.ciclo_aviso) {
           console.warn("[CRM]", data.ciclo_aviso);
         }
+
+        if (slug) {
+          const noServidor = mergeUsoFerramentasComPadraoPreservandoCustom(data.uso_ferramentas_ia);
+          const noWizard = mergeUsoFerramentasComPadraoPreservandoCustom(usoFerramentasIa);
+          const chaves = new Set([...Object.keys(noServidor), ...Object.keys(noWizard)]);
+          let usoDiferente = false;
+          for (const k of chaves) {
+            if ((noServidor[k] === true) !== (noWizard[k] === true)) {
+              usoDiferente = true;
+              break;
+            }
+          }
+          const motorDiferente = motorFerramentasHub !== (data.motor_ferramentas_habilitado === true);
+          const mistralDiferente = mistralProvisionar !== (data.mistral_agent_sync_habilitado === true);
+          if (usoDiferente || motorDiferente || mistralDiferente) {
+            const syncRes = await fetch(`/api/hub/agentes/${encodeURIComponent(slug)}`, {
+              method: "PATCH",
+              headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+              body: JSON.stringify({
+                motor_ferramentas_habilitado: motorFerramentasHub,
+                mistral_agent_sync_habilitado: mistralProvisionar,
+                uso_ferramentas_ia: usoFerramentasIa,
+              }),
+            });
+            if (!syncRes.ok) {
+              const pe = (await syncRes.json().catch(() => ({}))) as { error?: string };
+              setErro(
+                pe.error ||
+                  "Agente criado, mas as ferramentas não ficaram gravadas. Abra a ficha e guarde o bloco Mistral manualmente."
+              );
+            }
+          }
+        }
+
         if (slug && onCreated) onCreated({ agente_slug: slug });
-        if (variant === "drawer" && onClose) onClose();
-        else router.push("/crm/agentes");
+        setAgenteSlugCriado(slug ?? null);
+        setShowConfirm(false);
+        if (slug) {
+          setPasso(modoOperacao === "canal_whatsapp" ? 8 : 7);
+        } else setErro("Agente criado mas a API não devolveu o slug.");
       } else {
         const data = (await res.json().catch(() => ({}))) as { erro?: string; error?: string };
         setErro(data.erro || data.error || "Erro ao criar agente.");
@@ -477,7 +707,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               Confirmar criação
             </h2>
             <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
-              Confirmar criação do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>?
+              Confirmar criação do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>? Depois pode gerar o
+              playbook no Storage (passo Materiais) e, se escolheu WhatsApp, configurar a instância UAZAPI — abrimos esse
+              passo logo após criar.
             </p>
             {erro && <p style={{ color: "#ef4444", fontSize: 12, marginBottom: 12 }}>{erro}</p>}
             <div style={{ display: "flex", gap: 10 }}>
@@ -557,13 +789,22 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-          {["Cargo", "Identidade", "Personalidade", "Conhecimento", "Revisão"].map((label, i) => {
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0,
+            overflowX: "auto",
+            paddingBottom: 4,
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {WIZARD_STEP_LABELS.map((label, i) => {
             const num = i + 1;
             const ativo = passo === num;
             const passado = passo > num;
             return (
-              <div key={num} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <div key={num} style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 56 }}>
                 <div
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}
                 >
@@ -586,20 +827,24 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   </div>
                   <span
                     style={{
-                      fontSize: 10,
+                      fontSize: 9,
                       color: ativo ? "#c9a24a" : "#8b949e",
                       whiteSpace: "nowrap",
+                      textAlign: "center",
+                      maxWidth: 72,
+                      lineHeight: 1.15,
                     }}
                   >
                     {label}
                   </span>
                 </div>
-                {i < 4 && (
+                {i < WIZARD_STEP_LABELS.length - 1 && (
                   <div
                     style={{
                       height: 2,
                       flex: 0,
-                      width: 16,
+                      width: 12,
+                      flexShrink: 0,
                       background: passo > num ? "#c9a24a" : "#30363d",
                       marginBottom: 16,
                     }}
@@ -619,7 +864,15 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 24px 48px" }}>
+        <div
+          style={{
+            maxWidth: passo === 6 || passo === 8 ? 1180 : 760,
+            margin: "0 auto",
+            padding: "28px 24px 48px",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
           {passo === 1 && (
             <div>
               <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
@@ -1083,6 +1336,71 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
+          {passo === 6 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                  Ferramentas Hub
+                </h2>
+                <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
+                  Ligue o motor e active as funções que o Mistral pode pedir ao servidor (lead na sessão). Inclui o catálogo{" "}
+                  <strong style={{ color: "#aebccf" }}>builtin</strong> e as ferramentas{" "}
+                  <strong style={{ color: "#c9a24a" }}>custom</strong> activas do tenant. Se escolheu{" "}
+                  <strong style={{ color: "#aebccf" }}>WhatsApp</strong> no passo anterior, as sugestões para esse canal
+                  aparecem em destaque.
+                </p>
+              </div>
+              <AgenteFerramentasIaBlock
+                motorHabilitado={motorFerramentasHub}
+                onMotorChange={setMotorFerramentasHub}
+                mistralSyncHabilitado={mistralProvisionar}
+                onMistralSyncChange={setMistralProvisionar}
+                usoFerramentas={mergeUsoFerramentasComPadraoPreservandoCustom(usoFerramentasIa)}
+                onUsoChange={(id, ativo) =>
+                  setUsoFerramentasIa((prev) => ({
+                    ...mergeUsoFerramentasComPadraoPreservandoCustom(prev),
+                    [id]: ativo,
+                  }))
+                }
+                customCatalog={catalogoCustomFerramentasWizard}
+                destacarWhatsApp={modoOperacao === "canal_whatsapp"}
+              />
+              {erro && (
+                <p
+                  style={{
+                    color: "#ef4444",
+                    fontSize: 13,
+                    background: "#ef444411",
+                    border: "1px solid #ef444433",
+                    borderRadius: 8,
+                    padding: "10px 14px",
+                  }}
+                >
+                  {erro}
+                </p>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowConfirm(true)}
+                disabled={!cargoSelecionado || !nome.trim()}
+                style={{
+                  padding: "14px 0",
+                  borderRadius: 10,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  background: "#003b26",
+                  border: "none",
+                  color: "#c9a24a",
+                  cursor: !cargoSelecionado || !nome.trim() ? "not-allowed" : "pointer",
+                  opacity: !cargoSelecionado || !nome.trim() ? 0.4 : 1,
+                }}
+              >
+                Criar agente
+              </button>
+            </div>
+          )}
+
           {passo === 5 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
@@ -1090,7 +1408,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Revisão
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
-                  Confira tudo antes de criar o agente.
+                  Confira identidade, conhecimento e como o copiloto opera (canal e ciclos). Depois configure as ferramentas
+                  e crie o agente.
                 </p>
               </div>
 
@@ -1132,6 +1451,27 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       </span>
                     )}
                   </div>
+                </div>
+              )}
+
+              {cargoSelecionado && cargoModelosForaDaListaHub(cargoSelecionado).length > 0 && (
+                <div
+                  style={{
+                    background: "#3d2f0018",
+                    border: "1px solid #bb800966",
+                    borderRadius: 12,
+                    padding: "12px 16px",
+                    color: "#d4a72c",
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <strong style={{ color: "#e3b341" }}>Modelo de IA no catálogo</strong>
+                  <br />
+                  Este cargo tem IDs de modelo que o Postgres não aceita na tabela de identidade. Ao criar o agente, o
+                  servidor grava <strong>mistral</strong> nesses campos (sinónimo do modelo definido em{" "}
+                  <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor). Atualize o catálogo se quiser
+                  manter outro fabricante explicitamente.
                 </div>
               )}
 
@@ -1263,21 +1603,24 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   })}
                 </div>
 
-                <AgenteFerramentasIaBlock
-                  motorHabilitado={motorFerramentasHub}
-                  onMotorChange={setMotorFerramentasHub}
-                  mistralSyncHabilitado={mistralProvisionar}
-                  onMistralSyncChange={setMistralProvisionar}
-                  usoFerramentas={mergeUsoFerramentasComPadrao(usoFerramentasIa)}
-                  onUsoChange={(id, ativo) =>
-                    setUsoFerramentasIa((prev) => ({
-                      ...mergeUsoFerramentasComPadrao(prev),
-                      [id]: ativo,
-                    }))
-                  }
-                  destacarWhatsApp={modoOperacao === "canal_whatsapp"}
-                  modoCompacto
-                />
+                {modoOperacao === "canal_whatsapp" ? (
+                  <div
+                    style={{
+                      marginBottom: 14,
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(248,187,92,0.35)",
+                      background: "rgba(248,187,92,0.08)",
+                      color: "#e6c06a",
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <strong style={{ color: "#e6c06a" }}>Canal WhatsApp:</strong> recomendamos activar resumo do lead,
+                    memórias e registo de nota. No passo seguinte (<strong style={{ color: "#c9a24a" }}>Ferramentas</strong>
+                    ) estas opções aparecem em destaque — avance com <strong style={{ color: "#c9a24a" }}>Próximo</strong>.
+                  </div>
+                ) : null}
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
                   TIPO DE EXECUÇÃO DO CICLO PADRÃO
@@ -1598,45 +1941,169 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   ))}
                 </div>
               )}
+            </div>
+          )}
 
-              {erro && (
+          {passo === 7 && agenteSlugCriado && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                  Materiais (playbook)
+                </h2>
+                <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
+                  Gera um ficheiro no Storage com o conhecimento deste agente, para ferramentas ou equipas que precisem
+                  do playbook num URL estável. Se já passou pelo passo Canal (WhatsApp), use <strong style={{ color: "#aebccf" }}>← Anterior</strong> a partir desse ecrã para voltar aqui antes de concluir.
+                </p>
+              </div>
+
+              <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
+                <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 10px" }}>
+                  AGENTE CRIADO
+                </p>
+                <p style={{ color: "#e6edf3", fontSize: 14, fontWeight: 700, margin: "0 0 8px", wordBreak: "break-all" }}>
+                  {nome || agenteSlugCriado}{" "}
+                  <span style={{ color: "#6e7781", fontWeight: 600, fontSize: 12 }}>({agenteSlugCriado})</span>
+                </p>
+                <a
+                  href={`/crm/agentes/${encodeURIComponent(agenteSlugCriado)}`}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#58a6ff",
+                    textDecoration: "none",
+                  }}
+                >
+                  Abrir ficha do agente →
+                </a>
+              </div>
+
+              {playbookMetaLoading && (
+                <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>A ler estado do playbook…</p>
+              )}
+
+              {playbookErro ? (
                 <p
                   style={{
-                    color: "#ef4444",
+                    color: "#f85149",
                     fontSize: 13,
-                    background: "#ef444411",
-                    border: "1px solid #ef444433",
+                    margin: 0,
+                    background: "#f8514918",
+                    border: "1px solid #f8514944",
                     borderRadius: 8,
                     padding: "10px 14px",
                   }}
                 >
-                  {erro}
+                  {playbookErro}
                 </p>
-              )}
+              ) : null}
+
+              {!playbookMetaLoading && !playbookErro && playbookPublicUrl ? (
+                <div
+                  style={{
+                    background: "#23863618",
+                    border: "1px solid #23863644",
+                    borderRadius: 10,
+                    padding: "12px 14px",
+                  }}
+                >
+                  <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 6px" }}>
+                    PLAYBOOK PÚBLICO
+                  </p>
+                  <a
+                    href={playbookPublicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#3fb950", fontSize: 13, wordBreak: "break-all" }}
+                  >
+                    {playbookPublicUrl}
+                  </a>
+                </div>
+              ) : !playbookMetaLoading && !playbookErro ? (
+                <p style={{ color: "#6e7781", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                  Ainda não há playbook no Storage para este agente. Use o botão abaixo para gerar.
+                </p>
+              ) : null}
 
               <button
                 type="button"
-                onClick={() => setShowConfirm(true)}
-                disabled={!cargoSelecionado || !nome.trim()}
+                onClick={() => void gerarPlaybookNoStorage()}
+                disabled={playbookGerando || playbookMetaLoading}
                 style={{
                   padding: "14px 0",
                   borderRadius: 10,
                   fontSize: 14,
                   fontWeight: 700,
-                  background: "#003b26",
-                  border: "none",
+                  background: "#21262d",
+                  border: "1px solid #30363d",
                   color: "#c9a24a",
-                  cursor: !cargoSelecionado || !nome.trim() ? "not-allowed" : "pointer",
-                  opacity: !cargoSelecionado || !nome.trim() ? 0.4 : 1,
+                  cursor: playbookGerando || playbookMetaLoading ? "wait" : "pointer",
+                  opacity: playbookGerando || playbookMetaLoading ? 0.65 : 1,
                 }}
               >
-                Criar agente
+                {playbookGerando ? "A gerar playbook…" : "Gerar playbook no Storage"}
               </button>
             </div>
           )}
 
+          {passo === 8 && agenteSlugCriado && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                  Canal
+                </h2>
+                <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
+                  {modoOperacao === "canal_whatsapp"
+                    ? "Ligue o WhatsApp via UAZAPI (instância e QR/pairing). O token da API não é mostrado aqui."
+                    : "Este agente está em modo copiloto interno (jobs por ciclo). Não há WhatsApp neste fluxo — pode concluir e gerir ciclos na Central ou na ficha do agente."}
+                </p>
+              </div>
+
+              {modoOperacao === "canal_whatsapp" && hubCicloEstrategia === "somente_vincular" ? (
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(201,162,74,0.45)",
+                    background: "rgba(201,162,74,0.08)",
+                    color: "#e6c06a",
+                    fontSize: 12,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <strong style={{ color: "#c9a24a" }}>Ciclos vinculados:</strong> associou ciclos existentes da Central a
+                  este agente. Confirme no painel UAZAPI que o <strong style={{ color: "#e6edf3" }}>webhook</strong> aponta
+                  para <code style={{ fontSize: 11, color: "#93c5fd" }}>/api/whatsapp/webhook</code> e que a instância
+                  abaixo fica <strong style={{ color: "#e6edf3" }}>connected</strong> — só assim as mensagens disparam a
+                  IA neste modelo.
+                </div>
+              ) : null}
+
+              {modoOperacao === "canal_whatsapp" ? (
+                <AgenteUazapiBlock
+                  agenteSlug={agenteSlugCriado}
+                  snapshot={
+                    uazapiSnap ?? {
+                      uazapi_instance_id: null,
+                      uazapi_instance_name: null,
+                      uazapi_connection_status: null,
+                      uazapi_has_instance_token: false,
+                    }
+                  }
+                  onRefresh={() => refreshSnapshotUazapi()}
+                />
+              ) : (
+                <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
+                  <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
+                    Para ativar WhatsApp mais tarde, abra a ficha do agente e altere o modo de operação / ciclo ou use o
+                    bloco UAZAPI na área de integrações.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
-            {passo > 1 && (
+            {passo > 1 && !(agenteSlugCriado && passo === 7) && (
               <button
                 type="button"
                 onClick={() => setPasso((p) => p - 1)}
@@ -1655,7 +2122,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 ← Anterior
               </button>
             )}
-            {passo < 5 && (
+            {passo < 6 && (
               <button
                 type="button"
                 onClick={() => setPasso((p) => p + 1)}
@@ -1680,6 +2147,44 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 Próximo →
               </button>
             )}
+            {passo === 7 && agenteSlugCriado ? (
+              <button
+                type="button"
+                onClick={() => setPasso(8)}
+                style={{
+                  flex: 1,
+                  padding: "12px 0",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  background: "#003b26",
+                  border: "none",
+                  color: "#c9a24a",
+                  cursor: "pointer",
+                }}
+              >
+                Continuar → Canal
+              </button>
+            ) : null}
+            {passo === 8 ? (
+              <button
+                type="button"
+                onClick={concluirPosCriacao}
+                style={{
+                  flex: 1,
+                  padding: "12px 0",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  background: "#003b26",
+                  border: "none",
+                  color: "#c9a24a",
+                  cursor: "pointer",
+                }}
+              >
+                Concluir
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

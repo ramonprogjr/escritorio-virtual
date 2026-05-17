@@ -8,16 +8,21 @@ export function defaultTenantId(): string {
   return DEFAULT_OBRA10_TENANT_ID;
 }
 
-/**
- * Resolve tenant para rotas server. Em produção pública, sem claims/JWT dedicado,
- * mantém o tenant legado; integrações internas podem passar x-tenant-id junto da API key.
- */
+function headerUuidValido(s: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
+
 export function tenantIdFromRequest(headers: Headers): string {
   const internalKey = process.env.INTERNAL_API_KEY?.trim();
   const requestKey = headers.get("x-api-key")?.trim();
   const requestedTenant = headers.get("x-tenant-id")?.trim();
 
   if (internalKey && requestKey === internalKey && requestedTenant) {
+    return requestedTenant;
+  }
+
+  if (requestedTenant && headerUuidValido(requestedTenant)) {
     return requestedTenant;
   }
 

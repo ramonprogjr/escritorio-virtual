@@ -12,11 +12,16 @@ import { completarChatPreferindoMistral } from "./llm-completion";
 import { completarChatComFerramentasMistral } from "./llm-completion-tools";
 import { resolveInferenceModelId, isMistralFamilyModelId } from "./hub-model-defaults";
 import {
-  ferramentasMistralParaAgente,
-  mergeUsoFerramentasComPadrao,
-  normalizarUsoFerramentasIa,
+  ferramentasMistralListaParaAgente,
+  mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
 import { executarFerramentaHub } from "@/lib/hub/executar-ferramenta-ia";
+import {
+  fetchFerramentasCustomAtivas,
+  rowParaMistralDef,
+  type FerramentaCustomParaMistral,
+} from "@/lib/hub/ferramentas-custom-db";
+import { defaultTenantId } from "@/lib/tenant-default";
 
 function supabase() {
   return createClient(
@@ -177,10 +182,16 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
       .maybeSingle();
 
     const motorFerramentas = ferrIaRow?.motor_ferramentas_habilitado === true;
-    const usoMap = mergeUsoFerramentasComPadrao(
-      normalizarUsoFerramentasIa(ferrIaRow?.uso_ferramentas_ia ?? {})
-    );
-    const mistralTools = ferramentasMistralParaAgente(usoMap);
+    const tenantForTools = (ctx.tenantId && ctx.tenantId.trim()) || defaultTenantId();
+    let customDefs: FerramentaCustomParaMistral[] = [];
+    try {
+      const rows = await fetchFerramentasCustomAtivas(db, tenantForTools);
+      customDefs = rows.map(rowParaMistralDef);
+    } catch {
+      customDefs = [];
+    }
+    const usoMap = mergeUsoFerramentasComPadraoPreservandoCustom(ferrIaRow?.uso_ferramentas_ia ?? {});
+    const mistralTools = ferramentasMistralListaParaAgente(usoMap, customDefs);
     const modeloResolved = resolveInferenceModelId(modelo);
     const temMistralKey = Boolean(process.env.MISTRAL_API_KEY?.trim());
     const podeToolsMistral =

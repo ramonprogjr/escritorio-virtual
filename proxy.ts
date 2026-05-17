@@ -89,7 +89,14 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!validKey) {
-    return NextResponse.json({ error: "Servidor não configurado" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "API não autenticável neste pedido",
+        detail:
+          "Sem sessão CRM e sem INTERNAL_API_KEY no servidor. Para chamadas sem cookie: defina INTERNAL_API_KEY e no cliente NEXT_PUBLIC_INTERNAL_API_KEY (mesmo valor). Para validar o cookie no middleware: NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY devem estar definidos.",
+      },
+      { status: 401 }
+    );
   }
 
   return NextResponse.json({ error: "Acesso negado" }, { status: 401 });

@@ -19,6 +19,7 @@ import {
   Handshake,
   ClipboardList,
   Zap,
+  Wrench,
   Radio,
   PenLine,
   Settings,
@@ -28,6 +29,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Obra10LogoBadge, Obra10BrandHeader } from "@/components/brand/Obra10Brand";
+import { CrmQueryProvider } from "@/components/crm/CrmQueryProvider";
 import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
 import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
@@ -100,6 +102,7 @@ const NAV_GROUPS: { id: string; label: string; sectionIcon: LucideIcon; items: N
         icon: LayoutTemplate,
       },
       { href: "/crm/ciclos", label: "Ciclos IA", icon: Zap },
+      { href: "/crm/ferramentas", label: "Ferramentas", icon: Wrench },
     ],
   },
   {
@@ -208,6 +211,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <CrmQueryProvider>
     <CrmHeaderProvider>
       <CrmShellProvider value={{ sidebarExpanded, toggleSidebar }}>
         <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
@@ -651,5 +655,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </div>
       </CrmShellProvider>
     </CrmHeaderProvider>
+    </CrmQueryProvider>
   );
 }

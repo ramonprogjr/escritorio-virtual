@@ -8,17 +8,20 @@ import {
   Cloud,
   Cpu,
   FileCode2,
+  ListOrdered,
   PieChart,
   StickyNote,
+  UserPen,
   UserRound,
   Users,
   ClipboardPenLine,
+  Wrench,
 } from "lucide-react";
 import type { HubAgenteFerramentaId, HubFerramentaCategoria } from "@/lib/hub/agente-ferramentas-registry";
 import {
   HUB_AGENTE_FERRAMENTAS_CATALOGO,
   HUB_FERRAMENTA_SECAO_LABEL,
-  mergeUsoFerramentasComPadrao,
+  mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
 
 const ORDEM_SECOES: HubFerramentaCategoria[] = ["cliente", "analise", "registos"];
@@ -35,6 +38,8 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_metricas_escritorio: BarChart3,
   hub_relatorio_html_simples: FileCode2,
   hub_registar_nota_lead: StickyNote,
+  hub_whatsapp_menu: ListOrdered,
+  hub_atualizar_lead: UserPen,
 };
 
 function ToggleSwitch({
@@ -88,13 +93,24 @@ function ToggleSwitch({
   );
 }
 
+export type CatalogoFerramentaCustomLite = {
+  ferramenta_key: string;
+  titulo: string;
+  builtin_impl: string;
+  smart_provider: string;
+  ativo: boolean;
+  /** Texto curto para cards (admin); cai na descrição se vazio. */
+  descricao_curta?: string | null;
+};
+
 export type AgenteFerramentasIaBlockProps = {
   motorHabilitado: boolean;
   onMotorChange: (v: boolean) => void;
   mistralSyncHabilitado: boolean;
   onMistralSyncChange: (v: boolean) => void;
-  usoFerramentas: Record<HubAgenteFerramentaId, boolean>;
-  onUsoChange: (id: HubAgenteFerramentaId, ativo: boolean) => void;
+  usoFerramentas: Record<string, boolean>;
+  onUsoChange: (id: string, ativo: boolean) => void;
+  customCatalog?: CatalogoFerramentaCustomLite[];
   mistralAgentId?: string | null;
   mistralSyncEm?: string | null;
   mistralSyncErro?: string | null;
@@ -114,9 +130,12 @@ export function AgenteFerramentasIaBlock({
   mistralSyncErro,
   destacarWhatsApp,
   modoCompacto,
+  customCatalog = [],
 }: AgenteFerramentasIaBlockProps) {
-  const uso = mergeUsoFerramentasComPadrao(usoFerramentas);
-  const nAtivas = Object.values(uso).filter(Boolean).length;
+  const uso = mergeUsoFerramentasComPadraoPreservandoCustom(usoFerramentas);
+  const nAtivas = Object.entries(uso).filter(([, on]) => on === true).length;
+  const customActivos = customCatalog.filter((c) => c.ativo);
+  const nSlots = HUB_AGENTE_FERRAMENTAS_CATALOGO.length + customActivos.length;
   const motorSemTools = motorHabilitado && nAtivas === 0;
 
   function activarPacoteWhatsApp() {
@@ -243,7 +262,7 @@ export function AgenteFerramentasIaBlock({
           <span style={{ display: "block", color: "#8b949e", fontWeight: 400, fontSize: 12, marginTop: 2 }}>
             Modelo Mistral com lead na sessão ·{" "}
             <strong style={{ color: motorSemTools ? "#f85149" : "#8b949e" }}>{nAtivas}</strong> de{" "}
-            {HUB_AGENTE_FERRAMENTAS_CATALOGO.length} funções activas
+            {nSlots} funções activas
           </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
@@ -298,48 +317,158 @@ export function AgenteFerramentasIaBlock({
         FUNÇÕES DISPONÍVEIS
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {ORDEM_SECOES.map((cat) => {
-          const tools = HUB_AGENTE_FERRAMENTAS_CATALOGO.filter((t) => t.categoria === cat);
-          if (!tools.length) return null;
-          const SecIcon = ICONE_SECAO[cat];
-          return (
-            <div key={cat}>
-              <div
+      <>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {ORDEM_SECOES.map((cat) => {
+              const tools = HUB_AGENTE_FERRAMENTAS_CATALOGO.filter((t) => t.categoria === cat);
+              if (!tools.length) return null;
+              const SecIcon = ICONE_SECAO[cat];
+              return (
+                <div key={cat}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <SecIcon size={14} strokeWidth={2.25} style={{ color: "#8b949e" }} aria-hidden />
+                    <p
+                      style={{
+                        color: "#aebccf",
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: 0.04,
+                        textTransform: "uppercase",
+                        margin: 0,
+                      }}
+                    >
+                      {HUB_FERRAMENTA_SECAO_LABEL[cat]}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {tools.map((tool) => {
+                      const ligado = uso[tool.id] === true;
+                      const ToolIcon = ICONE_FERRAMENTA[tool.id];
+                      const labelId = `tool-label-${tool.id}`;
+                      return (
+                        <div
+                          key={tool.id}
+                          style={{
+                            ...rowBase,
+                            borderColor: ligado ? "#388bfd44" : "#30363d",
+                            background: ligado ? "rgba(56,139,253,0.06)" : "#161b22",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 42,
+                              height: 42,
+                              borderRadius: 10,
+                              background: ligado ? "rgba(56,139,253,0.18)" : "#21262d",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              color: ligado ? "#79c0ff" : "#8b949e",
+                              marginTop: 2,
+                            }}
+                          >
+                            <ToolIcon size={21} strokeWidth={2} aria-hidden />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0, paddingRight: 4 }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                              <span id={labelId} style={{ color: "#e6edf3", fontSize: 13, fontWeight: 700 }}>
+                                {tool.titulo}
+                              </span>
+                              {tool.recomendadoWhatsApp && destacarWhatsApp ? (
+                                <span
+                                  style={{
+                                    fontSize: 9,
+                                    fontWeight: 800,
+                                    letterSpacing: 0.06,
+                                    color: "#79c0ff",
+                                    border: "1px solid rgba(121,192,255,0.35)",
+                                    borderRadius: 4,
+                                    padding: "2px 6px",
+                                  }}
+                                >
+                                  WHATSAPP
+                                </span>
+                              ) : null}
+                            </div>
+                            <span
+                              style={{
+                                display: "block",
+                                color: "#8b949e",
+                                fontSize: 12,
+                                lineHeight: 1.45,
+                                marginTop: 4,
+                              }}
+                            >
+                              {tool.descricao}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-end",
+                              gap: 4,
+                              flexShrink: 0,
+                              paddingTop: 4,
+                            }}
+                          >
+                            <span style={{ fontSize: 10, fontWeight: 700, color: ligado ? "#3fb950" : "#6e7781" }}>
+                              {ligado ? "ACTIVO" : "INACTIVO"}
+                            </span>
+                            <ToggleSwitch
+                              checked={ligado}
+                              onCheckedChange={(v) => onUsoChange(tool.id, v)}
+                              labelledBy={labelId}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {customActivos.length > 0 ? (
+            <>
+              <p
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 10,
+                  color: "#8b949e",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  margin: "18px 0 10px",
+                  letterSpacing: 0.04,
                 }}
               >
-                <SecIcon size={14} strokeWidth={2.25} style={{ color: "#8b949e" }} aria-hidden />
-                <p
-                  style={{
-                    color: "#aebccf",
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: 0.04,
-                    textTransform: "uppercase",
-                    margin: 0,
-                  }}
-                >
-                  {HUB_FERRAMENTA_SECAO_LABEL[cat]}
-                </p>
-              </div>
+                FUNÇÕES CUSTOM DO ESCRITÓRIO
+              </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {tools.map((tool) => {
-                  const ligado = uso[tool.id] === true;
-                  const ToolIcon = ICONE_FERRAMENTA[tool.id];
-                  const labelId = `tool-label-${tool.id}`;
+                {customActivos.map((tool) => {
+                  const ligado = uso[tool.ferramenta_key] === true;
+                  const labelId = `tool-label-${tool.ferramenta_key}`;
+                  const curta = tool.descricao_curta != null ? String(tool.descricao_curta).trim() : "";
                   return (
                     <div
-                      key={tool.id}
+                      key={tool.ferramenta_key}
                       style={{
-                        ...rowBase,
-                        borderColor: ligado ? "#388bfd44" : "#30363d",
-                        background: ligado ? "rgba(56,139,253,0.06)" : "#161b22",
+                        display: "flex",
                         alignItems: "flex-start",
+                        gap: 12,
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        border: "1px solid",
+                        borderColor: ligado ? "rgba(201,162,74,0.35)" : "#30363d",
+                        background: ligado ? "rgba(201,162,74,0.07)" : "#161b22",
                       }}
                     >
                       <div
@@ -347,40 +476,77 @@ export function AgenteFerramentasIaBlock({
                           width: 42,
                           height: 42,
                           borderRadius: 10,
-                          background: ligado ? "rgba(56,139,253,0.18)" : "#21262d",
+                          background: ligado ? "rgba(201,162,74,0.2)" : "#21262d",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
-                          color: ligado ? "#79c0ff" : "#8b949e",
+                          color: ligado ? "#c9a24a" : "#8b949e",
                           marginTop: 2,
                         }}
                       >
-                        <ToolIcon size={21} strokeWidth={2} aria-hidden />
+                        <Wrench size={21} strokeWidth={2} aria-hidden />
                       </div>
                       <div style={{ flex: 1, minWidth: 0, paddingRight: 4 }}>
                         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                           <span id={labelId} style={{ color: "#e6edf3", fontSize: 13, fontWeight: 700 }}>
                             {tool.titulo}
                           </span>
-                          {tool.recomendadoWhatsApp && destacarWhatsApp ? (
+                          <span
+                            style={{
+                              fontSize: 9,
+                              fontWeight: 800,
+                              letterSpacing: 0.06,
+                              color: "#c9a24a",
+                              border: "1px solid rgba(201,162,74,0.35)",
+                              borderRadius: 4,
+                              padding: "2px 6px",
+                            }}
+                          >
+                            CUSTOM
+                          </span>
+                          {tool.smart_provider !== "none" ? (
                             <span
                               style={{
                                 fontSize: 9,
-                                fontWeight: 800,
-                                letterSpacing: 0.06,
+                                fontWeight: 700,
                                 color: "#79c0ff",
                                 border: "1px solid rgba(121,192,255,0.35)",
                                 borderRadius: 4,
                                 padding: "2px 6px",
                               }}
                             >
-                              WHATSAPP
+                              SMART {tool.smart_provider.toUpperCase()}
                             </span>
                           ) : null}
                         </div>
-                        <span style={{ display: "block", color: "#8b949e", fontSize: 12, lineHeight: 1.45, marginTop: 4 }}>
-                          {tool.descricao}
+                        <code
+                          style={{
+                            display: "block",
+                            fontSize: 10,
+                            color: "#93c5fd",
+                            marginTop: 4,
+                            wordBreak: "break-all",
+                          }}
+                        >
+                          {tool.ferramenta_key}
+                        </code>
+                        <span
+                          style={{ display: "block", color: "#8b949e", fontSize: 12, lineHeight: 1.45, marginTop: 4 }}
+                        >
+                          {curta ? (
+                            curta
+                          ) : (
+                            <>
+                              Base: <strong style={{ color: "#aebccf" }}>{tool.builtin_impl}</strong>
+                              {tool.smart_provider !== "none" ? (
+                                <>
+                                  {" "}
+                                  · smart <strong style={{ color: "#aebccf" }}>{tool.smart_provider}</strong>
+                                </>
+                              ) : null}
+                            </>
+                          )}
                         </span>
                       </div>
                       <div
@@ -398,7 +564,7 @@ export function AgenteFerramentasIaBlock({
                         </span>
                         <ToggleSwitch
                           checked={ligado}
-                          onCheckedChange={(v) => onUsoChange(tool.id, v)}
+                          onCheckedChange={(v) => onUsoChange(tool.ferramenta_key, v)}
                           labelledBy={labelId}
                         />
                       </div>
@@ -406,10 +572,9 @@ export function AgenteFerramentasIaBlock({
                   );
                 })}
               </div>
-            </div>
-          );
-        })}
-      </div>
+            </>
+          ) : null}
+      </>
 
       {mistralAgentId || mistralSyncEm || mistralSyncErro ? (
         <div

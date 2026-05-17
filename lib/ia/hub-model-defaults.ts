@@ -39,22 +39,83 @@ export function isAnthropicModelId(modelId: string): boolean {
   return modelId.toLowerCase().startsWith("claude-");
 }
 
-export function modeloPadraoForHubInsert(raw?: string | null): string {
-  const t = raw?.trim();
-  if (!t || t === LEGACY_PADRAO) return HUB_MODELO_SENTINEL;
+/**
+ * Valida valores aceites em hub_agente_identidade (constraint chk_modelo_valido;
+ * ver migração 20260602120000_hub_agente_identidade_chk_modelo_valido.sql).
+ */
+export function isHubModeloIdDbCompatible(raw: string): boolean {
+  const t = raw.trim();
+  if (!t) return false;
+  const lower = t.toLowerCase();
+  if (lower === HUB_MODELO_SENTINEL) return true;
+  if (["haiku", "sonnet", "opus"].includes(lower)) return true;
+  if (isMistralFamilyModelId(t)) return true;
+  if (isAnthropicModelId(t)) return true;
+  return false;
+}
+
+/**
+ * Aceita valores vindos do PostgREST/JSON onde `modelo_*` pode ser texto, número, booleano, etc.
+ * (evitar `unknown?.trim()` que devolve undefined e faz o normalizador cair só no legado equivocado.)
+ */
+export function coerceModeloStoredText(raw: unknown): string {
+  if (raw == null) return "";
+  const t = typeof raw === "string" ? raw.trim() : String(raw).trim();
   return t;
 }
 
-export function modeloCriticoForHubInsert(raw?: string | null): string {
-  const t = raw?.trim();
-  if (!t || t === LEGACY_CRITICO) return HUB_MODELO_SENTINEL;
+/** Postgres `chk_modelo_valido` — mensagens 23514 no insert/update. */
+export function isChkModeloValidoConstraintMessage(message?: string | null): boolean {
+  const m = (message ?? "").toLowerCase();
+  return m.includes("chk_modelo_valido") || m.includes("hub_agente_modelo_id_valido");
+}
+
+/** Valor canónico para INSERT/UPDATE: nunca deixa passar um ID que o Postgres rejeita. */
+function normalizeModeloColumnForHubInsert(raw: unknown, legacyFullId: string): string {
+  let t = coerceModeloStoredText(raw);
+  if (!t || t === legacyFullId) t = HUB_MODELO_SENTINEL;
+  else if (t.toLowerCase() === "mistral") t = HUB_MODELO_SENTINEL;
+  else if (["haiku", "sonnet", "opus"].includes(t.toLowerCase())) t = HUB_MODELO_SENTINEL;
+  if (!isHubModeloIdDbCompatible(t)) t = HUB_MODELO_SENTINEL;
   return t;
 }
 
-export function modeloAltoValorForHubInsert(raw?: string | null): string {
-  const t = raw?.trim();
-  if (!t || t === LEGACY_ALTO_VALOR) return HUB_MODELO_SENTINEL;
-  return t;
+/** Três colunas obrigatórias em `hub_agente_identidade` (chk_modelo_valido em todas). */
+export function modeloColumnsForAgenteIdentidadeInsert(row: Record<string, unknown>): {
+  modelo_padrao: string;
+  modelo_critico: string;
+  modelo_alto_valor: string;
+} {
+  return {
+    modelo_padrao: modeloPadraoForHubInsert(row.modelo_padrao),
+    modelo_critico: modeloCriticoForHubInsert(row.modelo_critico),
+    modelo_alto_valor: modeloAltoValorForHubInsert(row.modelo_alto_valor),
+  };
+}
+
+/** Última linha de defesa antes do INSERT quando o catálogo tem formatos estranhos não previstos. */
+export function forceMistralModeloTripleForDb(): {
+  modelo_padrao: string;
+  modelo_critico: string;
+  modelo_alto_valor: string;
+} {
+  return {
+    modelo_padrao: HUB_MODELO_SENTINEL,
+    modelo_critico: HUB_MODELO_SENTINEL,
+    modelo_alto_valor: HUB_MODELO_SENTINEL,
+  };
+}
+
+export function modeloPadraoForHubInsert(raw?: unknown): string {
+  return normalizeModeloColumnForHubInsert(raw, LEGACY_PADRAO);
+}
+
+export function modeloCriticoForHubInsert(raw?: unknown): string {
+  return normalizeModeloColumnForHubInsert(raw, LEGACY_CRITICO);
+}
+
+export function modeloAltoValorForHubInsert(raw?: unknown): string {
+  return normalizeModeloColumnForHubInsert(raw, LEGACY_ALTO_VALOR);
 }
 
 /** Texto fixo nos ecrãs do CRM: o modelo efectivo vem do Agno / `MISTRAL_MODEL`, não por agente. */
