@@ -65,7 +65,7 @@ Fluxo em produção e em local (`/office`, `/crm`, `/login`):
 
 ## Proxy (`proxy.ts`)
 
-Rotas **`/office/*`** e **`/crm/*`** exigem cookie de sessão válido (mesma regra que acima). Rotas `/api/*` exigem header `x-api-key` igual a `INTERNAL_API_KEY` **ou** esse cookie, exceto as documentadas em [`proxy.ts`](proxy.ts): WhatsApp webhook, health, verificação do portal parceiro, validação CPF/CNPJ, ciclos agendados, `GET /api/ml/ciclo`, `POST`/`DELETE /api/auth/crm-session` (auth própria nas handlers ou rota pública controlada).
+Rotas **`/office/*`** e **`/crm/*`** exigem cookie de sessão válido (mesma regra que acima). Rotas `/api/*` exigem header `x-api-key` igual a `INTERNAL_API_KEY` **ou** esse cookie. Sem sessão e sem `INTERNAL_API_KEY` no servidor, o proxy responde **401** JSON com `error` / `detail` (em vez de erro genérico de servidor). Rotas públicas listadas em [`proxy.ts`](proxy.ts): WhatsApp webhook, health, verificação do portal parceiro, validação CPF/CNPJ, ciclos agendados, `GET /api/ml/ciclo`, `POST`/`DELETE /api/auth/crm-session` (auth própria nas handlers ou rota pública controlada).
 
 ## RLS multi-tenant (Supabase)
 

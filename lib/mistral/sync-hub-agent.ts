@@ -1,11 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  ferramentasMistralParaAgente,
-  mergeUsoFerramentasComPadrao,
-  normalizarUsoFerramentasIa,
-  type HubAgenteFerramentaId,
+  ferramentasMistralListaParaAgente,
+  mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
+import {
+  fetchFerramentasCustomAtivas,
+  rowParaMistralDef,
+  type FerramentaCustomParaMistral,
+} from "@/lib/hub/ferramentas-custom-db";
 import { resolveInferenceModelId } from "@/lib/ia/hub-model-defaults";
+import { defaultTenantId } from "@/lib/tenant-default";
 
 const MISTRAL_AGENTS_URL = "https://api.mistral.ai/v1/agents";
 
@@ -16,6 +20,7 @@ type IdentRow = {
   modelo_padrao: string | null;
   mistral_agent_id: string | null;
   uso_ferramentas_ia: unknown;
+  tenant_id?: string | null;
 };
 
 function truncarInstrucoes(s: string, max = 12000): string {
@@ -42,7 +47,7 @@ export async function syncHubAgenteParaMistral(
   const { data: row, error } = await supabase
     .from("hub_agente_identidade")
     .select(
-      "agente_slug, nome, system_prompt_base, modelo_padrao, mistral_agent_id, uso_ferramentas_ia, mistral_agent_sync_habilitado"
+      "agente_slug, nome, system_prompt_base, modelo_padrao, mistral_agent_id, uso_ferramentas_ia, mistral_agent_sync_habilitado, tenant_id"
     )
     .eq("agente_slug", agenteSlug)
     .maybeSingle();
@@ -58,8 +63,16 @@ export async function syncHubAgenteParaMistral(
   const model = resolveInferenceModelId(String(r.modelo_padrao || ""));
   const name = `hub-${r.agente_slug}`.slice(0, 64);
   const instructions = truncarInstrucoes(String(r.system_prompt_base || r.nome || r.agente_slug));
-  const uso = mergeUsoFerramentasComPadrao(normalizarUsoFerramentasIa(r.uso_ferramentas_ia));
-  const tools = ferramentasMistralParaAgente(uso);
+  const uso = mergeUsoFerramentasComPadraoPreservandoCustom(r.uso_ferramentas_ia);
+  const tenantId = String(r.tenant_id || "").trim() || defaultTenantId();
+  let customDefs: FerramentaCustomParaMistral[] = [];
+  try {
+    const rows = await fetchFerramentasCustomAtivas(supabase, tenantId);
+    customDefs = rows.map(rowParaMistralDef);
+  } catch {
+    customDefs = [];
+  }
+  const tools = ferramentasMistralListaParaAgente(uso, customDefs);
 
   const body: Record<string, unknown> = {
     model,
@@ -161,9 +174,7 @@ async function gravarErroSync(supabase: SupabaseClient, slug: string, erro: stri
     .eq("agente_slug", slug);
 }
 
-/** Serializa uso para JSONB estável só com IDs conhecidos. */
-export function serializarUsoFerramentasParaDb(
-  raw: unknown
-): Record<HubAgenteFerramentaId, boolean> {
-  return mergeUsoFerramentasComPadrao(normalizarUsoFerramentasIa(raw));
+/** Serializa uso para JSONB: builtins normalizados + chaves hub_custom_* preservadas. */
+export function serializarUsoFerramentasParaDb(raw: unknown): Record<string, boolean> {
+  return mergeUsoFerramentasComPadraoPreservandoCustom(raw);
 }

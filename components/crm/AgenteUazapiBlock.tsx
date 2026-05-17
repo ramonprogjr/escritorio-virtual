@@ -1,8 +1,9 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertCircle,
   Loader2,
   MessageCircle,
   QrCode,
@@ -12,6 +13,7 @@ import {
   Unplug,
 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { normalizarSrcImagemQrUazapi } from "@/lib/whatsapp/qr-uazapi";
 
 export type AgenteUazapiSnapshot = {
   uazapi_instance_id?: string | null;
@@ -26,17 +28,55 @@ export type AgenteUazapiBlockProps = {
   onRefresh: () => Promise<void> | void;
 };
 
-function badgeCor(status?: string | null): { bg: string; fg: string } {
+function badgeCor(status?: string | null): { bg: string; fg: string; bar: string } {
   const s = (status || "").toLowerCase();
-  if (s === "connected") return { bg: "#23863633", fg: "#3fb950" };
-  if (s === "connecting") return { bg: "#bb800926", fg: "#e6c06a" };
-  return { bg: "#30363d", fg: "#8b949e" };
+  if (s === "connected") return { bg: "#23863633", fg: "#3fb950", bar: "#3fb950" };
+  if (s === "connecting") return { bg: "#bb800926", fg: "#e6c06a", bar: "#e6c06a" };
+  return { bg: "#30363d", fg: "#8b949e", bar: "#484f58" };
+}
+
+type ErroCtx = { titulo: string; detalhes: string[] };
+
+function montarErroDoCorpo(data: Record<string, unknown>, status: number): ErroCtx {
+  const titulo =
+    typeof data.error === "string" && data.error.trim()
+      ? data.error.trim()
+      : `Erro HTTP ${status}`;
+  const detalhes: string[] = [];
+  if (typeof data.detail === "string" && data.detail.trim()) detalhes.push(data.detail.trim());
+
+  const ur = data.uazapi_request;
+  if (ur && typeof ur === "object" && ur !== null) {
+    const o = ur as Record<string, unknown>;
+    if (typeof o.origin === "string" && typeof o.pathname === "string") {
+      detalhes.push(`Pedido externo: ${o.origin}${o.pathname}`);
+    }
+  }
+
+  if (status === 404) {
+    detalhes.push(
+      "404 costuma indicar URL base errada na UAZAPI ou rota do Hub inacessível. Confirme UAZAPI_BASE_URL (ex.: https://subdominio.uazapi.com, sem /api no fim) e reinicie o servidor Next.js."
+    );
+  }
+  return { titulo, detalhes };
+}
+
+async function lerCorpoApi(res: Response): Promise<Record<string, unknown>> {
+  const raw = await res.text();
+  if (!raw.trim()) return {};
+  try {
+    const j = JSON.parse(raw) as unknown;
+    return j && typeof j === "object" && !Array.isArray(j) ? (j as Record<string, unknown>) : {};
+  } catch {
+    const snippet = raw.replace(/\s+/g, " ").trim().slice(0, 380);
+    return { error: snippet || `Resposta não JSON (HTTP ${res.status})` };
+  }
 }
 
 export function AgenteUazapiBlock({ agenteSlug, snapshot, onRefresh }: AgenteUazapiBlockProps) {
   const [phonePair, setPhonePair] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
-  const [err, setErr] = useState("");
+  const [err, setErr] = useState<ErroCtx | null>(null);
   const [qrcode, setQrcode] = useState<string | null>(null);
   const [paircode, setPaircode] = useState<string | null>(null);
 
@@ -44,200 +84,418 @@ export function AgenteUazapiBlock({ agenteSlug, snapshot, onRefresh }: AgenteUaz
   const temInstancia = Boolean(snapshot.uazapi_instance_id?.trim());
   const badge = badgeCor(snapshot.uazapi_connection_status);
 
+  const rotuloEstado = useMemo(() => {
+    if (temInstancia) return String(status).toUpperCase();
+    return "SEM INSTÂNCIA";
+  }, [temInstancia, status]);
+
   const postAction = useCallback(
-    async (action: string, extra?: Record<string, unknown>) => {
-      setErr("");
-      setLoading(action);
+    async (
+      action: string,
+      extra?: Record<string, unknown>,
+      opts?: { silent?: boolean }
+    ) => {
+      if (!opts?.silent) {
+        setErr(null);
+        setLoading(action);
+      }
       try {
         const res = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlug)}/uazapi`, {
           method: "POST",
           headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
           body: JSON.stringify({ action, ...extra }),
         });
-        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const data = await lerCorpoApi(res);
         if (!res.ok) {
-          setErr(typeof data.error === "string" ? data.error : `Erro HTTP ${res.status}`);
+          if (!opts?.silent) {
+            setErr(montarErroDoCorpo(data, res.status));
+            if (action === "connect" || action === "status") {
+              setQrcode(null);
+              setPaircode(null);
+            }
+          }
           return data;
         }
-        if (typeof data.qrcode === "string") setQrcode(data.qrcode);
-        else if (action === "status" || action === "connect") setQrcode(null);
-        if (typeof data.paircode === "string") setPaircode(data.paircode);
-        else setPaircode(null);
+        if (typeof data.qrcode === "string" && data.qrcode.trim()) {
+          setQrcode(normalizarSrcImagemQrUazapi(data.qrcode));
+        } else if (action === "connect" || action === "status") {
+          setQrcode(null);
+        }
+        if (typeof data.paircode === "string" && data.paircode.trim()) {
+          setPaircode(data.paircode.trim());
+        } else if (action === "connect") {
+          setPaircode(null);
+        }
+        if (action === "delete_remote") {
+          setQrcode(null);
+          setPaircode(null);
+        }
+        if (action === "disconnect") {
+          setQrcode(null);
+          setPaircode(null);
+        }
         await onRefresh();
         return data;
       } catch {
-        setErr("Falha de rede ao falar com o servidor.");
+        if (!opts?.silent) {
+          setErr({
+            titulo: "Falha de rede ao falar com o servidor.",
+            detalhes: ["Verifique a ligação e se o servidor Next.js está a correr."],
+          });
+        }
         return null;
       } finally {
-        setLoading(null);
+        if (!opts?.silent) setLoading(null);
       }
     },
     [agenteSlug, onRefresh]
   );
 
-  const btn = (disabled: boolean) =>
+  const syncPollRef = useRef(0);
+  useEffect(() => {
+    if (!temInstancia) return;
+    const s = (snapshot.uazapi_connection_status || "").toLowerCase();
+    if (s === "connected") return;
+
+    void postAction("status", undefined, { silent: true });
+
+    if (s !== "connecting") return;
+
+    syncPollRef.current += 1;
+    const gen = syncPollRef.current;
+    const id = window.setInterval(() => {
+      if (gen !== syncPollRef.current) return;
+      void postAction("status", undefined, { silent: true });
+    }, 6000);
+
+    return () => {
+      syncPollRef.current += 1;
+      window.clearInterval(id);
+    };
+  }, [temInstancia, snapshot.uazapi_instance_id, snapshot.uazapi_connection_status, postAction]);
+
+  const btnBase = (disabled: boolean, primario?: boolean): CSSProperties =>
     ({
       display: "inline-flex",
       alignItems: "center",
+      justifyContent: "center",
       gap: 8,
-      padding: "8px 14px",
-      borderRadius: 8,
+      padding: "10px 14px",
+      borderRadius: 9,
       fontSize: 12,
       fontWeight: 700,
       cursor: disabled ? "not-allowed" : "pointer",
-      border: "1px solid #30363d",
-      background: disabled ? "#161b22" : "#21262d",
-      color: disabled ? "#484f58" : "#e6edf3",
+      border: primario ? "1px solid #58a6ff" : "1px solid #30363d",
+      background: disabled ? "#161b22" : primario ? "#1f6feb22" : "#21262d",
+      color: disabled ? "#484f58" : primario ? "#58a6ff" : "#e6edf3",
+      boxShadow: primario && !disabled ? "inset 0 1px 0 rgba(255,255,255,0.06)" : undefined,
+      transition: "background 0.15s, border-color 0.15s, opacity 0.15s",
+      minHeight: 40,
     }) as CSSProperties;
+
+  const mostrarQr =
+    qrcode && (qrcode.startsWith("data:image") || /^https?:\/\//i.test(qrcode));
 
   return (
     <div
       style={{
         marginBottom: 18,
-        padding: 14,
-        borderRadius: 12,
+        borderRadius: 14,
         border: "1px solid #30363d",
-        background: "#0d1117",
+        background: "linear-gradient(180deg, #151a22 0%, #0d1117 48px, #0d1117 100%)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+        overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-        <MessageCircle size={18} style={{ color: "#25d366" }} aria-hidden />
-        <p style={{ margin: 0, color: "#8b949e", fontSize: 11, fontWeight: 800, letterSpacing: 0.06 }}>
-          WHATSAPP (UAZAPI) — LINHA DESTE AGENTE
-        </p>
-      </div>
+      <div
+        style={{
+          height: 3,
+          background: "linear-gradient(90deg, #25d366, #128c7e, #1f6feb)",
+          opacity: 0.95,
+        }}
+        aria-hidden
+      />
 
-      <p style={{ color: "#6e7781", fontSize: 12, lineHeight: 1.55, margin: "0 0 12px" }}>
-        Só mensagens da instância <strong style={{ color: "#aebccf" }}>ligada e «connected»</strong> no Hub disparam a IA
-        neste número. Configure o webhook global na UAZAPI para o endpoint{" "}
-        <code style={{ fontSize: 11, color: "#79c0ff" }}>/api/whatsapp/webhook</code>.
-      </p>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 12 }}>
-        <span
+      <div style={{ padding: "16px 18px 18px" }}>
+        <div
           style={{
-            padding: "4px 10px",
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 800,
-            background: badge.bg,
-            color: badge.fg,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 14,
+            marginBottom: 16,
           }}
         >
-          {String(status).toUpperCase()}
-        </span>
-        {temInstancia ? (
-          <span style={{ color: "#8b949e", fontSize: 11 }}>
-            ID: <code style={{ color: "#aebccf", fontSize: 11 }}>{snapshot.uazapi_instance_id}</code>
-          </span>
-        ) : (
-          <span style={{ color: "#8b949e", fontSize: 11 }}>Sem instância criada</span>
-        )}
-      </div>
+          <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "linear-gradient(145deg, #25d36633, #128c7e18)",
+                border: "1px solid #25d36644",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <MessageCircle size={22} style={{ color: "#25d366" }} aria-hidden />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ margin: 0, color: "#e6edf3", fontSize: 14, fontWeight: 800, letterSpacing: 0.02 }}>
+                WhatsApp
+              </p>
+              <p style={{ margin: "4px 0 0", color: "#8b949e", fontSize: 12, lineHeight: 1.5 }}>
+                Linha dedicada a este agente. Só mensagens com instância{" "}
+                <strong style={{ color: "#c9d1d9" }}>connected</strong> disparam a IA neste número.
+              </p>
+            </div>
+          </div>
+        </div>
 
-      {err ? (
-        <p style={{ color: "#f85149", fontSize: 12, margin: "0 0 10px", lineHeight: 1.45 }}>{err}</p>
-      ) : null}
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <button
-          type="button"
-          disabled={loading !== null || temInstancia}
-          style={btn(loading !== null || temInstancia)}
-          onClick={() => postAction("create")}
-        >
-          {loading === "create" ? <Loader2 size={14} className="animate-spin" /> : <Smartphone size={14} />}
-          Criar instância
-        </button>
-
-        <button
-          type="button"
-          disabled={loading !== null || !temInstancia}
-          style={btn(loading !== null || !temInstancia)}
-          onClick={() => postAction("connect", phonePair.trim().length >= 10 ? { phone: phonePair } : {})}
-        >
-          {loading === "connect" ? <Loader2 size={14} className="animate-spin" /> : <QrCode size={14} />}
-          Pedir QR / pareamento
-        </button>
-
-        <button
-          type="button"
-          disabled={loading !== null || !temInstancia}
-          style={btn(loading !== null || !temInstancia)}
-          onClick={() => postAction("status")}
-        >
-          {loading === "status" ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-          Actualizar estado
-        </button>
-
-        <button
-          type="button"
-          disabled={loading !== null || !temInstancia}
-          style={btn(loading !== null || !temInstancia)}
-          onClick={() => postAction("disconnect")}
-        >
-          {loading === "disconnect" ? <Loader2 size={14} className="animate-spin" /> : <Unplug size={14} />}
-          Desligar sessão
-        </button>
-
-        <button
-          type="button"
-          disabled={loading !== null || !temInstancia}
+        <div
           style={{
-            ...btn(loading !== null || !temInstancia),
-            borderColor: "#f8514966",
-            color: loading !== null || !temInstancia ? "#484f58" : "#f85149",
-          }}
-          onClick={() => {
-            if (
-              typeof window !== "undefined" &&
-              !window.confirm("Eliminar instância na UAZAPI e limpar ligação no Hub?")
-            )
-              return;
-            postAction("delete_remote");
+            display: "grid",
+            gridTemplateColumns: mostrarQr ? "minmax(0,1fr) minmax(0,260px)" : "1fr",
+            gap: 18,
+            alignItems: "start",
           }}
         >
-          {loading === "delete_remote" ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-          Eliminar na UAZAPI
-        </button>
+          <div>
+            <div
+              style={{
+                position: "relative",
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "#161b22",
+                border: "1px solid #30363d",
+                marginBottom: 16,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 10,
+                  bottom: 10,
+                  width: 3,
+                  borderRadius: "0 4px 4px 0",
+                  background: badge.bar,
+                }}
+                aria-hidden
+              />
+              <div style={{ paddingLeft: 12, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+                <span
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: 0.04,
+                    background: badge.bg,
+                    color: badge.fg,
+                  }}
+                >
+                  {rotuloEstado}
+                </span>
+                {temInstancia ? (
+                  <div style={{ fontSize: 12, color: "#8b949e" }}>
+                    <span style={{ display: "block", fontWeight: 600, color: "#aebccf", marginBottom: 2 }}>Instância</span>
+                    <code style={{ color: "#e6edf3", fontSize: 11 }}>{snapshot.uazapi_instance_id}</code>
+                    {snapshot.uazapi_instance_name ? (
+                      <span style={{ marginLeft: 8, color: "#6e7681" }}>
+                        ({snapshot.uazapi_instance_name})
+                      </span>
+                    ) : null}
+                  </div>
+                ) : (
+                  <span style={{ color: "#8b949e", fontSize: 12 }}>
+                    Ainda não há instância no painel UAZAPI — use <strong style={{ color: "#c9d1d9" }}>Criar instância</strong>.
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "12px 14px",
+                borderRadius: 10,
+                border: "1px solid #30363d",
+                background: "#0d1117",
+                marginBottom: 16,
+              }}
+            >
+              <p style={{ margin: 0, color: "#6e7781", fontSize: 11, fontWeight: 700, letterSpacing: 0.06 }}>
+                CONFIGURAÇÃO
+              </p>
+              <p style={{ margin: "8px 0 0", color: "#8b949e", fontSize: 12, lineHeight: 1.55 }}>
+                Webhook global na UAZAPI:{" "}
+                <code style={{ fontSize: 11, color: "#79c0ff" }}>/api/whatsapp/webhook</code>. QR expirado?{" "}
+                <strong style={{ color: "#c9d1d9" }}>Desligar sessão</strong> e peça QR de novo, ou telefone com DDI para
+                código de pareamento.
+              </p>
+            </div>
+
+            {err ? (
+              <div
+                role="alert"
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  padding: "12px 14px",
+                  borderRadius: 10,
+                  border: "1px solid #f8514966",
+                  background: "#f851490d",
+                  marginBottom: 16,
+                }}
+              >
+                <AlertCircle size={20} style={{ color: "#f85149", flexShrink: 0, marginTop: 2 }} aria-hidden />
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: 0, color: "#ff7b72", fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>{err.titulo}</p>
+                  {err.detalhes.length ? (
+                    <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#e6c06a", fontSize: 12, lineHeight: 1.5 }}>
+                      {err.detalhes.map((d, i) => (
+                        <li key={i} style={{ marginBottom: 4 }}>
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))",
+                gap: 10,
+                marginBottom: 16,
+              }}
+            >
+              <button
+                type="button"
+                disabled={loading !== null || temInstancia}
+                style={btnBase(loading !== null || temInstancia, true)}
+                onClick={() => postAction("create")}
+              >
+                {loading === "create" ? <Loader2 size={15} className="animate-spin" /> : <Smartphone size={15} />}
+                Criar instância
+              </button>
+
+              <button
+                type="button"
+                disabled={loading !== null || !temInstancia}
+                style={btnBase(loading !== null || !temInstancia)}
+                onClick={() => postAction("connect", phonePair.trim().length >= 10 ? { phone: phonePair } : {})}
+              >
+                {loading === "connect" ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}
+                QR / pareamento
+              </button>
+
+              <button
+                type="button"
+                disabled={loading !== null || !temInstancia}
+                style={btnBase(loading !== null || !temInstancia)}
+                onClick={() => postAction("status")}
+              >
+                {loading === "status" ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
+                Actualizar estado
+              </button>
+
+              <button
+                type="button"
+                disabled={loading !== null || !temInstancia}
+                style={btnBase(loading !== null || !temInstancia)}
+                onClick={() => postAction("disconnect")}
+              >
+                {loading === "disconnect" ? <Loader2 size={15} className="animate-spin" /> : <Unplug size={15} />}
+                Desligar sessão
+              </button>
+
+              <button
+                type="button"
+                disabled={loading !== null || !temInstancia}
+                style={{
+                  ...btnBase(loading !== null || !temInstancia),
+                  borderColor: "#f8514966",
+                  color: loading !== null || !temInstancia ? "#484f58" : "#f85149",
+                  gridColumn: "1 / -1",
+                }}
+                onClick={() => {
+                  if (
+                    typeof window !== "undefined" &&
+                    !window.confirm("Eliminar instância na UAZAPI e limpar ligação no Hub?")
+                  )
+                    return;
+                  postAction("delete_remote");
+                }}
+              >
+                {loading === "delete_remote" ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                Eliminar na UAZAPI
+              </button>
+            </div>
+
+            <div>
+              <label style={{ display: "block", color: "#8b949e", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
+                Telefone (opcional, ex. 351912345678)
+              </label>
+              <input
+                value={phonePair}
+                onChange={(e) => setPhonePair(e.target.value)}
+                placeholder="Vazio = só QR"
+                style={{
+                  width: "100%",
+                  maxWidth: 320,
+                  padding: "10px 12px",
+                  borderRadius: 9,
+                  border: "1px solid #30363d",
+                  background: "#0d1117",
+                  color: "#e6edf3",
+                  fontSize: 13,
+                }}
+              />
+            </div>
+
+            {paircode ? (
+              <p style={{ color: "#e6c06a", fontSize: 14, fontWeight: 700, margin: "14px 0 0", letterSpacing: 0.02 }}>
+                Código: {paircode}
+              </p>
+            ) : null}
+          </div>
+
+          {mostrarQr ? (
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 12,
+                border: "1px solid #30363d",
+                background: "#161b22",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ margin: "0 0 10px", color: "#8b949e", fontSize: 11, fontWeight: 700 }}>QR WHATSAPP</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt="QR WhatsApp"
+                src={qrcode!}
+                style={{
+                  maxWidth: "100%",
+                  width: 240,
+                  height: "auto",
+                  borderRadius: 10,
+                  border: "1px solid #30363d",
+                  margin: "0 auto",
+                  display: "block",
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ display: "block", color: "#8b949e", fontSize: 11, marginBottom: 6 }}>
-          Telefone para código de pareamento (opcional, ex. 5511999999999)
-        </label>
-        <input
-          value={phonePair}
-          onChange={(e) => setPhonePair(e.target.value)}
-          placeholder="Deixe vazio só para QR"
-          style={{
-            width: "100%",
-            maxWidth: 280,
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid #30363d",
-            background: "#161b22",
-            color: "#e6edf3",
-            fontSize: 13,
-          }}
-        />
-      </div>
-
-      {paircode ? (
-        <p style={{ color: "#e6c06a", fontSize: 13, fontWeight: 700, margin: "8px 0" }}>
-          Código: {paircode}
-        </p>
-      ) : null}
-
-      {qrcode?.startsWith("data:image") ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img alt="QR WhatsApp" src={qrcode} style={{ maxWidth: 220, borderRadius: 8, border: "1px solid #30363d" }} />
-      ) : null}
-
-      <p style={{ color: "#484f58", fontSize: 10, margin: "12px 0 0", lineHeight: 1.45 }}>
-        Requer <code style={{ fontSize: 10 }}>UAZAPI_BASE_URL</code> e{" "}
-        <code style={{ fontSize: 10 }}>UAZAPI_ADMIN_TOKEN</code> no servidor para criar instâncias.
-      </p>
     </div>
   );
 }

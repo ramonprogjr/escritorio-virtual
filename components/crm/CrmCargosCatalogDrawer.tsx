@@ -1,7 +1,15 @@
 "use client";
 
 import type { ChangeEventHandler, CSSProperties } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchHubCargosCatalog } from "@/lib/hub/fetch-hub-cargos-catalog";
+import {
+  hubQueryKeys,
+  invalidateCargosCatalog,
+  patchCargosCache,
+  patchCargosManyCache,
+} from "@/lib/hub/hub-query-keys";
 import {
   CheckCircle2,
   CircleSlash2,
@@ -16,6 +24,11 @@ import {
 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { slugifyCargoSlug } from "@/lib/hub/cargo-slug";
+import {
+  especialidadesExemploParaSegmento,
+  nomesSegmentosConceito,
+  segmentoNoConceito,
+} from "@/lib/hub/documento-conceito-catalogo";
 import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
 
 const SEGMENTO_COR: Record<string, string> = {
@@ -338,8 +351,25 @@ export function CrmCargosCatalogDrawer({
   open: boolean;
   onClose: () => void;
 }) {
-  const [cargos, setCargos] = useState<CargoRow[]>([]);
-  const [carregando, setCarregando] = useState(false);
+  const queryClient = useQueryClient();
+  const cargosQuery = useQuery({
+    queryKey: hubQueryKeys.cargosCatalog(),
+    queryFn: async () => {
+      const res = await fetchHubCargosCatalog();
+      if (!res.ok) throw new Error(res.error);
+      return res.cargos as CargoRow[];
+    },
+    enabled: open,
+  });
+  const cargos = cargosQuery.data ?? [];
+  const cargosListaPendente =
+    open && (cargosQuery.isPending || (cargosQuery.isFetching && cargosQuery.data === undefined));
+  const erroExibicao = cargosQuery.isError
+    ? cargosQuery.error instanceof Error
+      ? cargosQuery.error.message
+      : "Falha ao carregar cargos."
+    : null;
+
   const [erro, setErro] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -358,36 +388,6 @@ export function CrmCargosCatalogDrawer({
   const [criando, setCriando] = useState(false);
   const [form, setForm] = useState<CargoFormFields>(() => emptyForm());
 
-  const carregar = useCallback(() => {
-    setCarregando(true);
-    setErro(null);
-    fetch("/api/hub/cargos?all=true", { headers: internalApiHeaders() })
-      .then(async (r) => {
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          setErro(typeof data?.error === "string" ? data.error : `Erro ${r.status}`);
-          setCargos([]);
-          return;
-        }
-        if (Array.isArray(data)) setCargos(data as CargoRow[]);
-        else if (Array.isArray(data?.cargos)) setCargos(data.cargos as CargoRow[]);
-        else {
-          setErro("Resposta inesperada ao carregar cargos.");
-          setCargos([]);
-        }
-      })
-      .catch((e: Error) => {
-        setErro(e?.message || "Falha de rede.");
-        setCargos([]);
-      })
-      .finally(() => setCarregando(false));
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    carregar();
-  }, [open, carregar]);
-
   useEffect(() => {
     if (!open) {
       setFocusSlug(null);
@@ -400,13 +400,26 @@ export function CrmCargosCatalogDrawer({
   }, [open]);
 
   const setoresOpcoes = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(nomesSegmentosConceito());
     for (const c of cargos) {
       const seg = String(c.segmento || "").trim();
       if (seg.length > 0) s.add(seg);
     }
     return [...s].sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
   }, [cargos]);
+
+  const especialidadesDatalistOpcoes = useMemo(() => {
+    const ex = especialidadesExemploParaSegmento(form.segmento);
+    const seg = form.segmento.trim().toLowerCase();
+    const sameSeg = cargos
+      .filter((c) => String((c as { segmento?: string }).segmento || "").trim().toLowerCase() === seg)
+      .map((c) => String((c as { especialidade?: string }).especialidade || "").trim())
+      .filter(Boolean);
+    return [...new Set([...ex, ...sameSeg])];
+  }, [cargos, form.segmento]);
+
+  const segmentoForaDoConceito =
+    Boolean(form.segmento.trim()) && !segmentoNoConceito(form.segmento);
 
   const cargosFiltrados = useMemo(() => {
     const q = filtroBusca.trim().toLowerCase();
@@ -449,10 +462,10 @@ export function CrmCargosCatalogDrawer({
 
   const temFiltroLista = Boolean(filtroBusca.trim()) || Boolean(filtroSetor.trim());
 
-  const painelBusy = carregando || bulkLoading || bulkDeleting || busySlug !== null;
+  const painelBusy = cargosListaPendente || bulkLoading || bulkDeleting || busySlug !== null;
 
   const podeSugerirIa =
-    !carregando && (criando || focusSlug !== null) && form.titulo.trim().length > 0;
+    !cargosListaPendente && (criando || focusSlug !== null) && form.titulo.trim().length > 0;
 
   async function eliminarPorSlug(slug: string, tituloOuSlugParaMsg: string) {
     const rotulo = tituloOuSlugParaMsg.trim() || slug;
@@ -475,7 +488,7 @@ export function CrmCargosCatalogDrawer({
         setErro(typeof data?.error === "string" ? data.error : `Erro HTTP ${res.status}`);
         return;
       }
-      await carregar();
+      await invalidateCargosCatalog(queryClient);
       setSelectedSlugs((prev) => {
         const next = new Set(prev);
         next.delete(slug);
@@ -527,7 +540,7 @@ export function CrmCargosCatalogDrawer({
         setForm(emptyForm());
       }
 
-      await carregar();
+      await invalidateCargosCatalog(queryClient);
 
       if (blocked.length > 0) {
         const linhas = blocked.map((b) => `• ${b.slug}: ${b.error}`).join("\n");
@@ -541,7 +554,7 @@ export function CrmCargosCatalogDrawer({
       }
     } catch (e) {
       setErro((e as Error)?.message || "Falha ao eliminar em lote.");
-      await carregar();
+      await invalidateCargosCatalog(queryClient);
     } finally {
       setBulkDeleting(false);
     }
@@ -568,7 +581,7 @@ export function CrmCargosCatalogDrawer({
         body: JSON.stringify({ slug, ativo: proximo }),
       });
       if (!res.ok) return;
-      setCargos((prev) => prev.map((c) => (c.slug === slug ? { ...c, ativo: proximo } : c)));
+      patchCargosCache(queryClient, slug, { ativo: proximo });
       if (focusSlug === slug) setForm((f) => ({ ...f, ativo: proximo }));
     } finally {
       setBusySlug(null);
@@ -596,26 +609,26 @@ export function CrmCargosCatalogDrawer({
       if (outcomes.every(Boolean)) {
         if (temFiltroLista) {
           const slugsAlvo = new Set(alvo.map((c) => String(c.slug || "").trim()).filter(Boolean));
-          setCargos((prev) =>
-            prev.map((c) => {
-              const slug = String(c.slug || "").trim();
-              return slugsAlvo.has(slug) ? { ...c, ativo: ativoAlvo } : c;
-            })
+          patchCargosManyCache(
+            queryClient,
+            alvo.map((c) => ({ slug: String(c.slug || "").trim(), ativo: ativoAlvo })).filter((u) => u.slug.length > 0)
           );
           if (focusSlug && slugsAlvo.has(focusSlug)) {
             setForm((f) => ({ ...f, ativo: ativoAlvo }));
           }
         } else {
-          setCargos((prev) => prev.map((c) => ({ ...c, ativo: ativoAlvo })));
+          queryClient.setQueryData<CargoRow[]>(hubQueryKeys.cargosCatalog(), (prev) =>
+            prev?.map((c) => ({ ...c, ativo: ativoAlvo }))
+          );
           setForm((f) => ({ ...f, ativo: ativoAlvo }));
         }
       } else {
         setErro("Não foi possível atualizar todos os cargos.");
-        carregar();
+        void invalidateCargosCatalog(queryClient);
       }
     } catch (e) {
       setErro((e as Error)?.message || "Falha em lote.");
-      carregar();
+      void invalidateCargosCatalog(queryClient);
     } finally {
       setBulkLoading(false);
     }
@@ -681,7 +694,7 @@ export function CrmCargosCatalogDrawer({
           setErro(typeof data?.error === "string" ? data.error : `Erro HTTP ${res.status}`);
           return;
         }
-        await carregar();
+        await invalidateCargosCatalog(queryClient);
         setCriando(false);
         setFocusSlug(String(data.slug || slugFinal));
         setForm(rowToForm(data as CargoRow));
@@ -708,7 +721,7 @@ export function CrmCargosCatalogDrawer({
         setErro(typeof data?.error === "string" ? data.error : `Erro HTTP ${res.status}`);
         return;
       }
-      await carregar();
+      await invalidateCargosCatalog(queryClient);
       const newSlug = typeof data.slug === "string" ? data.slug : focusSlug;
       setFocusSlug(newSlug);
       setForm(rowToForm(data as CargoRow));
@@ -846,7 +859,7 @@ export function CrmCargosCatalogDrawer({
             disponível no wizard de novos agentes quando activo. Sugestões IA usam cargos e mercados actuais do Hub como
             contexto.
           </p>
-          {!carregando && (
+          {!cargosListaPendente && (
             <>
               <div
                 style={{
@@ -883,7 +896,7 @@ export function CrmCargosCatalogDrawer({
                     onChange={(e) => setFiltroBusca(e.target.value)}
                     placeholder="Buscar cargo, slug…"
                     aria-label="Buscar cargos"
-                    disabled={carregando}
+                    disabled={cargosListaPendente}
                     style={{
                       flex: "1 1 96px",
                       minWidth: 72,
@@ -901,7 +914,7 @@ export function CrmCargosCatalogDrawer({
                     value={filtroSetor}
                     onChange={(e) => setFiltroSetor(e.target.value)}
                     aria-label="Filtrar por setor"
-                    disabled={carregando}
+                    disabled={cargosListaPendente}
                     style={{
                       flex: "0 1 148px",
                       maxWidth: "min(168px, 34vw)",
@@ -1203,8 +1216,21 @@ export function CrmCargosCatalogDrawer({
               padding: 12,
             }}
           >
-            {carregando ? (
+            {cargosListaPendente ? (
               <p style={{ color: OB.texto2, fontSize: 12 }}>Carregando…</p>
+            ) : erroExibicao ? (
+              <div
+                style={{
+                  color: "#f87171",
+                  background: "#3a1518",
+                  border: "1px solid #7f1d1d",
+                  borderRadius: 8,
+                  padding: 10,
+                  fontSize: 12,
+                }}
+              >
+                {erroExibicao}
+              </div>
             ) : cargos.length === 0 ? (
               <p style={{ color: OB.texto2, fontSize: 12 }}>Nenhum cargo.</p>
             ) : cargosFiltrados.length === 0 ? (
@@ -1449,7 +1475,7 @@ export function CrmCargosCatalogDrawer({
                   </span>
                 </div>
                 {(criando || focusSlug !== null) &&
-                !carregando &&
+                !cargosListaPendente &&
                 !form.titulo.trim() &&
                 !sugerindo ? (
                   <p style={{ margin: 0, fontSize: 11, color: OB.texto2, lineHeight: 1.45 }}>
@@ -1495,26 +1521,70 @@ export function CrmCargosCatalogDrawer({
                   />
                 </label>
 
+                <datalist id="crm-catalog-segmentos-conceito">
+                  {nomesSegmentosConceito().map((n) => (
+                    <option key={n} value={n} />
+                  ))}
+                </datalist>
+                <datalist id="crm-catalog-especialidades">
+                  {especialidadesDatalistOpcoes.map((n) => (
+                    <option key={n} value={n} />
+                  ))}
+                </datalist>
+
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <label style={{ display: "block" }}>
-                    <span style={{ display: "block", color: OB.texto2, fontSize: 11, marginBottom: 6 }}>Segmento</span>
+                    <span style={{ display: "block", color: OB.texto2, fontSize: 11, marginBottom: 6 }}>
+                      Segmento (setor)
+                    </span>
                     <input
+                      list="crm-catalog-segmentos-conceito"
+                      autoComplete="off"
                       value={form.segmento}
                       onChange={(e) => setForm((p) => ({ ...p, segmento: e.target.value }))}
+                      placeholder="Marketing · Comercial · Operações"
                       style={inp}
                     />
                   </label>
                   <label style={{ display: "block" }}>
                     <span style={{ display: "block", color: OB.texto2, fontSize: 11, marginBottom: 6 }}>
-                      Especialidade
+                      Especialidade (secção interna do setor)
                     </span>
                     <input
+                      list="crm-catalog-especialidades"
+                      autoComplete="off"
                       value={form.especialidade}
                       onChange={(e) => setForm((p) => ({ ...p, especialidade: e.target.value }))}
+                      placeholder="Ex.: SDR, Obra, Performance…"
                       style={inp}
                     />
                   </label>
                 </div>
+                <p style={{ margin: 0, fontSize: 10, color: OB.texto3, lineHeight: 1.45 }}>
+                  Taxonomia oficial em código:{" "}
+                  <code style={{ fontSize: 10, color: OB.texto2 }}>lib/hub/documento-conceito-catalogo.ts</code>
+                  . Novos setores ou mudanças nas secções do playbook devem actualizar esse ficheiro primeiro; a IA de
+                  sugestão segue esse «documento conceito» para não inventar nomes.
+                </p>
+                {segmentoForaDoConceito ? (
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 11,
+                      color: OB.douradoLight,
+                      lineHeight: 1.45,
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      border: `1px solid rgba(201, 162, 74, 0.35)`,
+                      background: "rgba(201, 162, 74, 0.08)",
+                    }}
+                  >
+                    Este segmento não está no documento conceito ({nomesSegmentosConceito().join(", ")}). Só continue se
+                    tiver actualizado{" "}
+                    <code style={{ fontSize: 10 }}>documento-conceito-catalogo.ts</code>; caso contrário prefira um dos
+                    setores listados para relatórios e sugestões IA alinhadas.
+                  </p>
+                ) : null}
 
                 <label style={{ display: "block" }}>
                   <span style={{ display: "block", color: OB.texto2, fontSize: 11, marginBottom: 6 }}>

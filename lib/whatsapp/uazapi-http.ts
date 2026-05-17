@@ -1,13 +1,54 @@
 /** Chamadas HTTP à API UAZAPI (headers `admintoken` vs `token`). */
 
+function uazapiPathPrefix(): string {
+  const p = process.env.UAZAPI_PATH_PREFIX?.trim() || "";
+  if (!p) return "";
+  const norm = p.replace(/\/+$/, "");
+  return norm.startsWith("/") ? norm : `/${norm}`;
+}
+
+/** Origem + caminho tentados (sem query) — útil para mensagens de diagnóstico no CRM. */
+export type UazapiPedidoMeta = { origin: string; pathname: string };
+
+function montarUrlUazapi(base: string, path: string): string {
+  const prefix = uazapiPathPrefix();
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${prefix}${p}`;
+}
+
 export function uazapiBaseUrlNormalizado(): string | null {
-  const b = process.env.UAZAPI_BASE_URL?.trim();
-  return b ? b.replace(/\/+$/, "") : null;
+  let b = process.env.UAZAPI_BASE_URL?.trim();
+  if (!b) return null;
+  b = b.replace(/\/+$/, "");
+  /** Painel costuma ser `https://subdominio.uazapi.com`; alguns `.env` trazem `/api` extra e recebem 404 em `/api/instance/create`. */
+  b = b.replace(/\/api\/?$/, "");
+  return b;
+}
+
+export function extrairMensagemErroUazapi(data: unknown, status: number): string {
+  if (typeof data === "string") {
+    const t = data.trim();
+    if (t) return t.length > 600 ? `${t.slice(0, 600)}…` : t;
+  }
+  if (data && typeof data === "object") {
+    const o = data as Record<string, unknown>;
+    for (const k of ["message", "error", "detail", "response", "info"]) {
+      const v = o[k];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+  }
+  return `HTTP ${status}`;
 }
 
 export type UazapiJsonResult<T = unknown> =
   | { ok: true; status: number; data: T }
-  | { ok: false; status: number; data: T | undefined; error: string };
+  | {
+      ok: false;
+      status: number;
+      data: T | undefined;
+      error: string;
+      request?: UazapiPedidoMeta;
+    };
 
 export async function uazapiFetchJson<T = unknown>(
   path: string,
@@ -41,7 +82,15 @@ export async function uazapiFetchJson<T = unknown>(
     headers.token = options.instanceToken.trim();
   }
 
-  const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const url = montarUrlUazapi(base, path);
+  let requestMeta: UazapiPedidoMeta | undefined;
+  try {
+    const u = new URL(url);
+    requestMeta = { origin: u.origin, pathname: u.pathname };
+  } catch {
+    /* ignore */
+  }
+
   const init: RequestInit = {
     method: options.method || "GET",
     headers,
@@ -68,11 +117,18 @@ export async function uazapiFetchJson<T = unknown>(
     }
 
     if (!res.ok) {
-      const msg =
-        typeof data === "object" && data !== null && "error" in data && typeof (data as { error: string }).error === "string"
-          ? (data as { error: string }).error
-          : `HTTP ${res.status}`;
-      return { ok: false, status: res.status, data: data as T, error: msg };
+      const msg = extrairMensagemErroUazapi(data, res.status);
+      const hint404 =
+        res.status === 404
+          ? " Verifique UAZAPI_BASE_URL (ex.: https://SUBDOMINIO.uazapi.com, sem /api no fim) e UAZAPI_ADMIN_TOKEN no painel."
+          : "";
+      return {
+        ok: false,
+        status: res.status,
+        data: data as T,
+        error: msg + hint404,
+        request: requestMeta,
+      };
     }
 
     return { ok: true, status: res.status, data: data as T };
@@ -82,6 +138,7 @@ export async function uazapiFetchJson<T = unknown>(
       status: 0,
       data: undefined,
       error: e instanceof Error ? e.message : "Erro de rede UAZAPI",
+      request: requestMeta,
     };
   }
 }

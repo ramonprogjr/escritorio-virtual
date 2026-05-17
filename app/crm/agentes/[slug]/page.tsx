@@ -3,13 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
-import { AgenteFerramentasIaBlock } from "@/components/crm/AgenteFerramentasIaBlock";
+import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
 import { AgenteUazapiBlock } from "@/components/crm/AgenteUazapiBlock";
 import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
 import {
-  mergeUsoFerramentasComPadrao,
-  normalizarUsoFerramentasIa,
-  type HubAgenteFerramentaId,
+  mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -176,9 +174,10 @@ export default function AgentePage() {
 
   const [motorFerramentasHub, setMotorFerramentasHub] = useState(false);
   const [mistralProvisionar, setMistralProvisionar] = useState(false);
-  const [usoFerramentasIa, setUsoFerramentasIa] = useState<
-    Partial<Record<HubAgenteFerramentaId, boolean>>
-  >(() => mergeUsoFerramentasComPadrao({}));
+  const [usoFerramentasIa, setUsoFerramentasIa] = useState<Record<string, boolean>>(() =>
+    mergeUsoFerramentasComPadraoPreservandoCustom({})
+  );
+  const [catalogoCustomFerramentas, setCatalogoCustomFerramentas] = useState<CatalogoFerramentaCustomLite[]>([]);
   const [syncMistralLoading, setSyncMistralLoading] = useState(false);
 
   // UI state
@@ -218,7 +217,7 @@ export default function AgentePage() {
         setMotorFerramentasHub(data.motor_ferramentas_habilitado === true);
         setMistralProvisionar(data.mistral_agent_sync_habilitado === true);
         setUsoFerramentasIa(
-          mergeUsoFerramentasComPadrao(normalizarUsoFerramentasIa(data.uso_ferramentas_ia))
+          mergeUsoFerramentasComPadraoPreservandoCustom(data.uso_ferramentas_ia)
         );
       }
     } catch {
@@ -227,6 +226,31 @@ export default function AgentePage() {
       setCarregando(false);
     }
   }, [slug]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const r = await fetch("/api/hub/ferramentas-custom?all=true", { headers: internalApiHeaders() });
+        const d: unknown = await r.json().catch(() => null);
+        if (!r.ok || !Array.isArray(d)) return;
+        setCatalogoCustomFerramentas(
+          (d as Record<string, unknown>[]).map((x) => ({
+            ferramenta_key: String(x.ferramenta_key ?? ""),
+            titulo: String(x.titulo ?? ""),
+            builtin_impl: String(x.builtin_impl ?? ""),
+            smart_provider: String(x.smart_provider ?? "none"),
+            ativo: x.ativo !== false,
+            descricao_curta:
+              x.descricao_curta != null && String(x.descricao_curta).trim()
+                ? String(x.descricao_curta).trim()
+                : null,
+          }))
+        );
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     carregar();
@@ -297,7 +321,7 @@ export default function AgentePage() {
           system_prompt_base: systemPromptBase,
           motor_ferramentas_habilitado: motorFerramentasHub,
           mistral_agent_sync_habilitado: mistralProvisionar,
-          uso_ferramentas_ia: mergeUsoFerramentasComPadrao(usoFerramentasIa),
+          uso_ferramentas_ia: usoFerramentasIa,
         }),
       });
       if (res.ok) {
@@ -886,13 +910,14 @@ export default function AgentePage() {
               onMotorChange={setMotorFerramentasHub}
               mistralSyncHabilitado={mistralProvisionar}
               onMistralSyncChange={setMistralProvisionar}
-              usoFerramentas={mergeUsoFerramentasComPadrao(usoFerramentasIa)}
+              usoFerramentas={usoFerramentasIa}
               onUsoChange={(id, ativo) =>
                 setUsoFerramentasIa((prev) => ({
-                  ...mergeUsoFerramentasComPadrao(prev),
+                  ...mergeUsoFerramentasComPadraoPreservandoCustom(prev),
                   [id]: ativo,
                 }))
               }
+              customCatalog={catalogoCustomFerramentas}
               mistralAgentId={typeof agente.mistral_agent_id === "string" ? agente.mistral_agent_id : null}
               mistralSyncEm={typeof agente.mistral_agent_sync_em === "string" ? agente.mistral_agent_sync_em : null}
               mistralSyncErro={

@@ -3,6 +3,8 @@
  * Cada tool tem schema estável e execução servidor em `executarFerramentasHub`.
  */
 
+import type { MistralChatToolDefinition } from "@/lib/ia/mistral-chat-tools";
+
 export type HubFerramentaCategoria = "cliente" | "analise" | "registos";
 
 export type HubAgenteFerramentaId =
@@ -10,7 +12,9 @@ export type HubAgenteFerramentaId =
   | "hub_lead_memorias"
   | "hub_metricas_escritorio"
   | "hub_relatorio_html_simples"
-  | "hub_registar_nota_lead";
+  | "hub_registar_nota_lead"
+  | "hub_whatsapp_menu"
+  | "hub_atualizar_lead";
 
 export type HubAgenteFerramentaCatalogo = {
   id: HubAgenteFerramentaId;
@@ -118,6 +122,75 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
     },
   },
   {
+    id: "hub_atualizar_lead",
+    categoria: "registos",
+    titulo: "Actualizar lead no CRM",
+    descricao:
+      "Grava campos permitidos na ficha do cliente (hub_leads_crm): estágio, score, valor, interesse, follow-up, tags, metadata.",
+    recomendadoWhatsApp: true,
+    mistralFunction: {
+      name: "hub_atualizar_lead",
+      description:
+        "Actualiza dados factuais do lead desta conversa no CRM. Use quando o cliente revelar orçamento, interesse, dados de contacto, qualificação ou próximo passo. Não use para estágios ganho/perdido (equipa humana). Envie só campos que mudaram.",
+      parameters: {
+        type: "object",
+        properties: {
+          estagio: {
+            type: "string",
+            enum: ["novo", "qualificando", "qualificado", "proposta", "negociando", "fechamento"],
+            description: "Estágio no pipeline (ganho/perdido bloqueados para a IA).",
+          },
+          score: {
+            type: "integer",
+            description: "Pontuação 0–100 (interesse/qualificação).",
+            minimum: 0,
+            maximum: 100,
+          },
+          valor_estimado: {
+            type: "number",
+            description: "Valor estimado do negócio (número, ex.: 150000).",
+            minimum: 0,
+          },
+          nome: { type: "string", description: "Nome completo se o cliente informou." },
+          email: { type: "string", description: "E-mail se informado." },
+          interesse_principal: {
+            type: "string",
+            description: "Resumo curto do interesse (ex.: reforma cozinha, apto 3 quartos).",
+          },
+          proxima_acao: {
+            type: "string",
+            description: "Próximo passo combinado (ex.: enviar proposta, visita sábado).",
+          },
+          data_proxima_acao: {
+            type: "string",
+            description: "Data/hora ISO para follow-up (ex.: 2026-05-20T15:00:00Z).",
+          },
+          motivo_perda: {
+            type: "string",
+            description: "Documentar objeção (não altera estágio para perdido).",
+          },
+          tags_adicionar: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tags curtas a acrescentar (ex.: urgente, imobiliario).",
+          },
+          humor: { type: "string", description: "Tom detectado: neutro, positivo, irritado, etc." },
+          cpf: { type: "string", description: "CPF só dígitos se o cliente forneceu." },
+          endereco_completo: { type: "string", description: "Morada se informada." },
+          metadata: {
+            type: "object",
+            description: "Chaves extra (merge JSON), ex.: mercado, quartos.",
+          },
+          preferencias: {
+            type: "object",
+            description: "Preferências (merge JSON), ex.: horario manhã.",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
     id: "hub_registar_nota_lead",
     categoria: "registos",
     titulo: "Registar nota na linha do tempo",
@@ -141,12 +214,110 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  {
+    id: "hub_whatsapp_menu",
+    categoria: "cliente",
+    titulo: "Menu WhatsApp (botões, lista, enquete ou carrossel)",
+    descricao:
+      "Envia mensagem interactiva via UAZAPI ao número deste lead: botões, lista, enquete ou carrossel (rede finita OpenAPI: /send/menu e /send/carousel).",
+    recomendadoWhatsApp: true,
+    mistralFunction: {
+      name: "hub_whatsapp_menu",
+      description:
+        "Envia menu interactivo no WhatsApp desta conversa (UAZAPI). Use quando precisar de escolhas claras: botões (poucas opções), lista (muitas linhas), enquete (selecção múltipla) ou carrossel (cartões com imagem e botões). O número é o do lead; só em agentes modo canal WhatsApp.",
+      parameters: {
+        type: "object",
+        properties: {
+          tipo: {
+            type: "string",
+            enum: ["button", "list", "poll", "carousel"],
+            description:
+              "button — respostas rápidas; list — lista com secções (use linhas que começam com [Título] na doc UAZAPI); poll — enquete; carousel — opções em texto (choices) ou cartões com imagem (cartoes_carrossel + /send/carousel).",
+          },
+          texto: {
+            type: "string",
+            description: "Texto principal da mensagem (cabeçalho do menu).",
+          },
+          opcoes: {
+            type: "array",
+            description:
+              "Lista de choices (obrigatória para /send/menu). Formatos avançados de lista: ver OpenAPI UAZAPI (ex.: Título|id|subtítulo). Para carrossel só com cartoes_carrossel pode ser array vazio.",
+            items: { type: "string" },
+          },
+          rodape: {
+            type: "string",
+            description: "Texto de rodapé opcional (footerText).",
+          },
+          texto_botao_lista: {
+            type: "string",
+            description: "Rótulo do botão que abre a lista (listButton); relevante para type list.",
+          },
+          max_opcoes_selecionaveis: {
+            type: "integer",
+            description: "Para enquetes: número máximo de opções que o utilizador pode escolher (selectableCount).",
+            minimum: 1,
+            maximum: 20,
+          },
+          url_imagem_botao: {
+            type: "string",
+            description: "URL da imagem em menus tipo button (imageButton).",
+          },
+          numero_destino: {
+            type: "string",
+            description: "Override opcional do número (DDI+…); por defeito usa telefone do lead no CRM.",
+          },
+          cartoes_carrossel: {
+            type: "array",
+            description:
+              "Se preenchido com tipo carousel, envia via POST /send/carousel (cartões com imagem e botões). Cada cartão: texto_cartao, url_imagem opcional, botoes [{ id, rotulo, tipo: REPLY|URL|COPY|CALL }].",
+            items: {
+              type: "object",
+              properties: {
+                texto_cartao: { type: "string", description: "Texto do cartão (pode ter quebras de linha)." },
+                url_imagem: { type: "string", description: "URL https da imagem do cartão." },
+                botoes: {
+                  type: "array",
+                  description: "Botões do cartão (máx. ~3 por cartão no WhatsApp).",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: {
+                        type: "string",
+                        description: "Valor enviado no chat (REPLY), URL completa (URL), texto a copiar (COPY), telefone (CALL).",
+                      },
+                      rotulo: { type: "string", description: "Texto visível no botão." },
+                      tipo: {
+                        type: "string",
+                        enum: ["REPLY", "URL", "COPY", "CALL"],
+                        description: "REPLY — resposta; URL — abrir link; COPY — copiar; CALL — telefonar.",
+                      },
+                    },
+                    required: ["id", "rotulo", "tipo"],
+                  },
+                },
+              },
+              required: ["texto_cartao", "botoes"],
+            },
+          },
+        },
+        required: ["tipo", "texto"],
+        additionalProperties: false,
+      },
+    },
+  },
 ] as const;
 
 const IDS = new Set(HUB_AGENTE_FERRAMENTAS_CATALOGO.map((t) => t.id));
 
 export function isHubAgenteFerramentaId(v: string): v is HubAgenteFerramentaId {
   return IDS.has(v as HubAgenteFerramentaId);
+}
+
+/** Aceita boolean JSONB e valores às vezes devolvidos como string/número (APIs legadas, cópias). */
+function coalesceFerramentaBool(v: unknown): boolean | undefined {
+  if (v === true || v === "true" || v === 1 || v === "1") return true;
+  if (v === false || v === "false" || v === 0 || v === "0") return false;
+  return undefined;
 }
 
 /** Mapa id → ativo; chaves desconhecidas são ignoradas. */
@@ -156,7 +327,8 @@ export function normalizarUsoFerramentasIa(raw: unknown): Partial<Record<HubAgen
   const out: Partial<Record<HubAgenteFerramentaId, boolean>> = {};
   for (const [k, v] of Object.entries(o)) {
     if (!isHubAgenteFerramentaId(k)) continue;
-    if (typeof v === "boolean") out[k] = v;
+    const b = coalesceFerramentaBool(v);
+    if (b !== undefined) out[k] = b;
   }
   return out;
 }
@@ -173,6 +345,62 @@ export function ferramentasMistralParaAgente(
   return out;
 }
 
+/** Chaves `hub_custom_*` no JSON de uso (activação por agente). */
+export function extrairUsoFerramentasCustomIa(raw: unknown): Record<string, boolean> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const o = raw as Record<string, unknown>;
+  const out: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(o)) {
+    if (!k.startsWith("hub_custom_")) continue;
+    const b = coalesceFerramentaBool(v);
+    if (b !== undefined) out[k] = b;
+  }
+  return out;
+}
+
+/** Mapa estável para builtins + booleans para ferramentas custom preservadas do `raw`. */
+export function mergeUsoFerramentasComPadraoPreservandoCustom(raw: unknown): Record<string, boolean> {
+  const base = mergeUsoFerramentasComPadrao(normalizarUsoFerramentasIa(raw));
+  const custom = extrairUsoFerramentasCustomIa(raw);
+  return { ...base, ...custom };
+}
+
+export type FerramentaCustomDefMistral = {
+  ferramenta_key: string;
+  descricao_modelo: string;
+  parametros_schema: Record<string, unknown>;
+};
+
+/** Lista completa para Mistral: catálogo fixo + linhas custom do tenant. */
+export function ferramentasMistralListaParaAgente(
+  uso: Record<string, boolean>,
+  customDefs: FerramentaCustomDefMistral[]
+): MistralChatToolDefinition[] {
+  const out: MistralChatToolDefinition[] = [];
+  for (const item of HUB_AGENTE_FERRAMENTAS_CATALOGO) {
+    if (uso[item.id] === true) {
+      out.push({ type: "function", function: item.mistralFunction });
+    }
+  }
+  for (const c of customDefs) {
+    if (uso[c.ferramenta_key] === true) {
+      out.push({
+        type: "function",
+        function: {
+          name: c.ferramenta_key,
+          description: c.descricao_modelo,
+          parameters: c.parametros_schema,
+        },
+      });
+    }
+  }
+  return out;
+}
+
+export function catalogoBuiltinPorId(id: HubAgenteFerramentaId): HubAgenteFerramentaCatalogo | undefined {
+  return HUB_AGENTE_FERRAMENTAS_CATALOGO.find((t) => t.id === id);
+}
+
 export function mergeUsoFerramentasComPadrao(
   uso: Partial<Record<HubAgenteFerramentaId, boolean>>
 ): Record<HubAgenteFerramentaId, boolean> {
@@ -182,9 +410,11 @@ export function mergeUsoFerramentasComPadrao(
     hub_metricas_escritorio: false,
     hub_relatorio_html_simples: false,
     hub_registar_nota_lead: false,
+    hub_whatsapp_menu: false,
+    hub_atualizar_lead: false,
   };
   for (const id of Object.keys(base) as HubAgenteFerramentaId[]) {
-    if (uso[id] === true) base[id] = true;
+    if (coalesceFerramentaBool(uso[id]) === true) base[id] = true;
   }
   return base;
 }
@@ -193,4 +423,17 @@ export const HUB_FERRAMENTA_SECAO_LABEL: Record<HubFerramentaCategoria, string> 
   cliente: "Dados do cliente nesta conversa",
   analise: "Análise e partilha",
   registos: "Registos no CRM",
+};
+
+/** Efeito em dados ou storage (UI / CRM — catálogo fixo no código). */
+export type HubFerramentaNivelAcesso = "leitura" | "escrita";
+
+export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaNivelAcesso> = {
+  hub_lead_resumo: "leitura",
+  hub_lead_memorias: "leitura",
+  hub_metricas_escritorio: "leitura",
+  hub_relatorio_html_simples: "escrita",
+  hub_registar_nota_lead: "escrita",
+  hub_whatsapp_menu: "escrita",
+  hub_atualizar_lead: "escrita",
 };

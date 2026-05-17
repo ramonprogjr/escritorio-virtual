@@ -2,6 +2,8 @@
  * Sugestão de linha em `hub_cargos_catalogo` via Mistral, com contexto dos cargos / mercados já existentes no Hub.
  */
 
+import { documentoConceitoTaxonomiaParaIa } from "@/lib/hub/documento-conceito-catalogo";
+
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
 
 export type CargoCatalogoContextRow = {
@@ -100,7 +102,9 @@ Regras:
 - Listas curtas e acionáveis (máx. **12** itens cada em pode_fazer / nao_pode_fazer).
 - \`prompt_template\`: base de system prompt para agentes criados com este cargo (parágrafos claros; pode usar bullets com "-").
 - \`descricao\`: texto longo para documentação interna do papel (responsabilidades, limites).
-- Alinha segmento/especialidade ao **padrão já observado** no contexto quando possível (Marketing, Comercial, Operações, etc.).`;
+- Alinha segmento/especialidade ao **padrão já observado** no contexto quando possível — mas **sem violar** o documento conceito abaixo.
+
+${documentoConceitoTaxonomiaParaIa()}`;
 
 export async function sugerirCargoCatalogoComMistral(opts: {
   tituloPedido: string;

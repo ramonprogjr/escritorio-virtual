@@ -4,9 +4,9 @@ import { runPlaybookPipeline } from "@/lib/playbook/orchestrate";
 import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
 import { validateAndNormalizeCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
 import {
-  modeloAltoValorForHubInsert,
-  modeloCriticoForHubInsert,
-  modeloPadraoForHubInsert,
+  forceMistralModeloTripleForDb,
+  isChkModeloValidoConstraintMessage,
+  modeloColumnsForAgenteIdentidadeInsert,
 } from "@/lib/ia/hub-model-defaults";
 import {
   CONHECIMENTO_TITULO_INSERT,
@@ -289,6 +289,8 @@ export async function POST(request: NextRequest) {
     .filter((x): x is string => x != null);
   const diasTexto = [...new Set(diasParsed)];
 
+  const modeloCols = modeloColumnsForAgenteIdentidadeInsert(cat as Record<string, unknown>);
+
   const row: Record<string, unknown> = {
     agente_slug,
     nome: nome.trim(),
@@ -299,9 +301,7 @@ export async function POST(request: NextRequest) {
     tom_voz: (tom_voz && String(tom_voz).trim()) || "profissional e cordial",
     estilo_comunicacao: (estilo_comunicacao && String(estilo_comunicacao).trim()) || "Direto",
     system_prompt_base: promptBase,
-    modelo_padrao: modeloPadraoForHubInsert(cat.modelo_padrao as string | undefined),
-    modelo_critico: modeloCriticoForHubInsert(cat.modelo_critico as string | undefined),
-    modelo_alto_valor: modeloAltoValorForHubInsert(cat.modelo_alto_valor as string | undefined),
+    ...modeloCols,
     pode_fazer: podeFazer,
     nao_pode_fazer: naoPode,
     sempre_dizer: [],
@@ -385,6 +385,36 @@ export async function POST(request: NextRequest) {
       .insert(rowInsert)
       .select()
       .single());
+  }
+
+  if (error && isChkModeloValidoConstraintMessage(error.message)) {
+    console.warn(
+      "[hub/agentes] chk_modelo_valido no insert — a forçar mistral nos três campos e a repetir (catálogo com formato estranho ou CHECK desalinhado)."
+    );
+    rowInsert = { ...rowInsert, ...forceMistralModeloTripleForDb() };
+    ({ data, error } = await supabase
+      .from("hub_agente_identidade")
+      .insert(rowInsert)
+      .select()
+      .single());
+
+    if (error && isTenantColumnMissing(error.message)) {
+      const { tenant_id, ...rowWithoutTenant } = rowInsert;
+      rowInsert = rowWithoutTenant;
+      ({ data, error } = await supabase
+        .from("hub_agente_identidade")
+        .insert(rowInsert)
+        .select()
+        .single());
+    }
+    if (error && isHubAgenteFerramentasColumnsMissing(error.message)) {
+      rowInsert = omitHubAgenteFerramentasMigrationKeys(rowInsert);
+      ({ data, error } = await supabase
+        .from("hub_agente_identidade")
+        .insert(rowInsert)
+        .select()
+        .single());
+    }
   }
 
   if (error) {

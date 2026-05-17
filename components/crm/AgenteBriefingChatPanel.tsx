@@ -208,8 +208,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
             </div>
             <p style={{ fontSize: 10, color: "#6e7681", margin: "8px 0 0", lineHeight: 1.45 }}>
               {modoChat === "briefing_interno"
-                ? "Visão de operação: ciclos, logs e ações (dados reais, só leitura) — não simula conversa com lead."
-                : "Simulação de prompts internos: identidade + conhecimento + regras do hub para validar o comportamento do copiloto."}
+                ? "Visão de operação: extractos reais (ciclos, logs, acções). Sem invocar ferramentas Hub — isso só na conversa ao vivo com lead em sessão."
+                : "Simulação de texto com o mesmo prompt de produção; sem lead nem chamadas a ferramentas. Teste de tom e respostas, não de integrações."}
             </p>
           </div>
           <button
@@ -257,14 +257,14 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               <p style={{ color: "#8b949e", fontSize: 13, lineHeight: 1.55, maxWidth: 640 }}>
                 {modoChat === "briefing_interno" ? (
                   <>
-                    Envie uma mensagem: o <strong style={{ color: "#aebccf" }}>funcionário IA</strong> analisa{" "}
-                    <strong style={{ color: "#aebccf" }}>ciclos, logs e ações</strong> reais do hub (somente leitura).
-                    Útil para alinhar o que corre nos bastidores com o papel deste colaborador digital.
+                    Envie uma mensagem: o <strong style={{ color: "#aebccf" }}>funcionário IA</strong> interpreta{" "}
+                    <strong style={{ color: "#aebccf" }}>ciclos, logs e ações</strong> já registados no hub. Estas respostas
+                    <strong style={{ color: "#aebccf" }}> não usam</strong> as ferramentas Mistral (resumo de lead, notas,
+                    etc.) — essas só na <strong style={{ color: "#aebccf" }}>engine com lead</strong> no canal.
                   </>
                 ) : (
                   <>
-                    Faça uma simulação operacional: o funcionário IA usa o mesmo bloco de instruções
-                    (playbook / conhecimento / regras), sem o painel interno de logs.
+                    Simule conversa com cliente usando identity + conhecimento + regras. É <strong style={{ color: "#aebccf" }}>só texto</strong> — sem ferramentas nem gravações reais; valide tom e limites antes de ligar o WhatsApp.
                   </>
                 )}
               </p>

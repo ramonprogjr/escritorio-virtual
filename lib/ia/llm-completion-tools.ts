@@ -41,7 +41,7 @@ export async function completarChatComFerramentasMistral(params: {
   let tokensEntrada = 0;
   let tokensSaida = 0;
 
-  let systemExtra = `\n\n═══ FERRAMENTAS ═══\nTem ferramentas para ler dados do CRM. Use-as quando precisar de factos sobre o lead; não invente estados ou valores.`;
+  let systemExtra = `\n\n═══ FERRAMENTAS ═══\nTem ferramentas para ler e actualizar o CRM desta conversa. Use hub_lead_resumo antes de afirmar estágio ou valores; use hub_atualizar_lead quando o cliente der dados novos (orçamento, interesse, follow-up); não invente factos não confirmados.`;
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const out = await mistralChatCompletionToolRound({
