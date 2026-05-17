@@ -9,9 +9,12 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "smoke:playbook": "node scripts/smoke-agent-playbook.cjs"
+    "smoke:playbook": "node scripts/smoke-agent-playbook.cjs",
+    "checklist:hub": "node scripts/verify-hub-checklist.cjs",
+    "smoke:whatsapp": "node scripts/smoke-whatsapp-webhook.cjs"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.16",
     "@anthropic-ai/sdk": "^0.92.0",
     "@supabase/supabase-js": "^2.105.1",
     "lucide-react": "^0.468.0",

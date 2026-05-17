@@ -5,9 +5,15 @@
 #   NEXT_PUBLIC_SUPABASE_URL
 #   NEXT_PUBLIC_SUPABASE_ANON_KEY
 #   SUPABASE_SERVICE_ROLE_KEY
-#   NEXT_PUBLIC_APP_URL          — public origin (HTTPS); dispatch route uses it for internal fetch to /api/ciclos/*
+#   NEXT_PUBLIC_APP_URL          — https://<seu-servico>.onrender.com (sem barra final)
 #   CRON_SECRET                   — Bearer token for /api/cron/dispatch-ciclos (see lib/cron-auth.ts)
-# Add other keys from `.env.example` as needed (INTERNAL_API_KEY, WhatsApp, etc.).
+#   MISTRAL_API_KEY               — IA no webhook WhatsApp e briefing
+#   UAZAPI_BASE_URL               — ex. https://smartvenda.uazapi.com
+#   UAZAPI_ADMIN_TOKEN            — criar instância / sync webhook na ficha do agente
+#   WEBHOOK_SECRET                — mesmo valor no header da UAZAPI (x-webhook-secret ou Bearer)
+#   DEFAULT_TENANT_ID             — 00000000-0000-4000-8000-000000000001
+# Supabase: aplicar migrações (incl. 20260605120000_ensure_hub_leads_crm_tenant.sql) antes do go-live.
+# WhatsApp: após deploy, abrir agente → QR/pareamento (sincroniza webhook para NEXT_PUBLIC_APP_URL/api/whatsapp/webhook).
 #
 # --- Cron Job (`dispatch-ciclos-cron`) ---
 # Minimal Docker image (`curl`) runs `scripts/render-dispatch-ciclos.sh` every schedule tick (UTC).
@@ -38,6 +44,18 @@ services:
         sync: false
       - key: CRON_SECRET
         sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: UAZAPI_BASE_URL
+        sync: false
+      - key: UAZAPI_ADMIN_TOKEN
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+      - key: WEBHOOK_SECRET_HEADER
+        value: x-webhook-secret
+      - key: DEFAULT_TENANT_ID
+        value: "00000000-0000-4000-8000-000000000001"
 
   - type: cron
     name: dispatch-ciclos-cron

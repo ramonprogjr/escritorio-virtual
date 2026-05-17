@@ -246,6 +246,9 @@ export async function POST(
       const st = statusFromPayloadUazapi(out.data);
       await persistUazapi({ uazapi_connection_status: st });
 
+      const webhookSync =
+        st === "connected" ? await syncWebhookDaInstancia(request, tokenInst) : { ok: true as const };
+
       const inst = pickInstanceFromResponse(out.data);
       const qrRaw = extrairQrcodeDePayloadUazapi(out.data);
       const qrcode = qrRaw ? normalizarSrcImagemQrUazapi(qrRaw) : undefined;
@@ -257,6 +260,9 @@ export async function POST(
         ...(qrcode ? { qrcode } : {}),
         ...(paircode ? { paircode } : {}),
         profileName: typeof inst?.profileName === "string" ? inst.profileName : undefined,
+        ...(webhookSync.ok
+          ? {}
+          : { webhook_warning: `Estado actualizado, mas webhook não sincronizado: ${webhookSync.error}` }),
       });
     }
 
