@@ -12,7 +12,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * | PAR     | Parceiro rede   | hub_parceiros    | Formulário / convite parceiro            |
  * | IMO     | Imóvel          | hub_imoveis      | Cadastro de imóvel                       |
  *
- * Cadeia típica: PES → LED → NEG (parceiro: PAR; PJ também EMP).
+ * Cadeia típica (PDF Pt.20): PES → LED → NEG → PAR; PJ também EMP; imóvel IMO.
+ * Busca unificada: GET /api/crm/rastreio?codigo=
  */
 export const HUB_PREFIXO_CODIGO = {
   pessoa: "PES",

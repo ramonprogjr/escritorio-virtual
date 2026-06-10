@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   enriquecerPessoaDaDb,
   HUB_PESSOA_SELECT_CORE,
+  HUB_PESSOA_SELECT_LIST,
   type HubPessoaRow,
 } from "@/lib/crm/hub-pessoas-compat";
 import { isMissingPgColumn, isTenantFkError } from "@/lib/tenant-default";
@@ -43,15 +44,20 @@ export async function insertHubPessoaCrm(
     payload = { ...baseRow, tenant_id: tenantId };
   }
 
+  let selectCols = HUB_PESSOA_SELECT_LIST;
+
   for (let attempt = 0; attempt < HUB_PESSOA_OPTIONAL_INSERT_COLUMNS.length + 5; attempt++) {
     const { data, error } = await supabase
       .from("hub_pessoas")
       .insert(payload)
-      .select(HUB_PESSOA_SELECT_CORE)
+      .select(selectCols)
       .single();
 
     if (!error && data) {
-      return { data: enriquecerPessoaDaDb(data as Record<string, unknown>), error: null };
+      return {
+        data: enriquecerPessoaDaDb(data as unknown as Record<string, unknown>),
+        error: null,
+      };
     }
 
     if (isTenantFkError(error)) {
@@ -74,6 +80,11 @@ export async function insertHubPessoaCrm(
     if (missing) {
       delete (baseRow as Record<string, unknown>)[missing];
       payload = withTenant ? { ...baseRow, tenant_id: tenantId } : { ...baseRow };
+      continue;
+    }
+
+    if (selectCols !== HUB_PESSOA_SELECT_CORE && isMissingPgColumn(error)) {
+      selectCols = HUB_PESSOA_SELECT_CORE;
       continue;
     }
 

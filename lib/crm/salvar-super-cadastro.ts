@@ -21,6 +21,12 @@ import { AREA_ATUACAO_OUTRO_VALUE } from "@/lib/crm/areas-atuacao";
 import { resolverTelefoneCadastro } from "@/lib/crm/cadastro-flexivel";
 import { documentoCompleto } from "@/lib/crm/documento-brasil";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
+import { enriquecerLeadComPipeline } from "@/lib/crm/resolve-pipeline";
+import {
+  metadataRoutingLead,
+  resolverAgenteResponsavelLead,
+} from "@/lib/crm/lead-routing-rules";
+import { criarVinculoPessoaEmpresa } from "@/lib/crm/pessoa-empresa-vinculo";
 import { isMissingPgColumn, isTenantFkError } from "@/lib/tenant-default";
 
 export type SalvarSuperCadastroResult =
@@ -115,7 +121,13 @@ async function insertLead(
   }
 ): Promise<{ id: string; codigo: string } | null> {
   const mercadoPrincipal = params.mercados[0] ?? "IMB";
-  const row = await prepararRowHubLeadInsert(
+  const agente = resolverAgenteResponsavelLead({
+    origem: params.origem,
+    origem_cadastro: "super_cadastro",
+    mercados: params.mercados,
+    indicado_por: params.indicado_por,
+  });
+  const baseRow = await prepararRowHubLeadInsert(
     supabase,
     {
       nome: params.nome.slice(0, 200),
@@ -125,7 +137,7 @@ async function insertLead(
       estagio: "novo",
       score: 10,
       valor_estimado: 0,
-      agente_responsavel: "sdr",
+      agente_responsavel: agente,
       pessoa_id: params.pessoa_id,
       tenant_id: params.tenant_id,
       metadata: {
@@ -133,10 +145,16 @@ async function insertLead(
         mercado_principal: mercadoPrincipal,
         origem_cadastro: "super_cadastro",
         ...(params.indicado_por ? { indicado_por: params.indicado_por } : {}),
+        ...metadataRoutingLead({
+          origem: params.origem,
+          indicado_por: params.indicado_por,
+          mercados: params.mercados,
+        }),
       },
     },
     { pessoa_codigo: params.pessoa_codigo }
   );
+  const row = await enriquecerLeadComPipeline(supabase, baseRow, mercadoPrincipal);
 
   let payload: Record<string, unknown> = { ...row };
   let selectCols = "id, codigo";
@@ -167,6 +185,12 @@ async function insertLead(
       const { codigo: _c, ...semCodigo } = payload;
       payload = semCodigo;
       selectCols = "id";
+      continue;
+    }
+
+    if (isMissingPgColumn(error, "pipeline_id")) {
+      delete payload.pipeline_id;
+      delete payload.estagio_funil;
       continue;
     }
 
@@ -358,7 +382,21 @@ export async function salvarSuperCadastro(
 
   const leadId = leadPack.leadId;
   const codigoLead = leadPack.codigoLead;
-  const aviso = leadPack.aviso;
+  let avisoFinal = leadPack.aviso;
+
+  if (empresaId && pessoaId) {
+    const vinc = await criarVinculoPessoaEmpresa(supabase, {
+      pessoa_id: pessoaId,
+      empresa_id: empresaId,
+      cargo: "Representante legal",
+      principal: true,
+      tenant_id: opts.tenantId,
+    });
+    if (!vinc.ok) {
+      const msg = vinc.error || "Vínculo pessoa-empresa não criado.";
+      avisoFinal = avisoFinal ? `${avisoFinal} ${msg}` : msg;
+    }
+  }
 
   return {
     ok: true,
@@ -368,6 +406,6 @@ export async function salvarSuperCadastro(
     codigo_pessoa: codigoPessoa,
     codigo_lead: codigoLead,
     pessoa: insPessoa.data,
-    aviso,
+    aviso: avisoFinal,
   };
 }

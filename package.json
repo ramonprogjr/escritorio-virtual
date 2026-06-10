@@ -22,6 +22,7 @@
     "validar:whatsapp:fix": "node scripts/validar-agentes-whatsapp.cjs --fix",
     "provision:user": "node scripts/provision-app-user.mjs",
     "verify:regression": "node scripts/verify-regression-plan.mjs",
+    "verify:crm-golive": "node scripts/verify-crm-golive.mjs",
     "open:dev": "node scripts/open-dev-url.cjs"
   },
   "dependencies": {

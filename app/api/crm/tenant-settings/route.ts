@@ -7,6 +7,8 @@ export type TenantSettings = {
   horario_inicio?: string;
   horario_fim?: string;
   timezone?: string;
+  distribuicao_auto?: boolean;
+  distribuicao_validacao_horas?: number;
 };
 
 export async function GET(request: NextRequest) {
@@ -40,10 +42,27 @@ export async function PATCH(request: NextRequest) {
   const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const body = (await request.json().catch(() => ({}))) as TenantSettings;
 
+  const { data: atual } = await crmDb()
+    .from("hub_tenants")
+    .select("settings")
+    .eq("id", tenantId)
+    .maybeSingle();
+
+  const prev = (atual?.settings as TenantSettings) ?? {};
+
   const settings: TenantSettings = {
-    horario_inicio: body.horario_inicio?.trim() || "08:00",
-    horario_fim: body.horario_fim?.trim() || "18:00",
-    timezone: body.timezone?.trim() || "America/Sao_Paulo",
+    ...prev,
+    horario_inicio: body.horario_inicio?.trim() || prev.horario_inicio || "08:00",
+    horario_fim: body.horario_fim?.trim() || prev.horario_fim || "18:00",
+    timezone: body.timezone?.trim() || prev.timezone || "America/Sao_Paulo",
+    distribuicao_auto:
+      typeof body.distribuicao_auto === "boolean"
+        ? body.distribuicao_auto
+        : prev.distribuicao_auto ?? true,
+    distribuicao_validacao_horas:
+      typeof body.distribuicao_validacao_horas === "number"
+        ? body.distribuicao_validacao_horas
+        : prev.distribuicao_validacao_horas ?? 24,
   };
 
   const { data, error } = await crmDb()

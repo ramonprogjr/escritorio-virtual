@@ -1,9 +1,10 @@
+import { encodeHttpHeaderValue } from "@/lib/http-header-utf8";
+
 /**
  * Cabeçalho esperado pelo `proxy.ts` para rotas /api internas (alternativa: sessão Supabase no browser).
  * No cliente use NEXT_PUBLIC_INTERNAL_API_KEY (mesmo valor que INTERNAL_API_KEY).
  */
-export function internalApiHeaders(): Record<string, string> {
-  const key =
+export function internalApiHeaders(): Record<string, string> {  const key =
     typeof window !== "undefined"
       ? process.env.NEXT_PUBLIC_INTERNAL_API_KEY
       : process.env.INTERNAL_API_KEY;
@@ -26,6 +27,6 @@ export function internalApiHeadersWithActor(actor?: {
   const h = internalApiHeaders();
   if (actor?.id) h["x-user-id"] = actor.id;
   if (actor?.email) h["x-user-email"] = actor.email;
-  if (actor?.name) h["x-user-name"] = actor.name;
+  if (actor?.name) h["x-user-name"] = encodeHttpHeaderValue(actor.name);
   return h;
 }

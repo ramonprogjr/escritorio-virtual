@@ -12,6 +12,7 @@ import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { ESTAGIOS_FALLBACK_UI } from "@/lib/crm/pipeline-defaults";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { LeadEncaminharModal } from "@/components/crm/leads/LeadEncaminharModal";
+import { EncaminhamentosPendentesPanel } from "@/components/crm/leads/EncaminhamentosPendentesPanel";
 
 const LeadRapidoSideover = dynamic(
   () =>
@@ -592,6 +593,10 @@ export default function LeadsPage() {
           </button>
         </div>
       )}
+
+      <div className="mx-4 mt-3">
+        <EncaminhamentosPendentesPanel onChanged={() => void carregar()} />
+      </div>
 
       {pipelineTabs}
 

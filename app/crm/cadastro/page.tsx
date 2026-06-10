@@ -1,10 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { PARCEIRO_LINK_TOKEN_REDE } from "@/lib/crm/parceiro-link-publico";
 import type { User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
@@ -49,6 +47,13 @@ const CadastroEmpresaSideover = dynamic(
   () =>
     import("@/components/crm/cadastro/CadastroEmpresaSideover").then((m) => ({
       default: m.CadastroEmpresaSideover,
+    })),
+  { ssr: false }
+);
+const ParceiroLinkWizard = dynamic(
+  () =>
+    import("@/components/crm/parceiros/ParceiroLinkWizard").then((m) => ({
+      default: m.ParceiroLinkWizard,
     })),
   { ssr: false }
 );
@@ -116,6 +121,7 @@ export default function CadastroPage() {
   const [erroMassa, setErroMassa] = useState("");
   const [sucessoCadastro, setSucessoCadastro] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [conviteWizardOpen, setConviteWizardOpen] = useState(false);
   const [tipoWizard, setTipoWizard] = useState<"PF" | "PJ">("PF");
 
   const [contactoId, setContactoId] = useState<string | null>(null);
@@ -154,6 +160,20 @@ export default function CadastroPage() {
   const pessoasCarregando = isCrmListInitialLoad(pessoasQuery);
   const empresasCarregando = isCrmListInitialLoad(empresasQuery);
 
+  const erroListaPessoas =
+    pessoasQuery.isError
+      ? pessoasQuery.error instanceof Error
+        ? pessoasQuery.error.message
+        : "Não foi possível carregar a lista de contatos."
+      : null;
+
+  const erroListaEmpresas =
+    empresasQuery.isError
+      ? empresasQuery.error instanceof Error
+        ? empresasQuery.error.message
+        : "Não foi possível carregar a lista de empresas."
+      : null;
+
   const actor = actorFromUser(authUser);
 
   useEffect(() => {
@@ -190,6 +210,16 @@ export default function CadastroPage() {
     let dest = convidar ? "/crm/parceiros?convidar=1" : "/crm/parceiros";
     if (q) dest += `${dest.includes("?") ? "&" : "?"}${q}`;
     router.replace(dest);
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    if (searchParams.get("convidar") === "1") {
+      setConviteWizardOpen(true);
+      const p = new URLSearchParams(searchParams.toString());
+      p.delete("convidar");
+      const q = p.toString();
+      router.replace(q ? `/crm/cadastro?${q}` : "/crm/cadastro");
+    }
   }, [searchParams, router]);
 
   function setRegisto(id: RegistoId) {
@@ -319,10 +349,9 @@ export default function CadastroPage() {
   const headerActions = useMemo(
     () => (
       <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href={`/parceiro/cadastro/${PARCEIRO_LINK_TOKEN_REDE}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => setConviteWizardOpen(true)}
           style={{
             background: "#003b26",
             color: "#c9a24a",
@@ -332,12 +361,10 @@ export default function CadastroPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: "pointer",
-            textDecoration: "none",
-            display: "inline-block",
           }}
         >
           + Convidar
-        </Link>
+        </button>
         <button
           type="button"
           onClick={() => {
@@ -506,20 +533,17 @@ export default function CadastroPage() {
       : "Cadastro gravado com sucesso.";
     if (result?.aviso) msg += ` ${result.aviso}`;
     setSucessoCadastro(msg);
-    setBusca("");
 
     if (result?.pessoa && filtroRegisto === "contactos") {
       prependPessoaListaCache(queryClient, pessoasFiltros, result.pessoa as HubPessoaRow);
-    } else if (filtroRegisto === "empresas") {
-      void queryClient.invalidateQueries({
-        queryKey: [...crmQueryKeys.all, "empresas"],
-        refetchType: "none",
-      });
+    }
+
+    setBusca("");
+
+    if (filtroRegisto === "empresas") {
+      void queryClient.invalidateQueries({ queryKey: [...crmQueryKeys.all, "empresas"] });
     } else {
-      void queryClient.invalidateQueries({
-        queryKey: [...crmQueryKeys.all, "pessoas"],
-        refetchType: "none",
-      });
+      void queryClient.invalidateQueries({ queryKey: [...crmQueryKeys.all, "pessoas"] });
     }
   }
 
@@ -654,10 +678,22 @@ export default function CadastroPage() {
 
         {filtroRegisto === "contactos" && (
           <>
+            {erroListaPessoas && (
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 px-4 py-3">
+                <p className="text-sm text-[#fca5a5]">{erroListaPessoas}</p>
+                <button
+                  type="button"
+                  onClick={() => void pessoasQuery.refetch()}
+                  className="min-h-9 rounded-lg border border-[#EF4444]/50 px-4 py-1.5 text-xs font-bold text-[#fca5a5] hover:bg-[#EF4444]/15"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            )}
             {pessoasCarregando && (
               <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando…</p>
             )}
-            {!pessoasCarregando && pessoas.length === 0 && (
+            {!erroListaPessoas && !pessoasCarregando && pessoas.length === 0 && (
               <EmptyState message="Nenhum cadastro. Use «Novo cadastro» ou ajuste os filtros." />
             )}
             {!pessoasCarregando && pessoas.length > 0 && (
@@ -693,10 +729,22 @@ export default function CadastroPage() {
 
         {filtroRegisto === "empresas" && (
           <>
+            {erroListaEmpresas && (
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 px-4 py-3">
+                <p className="text-sm text-[#fca5a5]">{erroListaEmpresas}</p>
+                <button
+                  type="button"
+                  onClick={() => void empresasQuery.refetch()}
+                  className="min-h-9 rounded-lg border border-[#EF4444]/50 px-4 py-1.5 text-xs font-bold text-[#fca5a5] hover:bg-[#EF4444]/15"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            )}
             {empresasCarregando && (
               <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando…</p>
             )}
-            {!empresasCarregando && empresas.length === 0 && (
+            {!erroListaEmpresas && !empresasCarregando && empresas.length === 0 && (
               <EmptyState message="Nenhuma empresa. Use «Novo cadastro» (PJ) ou ajuste os filtros." />
             )}
             {!empresasCarregando && empresas.length > 0 && (
@@ -780,6 +828,11 @@ export default function CadastroPage() {
           onBackToView={() => setEmpresaMode("view")}
         />
       )}
+
+      <ParceiroLinkWizard
+        open={conviteWizardOpen}
+        onClose={() => setConviteWizardOpen(false)}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
 } from "@/lib/crm/registrar-auditoria-crm";
 import { isMissingPgColumn } from "@/lib/tenant-default";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
+import { validarCnpjEmpresaDisponivelPatch } from "@/lib/crm/validar-documento-server";
 
 const EMPRESA_SELECT =
   "id, codigo, razao_social, nome_fantasia, cnpj, email, telefone, segmento, prefixo_mercado, cep, logradouro, numero, complemento, bairro, cidade, estado, ativo, acesso_habilitado, acesso_habilitado_em, criado_em, atualizado_em";
@@ -137,6 +138,15 @@ export async function PATCH(
   ] as const;
   for (const key of textFields) {
     if (key in body && body[key] != null) updates[key] = String(body[key]).trim();
+  }
+
+  if ("cnpj" in body) {
+    const cnpjCheck = await validarCnpjEmpresaDisponivelPatch(db(), body.cnpj as string, id);
+    if (!cnpjCheck.ok) {
+      return NextResponse.json({ error: cnpjCheck.error }, { status: 409 });
+    }
+    if (cnpjCheck.cnpj) updates.cnpj = cnpjCheck.cnpj;
+    else delete updates.cnpj;
   }
 
   if (typeof body.acesso_habilitado === "boolean") {

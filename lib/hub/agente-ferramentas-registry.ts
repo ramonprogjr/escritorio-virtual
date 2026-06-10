@@ -15,7 +15,8 @@ export type HubAgenteFerramentaId =
   | "hub_relatorio_html_simples"
   | "hub_registar_nota_lead"
   | "hub_whatsapp_menu"
-  | "hub_atualizar_lead";
+  | "hub_atualizar_lead"
+  | "hub_crm_criar_cadastro";
 
 export type HubAgenteFerramentaCatalogo = {
   id: HubAgenteFerramentaId;
@@ -211,6 +212,35 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
             description: "Preferências (merge JSON), ex.: horario manhã.",
           },
         },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_crm_criar_cadastro",
+    categoria: "registos",
+    titulo: "Criar cadastro CRM (PES + LED)",
+    descricao:
+      "Cria pessoa e lead no CRM após qualificação mínima. Só activo com CRM_IA_AUTO_CADASTRO. Não duplica telefone.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_crm_criar_cadastro",
+      description:
+        "Cria cadastro permanente (PES) e lead (LED) no CRM quando o contacto ainda não existe. Requer nome e telefone. Respeita duplicidade. Só disponível se a flag CRM_IA_AUTO_CADASTRO estiver ligada.",
+      parameters: {
+        type: "object",
+        properties: {
+          nome: { type: "string", description: "Nome completo do contacto." },
+          telefone: { type: "string", description: "Telefone com DDD (preferir o da sessão WhatsApp)." },
+          tipo_pessoa: { type: "string", enum: ["PF", "PJ"], description: "PF por defeito." },
+          mercado: {
+            type: "string",
+            description: "Sigla de mercado (IMB, ARQ, RFM…). Omita IMB.",
+          },
+          origem: { type: "string", description: "Origem do lead (whatsapp, site…)." },
+          email: { type: "string", description: "E-mail opcional." },
+        },
+        required: ["nome", "telefone"],
         additionalProperties: false,
       },
     },
@@ -438,6 +468,7 @@ export function mergeUsoFerramentasComPadrao(
     hub_registar_nota_lead: false,
     hub_whatsapp_menu: false,
     hub_atualizar_lead: false,
+    hub_crm_criar_cadastro: false,
   };
   for (const id of Object.keys(base) as HubAgenteFerramentaId[]) {
     if (coalesceFerramentaBool(uso[id]) === true) base[id] = true;
@@ -482,4 +513,5 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_registar_nota_lead: "escrita",
   hub_whatsapp_menu: "escrita",
   hub_atualizar_lead: "escrita",
+  hub_crm_criar_cadastro: "escrita",
 };

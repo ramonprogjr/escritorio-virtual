@@ -42,6 +42,7 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_registar_nota_lead: StickyNote,
   hub_whatsapp_menu: ListOrdered,
   hub_atualizar_lead: UserPen,
+  hub_crm_criar_cadastro: UserRound,
 };
 
 function ToggleSwitch({

@@ -1,0 +1,170 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { persistirParceiroNoLead } from "@/lib/crm/lead-parceiro-metadata";
+import { uazapiSendText } from "@/lib/whatsapp/uazapi-send";
+import { defaultTenantId } from "@/lib/tenant-default";
+
+export type EnviarLeadParceiroResult =
+  | { ok: true; telefone: string }
+  | { ok: false; error: string };
+
+function appUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.trim()?.replace(/\/+$/, "") ||
+    "http://localhost:3001"
+  );
+}
+
+function parseCriterioEncaminhamento(raw: string | null | undefined): Record<string, unknown> {
+  if (!raw?.trim()) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (parsed && typeof parsed === "object") return parsed;
+  } catch {
+    return { parceiro_nome: raw };
+  }
+  return {};
+}
+
+/** Envia WhatsApp ao parceiro com dados do lead e actualiza métricas. */
+export async function enviarLeadAoParceiro(
+  supabase: SupabaseClient,
+  encaminhamentoId: string,
+  opts?: { parceiro_id?: string; instanceToken?: string | null }
+): Promise<EnviarLeadParceiroResult> {
+  const { data: enc, error: encErr } = await supabase
+    .from("hub_encaminhamentos")
+    .select("*")
+    .eq("id", encaminhamentoId)
+    .maybeSingle();
+
+  if (encErr || !enc) {
+    return { ok: false, error: encErr?.message || "Encaminhamento não encontrado." };
+  }
+
+  const criterio = parseCriterioEncaminhamento(enc.criterio_selecao as string | null);
+  const parceiroId = opts?.parceiro_id ?? (criterio.parceiro_id as string | undefined);
+  if (!parceiroId) {
+    return { ok: false, error: "Parceiro não definido no encaminhamento." };
+  }
+
+  const { data: parceiro } = await supabase
+    .from("hub_parceiros")
+    .select("id, nome, telefone, codigo, total_leads_recebidos, prefixo_mercado")
+    .eq("id", parceiroId)
+    .maybeSingle();
+
+  if (!parceiro?.telefone) {
+    return { ok: false, error: "Parceiro sem telefone cadastrado." };
+  }
+
+  const leadId = enc.lead_id as string;
+  const { data: lead } = await supabase
+    .from("hub_leads_crm")
+    .select("id, nome, telefone, codigo, metadata, estagio")
+    .eq("id", leadId)
+    .maybeSingle();
+
+  if (!lead) {
+    return { ok: false, error: "Lead não encontrado." };
+  }
+
+  const leadMeta =
+    lead.metadata && typeof lead.metadata === "object" && !Array.isArray(lead.metadata)
+      ? (lead.metadata as Record<string, unknown>)
+      : {};
+  const mercadosRaw = leadMeta.mercados;
+  const mercadoPrimeiro = Array.isArray(mercadosRaw) ? mercadosRaw[0] : undefined;
+  const mercado = String(leadMeta.mercado_principal ?? mercadoPrimeiro ?? "—");
+  const codigo = lead.codigo ? ` (${lead.codigo})` : "";
+  const portalUrl = `${appUrl()}/parceiro/dashboard`;
+
+  const texto = [
+    `🔔 *Novo lead para você!*`,
+    ``,
+    `*Nome:* ${lead.nome}${codigo}`,
+    `*Telefone:* ${lead.telefone || "—"}`,
+    `*Mercado:* ${mercado}`,
+    ``,
+    `Acesse o portal para aceitar ou recusar:`,
+    portalUrl,
+  ].join("\n");
+
+  if (process.env.WHATSAPP_DRY_RUN === "1") {
+    console.info("[distribuicao] DRY RUN parceiro:", parceiro.telefone, texto.slice(0, 80));
+  } else {
+    const send = await uazapiSendText(String(parceiro.telefone), texto, opts?.instanceToken);
+    if (!send.ok) {
+      return { ok: false, error: send.error || "Falha ao enviar WhatsApp ao parceiro." };
+    }
+  }
+
+  const now = new Date().toISOString();
+  await supabase
+    .from("hub_encaminhamentos")
+    .update({
+      status: "enviado",
+      enviado_em: now,
+      validado_humano: true,
+      encaminhado_para: parceiro.nome,
+    })
+    .eq("id", encaminhamentoId);
+
+  await supabase
+    .from("hub_leads_crm")
+    .update({
+      estagio: "encaminhado",
+      estagio_funil: "encaminhado",
+      atualizado_em: now,
+    })
+    .eq("id", leadId);
+
+  const prefixoMercado = String(parceiro.prefixo_mercado ?? leadMeta.mercado_principal ?? "IMB").toUpperCase();
+  const papel =
+    prefixoMercado === "ARQ" || prefixoMercado === "PRO"
+      ? ("arquiteto" as const)
+      : prefixoMercado === "IMB"
+        ? ("corretor" as const)
+        : ("parceiro" as const);
+
+  await persistirParceiroNoLead(supabase, leadId, {
+    parceiro_id: parceiroId,
+    parceiro_codigo: parceiro.codigo != null ? String(parceiro.codigo) : null,
+    parceiro_nome: parceiro.nome != null ? String(parceiro.nome) : null,
+    papel,
+  });
+
+  const total = (parceiro.total_leads_recebidos ?? 0) + 1;
+  await supabase
+    .from("hub_parceiros")
+    .update({ total_leads_recebidos: total, atualizado_em: now })
+    .eq("id", parceiroId);
+
+  return { ok: true, telefone: String(parceiro.telefone) };
+}
+
+/** Aprova encaminhamento sugerido pela IA e envia ao parceiro. */
+export async function aprovarEEnviarEncaminhamento(
+  supabase: SupabaseClient,
+  encaminhamentoId: string,
+  opts?: { parceiro_id?: string; instanceToken?: string | null }
+): Promise<EnviarLeadParceiroResult> {
+  const { data: enc } = await supabase
+    .from("hub_encaminhamentos")
+    .select("status")
+    .eq("id", encaminhamentoId)
+    .maybeSingle();
+
+  if (!enc) return { ok: false, error: "Encaminhamento não encontrado." };
+
+  const status = String(enc.status ?? "");
+  if (status !== "aguardando_validacao" && status !== "sugerido_ia" && status !== "aprovado_envio") {
+    return { ok: false, error: `Status inválido para aprovação: ${status}` };
+  }
+
+  await supabase
+    .from("hub_encaminhamentos")
+    .update({ status: "aprovado_envio", validado_humano: true })
+    .eq("id", encaminhamentoId);
+
+  return enviarLeadAoParceiro(supabase, encaminhamentoId, opts);
+}
