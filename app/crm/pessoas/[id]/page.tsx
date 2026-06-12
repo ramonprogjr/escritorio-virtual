@@ -13,6 +13,8 @@ import {
   CadastroFichaTabs,
   type CadastroFichaTabId,
 } from "@/components/crm/cadastro/CadastroFichaTabs";
+import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFichaRelacionados";
+import { CadastroVinculosPessoaEmpresa } from "@/components/crm/cadastro/CadastroVinculosPessoaEmpresa";
 import Link from "next/link";
 
 type PessoaDetalhe = {
@@ -128,7 +130,7 @@ export default function PessoaDetalhePage() {
   }, [carregar]);
 
   useEffect(() => {
-    if (tab !== "vinculos" && tab !== "relacionados") return;
+    if (tab !== "relacionados") return;
     void (async () => {
       const res = await fetch(`/api/crm/pessoas/${encodeURIComponent(id)}/vinculos`, {
         headers: internalApiHeaders(),
@@ -352,82 +354,14 @@ export default function PessoaDetalhePage() {
             </>
           )}
           {tab === "vinculos" && (
-            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-              {(vinculos?.empresas ?? []).length === 0 ? (
-                <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhum vínculo com empresa.</li>
-              ) : (
-                vinculos?.empresas.map((e) => (
-                  <li
-                    key={e.empresa_id}
-                    style={{
-                      padding: "12px 0",
-                      borderBottom: "1px solid #30363d",
-                    }}
-                  >
-                    <Link
-                      href={`/crm/empresas/${e.empresa_id}`}
-                      style={{ color: "#c9a24a", fontWeight: 600, textDecoration: "none" }}
-                    >
-                      {e.codigo ? `${e.codigo} · ` : ""}
-                      {e.razao_social}
-                    </Link>
-                    {e.cargo ? (
-                      <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8b949e" }}>{e.cargo}</p>
-                    ) : null}
-                  </li>
-                ))
-              )}
-            </ul>
+            <CadastroVinculosPessoaEmpresa entityType="pessoa" entityId={id} variant="page" />
           )}
           {tab === "relacionados" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              <div>
-                <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#8b949e" }}>
-                  LEADS
-                </p>
-                <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                  {(vinculos?.leads ?? []).length === 0 ? (
-                    <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhum lead vinculado.</li>
-                  ) : (
-                    vinculos?.leads.map((l) => (
-                      <li key={l.id} style={{ padding: "8px 0", borderBottom: "1px solid #30363d" }}>
-                        <Link
-                          href={`/crm/leads/${l.id}`}
-                          style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
-                        >
-                          {l.nome}
-                        </Link>
-                        <span style={{ marginLeft: 8, fontSize: 11, color: "#8b949e" }}>
-                          {l.estagio}
-                        </span>
-                      </li>
-                    ))
-                  )}
-                </ul>
-              </div>
-              <div>
-                <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#8b949e" }}>
-                  NEGÓCIOS
-                </p>
-                <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                  {(vinculos?.negocios ?? []).length === 0 ? (
-                    <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhum negócio vinculado.</li>
-                  ) : (
-                    vinculos?.negocios.map((n) => (
-                      <li key={n.id} style={{ padding: "8px 0", borderBottom: "1px solid #30363d" }}>
-                        <Link
-                          href={`/crm/negocios?destaque=${n.id}`}
-                          style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
-                        >
-                          {n.codigo ? `${n.codigo} · ` : ""}
-                          {n.titulo}
-                        </Link>
-                      </li>
-                    ))
-                  )}
-                </ul>
-              </div>
-            </div>
+            <CadastroFichaRelacionados
+              leads={vinculos?.leads ?? []}
+              negocios={vinculos?.negocios ?? []}
+              variant="page"
+            />
           )}
         </CadastroFichaTabs>
       </div>

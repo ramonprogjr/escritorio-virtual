@@ -18,6 +18,11 @@ import {
 } from "@/lib/crm/sincronizar-contato-whatsapp";
 import { telefoneConversaId } from "@/lib/crm/isolamento-conversa-lead";
 import { garantirCodigoLead, prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
+import {
+  mercadoWhatsappParaPrefixo,
+  resolverAgenteResponsavelLead,
+} from "@/lib/crm/lead-routing-rules";
+import { enriquecerLeadComPipeline } from "@/lib/crm/resolve-pipeline";
 import { gerarCodigoPessoa } from "@/lib/crm/pessoa-cadastro";
 import { createWhatsappWebhookTrace } from "@/lib/observability/whatsapp-webhook-trace";
 import { dispararProcessamentoJobsWhatsapp } from "@/lib/whatsapp/trigger-job-processor";
@@ -241,7 +246,12 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
     };
   }
 
-  const agenteResponsavel = mercado === "imobiliario" || mercado === "arquitetura" ? "atendente" : "sdr";
+  const mercadoPrefix = mercadoWhatsappParaPrefixo(mercado);
+  const agenteResponsavel = resolverAgenteResponsavelLead({
+    origem: "whatsapp",
+    origem_cadastro: "whatsapp",
+    mercados: [mercadoPrefix],
+  });
 
   const nomeLead = pushNameParaNomeExibicao(nome) || `Lead ${tel.slice(-4)}`;
 
@@ -250,7 +260,7 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
       ? String(pessoa.codigo)
       : null;
 
-  const rowNovoLead = await prepararRowHubLeadInsert(
+  const baseRow = await prepararRowHubLeadInsert(
     supabase,
     {
       nome: nomeLead,
@@ -265,7 +275,10 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
       metadata: mergeMetadataWhatsapp(
         {
           mercado,
+          mercado_principal: mercadoPrefix,
+          mercados: [mercadoPrefix],
           fase_atendimento: "conversa_ia",
+          origem_cadastro: "whatsapp",
           primeira_mensagem: mensagem.slice(0, 200),
         },
         { telefone: tel, pushName: nome, mercado }
@@ -273,6 +286,8 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
     },
     { pessoa_codigo: pessoaCodigo }
   );
+
+  const rowNovoLead = await enriquecerLeadComPipeline(supabase, baseRow, mercadoPrefix);
 
   const { data: novoLead, error } = await supabase
     .from("hub_leads_crm")

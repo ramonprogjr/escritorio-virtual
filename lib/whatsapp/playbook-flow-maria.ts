@@ -444,6 +444,20 @@ async function atualizarLeadPlaybook(
     sucesso: true,
     metadata: { origem: "playbook_flow_maria", campos: Object.keys(built.patch) },
   });
+
+  const novoEstagio = String(built.patch.estagio ?? "").toLowerCase();
+  if (novoEstagio === "qualificado") {
+    try {
+      const { sugerirEncaminhamentoAutomatico } = await import(
+        "@/lib/crm/sugerir-encaminhamento-auto"
+      );
+      await sugerirEncaminhamentoAutomatico(supabase, leadId, {
+        responsavel: agenteSlug,
+      });
+    } catch (e) {
+      console.error("[playbook] sugerir encaminhamento:", e);
+    }
+  }
 }
 
 function metadataFluxoParaTriagem(choiceId: string): Record<string, unknown> {

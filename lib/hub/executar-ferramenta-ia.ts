@@ -12,6 +12,7 @@ import {
   telefonesConversaEquivalentes,
   validarLeadTelefoneSessao,
 } from "@/lib/crm/isolamento-conversa-lead";
+import { iaCriarCadastroCrm } from "@/lib/crm/ia-criar-cadastro";
 
 export type FerramentaHubContexto = {
   leadId: string;
@@ -288,6 +289,28 @@ async function executarFerramentaHubBuiltin(
           (k) => k !== "atualizado_em" && k !== "ultimo_contato"
         ),
       });
+    }
+    case "hub_crm_criar_cadastro": {
+      const nome = typeof args.nome === "string" ? args.nome.trim() : "";
+      const telefoneArg = typeof args.telefone === "string" ? args.telefone.trim() : "";
+      const telefone = telefoneArg || telSessao;
+      if (!nome) return JSON.stringify({ erro: "nome_obrigatorio" });
+      if (!telefone || telefone.length < 10) {
+        return JSON.stringify({ erro: "telefone_obrigatorio" });
+      }
+      const result = await iaCriarCadastroCrm(supabase, {
+        nome,
+        telefone,
+        tipo_pessoa: args.tipo_pessoa === "PJ" ? "PJ" : "PF",
+        mercado: typeof args.mercado === "string" ? args.mercado : undefined,
+        origem: typeof args.origem === "string" ? args.origem : "whatsapp",
+        email: typeof args.email === "string" ? args.email : null,
+        tenant_id: ctx.tenantId ?? defaultTenantId(),
+      });
+      if (!result.ok) {
+        return JSON.stringify({ erro: "criar_cadastro_falhou", detalhe: result.error });
+      }
+      return JSON.stringify({ ok: true, ...result.payload });
     }
     case "hub_registar_nota_lead": {
       if (ctx.modoOperacao !== "canal_whatsapp") {

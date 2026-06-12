@@ -5,6 +5,7 @@ import { CrmPageHeader } from "@/components/crm/CrmPageHeader";
 import { defaultCrmHeaderForPath } from "@/lib/crm-header-defaults";
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
+import { CrmRastreioBusca } from "@/components/crm/CrmRastreioBusca";
 
 export function CrmUniversalHeader() {
   const pathname = usePathname() || "";
@@ -19,11 +20,18 @@ export function CrmUniversalHeader() {
   const title = scoped?.title ?? base.title;
   const subtitle = scoped?.subtitle ?? base.subtitle;
 
+  const actions = (
+    <>
+      <CrmRastreioBusca />
+      {scoped?.actions ?? null}
+    </>
+  );
+
   return (
     <CrmPageHeader
       title={title}
       subtitle={subtitle}
-      actions={scoped?.actions ?? undefined}
+      actions={actions}
       blendDesktopUnderlap
       className="flex-shrink-0"
     />

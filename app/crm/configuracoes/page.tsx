@@ -45,6 +45,8 @@ export default function Configuracoes() {
     horario_inicio: "08:00",
     horario_fim: "18:00",
     timezone: "America/Sao_Paulo",
+    distribuicao_auto: true,
+    distribuicao_validacao_horas: 24,
   });
   const [salvandoFollowup, setSalvandoFollowup] = useState(false);
   const [salvandoHorario, setSalvandoHorario] = useState(false);
@@ -205,6 +207,48 @@ export default function Configuracoes() {
             className="mt-3 min-h-10 rounded-lg bg-[#c9a24a] px-4 text-xs font-bold text-[#003b26] disabled:opacity-50"
           >
             {salvandoHorario ? "Salvando…" : "Guardar horário"}
+          </button>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+          <p className="text-sm font-bold text-[#e6edf3]">Distribuição de leads</p>
+          <p className="mt-1 text-xs text-[#8b949e]">
+            IA sugere parceiro após qualificação; gestor valida em Leads → Encaminhamentos pendentes.
+            Flag global: CRM_DISTRIBUICAO_AUTO no ambiente.
+          </p>
+          <label className="mt-3 flex items-center gap-2 text-sm text-[#e6edf3]">
+            <input
+              type="checkbox"
+              checked={tenantSettings.distribuicao_auto !== false}
+              onChange={(e) =>
+                setTenantSettings((s) => ({ ...s, distribuicao_auto: e.target.checked }))
+              }
+            />
+            Sugestão automática activa (tenant)
+          </label>
+          <label className="mt-3 block text-[10px] font-bold uppercase text-[#8b949e]">
+            Prazo validação humana (horas)
+            <input
+              type="number"
+              min={1}
+              max={168}
+              value={tenantSettings.distribuicao_validacao_horas ?? 24}
+              onChange={(e) =>
+                setTenantSettings((s) => ({
+                  ...s,
+                  distribuicao_validacao_horas: Number(e.target.value) || 24,
+                }))
+              }
+              className="mt-1 w-full max-w-[120px] min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-2 text-sm text-[#e6edf3]"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={salvandoHorario}
+            onClick={() => void salvarHorario()}
+            className="mt-3 min-h-10 rounded-lg bg-[#c9a24a] px-4 text-xs font-bold text-[#003b26] disabled:opacity-50"
+          >
+            {salvandoHorario ? "Salvando…" : "Guardar distribuição"}
           </button>
         </div>
 

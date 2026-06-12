@@ -23,7 +23,10 @@ const listQueryDefaults = {
 } as const;
 
 async function fetchJsonList<T>(url: string): Promise<T[]> {
-  const res = await fetch(url, { headers: internalApiHeaders() });
+  const res = await fetch(url, {
+    credentials: "include",
+    headers: internalApiHeaders(),
+  });
   const data = (await res.json().catch(() => ({}))) as { data?: T[]; erro?: string; error?: string };
   if (!res.ok) {
     throw new Error(data.erro || data.error || "Falha ao carregar lista.");

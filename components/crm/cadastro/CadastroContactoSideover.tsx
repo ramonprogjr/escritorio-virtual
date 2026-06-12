@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Eye, Pencil, Trash2, User } from "lucide-react";
 import { AgenteSideoverEntityCard, AgenteSideoverInfoGrid } from "@/components/crm/AgenteSideoverCards";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
@@ -23,6 +24,12 @@ import {
   cepValidoParaBusca,
   formatarCepMascara,
 } from "@/lib/crm/viacep";
+import {
+  CadastroFichaTabs,
+  type CadastroFichaTabId,
+} from "@/components/crm/cadastro/CadastroFichaTabs";
+import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFichaRelacionados";
+import { CadastroVinculosPessoaEmpresa } from "@/components/crm/cadastro/CadastroVinculosPessoaEmpresa";
 
 export type ContactoLista = {
   id: string;
@@ -123,6 +130,11 @@ export function CadastroContactoSideover({
   const [secContacto, setSecContacto] = useState(true);
   const [secEndereco, setSecEndereco] = useState(true);
   const [secCrm, setSecCrm] = useState(true);
+  const [fichaTab, setFichaTab] = useState<CadastroFichaTabId>("resumo");
+  const [relacionados, setRelacionados] = useState<{
+    leads: Array<{ id: string; nome: string; estagio?: string | null }>;
+    negocios: Array<{ id: string; codigo?: string | null; titulo: string }>;
+  } | null>(null);
 
   const carregar = useCallback(async () => {
     if (!pessoaId) return;
@@ -154,10 +166,33 @@ export function CadastroContactoSideover({
       setForm({});
       setConfirmExcluir(false);
       setErro("");
+      setFichaTab("resumo");
+      setRelacionados(null);
       return;
     }
     void carregar();
   }, [open, carregar]);
+
+  useEffect(() => {
+    if (!open || !pessoaId || fichaTab !== "relacionados") return;
+    void (async () => {
+      const res = await fetch(`/api/crm/pessoas/${encodeURIComponent(pessoaId)}/vinculos`, {
+        credentials: "include",
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: {
+          leads?: Array<{ id: string; nome: string; estagio?: string | null }>;
+          negocios?: Array<{ id: string; codigo?: string | null; titulo: string }>;
+        };
+      };
+      if (res.ok && json.data) {
+        setRelacionados({
+          leads: json.data.leads ?? [],
+          negocios: json.data.negocios ?? [],
+        });
+      }
+    })();
+  }, [open, pessoaId, fichaTab]);
 
   async function salvar() {
     if (!pessoaId) return;
@@ -371,6 +406,16 @@ export function CadastroContactoSideover({
       footer={footer}
     >
       {loading && <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando dados do contato…</p>}
+      {pessoaId && (
+        <p style={{ margin: "0 0 8px", fontSize: 12 }}>
+          <Link
+            href={`/crm/pessoas/${encodeURIComponent(pessoaId)}`}
+            style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
+          >
+            Abrir ficha completa →
+          </Link>
+        </p>
+      )}
       {erro && (
         <div
           style={{
@@ -407,6 +452,9 @@ export function CadastroContactoSideover({
 
       {mode === "view" && pessoa && !loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <CadastroFichaTabs active={fichaTab} onChange={setFichaTab}>
+            {fichaTab === "resumo" && (
+              <>
           <AgenteSideoverEntityCard
             accent="#c9a24a"
             Icon={User}
@@ -513,6 +561,42 @@ export function CadastroContactoSideover({
               {actor.email ? ` (${actor.email})` : ""}.
             </p>
           )}
+              </>
+            )}
+            {fichaTab === "vinculos" && pessoaId ? (
+              <CadastroVinculosPessoaEmpresa
+                entityType="pessoa"
+                entityId={pessoaId}
+                actor={actor}
+                variant="sideover"
+              />
+            ) : null}
+            {fichaTab === "relacionados" ? (
+              <CadastroFichaRelacionados
+                leads={relacionados?.leads ?? []}
+                negocios={relacionados?.negocios ?? []}
+                variant="sideover"
+              />
+            ) : null}
+            {fichaTab === "dados" && (
+              <CadastroSideoverPanel>
+                <AgenteSideoverInfoGrid
+                  rows={[
+                    { label: "Origem", value: pessoa.origem || "—" },
+                    { label: "Criado em", value: formatarData(pessoa.criado_em) },
+                    { label: "Documento", value: docFmt },
+                    {
+                      label: "Endereço",
+                      value:
+                        [pessoa.logradouro, pessoa.numero, pessoa.bairro, pessoa.cidade, pessoa.estado]
+                          .filter(Boolean)
+                          .join(", ") || "—",
+                    },
+                  ]}
+                />
+              </CadastroSideoverPanel>
+            )}
+          </CadastroFichaTabs>
         </div>
       )}
 

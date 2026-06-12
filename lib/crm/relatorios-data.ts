@@ -90,11 +90,23 @@ export async function carregarRelatorio(
     const out = await selectSimple(
       supabase,
       "hub_leads_crm",
-      ["nome, telefone, email, origem, estagio, valor_estimado, criado_em"],
+      [
+        "codigo, nome, telefone, email, origem, estagio, valor_estimado, criado_em",
+        "nome, telefone, email, origem, estagio, valor_estimado, criado_em",
+      ],
       { column: "criado_em", ascending: false }
     );
     if (out.error) throw new Error(out.error);
-    const headers = ["nome", "telefone", "email", "origem", "estagio", "valor_estimado", "criado_em"];
+    const headers = [
+      "codigo",
+      "nome",
+      "telefone",
+      "email",
+      "origem",
+      "estagio",
+      "valor_estimado",
+      "criado_em",
+    ];
     return { entidade, headers, rows: out.rows, aviso: out.aviso };
   }
 
