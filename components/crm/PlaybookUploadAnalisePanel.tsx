@@ -83,7 +83,7 @@ export function PlaybookUploadAnalisePanel({
       <div
         role="button"
         tabIndex={0}
-        aria-label="Ãrea de upload do playbook. Arraste e solte arquivo .md ou .txt."
+        aria-label="Área de upload do playbook. Arraste e solte arquivo .md ou .txt."
         onDragEnter={(e) => {
           e.preventDefault();
           if (!enviando) onHoverChange(true);
@@ -145,7 +145,7 @@ export function PlaybookUploadAnalisePanel({
           </span>
         </div>
         <p style={{ color: "#8b949e", fontSize: 12, margin: "8px 0 0", lineHeight: 1.55 }}>
-          Arraste e solte o arquivo nesta Ã¡rea ou use o botÃ£o para selecionar. Tamanho mÃ¡ximo: 2 MB.
+          Arraste e solte o arquivo nesta área ou use o botão para selecionar. Tamanho máximo: 2 MB.
         </p>
         <p style={{ color: "#8b949e", fontSize: 12, margin: "10px 0 0", lineHeight: 1.55 }}>
           Sem modelo?{" "}
@@ -262,7 +262,7 @@ export function PlaybookUploadAnalisePanel({
             padding: 12,
           }}
         >
-          <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>PRÃ‰-VISUALIZAÃ‡ÃƒO</p>
+          <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>PRÉ-VISUALIZAÇÃO</p>
           <pre
             style={{
               margin: 0,
@@ -302,8 +302,8 @@ export function PlaybookUploadAnalisePanel({
           {analiseLoading ? "A analisar playbook..." : "Analisar playbook"}
         </button>
         <p style={{ color: "#8b949e", fontSize: 11, margin: "8px 0 0", lineHeight: 1.5 }}>
-          A IA lÃª o conteÃºdo, atribui uma nota de 0 a 10 e aponta pontos fortes, lacunas, riscos e sugestÃµes.
-          {modoPreCriacao ? " Ã‰ necessÃ¡rio analisar antes de avanÃ§ar." : ""}
+          A IA lê o conteúdo, atribui uma nota de 0 a 10 e aponta pontos fortes, lacunas, riscos e sugestões.
+          {modoPreCriacao ? " É necessário analisar antes de avançar." : ""}
         </p>
         {analiseLoading ? (
           <div
@@ -439,7 +439,7 @@ export function PlaybookUploadAnalisePanel({
             </p>
             {analiseResultado.origem === "fallback" ? (
               <p style={{ margin: "8px 0 0", color: "#d29922", fontSize: 11 }}>
-                AnÃ¡lise local â€” configure MISTRAL_API_KEY para nota automÃ¡tica completa.
+                Análise local — configure MISTRAL_API_KEY para nota automática completa.
               </p>
             ) : null}
           </div>
@@ -480,7 +480,7 @@ export function PlaybookUploadAnalisePanel({
               ) : null}
               {analiseResultado.recomendacoes.length > 0 ? (
                 <div>
-                  <p style={{ margin: 0, color: "#58a6ff", fontSize: 11, fontWeight: 700 }}>SUGESTÃ•ES</p>
+                  <p style={{ margin: 0, color: "#58a6ff", fontSize: 11, fontWeight: 700 }}>SUGESTÕES</p>
                   <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#aebccf", fontSize: 12, lineHeight: 1.5 }}>
                     {analiseResultado.recomendacoes.map((item, idx) => (
                       <li key={idx}>{item}</li>
