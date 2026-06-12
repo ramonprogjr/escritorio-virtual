@@ -421,6 +421,17 @@ export default function LeadFichaPage() {
   const meta = (lead.metadata as Record<string, unknown>) || {};
   const mercadoMeta =
     (meta.mercado as string) || (meta.primeira_mensagem != null ? "ver metadata" : null);
+  const parceiroId = typeof meta.parceiro_id === "string" ? meta.parceiro_id : null;
+  const parceiroNome =
+    typeof meta.parceiro_nome === "string"
+      ? meta.parceiro_nome
+      : typeof meta.parceiro_codigo === "string"
+        ? meta.parceiro_codigo
+        : null;
+  const parceiroPapel =
+    meta.parceiro_papel === "corretor" || meta.parceiro_papel === "arquiteto"
+      ? meta.parceiro_papel
+      : "parceiro";
 
   const camposDados: { label: string; value: string }[] = [
     {
@@ -805,6 +816,28 @@ export default function LeadFichaPage() {
                       {estagio}
                     </span>
                   </div>
+
+                  {parceiroId ? (
+                    <div
+                      className="mb-4 rounded-lg border px-4 py-3"
+                      style={{ borderColor: "#c9a24a44", background: "#c9a24a10" }}
+                    >
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#c9a24a]">
+                        Profissional atribuído
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-white">
+                        {parceiroNome || "Parceiro"}{" "}
+                        <span className="text-xs font-normal text-[#8b949e]">({parceiroPapel})</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/crm/parceiros/${parceiroId}`)}
+                        className="mt-2 text-xs font-semibold text-[#c9a24a] hover:underline"
+                      >
+                        Ver ficha PAR →
+                      </button>
+                    </div>
+                  ) : null}
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-4 lg:gap-y-3">
                     {camposDados.map((f) => (

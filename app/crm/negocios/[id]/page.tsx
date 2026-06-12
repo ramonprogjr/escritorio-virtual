@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
+import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
+import type { RastreioCadeia } from "@/lib/crm/resolver-rastreio-codigo";
 
 type NegocioDetalhe = {
   id: string;
@@ -16,6 +19,7 @@ type NegocioDetalhe = {
   etapa: string;
   valor_estimado: number | null;
   valor_fechado: number | null;
+  motivo_perda: string | null;
   lead_id: string | null;
   pessoa_id: string | null;
   criado_em: string | null;
@@ -44,6 +48,9 @@ export default function NegocioDetalhePage() {
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", valor_estimado: "" });
   const [salvando, setSalvando] = useState(false);
+  const [rastreio, setRastreio] = useState<RastreioCadeia | null>(null);
+  const [motivoPendente, setMotivoPendente] = useState<string | null>(null);
+  const [motivoSelecionado, setMotivoSelecionado] = useState("");
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -84,6 +91,17 @@ export default function NegocioDetalhePage() {
     void carregar();
   }, [carregar]);
 
+  useEffect(() => {
+    if (!negocio?.codigo) return;
+    void (async () => {
+      const res = await fetch(`/api/crm/rastreio?codigo=${encodeURIComponent(negocio.codigo!)}`, {
+        credentials: "include",
+      });
+      const json = (await res.json().catch(() => ({}))) as { data?: RastreioCadeia };
+      if (res.ok && json.data) setRastreio(json.data);
+    })();
+  }, [negocio?.codigo]);
+
   async function salvarEdicao() {
     setSalvando(true);
     const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
@@ -113,12 +131,38 @@ export default function NegocioDetalhePage() {
   }
 
   async function mudarEtapa(novaEtapa: string) {
+    const perdido = novaEtapa === "perdido" || novaEtapa === "fechado_perdido";
+    if (perdido && !negocio?.motivo_perda) {
+      setMotivoPendente(novaEtapa);
+      return;
+    }
     const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-      body: JSON.stringify({ etapa: novaEtapa }),
+      body: JSON.stringify({
+        etapa: novaEtapa,
+        status: perdido ? "perdido" : undefined,
+      }),
     });
     if (res.ok) void carregar();
+  }
+
+  async function confirmarMotivoPerda() {
+    if (!motivoPendente || !motivoSelecionado.trim()) return;
+    const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+      body: JSON.stringify({
+        etapa: motivoPendente,
+        status: "perdido",
+        motivo_perda: motivoSelecionado.trim(),
+      }),
+    });
+    if (res.ok) {
+      setMotivoPendente(null);
+      setMotivoSelecionado("");
+      void carregar();
+    }
   }
 
   if (carregando) {
@@ -156,6 +200,59 @@ export default function NegocioDetalhePage() {
         </button>
       </div>
       <p style={{ margin: 0, color: "#8b949e", fontFamily: "monospace" }}>{negocio.codigo}</p>
+      {negocio.motivo_perda ? (
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "#f87171" }}>
+          Motivo perda: {MOTIVOS_PERDA_LABEL[negocio.motivo_perda] ?? negocio.motivo_perda}
+        </p>
+      ) : null}
+
+      {motivoPendente ? (
+        <div
+          style={{
+            marginTop: 16,
+            padding: 14,
+            borderRadius: 10,
+            border: "1px solid #30363d",
+            background: "#161b22",
+          }}
+        >
+          <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700 }}>Motivo da perda (obrigatório)</p>
+          <select
+            value={motivoSelecionado}
+            onChange={(e) => setMotivoSelecionado(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 8,
+              border: "1px solid #30363d",
+              background: "#0d1117",
+              color: "#e6edf3",
+              marginBottom: 8,
+            }}
+          >
+            <option value="">Selecione…</option>
+            {MOTIVOS_PERDA.map((m) => (
+              <option key={m} value={m}>
+                {MOTIVOS_PERDA_LABEL[m]}
+              </option>
+            ))}
+          </select>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={() => setMotivoPendente(null)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", cursor: "pointer" }}>
+              Cancelar
+            </button>
+            <button type="button" onClick={() => void confirmarMotivoPerda()} style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, cursor: "pointer" }}>
+              Confirmar perda
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {rastreio ? (
+        <div style={{ marginTop: 20 }}>
+          <CrmRastreioCadeia cadeia={rastreio} />
+        </div>
+      ) : null}
 
       {editando && (
         <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#161b22" }}>

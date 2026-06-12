@@ -16,8 +16,15 @@ function publicEnvBool(value: string | undefined, defaultValue = false): boolean
 export const crmFeatureFlags = {
   pipelineV2: () => envBool("CRM_PIPELINE_V2", true),
   encaminhamentoV2: () => envBool("CRM_ENCAMINHAMENTO_V2", true),
+  distribuicaoAuto: () => envBool("CRM_DISTRIBUICAO_AUTO", true),
   proximaAcaoObrigatoria: () => envBool("CRM_PROXIMA_ACAO_OBRIGATORIA"),
   logsAuditoria: () => envBool("CRM_LOGS_AUDITORIA", true),
+  /** IA cria PES+LED via tool hub_crm_criar_cadastro — default off em prod */
+  iaAutoCadastro: () => envBool("CRM_IA_AUTO_CADASTRO", false),
+  /** Grava parceiro no lead e PAR no NEG ao converter — default off em prod */
+  vinculoParceiroAuto: () => envBool("CRM_VINCULO_PARCEIRO_AUTO", false),
+  /** UI busca global por código de rastreio */
+  rastreioBusca: () => envBool("CRM_RASTREIO_BUSCA", true),
   playbookFlowVisualSideover: () =>
     publicEnvBool(
       process.env.NEXT_PUBLIC_CRM_PLAYBOOK_FLOW_VISUAL_SIDEOVER,

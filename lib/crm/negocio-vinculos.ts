@@ -128,6 +128,9 @@ export async function criarVinculosNegocioFromLead(
     pessoa_codigo: string | null;
     empresa_id?: string | null;
     empresa_codigo?: string | null;
+    parceiro_id?: string | null;
+    parceiro_codigo?: string | null;
+    parceiro_papel?: "corretor" | "arquiteto" | "parceiro";
     tenant_id?: string | null;
   }
 ): Promise<void> {
@@ -160,6 +163,17 @@ export async function criarVinculosNegocioFromLead(
       entidade_id: opts.empresa_id,
       codigo_rastreio: opts.empresa_codigo ?? null,
       papel: "empresa",
+      tenant_id: opts.tenant_id,
+    });
+  }
+
+  if (opts.parceiro_id) {
+    rows.push({
+      negocio_id: opts.negocio_id,
+      entidade_tipo: "parceiro",
+      entidade_id: opts.parceiro_id,
+      codigo_rastreio: opts.parceiro_codigo ?? null,
+      papel: "parceiro",
       tenant_id: opts.tenant_id,
     });
   }

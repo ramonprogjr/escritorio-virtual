@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { decodeHttpHeaderValue } from "@/lib/http-header-utf8";
 
 export type ActorCrm = {
   id?: string | null;
@@ -10,7 +11,10 @@ export function actorFromRequestHeaders(headers: Headers): ActorCrm {
   return {
     id: headers.get("x-user-id")?.trim() || null,
     email: headers.get("x-user-email")?.trim() || null,
-    nome: headers.get("x-user-name")?.trim() || null,
+    nome: (() => {
+      const raw = headers.get("x-user-name")?.trim();
+      return raw ? decodeHttpHeaderValue(raw) : null;
+    })(),
   };
 }
 

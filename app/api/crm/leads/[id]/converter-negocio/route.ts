@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildLeadEstagioPatch } from "@/lib/crm/estagio-map";
 import { gerarCodigoNegocio } from "@/lib/crm/negocio-cadastro";
+import { extrairParceiroDoLeadMetadata } from "@/lib/crm/lead-parceiro-metadata";
+import { crmFeatureFlags } from "@/lib/crm/feature-flags";
 import {
   criarVinculosNegocioFromLead,
   prefixoMercadoFromLead,
@@ -116,6 +118,9 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { data: negocio, error } = await supabase.from("hub_negocios").insert(row).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const parceiroMeta =
+    crmFeatureFlags.vinculoParceiroAuto() ? extrairParceiroDoLeadMetadata(lead.metadata) : null;
+
   try {
     await criarVinculosNegocioFromLead(supabase, {
       negocio_id: negocio.id,
@@ -125,6 +130,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       pessoa_codigo: pessoaCodigo,
       empresa_id: empresaId,
       empresa_codigo: empresaCodigo,
+      parceiro_id: parceiroMeta?.parceiro_id ?? null,
+      parceiro_codigo: parceiroMeta?.parceiro_codigo ?? null,
       tenant_id: tenantId,
     });
   } catch (vincErr) {

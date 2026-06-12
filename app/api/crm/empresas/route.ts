@@ -5,7 +5,7 @@ import {
   validarEmpresaCadastro,
   type EmpresaCadastroPayload,
 } from "@/lib/crm/empresa-cadastro";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -110,18 +110,23 @@ export async function GET(request: NextRequest) {
   const estado = searchParams.get("estado") || "";
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(searchParams.get("limit") || "200", 10), 500);
+  const tenant_id = tenantIdFromRequest(request.headers);
 
   const EMPRESA_SELECT_LIST =
     "id, codigo, razao_social, nome_fantasia, cnpj, email, telefone, segmento, prefixo_mercado, cep, logradouro, numero, complemento, bairro, cidade, estado, ativo, acesso_habilitado, acesso_habilitado_em, tenant_id, criado_em, atualizado_em";
   const EMPRESA_SELECT_FALLBACK =
     "id, codigo, razao_social, nome_fantasia, cnpj, email, telefone, segmento, prefixo_mercado, cidade, estado, ativo, criado_em";
 
-  const runList = (select: string) => {
+  const runList = (select: string, withTenantFilter: boolean) => {
     let query = supabase
       .from("hub_empresas")
       .select(select, { count: "exact" })
       .order("criado_em", { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (withTenantFilter) {
+      query = query.or(tenantScopeOrFilter(tenant_id));
+    }
 
     if (ativo !== null) {
       query = query.eq("ativo", ativo);
@@ -144,21 +149,24 @@ export async function GET(request: NextRequest) {
     return query;
   };
 
-  let { data, error, count } = await runList(EMPRESA_SELECT_LIST);
+  let { data, error, count } = await runList(EMPRESA_SELECT_LIST, true);
   if (error) {
-    const retryCols = [
-      "acesso_habilitado",
-      "acesso_habilitado_em",
-      "tenant_id",
-      "atualizado_em",
-      "cep",
-      "logradouro",
-      "numero",
-      "complemento",
-      "bairro",
-    ];
-    if (retryCols.some((c) => isMissingPgColumn(error, c))) {
-      ({ data, error, count } = await runList(EMPRESA_SELECT_FALLBACK));
+    if (isMissingPgColumn(error, "tenant_id")) {
+      ({ data, error, count } = await runList(EMPRESA_SELECT_FALLBACK, false));
+    } else {
+      const retryCols = [
+        "acesso_habilitado",
+        "acesso_habilitado_em",
+        "atualizado_em",
+        "cep",
+        "logradouro",
+        "numero",
+        "complemento",
+        "bairro",
+      ];
+      if (retryCols.some((c) => isMissingPgColumn(error, c))) {
+        ({ data, error, count } = await runList(EMPRESA_SELECT_FALLBACK, true));
+      }
     }
   }
 

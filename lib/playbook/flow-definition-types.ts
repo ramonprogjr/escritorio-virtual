@@ -63,11 +63,17 @@ export type PlaybookFlowMessageStep = PlaybookFlowBaseStep & {
   complete?: PlaybookFlowCompleteAction;
 };
 
+export type PlaybookFlowMenuFormat = "list" | "button" | "text";
+
 export type PlaybookFlowMenuStep = PlaybookFlowBaseStep & {
   kind: "menu";
   prompt: string;
   /** Chave em wa_playbook_answers; padrão: id do step. */
   field?: string;
+  /** list/button = menu nativo UAZAPI; text = opções numeradas no corpo da mensagem. */
+  menu_type?: PlaybookFlowMenuFormat;
+  /** Rótulo do botão quando menu_type=list. */
+  list_button?: string;
   options: PlaybookFlowMenuOption[];
   on_select?: Record<string, string>;
 };

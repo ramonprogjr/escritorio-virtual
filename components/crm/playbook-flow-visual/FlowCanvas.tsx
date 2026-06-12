@@ -32,6 +32,7 @@ import type {
   PlaybookFlowInputType,
   PlaybookFlowJourney,
   PlaybookFlowMenuOption,
+  PlaybookFlowMenuFormat,
 } from "@/lib/playbook/flow-definition-types";
 import {
   FLOW_NODE_TYPES,
@@ -444,6 +445,7 @@ function toDefinition(
       }
       if (node.data.kind === "menu") {
         const options = mapMenuOptions(node, nodeEdges);
+        const menuType = (node.data.menuFormat as PlaybookFlowMenuFormat | undefined) ?? "list";
         return {
           id: node.id,
           kind: "menu",
@@ -451,6 +453,7 @@ function toDefinition(
           journey: (node.data.journey as PlaybookFlowJourney | undefined) ?? undefined,
           prompt: node.data.content,
           field: String(node.data.field ?? node.id).trim() || node.id,
+          menu_type: menuType,
           options,
         };
       }

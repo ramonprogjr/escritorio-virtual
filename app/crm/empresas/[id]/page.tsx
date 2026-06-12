@@ -11,6 +11,8 @@ import {
   CadastroFichaTabs,
   type CadastroFichaTabId,
 } from "@/components/crm/cadastro/CadastroFichaTabs";
+import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFichaRelacionados";
+import { CadastroVinculosPessoaEmpresa } from "@/components/crm/cadastro/CadastroVinculosPessoaEmpresa";
 import Link from "next/link";
 
 type EmpresaDetalhe = {
@@ -101,7 +103,7 @@ export default function EmpresaDetalhePage() {
   }, [carregar]);
 
   useEffect(() => {
-    if (tab !== "vinculos" && tab !== "relacionados") return;
+    if (tab !== "relacionados") return;
     void (async () => {
       const res = await fetch(`/api/crm/empresas/${encodeURIComponent(id)}/vinculos`, {
         headers: internalApiHeaders(),
@@ -360,48 +362,10 @@ export default function EmpresaDetalhePage() {
             </>
           )}
           {tab === "vinculos" && (
-            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-              {(vinculos?.pessoas ?? []).length === 0 ? (
-                <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhuma pessoa vinculada.</li>
-              ) : (
-                vinculos?.pessoas.map((p) => (
-                  <li
-                    key={p.pessoa_id}
-                    style={{ padding: "12px 0", borderBottom: "1px solid #30363d" }}
-                  >
-                    <Link
-                      href={`/crm/pessoas/${p.pessoa_id}`}
-                      style={{ color: "#c9a24a", fontWeight: 600, textDecoration: "none" }}
-                    >
-                      {p.codigo ? `${p.codigo} · ` : ""}
-                      {p.nome}
-                    </Link>
-                    {p.cargo ? (
-                      <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8b949e" }}>{p.cargo}</p>
-                    ) : null}
-                  </li>
-                ))
-              )}
-            </ul>
+            <CadastroVinculosPessoaEmpresa entityType="empresa" entityId={id} variant="page" />
           )}
           {tab === "relacionados" && (
-            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-              {(vinculos?.negocios ?? []).length === 0 ? (
-                <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhum negócio vinculado.</li>
-              ) : (
-                vinculos?.negocios.map((n) => (
-                  <li key={n.id} style={{ padding: "8px 0", borderBottom: "1px solid #30363d" }}>
-                    <Link
-                      href={`/crm/negocios?destaque=${n.id}`}
-                      style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
-                    >
-                      {n.codigo ? `${n.codigo} · ` : ""}
-                      {n.titulo}
-                    </Link>
-                  </li>
-                ))
-              )}
-            </ul>
+            <CadastroFichaRelacionados negocios={vinculos?.negocios ?? []} variant="page" />
           )}
         </CadastroFichaTabs>
       </div>

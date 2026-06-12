@@ -7,7 +7,7 @@ import { HUB_MODELO_SENTINEL } from "./hub-model-defaults";
 import { buscarTrechosRag } from "@/lib/hub/rag";
 import { formatarBlocoMemoriasAgente, listarMemoriasAgente } from "@/lib/ia/memoria-agente";
 import { blocoFluxoPrimeiroAtendimentoWhatsapp } from "@/lib/ia/primeiro-atendimento-whatsapp";
-import { blocoRegrasFluxoSequencialPlaybook } from "@/lib/ia/playbook-mari-runtime";
+import { blocoRegrasFluxoSequencialPlaybook, blocoRegrasPosFluxoPlaybookConversacional } from "@/lib/ia/playbook-mari-runtime";
 import { cutoffSessaoConversaMs } from "@/lib/ia/sessao-conversa-ttl";
 import { resolverCargoCatalogoParaAgente } from "@/lib/hub/resolver-cargo-catalogo";
 import {
@@ -78,6 +78,20 @@ export async function construirPrompt(params: PromptParams): Promise<PromptCompl
     .single();
 
   if (!agente) return null;
+
+  let playbookFluxoConcluido = false;
+  if (params.leadId) {
+    const { data: leadRow } = await supabase
+      .from("hub_leads_crm")
+      .select("metadata")
+      .eq("id", params.leadId)
+      .maybeSingle();
+    const meta =
+      leadRow?.metadata && typeof leadRow.metadata === "object" && !Array.isArray(leadRow.metadata)
+        ? (leadRow.metadata as Record<string, unknown>)
+        : null;
+    playbookFluxoConcluido = meta?.wa_playbook_complete === true;
+  }
 
   const playbookPublicado = await loadPublishedPlaybookRuntimeSource(supabase, params.agenteSlug, {
     playbook_generated_at: typeof agente.playbook_generated_at === "string" ? agente.playbook_generated_at : null,
@@ -156,11 +170,17 @@ ${playbookPublicado.prompt}`);
     secoes.push(`═══ REGRAS DE NOME (CRÍTICO) ═══
 - Nunca use nomes de rodapé, responsável técnico ou metadados do documento do playbook como nome do cliente.
 - Os marcadores [Nome] nos exemplos do playbook são modelos — não são o nome real de quem está a escrever agora.
-- Se o cliente só disse «Olá», «Oi» ou equivalente e ainda não confirmou o nome nesta conversa, NÃO invente nem assuma um nome na saudação.
+${playbookFluxoConcluido
+  ? "- O fluxo de qualificação já foi concluído: use o nome confirmado no histórico/CRM; não peça o nome de novo."
+  : `- Se o cliente só disse «Olá», «Oi» ou equivalente e ainda não confirmou o nome nesta conversa, NÃO invente nem assuma um nome na saudação.
 - Siga o playbook: apresente a Mari, acolha e pergunte o nome («Me fale qual é o seu nome, por gentileza?») antes de personalizar.
-- Só use nome na saudação se vier confirmado em «DADOS DO CANAL (WhatsApp → CRM)» para este número ou se o cliente tiver dito o nome nesta sessão.`);
+- Só use nome na saudação se vier confirmado em «DADOS DO CANAL (WhatsApp → CRM)» para este número ou se o cliente tiver dito o nome nesta sessão.`}`);
 
-    secoes.push(blocoRegrasFluxoSequencialPlaybook(playbookPublicado.flowHints));
+    secoes.push(
+      playbookFluxoConcluido
+        ? blocoRegrasPosFluxoPlaybookConversacional(playbookPublicado.flowHints)
+        : blocoRegrasFluxoSequencialPlaybook(playbookPublicado.flowHints)
+    );
 
     // Fluxo determinístico no inbound pode enviar menus antes da IA; ver inbound-message-processor + menu-triagem-uazapi.
   } else {

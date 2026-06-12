@@ -216,6 +216,23 @@ export function CadastroComercialSecao({
           });
         }}
       />
+      {criarLead ? (
+        <p
+          style={{
+            margin: "-8px 0 0",
+            padding: "10px 12px",
+            borderRadius: 8,
+            border: "1px solid #c9a24a33",
+            background: "#c9a24a10",
+            fontSize: 12,
+            color: "#c9a24a",
+            lineHeight: 1.45,
+          }}
+        >
+          Ao guardar, será criado um código <strong>LED-{new Date().getFullYear()}-####</strong> no funil{" "}
+          {mercados.length > 0 ? mercados.join(", ") : "IMB"}.
+        </p>
+      ) : null}
 
       <SubtituloSecao icon={Building2}>Mercado / área de interesse</SubtituloSecao>
       <p style={{ margin: "0 0 8px", fontSize: 12, color: OB.texto2, lineHeight: 1.45 }}>

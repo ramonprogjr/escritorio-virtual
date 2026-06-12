@@ -38,6 +38,16 @@ export function resolverRoteamentoPlaybookAgente(ctx: AgentePlaybookRoutingConte
   }
 
   if (playbookOnly) {
+    if (ctx.playbookComplete) {
+      return {
+        temPlaybookPublicado: true,
+        playbookOnly: true,
+        cargoComPlaybook: false,
+        proibirFallbackLegado: true,
+        bloquearIa: false,
+        motivo: "playbook_only_pos_fluxo",
+      };
+    }
     return {
       temPlaybookPublicado: true,
       playbookOnly: true,
@@ -84,7 +94,7 @@ export const MSG_PLAYBOOK_FLUXO_INDISPONIVEL =
   "No momento não consegui iniciar o roteiro de atendimento. Nossa equipe já foi avisada e retorna por aqui em breve.";
 
 export const MSG_PLAYBOOK_POS_CONCLUSAO =
-  "Seu pré-atendimento já foi registrado. Nossa equipe analisa as informações e retorna por aqui em breve.";
+  "Seu pré-atendimento já foi registrado. Pode continuar me perguntando por aqui — estou à disposição para ajudar.";
 
 export type HubAgenteIdentidadePlaybookRow = AgenteInstrucaoIdent & {
   agente_slug?: string | null;

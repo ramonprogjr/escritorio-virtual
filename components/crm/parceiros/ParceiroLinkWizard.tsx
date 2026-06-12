@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Link2, X } from "lucide-react";
+import { Copy, ExternalLink, Link2, X } from "lucide-react";
 import {
   PARCEIRO_LINK_TOKEN_REDE,
   urlCadastroParceiroPublico,
@@ -163,7 +163,14 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
                 fontFamily: "monospace",
               }}
             >
-              {link}
+              <a
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: OB.dourado, textDecoration: "underline" }}
+              >
+                {link}
+              </a>
             </p>
             <p style={{ color: "#6e7781", fontSize: 10, margin: "10px 0 0" }}>
               Token: <code>{PARCEIRO_LINK_TOKEN_REDE}</code>
@@ -186,11 +193,38 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
+              marginBottom: 10,
             }}
           >
             <Copy size={16} />
             {copiado ? "Copiado!" : "Copiar link"}
           </button>
+
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              width: "100%",
+              padding: "12px",
+              borderRadius: 10,
+              border: `1px solid ${OB.borda}`,
+              background: "#161b22",
+              color: OB.texto2,
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              textDecoration: "none",
+              fontSize: 13,
+              boxSizing: "border-box",
+            }}
+          >
+            <ExternalLink size={15} />
+            Pré-visualizar formulário
+          </a>
         </div>
 
         <div

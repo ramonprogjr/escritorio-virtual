@@ -12,7 +12,11 @@ import {
   X,
 } from "lucide-react";
 import type { FlowMenuOption, FlowVisualNodeData } from "./types";
-import type { PlaybookFlowInputType, PlaybookFlowJourney } from "@/lib/playbook/flow-definition-types";
+import type {
+  PlaybookFlowInputType,
+  PlaybookFlowJourney,
+  PlaybookFlowMenuFormat,
+} from "@/lib/playbook/flow-definition-types";
 
 type FlowNodeEditorSideoverProps = {
   selectedNode: Node<FlowVisualNodeData>;
@@ -210,7 +214,21 @@ export function FlowNodeEditorSideover({
           )}
 
           {data.kind === "menu" && (
-            <FieldRow label={`Opcoes (${(data.menuOptions ?? []).length})`}>
+            <>
+              <FieldRow label="Formato das opções">
+                <select
+                  value={String(data.menuFormat ?? "list")}
+                  onChange={(event) =>
+                    update({ menuFormat: event.target.value as PlaybookFlowMenuFormat })
+                  }
+                  style={selectStyle}
+                >
+                  <option value="text">Texto numerado (1, 2, 3…)</option>
+                  <option value="list">Lista nativa WhatsApp</option>
+                  <option value="button">Botões nativos (até 3)</option>
+                </select>
+              </FieldRow>
+              <FieldRow label={`Opcoes (${(data.menuOptions ?? []).length})`}>
               <div style={optionsWrapStyle}>
                 {(data.menuOptions ?? []).map((option, index) => (
                   <div key={option.id} style={optionRowStyle}>
@@ -238,6 +256,7 @@ export function FlowNodeEditorSideover({
                 </button>
               </div>
             </FieldRow>
+            </>
           )}
 
           <datalist id="flow-existing-node-ids">

@@ -13,6 +13,8 @@ import {
   registrarAuditoriaCrm,
 } from "@/lib/crm/registrar-auditoria-crm";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
+import { validarDocumentoDisponivelPatch } from "@/lib/crm/validar-documento-server";
+import type { TipoPessoaCadastro } from "@/lib/crm/pessoa-cadastro";
 
 function db() {
   return createClient(
@@ -128,6 +130,29 @@ export async function PATCH(
     if (key in body) updates[key] = body[key];
   }
 
+  const supabase = db();
+
+  if ("documento" in body || "tipo_pessoa" in body) {
+    const { data: atualDoc } = await supabase
+      .from("hub_pessoas")
+      .select("tipo_pessoa")
+      .eq("id", id)
+      .maybeSingle();
+    const tipo = ((body.tipo_pessoa as string) || atualDoc?.tipo_pessoa || "PF") as TipoPessoaCadastro;
+    if (tipo === "PF" || tipo === "PJ") {
+      const docCheck = await validarDocumentoDisponivelPatch(
+        supabase,
+        tipo,
+        body.documento as string | undefined,
+        id
+      );
+      if (!docCheck.ok) {
+        return NextResponse.json({ error: docCheck.error }, { status: 409 });
+      }
+      if (docCheck.documento) updates.documento = docCheck.documento;
+    }
+  }
+
   const enderecoKeys = [
     "area_atuacao",
     "cep",
@@ -162,7 +187,6 @@ export async function PATCH(
     return NextResponse.json({ error: "Nenhum campo para atualizar." }, { status: 400 });
   }
 
-  const supabase = db();
   let result = await supabase
     .from("hub_pessoas")
     .update(updates)

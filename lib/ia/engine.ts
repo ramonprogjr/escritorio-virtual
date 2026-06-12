@@ -433,6 +433,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
     const filaEntrada: Record<string, unknown> = {
       lead_id: ctx.leadId,
       agente_id: agente.slug,
+      remetente_numero: ctx.telefone ?? "",
       canal: ctx.canal,
       direcao: "entrada",
       conteudo: ctx.mensagem,
@@ -445,6 +446,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
     } catch (e) {
       console.warn("[ENGINE] hub_fila_mensagens entrada:", e);
     }
+    if (ctx.telefone) filaSaida.remetente_numero = ctx.telefone;
     await db.from("hub_fila_mensagens").insert(filaSaida);
 
     const hora = new Date().getHours();

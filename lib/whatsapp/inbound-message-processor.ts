@@ -66,6 +66,7 @@ async function enviarFallbackIA(params: {
     const filaRow = {
       lead_id: params.leadId,
       agente_id: params.agenteSlug || "sdr",
+      remetente_numero: params.telefone,
       canal: "whatsapp",
       direcao: "saida",
       conteudo: mensagem,
@@ -168,6 +169,34 @@ export async function processarMensagemInboundWhatsapp(params: {
   const agenteSlug = typeof agente.agente_slug === "string" ? agente.agente_slug : "sdr";
   const iaStarted = Date.now();
   log.info("wa.processor.ia_start", { agente_slug: agenteSlug, lead_id: lead.id });
+
+  // Persiste a mensagem do lead na fila para que o chat do CRM a exiba
+  // (feito antes de qualquer fluxo — playbook, menu ou LLM)
+  try {
+    const filaEntrada: Record<string, unknown> = {
+      lead_id: lead.id,
+      agente_id: agenteSlug,
+      remetente_numero: params.telefone,
+      canal: "whatsapp",
+      direcao: "entrada",
+      conteudo: params.mensagemFinal,
+      status: "processado",
+      tenant_id: defaultTenantId(),
+      metadata: {
+        feito_por: "inbound",
+        message_id: params.messageId ?? null,
+        push_name: params.pushName || null,
+        tipo_midia: params.tipoMidia,
+      },
+    };
+    let ins = await supabase.from("hub_fila_mensagens").insert(filaEntrada);
+    if (ins.error && isMissingPgColumn(ins.error, "tenant_id")) {
+      const { tenant_id: _t, ...semTenant } = filaEntrada;
+      ins = await supabase.from("hub_fila_mensagens").insert(semTenant);
+    }
+  } catch (e) {
+    console.warn("[WHATSAPP][PROCESSOR] salvar entrada fila:", e);
+  }
 
   let menuEnviadoDeterministico = false;
 

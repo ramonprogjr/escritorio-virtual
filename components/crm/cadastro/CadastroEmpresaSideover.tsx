@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Building2, Pencil, Trash2 } from "lucide-react";
 import { AgenteSideoverEntityCard, AgenteSideoverInfoGrid } from "@/components/crm/AgenteSideoverCards";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
@@ -19,6 +20,12 @@ import {
   cepValidoParaBusca,
   formatarCepMascara,
 } from "@/lib/crm/viacep";
+import {
+  CadastroFichaTabs,
+  type CadastroFichaTabId,
+} from "@/components/crm/cadastro/CadastroFichaTabs";
+import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFichaRelacionados";
+import { CadastroVinculosPessoaEmpresa } from "@/components/crm/cadastro/CadastroVinculosPessoaEmpresa";
 
 export type EmpresaLista = {
   id: string;
@@ -41,6 +48,7 @@ type EmpresaDetalhe = EmpresaLista & {
   complemento?: string | null;
   bairro?: string | null;
   ativo?: boolean | null;
+  acesso_habilitado?: boolean | null;
   criado_em?: string | null;
 };
 
@@ -110,6 +118,10 @@ export function CadastroEmpresaSideover({
   const [secIdentidade, setSecIdentidade] = useState(true);
   const [secContacto, setSecContacto] = useState(true);
   const [secEndereco, setSecEndereco] = useState(true);
+  const [fichaTab, setFichaTab] = useState<CadastroFichaTabId>("resumo");
+  const [negociosRel, setNegociosRel] = useState<
+    Array<{ id: string; codigo?: string | null; titulo: string }>
+  >([]);
 
   const carregar = useCallback(async () => {
     if (!empresaId) return;
@@ -141,10 +153,25 @@ export function CadastroEmpresaSideover({
       setForm({});
       setConfirmExcluir(false);
       setErro("");
+      setFichaTab("resumo");
+      setNegociosRel([]);
       return;
     }
     void carregar();
   }, [open, carregar]);
+
+  useEffect(() => {
+    if (!open || !empresaId || fichaTab !== "relacionados") return;
+    void (async () => {
+      const res = await fetch(`/api/crm/empresas/${encodeURIComponent(empresaId)}/vinculos`, {
+        credentials: "include",
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: { negocios?: Array<{ id: string; codigo?: string | null; titulo: string }> };
+      };
+      if (res.ok && json.data?.negocios) setNegociosRel(json.data.negocios);
+    })();
+  }, [open, empresaId, fichaTab]);
 
   async function salvar() {
     if (!empresaId) return;
@@ -173,6 +200,8 @@ export function CadastroEmpresaSideover({
           bairro: form.bairro,
           cidade: form.cidade,
           estado: form.estado,
+          ativo: form.ativo,
+          acesso_habilitado: form.acesso_habilitado,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -355,6 +384,16 @@ export function CadastroEmpresaSideover({
       footer={footer}
     >
       {loading && <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando dados da empresa…</p>}
+      {empresaId && (
+        <p style={{ margin: "0 0 8px", fontSize: 12 }}>
+          <Link
+            href={`/crm/empresas/${encodeURIComponent(empresaId)}`}
+            style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}
+          >
+            Abrir ficha completa →
+          </Link>
+        </p>
+      )}
       {erro && (
         <div
           style={{
@@ -391,6 +430,9 @@ export function CadastroEmpresaSideover({
 
       {mode === "view" && empresa && !loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <CadastroFichaTabs active={fichaTab} onChange={setFichaTab}>
+            {fichaTab === "resumo" && (
+              <>
           <AgenteSideoverEntityCard
             accent="#3b82f6"
             Icon={Building2}
@@ -480,6 +522,38 @@ export function CadastroEmpresaSideover({
               {actor.email ? ` (${actor.email})` : ""}.
             </p>
           )}
+              </>
+            )}
+            {fichaTab === "vinculos" && empresaId ? (
+              <CadastroVinculosPessoaEmpresa
+                entityType="empresa"
+                entityId={empresaId}
+                actor={actor}
+                variant="sideover"
+              />
+            ) : null}
+            {fichaTab === "relacionados" ? (
+              <CadastroFichaRelacionados negocios={negociosRel} variant="sideover" />
+            ) : null}
+            {fichaTab === "dados" && (
+              <CadastroSideoverPanel>
+                <AgenteSideoverInfoGrid
+                  rows={[
+                    { label: "Mercado", value: labelMercadoPrefixo(empresa.prefixo_mercado) },
+                    { label: "Segmento", value: labelEmpresaSegmento(empresa.segmento) },
+                    { label: "Criado em", value: formatarData(empresa.criado_em) },
+                    {
+                      label: "Endereço",
+                      value:
+                        [empresa.logradouro, empresa.numero, empresa.bairro, empresa.cidade, empresa.estado]
+                          .filter(Boolean)
+                          .join(", ") || "—",
+                    },
+                  ]}
+                />
+              </CadastroSideoverPanel>
+            )}
+          </CadastroFichaTabs>
         </div>
       )}
 
@@ -546,6 +620,22 @@ export function CadastroEmpresaSideover({
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
           </div>
+          <label style={{ ...LABEL, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={form.ativo !== false}
+              onChange={(e) => setForm((f) => ({ ...f, ativo: e.target.checked }))}
+            />
+            Empresa activa
+          </label>
+          <label style={{ ...LABEL, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={Boolean(form.acesso_habilitado)}
+              onChange={(e) => setForm((f) => ({ ...f, acesso_habilitado: e.target.checked }))}
+            />
+            Acesso ao portal habilitado
+          </label>
         </div>
       )}
     </CadastroPremiumSideover>

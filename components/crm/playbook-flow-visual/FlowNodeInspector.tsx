@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import type { Node } from "@xyflow/react";
 import { CheckCircle, ClipboardList, MessageSquare, Pencil, Trash2, Plus } from "lucide-react";
 import type { FlowMenuOption, FlowVisualNodeData } from "./types";
+import type { PlaybookFlowMenuFormat } from "@/lib/playbook/flow-definition-types";
 
 type FlowNodeInspectorProps = {
   selectedNode: Node<FlowVisualNodeData> | null;
@@ -113,7 +114,19 @@ export function FlowNodeInspector({
 
         {/* Menu options */}
         {data.kind === "menu" && (
-          <FieldRow label={`Opções (${(data.menuOptions ?? []).length})`}>
+          <>
+            <FieldRow label="Formato das opções">
+              <select
+                value={String(data.menuFormat ?? "list")}
+                onChange={(e) => update({ menuFormat: e.target.value as PlaybookFlowMenuFormat })}
+                style={inputStyle}
+              >
+                <option value="text">Texto numerado</option>
+                <option value="list">Lista WhatsApp</option>
+                <option value="button">Botões (até 3)</option>
+              </select>
+            </FieldRow>
+            <FieldRow label={`Opções (${(data.menuOptions ?? []).length})`}>
             <div style={optionsWrapStyle}>
               {(data.menuOptions ?? []).map((opt, idx) => (
                 <div key={opt.id} style={optionRowStyle}>
@@ -140,6 +153,7 @@ export function FlowNodeInspector({
               </button>
             </div>
           </FieldRow>
+          </>
         )}
 
         {/* Delete */}

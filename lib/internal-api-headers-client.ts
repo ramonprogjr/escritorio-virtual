@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { encodeHttpHeaderValue } from "@/lib/http-header-utf8";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 /** Cabeçalhos para APIs CRM admin, incluindo auth_id do utilizador atual. */
@@ -18,6 +19,6 @@ export async function crmApiHeadersWithActor(actor?: {
   const h = await crmApiHeaders();
   if (actor?.id) h["x-user-id"] = actor.id;
   if (actor?.email) h["x-user-email"] = actor.email;
-  if (actor?.name) h["x-user-name"] = actor.name;
+  if (actor?.name) h["x-user-name"] = encodeHttpHeaderValue(actor.name);
   return h;
 }

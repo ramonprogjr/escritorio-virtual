@@ -12,7 +12,7 @@ import {
   validarPessoaCadastro,
   type PessoaCadastroPayload,
 } from "@/lib/crm/pessoa-cadastro";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -136,14 +136,19 @@ async function listarPessoas(
     area_atuacao: string;
     offset: number;
     limit: number;
+    tenant_id: string;
   }
 ) {
-  const run = (select: string) => {
+  const runList = (select: string, withTenantFilter: boolean) => {
     let query = supabase
       .from("hub_pessoas")
       .select(select, { count: "exact" })
       .order("criado_em", { ascending: false })
       .range(params.offset, params.offset + params.limit - 1);
+
+    if (withTenantFilter) {
+      query = query.or(tenantScopeOrFilter(params.tenant_id));
+    }
 
     if (params.busca) {
       const b = params.busca.replace(/%/g, "");
@@ -166,24 +171,27 @@ async function listarPessoas(
     return query;
   };
 
-  const first = await run(HUB_PESSOA_SELECT_LIST);
-  if (!first.error) return first;
-
-  const missingCol = [
-    "area_atuacao",
-    "cep",
-    "logradouro",
-    "numero",
-    "complemento",
-    "bairro",
-    "tenant_id",
-    "dados_extras",
-    "codigo",
-  ].some((c) => isMissingPgColumn(first.error, c));
-  if (missingCol || isMissingPgColumn(first.error)) {
-    return run(HUB_PESSOA_SELECT_CORE);
+  let result = await runList(HUB_PESSOA_SELECT_LIST, true);
+  if (result.error) {
+    if (isMissingPgColumn(result.error, "tenant_id")) {
+      result = await runList(HUB_PESSOA_SELECT_CORE, false);
+    } else {
+      const missingCol = [
+        "area_atuacao",
+        "cep",
+        "logradouro",
+        "numero",
+        "complemento",
+        "bairro",
+        "dados_extras",
+        "codigo",
+      ].some((c) => isMissingPgColumn(result.error, c));
+      if (missingCol || isMissingPgColumn(result.error)) {
+        result = await runList(HUB_PESSOA_SELECT_CORE, true);
+      }
+    }
   }
-  return first;
+  return result;
 }
 
 export async function GET(request: NextRequest) {
@@ -196,6 +204,7 @@ export async function GET(request: NextRequest) {
   const area_atuacao = searchParams.get("area_atuacao") || "";
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(searchParams.get("limit") || "200", 10), 500);
+  const tenant_id = tenantIdFromRequest(request.headers);
 
   const { data, error, count } = await listarPessoas(supabase, {
     busca,
@@ -205,6 +214,7 @@ export async function GET(request: NextRequest) {
     area_atuacao,
     offset,
     limit,
+    tenant_id,
   });
 
   if (error) {
