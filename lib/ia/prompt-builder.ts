@@ -95,6 +95,7 @@ export async function construirPrompt(params: PromptParams): Promise<PromptCompl
   if (!agente) return null;
 
   let playbookFluxoConcluido = false;
+  let playbookRespostas: Record<string, string> = {};
   if (params.leadId) {
     const { data: leadRow } = await supabase
       .from("hub_leads_crm")
@@ -106,6 +107,14 @@ export async function construirPrompt(params: PromptParams): Promise<PromptCompl
         ? (leadRow.metadata as Record<string, unknown>)
         : null;
     playbookFluxoConcluido = meta?.wa_playbook_complete === true;
+    const ans = meta?.wa_playbook_answers;
+    if (ans && typeof ans === "object" && !Array.isArray(ans)) {
+      playbookRespostas = Object.fromEntries(
+        Object.entries(ans as Record<string, unknown>)
+          .filter(([, v]) => typeof v === "string" && v.trim())
+          .map(([k, v]) => [k, String(v).trim()])
+      );
+    }
   }
 
   const playbookPublicado = await loadPublishedPlaybookRuntimeSource(supabase, params.agenteSlug, {
@@ -187,6 +196,29 @@ Modo de extração: ${playbookPublicado.mode}
 ${playbookOnly ? "Modo playbook-only: este agente não usa catálogo de cargo — ignore qualquer regra externa de SDR/cargo." : "Se alguma configuração genérica do runtime conflitar com este playbook, priorize o playbook publicado."}
 
 ${playbookPublicado.prompt}`);
+
+    if (typeof agente.personalidade === "string" && agente.personalidade.trim()) {
+      secoes.push(`═══ TOM E PERSONALIDADE (identidade do agente) ═══
+${agente.personalidade.trim()}
+Priorize acolhimento humano, empatia e respostas naturais — evite soar como script ou questionário rígido.`);
+
+      fontesConhecimento.push({
+        id: "personalidade_playbook",
+        label: "Personalidade (identidade)",
+      });
+    }
+
+    if (playbookFluxoConcluido && Object.keys(playbookRespostas).length > 0) {
+      const linhasResp = Object.entries(playbookRespostas).map(([k, v]) => `- ${k}: ${v}`);
+      secoes.push(`═══ QUALIFICAÇÃO JÁ REGISTRADA (não repetir) ═══
+${linhasResp.join("\n")}
+Use estes dados como contexto; conduza a conversa com raciocínio e perguntas abertas quando faltar detalhe.`);
+      fontesConhecimento.push({
+        id: "playbook_respostas",
+        label: "Respostas do fluxo WhatsApp",
+        detalhe: `${Object.keys(playbookRespostas).length} campo(s)`,
+      });
+    }
 
     secoes.push(`═══ REGRAS DE NOME (CRÍTICO) ═══
 - Nunca use nomes de rodapé, responsável técnico ou metadados do documento do playbook como nome do cliente.

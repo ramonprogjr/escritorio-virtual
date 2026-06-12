@@ -72,7 +72,14 @@ export type FlowBranchImobSubStep = BaseStep & {
 
 export type FlowCompleteStep = BaseStep & {
   type: "complete";
+  /** Texto ao cliente (nunca usar summary interno aqui). */
   text?: string;
+  /** Resumo interno para CRM — não enviar ao WhatsApp. */
+  internalSummary?: string;
+  /** Após concluir, permitir IA no mesmo turno (handoff conversacional). */
+  handoff_ia?: boolean;
+  /** Patch CRM opcional ao concluir (ex.: triagem inicial). */
+  complete_crm_patch?: Record<string, unknown>;
 };
 
 export type FlowEngineStep =
@@ -114,7 +121,15 @@ export type FlowEngineAdapter = {
   resolveChoiceId: (mensagem: string, menuChoiceId?: string | null) => string | null;
   persistState: (patch: FlowEnginePersistPatch) => Promise<void>;
   onNameCaptured?: (name: string) => Promise<void>;
-  onStepComplete?: (stepId: string, answers: Record<string, string>) => Promise<void>;
+  onStepComplete?: (
+    stepId: string,
+    answers: Record<string, string>,
+    meta?: {
+      internalSummary?: string;
+      handoffIa?: boolean;
+      crmPatch?: Record<string, unknown>;
+    }
+  ) => Promise<void>;
 };
 
 function mensagemPareceNome(mensagem: string): boolean {
@@ -253,20 +268,43 @@ export async function executeFlowEngine(
 
     switch (step.type) {
       case "send_text": {
-        if (step.text.trim()) {
-          await adapter.sendText(step.text.trim());
+        const parts: string[] = [];
+        let walk: string | undefined = currentStepId;
+        let landedStepId: string | undefined;
+        while (walk) {
+          const st: FlowEngineStep | undefined = definition.steps[walk];
+          if (!st || st.type !== "send_text") {
+            landedStepId = walk;
+            break;
+          }
+          if (st.text.trim()) parts.push(st.text.trim());
+          if (!st.next_step) {
+            currentStepId = walk;
+            walk = undefined;
+            break;
+          }
+          walk = st.next_step;
+          currentStepId = walk;
         }
-        if (!step.next_step) {
-          await adapter.persistState({
-            step: currentStepId,
-            answers,
-            active: true,
-            complete: false,
-          });
-          return { handled: true, skipIa: true, step: currentStepId };
+        if (parts.length) {
+          await adapter.sendText(parts.join("\n\n"));
         }
-        currentStepId = step.next_step;
-        continue;
+
+        if (landedStepId) {
+          const landed = definition.steps[landedStepId];
+          if (landed && landed.type !== "send_text") {
+            currentStepId = landedStepId;
+            continue;
+          }
+        }
+
+        await adapter.persistState({
+          step: currentStepId,
+          answers,
+          active: true,
+          complete: false,
+        });
+        return { handled: true, skipIa: true, step: currentStepId };
       }
 
       case "await_name": {
@@ -410,7 +448,14 @@ export async function executeFlowEngine(
           await adapter.sendText(step.text.trim());
         }
         if (adapter.onStepComplete) {
-          await adapter.onStepComplete(currentStepId, answers);
+          await adapter.onStepComplete(currentStepId, answers, {
+            internalSummary: step.internalSummary?.trim() || undefined,
+            handoffIa: step.handoff_ia === true,
+            crmPatch:
+              step.complete_crm_patch && typeof step.complete_crm_patch === "object"
+                ? step.complete_crm_patch
+                : undefined,
+          });
         }
         await adapter.persistState({
           step: "concluido",
@@ -418,7 +463,7 @@ export async function executeFlowEngine(
           active: false,
           complete: true,
         });
-        return { handled: true, skipIa: true, step: "concluido" };
+        return { handled: true, skipIa: step.handoff_ia !== true, step: "concluido" };
       }
     }
   }

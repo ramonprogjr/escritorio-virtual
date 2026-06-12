@@ -36,7 +36,10 @@ export type PlaybookFlowCrmPatch = {
 export type PlaybookFlowCompleteAction = {
   type: "complete";
   handoff_to?: PlaybookFlowHandoffTarget;
+  /** Nota interna CRM — nunca enviar ao cliente no WhatsApp. */
   summary?: string;
+  /** Mensagem opcional ao cliente ao encerrar o fluxo (se vazio, não envia texto extra). */
+  user_message?: string;
   crm_patch?: PlaybookFlowCrmPatch;
 };
 
