@@ -26,10 +26,7 @@ import {
   type PlaybookUploadStatus,
 } from "@/components/crm/PlaybookUploadAnalisePanel";
 import { PlaybookFlowStatusBanner } from "@/components/crm/PlaybookFlowStatusBanner";
-import {
-  assessPlaybookFlowInMarkdown,
-  playbookFlowReady,
-} from "@/lib/playbook/playbook-flow-ui";
+import { assessPlaybookFlowInMarkdown } from "@/lib/playbook/playbook-flow-ui";
 import { PLAYBOOK_EXEMPLO_MD_URL } from "@/lib/playbook/playbook-exemplo";
 import {
   RAG_ACCEPT_ATTR,
@@ -999,8 +996,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           ? "#23863618"
           : "#0d1117";
 
+  /** Só playbook: exige arquivo + análise; fluxo WA dinâmico é opcional no passo 1 (aviso no banner). */
   const passo1AvancarBloqueado = somentePlaybook
-    ? !playbookConteudoAnalise.trim() || !playbookAnaliseResultado || !playbookFlowReady(playbookFlowStatus)
+    ? !playbookConteudoAnalise.trim() || !playbookAnaliseResultado
     : !cargoSelecionado;
 
   useEffect(() => {
