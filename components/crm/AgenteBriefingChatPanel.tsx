@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, User, X } from "lucide-react";
+import { Bot, MessageCircle, Send, User, X } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import {
   formatarFontesConhecimentoLinha,
   type PromptFonteConhecimento,
 } from "@/lib/ia/prompt-builder";
+import {
+  BRIEFING_FLOW_SIM_STATE_KEY,
+  emptyBriefingFlowSimState,
+  parseBriefingFlowSimState,
+  type BriefingFlowSimState,
+} from "@/lib/playbook/briefing-flow-sim-shared";
+import {
+  BriefingWhatsappBubble,
+  BriefingWhatsappUserBubble,
+  parseSimPartFromMetadata,
+} from "@/components/crm/BriefingWhatsappBubble";
 
 function fontesConhecimentoFromMetadata(
   metadata: Record<string, unknown> | undefined
@@ -43,7 +54,7 @@ function isOptimisticUserMessage(m: Msg): boolean {
   return m.papel === "user" && m.id.startsWith(OPTIMISTIC_USER_PREFIX);
 }
 
-export type ModoBriefingChat = "briefing_interno" | "simulacao_canal";
+export type ModoBriefingChat = "briefing_interno" | "simulacao_canal" | "simulacao_whatsapp";
 
 export type AgenteBriefingDrawerProps = {
   open: boolean;
@@ -56,10 +67,13 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
   const [modoChat, setModoChat] = useState<ModoBriefingChat>("briefing_interno");
   const [sessaoId, setSessaoId] = useState<string | null>(null);
   const [mensagens, setMensagens] = useState<Msg[]>([]);
+  const [flowState, setFlowState] = useState<BriefingFlowSimState>(emptyBriefingFlowSimState());
   const [input, setInput] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const fimRef = useRef<HTMLDivElement>(null);
+
+  const isWhatsappSim = modoChat === "simulacao_whatsapp";
 
   const base = `/api/hub/agentes/${encodeURIComponent(agenteSlug)}/briefing-chat`;
 
@@ -77,6 +91,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
     if (!open || !agenteSlug) return;
     setSessaoId(null);
     setMensagens([]);
+    setFlowState(emptyBriefingFlowSimState());
     setErro("");
     setInput("");
   }, [open, agenteSlug, modoChat]);
@@ -85,42 +100,62 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens, enviando, open]);
 
-  async function enviar() {
-    const t = input.trim();
+  async function enviar(extra?: { menuChoiceId?: string; texto?: string }) {
+    const t = (extra?.texto ?? input).trim();
     if (!t || enviando) return;
     const tempId = `${OPTIMISTIC_USER_PREFIX}${Date.now()}`;
     const now = new Date().toISOString();
     setMensagens((prev) => [...prev, { id: tempId, papel: "user", conteudo: t, criado_em: now }]);
     setEnviando(true);
     setErro("");
-    setInput("");
+    if (!extra?.texto) setInput("");
     try {
+      const body: Record<string, unknown> = {
+        sessao_id: sessaoId,
+        mensagem: t,
+        modo: modoChat,
+      };
+      if (isWhatsappSim) {
+        body.flow_state = flowState;
+        if (extra?.menuChoiceId) body.menu_choice_id = extra.menuChoiceId;
+      }
       const res = await fetch(base, {
         method: "POST",
         headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ sessao_id: sessaoId, mensagem: t, modo: modoChat }),
+        body: JSON.stringify(body),
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
         sessao_id?: string;
         mensagens?: Msg[];
+        flow_state?: BriefingFlowSimState;
       };
       if (!res.ok) {
         setMensagens((prev) => prev.filter((m) => m.id !== tempId));
         setErro(typeof data?.error === "string" ? data.error : `Erro ${res.status}`);
-        setInput(t);
+        if (!extra?.texto) setInput(t);
         if (res.status === 409) setSessaoId(null);
         return;
       }
       if (data.sessao_id) setSessaoId(data.sessao_id);
+      if (data.flow_state) setFlowState(data.flow_state);
+      else if (Array.isArray(data.mensagens)) {
+        const lastAssistant = [...data.mensagens].reverse().find((m) => m.papel === "assistant");
+        const st = parseBriefingFlowSimState(lastAssistant?.metadata?.[BRIEFING_FLOW_SIM_STATE_KEY]);
+        if (st) setFlowState(st);
+      }
       if (Array.isArray(data.mensagens)) setMensagens(data.mensagens);
     } catch {
       setMensagens((prev) => prev.filter((m) => m.id !== tempId));
       setErro("Falha de rede ao enviar.");
-      setInput(t);
+      if (!extra?.texto) setInput(t);
     } finally {
       setEnviando(false);
     }
+  }
+
+  function iniciarWhatsappSim() {
+    void enviar({ texto: "Olá" });
   }
 
   if (!agenteSlug) return null;
@@ -215,6 +250,27 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               </button>
               <button
                 type="button"
+                onClick={() => setModoChat("simulacao_whatsapp")}
+                disabled={enviando}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: `1px solid ${modoChat === "simulacao_whatsapp" ? "#00a88488" : "#30363d"}`,
+                  background: modoChat === "simulacao_whatsapp" ? "#00a88418" : "#21262d",
+                  color: modoChat === "simulacao_whatsapp" ? "#5eead4" : "#8b949e",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: enviando ? "not-allowed" : "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <MessageCircle size={14} />
+                WhatsApp
+              </button>
+              <button
+                type="button"
                 onClick={() => setModoChat("simulacao_canal")}
                 disabled={enviando}
                 style={{
@@ -228,13 +284,15 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                   cursor: enviando ? "not-allowed" : "pointer",
                 }}
               >
-                Simulação interna
+                Só IA (texto)
               </button>
             </div>
             <p style={{ fontSize: 10, color: "#6e7681", margin: "8px 0 0", lineHeight: 1.45 }}>
               {modoChat === "briefing_interno"
                 ? "Visão de operação: extractos reais (ciclos, logs, acções). Sem invocar ferramentas Hub — isso só na conversa ao vivo com lead em sessão."
-                : "Simulação de texto com o mesmo prompt de produção; sem lead nem chamadas a ferramentas. Teste de tom e respostas, não de integrações."}
+                : modoChat === "simulacao_whatsapp"
+                  ? "Simula o WhatsApp com fluxo do playbook (menus, botões, listas) e depois IA pós-qualificação — igual ao canal ao vivo, sem gravar lead."
+                  : "Só prompt de produção em texto livre; sem motor de fluxo. Útil para testar tom após qualificação."}
             </p>
           </div>
           <button
@@ -259,8 +317,46 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
           </button>
         </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0, background: "#0d1117" }}>
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 20px" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+            minHeight: 0,
+            background: isWhatsappSim
+              ? "linear-gradient(180deg, #0b141a 0%, #111b21 100%)"
+              : "#0d1117",
+          }}
+        >
+          {isWhatsappSim && (
+            <div
+              style={{
+                flexShrink: 0,
+                padding: "10px 14px",
+                background: "#202c33",
+                borderBottom: "1px solid #2a3942",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "linear-gradient(145deg, #003b26, #14532d)",
+                  border: "1px solid #22c55e55",
+                }}
+              />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: "#e9edef", fontSize: 14, fontWeight: 600 }}>{agenteNome}</div>
+                <div style={{ color: "#8696a0", fontSize: 11 }}>HUB Obra 10+ · simulação</div>
+              </div>
+            </div>
+          )}
+          <div style={{ flex: 1, overflowY: "auto", padding: isWhatsappSim ? "14px 12px 20px" : "16px 18px 20px" }}>
             {erro && (
               <div
                 style={{
@@ -279,7 +375,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               </div>
             )}
             {mensagens.length === 0 && !erro && !enviando && (
-              <p style={{ color: "#8b949e", fontSize: 13, lineHeight: 1.55, maxWidth: 640 }}>
+              <p style={{ color: isWhatsappSim ? "#8696a0" : "#8b949e", fontSize: 13, lineHeight: 1.55, maxWidth: 640 }}>
                 {modoChat === "briefing_interno" ? (
                   <>
                     Envie uma mensagem: o <strong style={{ color: "#aebccf" }}>funcionário IA</strong> interpreta{" "}
@@ -287,16 +383,100 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                     <strong style={{ color: "#aebccf" }}> não usam</strong> as ferramentas Mistral (resumo de lead, notas,
                     etc.) — essas só na <strong style={{ color: "#aebccf" }}>engine com lead</strong> no canal.
                   </>
+                ) : isWhatsappSim ? (
+                  <>
+                    Teste o playbook como no WhatsApp: menus numerados, listas e botões.{" "}
+                    <button
+                      type="button"
+                      onClick={iniciarWhatsappSim}
+                      style={{
+                        marginTop: 10,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: "1px solid #00a88455",
+                        background: "#005c4b33",
+                        color: "#5eead4",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <MessageCircle size={14} />
+                      Iniciar com &quot;Olá&quot;
+                    </button>
+                  </>
                 ) : (
                   <>
-                    Simule conversa com cliente usando identity + conhecimento + regras. É <strong style={{ color: "#aebccf" }}>só texto</strong> — sem ferramentas nem gravações reais; valide tom e limites antes de ligar o WhatsApp.
+                    Simule conversa com cliente usando identity + conhecimento + regras. É <strong style={{ color: "#aebccf" }}>só texto</strong> — sem fluxo nem ferramentas.
                   </>
                 )}
               </p>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {mensagens.map((m) => {
+            <div style={{ display: "flex", flexDirection: "column", gap: isWhatsappSim ? 10 : 16 }}>
+              {(() => {
+                const lastInteractiveMenuId = (() => {
+                  if (!isWhatsappSim || (flowState.complete && flowState.handoff_ia)) return null;
+                  const lastAssistant = [...mensagens].reverse().find((m) => m.papel === "assistant");
+                  if (!lastAssistant) return null;
+                  const part = parseSimPartFromMetadata(lastAssistant.metadata);
+                  return part?.kind === "menu" ? lastAssistant.id : null;
+                })();
+
+                return mensagens.map((m) => {
                 const isUser = m.papel === "user";
+                const simPart = !isUser ? parseSimPartFromMetadata(m.metadata) : null;
+
+                if (isWhatsappSim) {
+                  if (isUser) {
+                    return (
+                      <div key={m.id} style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <BriefingWhatsappUserBubble text={m.conteudo} />
+                      </div>
+                    );
+                  }
+                  if (simPart) {
+                    const menuAtivo = m.id === lastInteractiveMenuId;
+                    return (
+                      <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <BriefingWhatsappBubble
+                          part={simPart}
+                          disabled={enviando || !menuAtivo}
+                          onSelectOption={
+                            simPart.kind === "menu" && menuAtivo
+                              ? (choice, index) => {
+                                  void enviar({
+                                    texto: String(index + 1),
+                                    menuChoiceId: choice.id,
+                                  });
+                                }
+                              : undefined
+                          }
+                        />
+                        {m.metadata && typeof m.metadata === "object" && m.metadata.modelo ? (
+                          <div style={{ paddingLeft: 4, fontSize: 10, color: "#8696a0" }}>
+                            {String(m.metadata.modelo)}
+                            {m.metadata.fase === "ia_pos_fluxo" ? " · pós-fluxo IA" : " · fluxo playbook"}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <BriefingWhatsappBubble part={{ kind: "text", text: m.conteudo }} />
+                      {m.metadata && typeof m.metadata === "object" && m.metadata.modelo ? (
+                        <div style={{ paddingLeft: 4, fontSize: 10, color: "#8696a0" }}>
+                          {String(m.metadata.modelo)} · {String(m.metadata.tokens_input ?? "—")}/
+                          {String(m.metadata.tokens_output ?? "—")} tok
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                }
+
                 return (
                   <div
                     key={m.id}
@@ -426,8 +606,35 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                     )}
                   </div>
                 );
-              })}
-              {enviando && (
+              });
+              })()}
+              {enviando && isWhatsappSim && (
+                <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                  <div
+                    style={{
+                      background: "#005c4b",
+                      borderRadius: "8px 8px 8px 2px",
+                      padding: "12px 16px",
+                      display: "flex",
+                      gap: 6,
+                    }}
+                  >
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: "#ffffff99",
+                          animation: `dotBlink ${0.55 + i * 0.12}s ease-in-out infinite`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {enviando && !isWhatsappSim && (
                 <div
                   style={{
                     display: "flex",
@@ -526,7 +733,11 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Mensagem para o funcionário IA (revisão ou simulação interna)…"
+                placeholder={
+                  isWhatsappSim
+                    ? "Mensagem como no WhatsApp…"
+                    : "Mensagem para o funcionário IA (revisão ou simulação interna)…"
+                }
                 rows={2}
                 disabled={enviando}
                 onKeyDown={(e) => {
@@ -559,8 +770,12 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                   borderRadius: "50%",
                   border: "none",
                   background:
-                    enviando || !input.trim() ? "#30363d" : "linear-gradient(145deg, #003b26, #14532d)",
-                  color: "#c9a24a",
+                    enviando || !input.trim()
+                      ? "#30363d"
+                      : isWhatsappSim
+                        ? "#00a884"
+                        : "linear-gradient(145deg, #003b26, #14532d)",
+                  color: isWhatsappSim ? "#fff" : "#c9a24a",
                   cursor: enviando || !input.trim() ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",

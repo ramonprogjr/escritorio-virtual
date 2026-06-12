@@ -1,6 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { completarChatPreferindoMistral } from "@/lib/ia/llm-completion";
 import { construirPrompt, type PromptFonteConhecimento } from "@/lib/ia/prompt-builder";
+import {
+  carregarFluxoPublicadoParaSimulacao,
+  emptyBriefingFlowSimState,
+  executarPassoSimulacaoFluxo,
+  partToDisplayText,
+  type BriefingFlowSimState,
+  type BriefingSimOutboundPart,
+} from "@/lib/playbook/briefing-flow-simulator";
 
 export type BriefingReplyResult = {
   texto: string;
@@ -32,7 +40,20 @@ Responda como faria ao **cliente ou lead** no canal ao vivo, seguindo **estritam
 - **Neste painel não há sessão de lead nem chamadas reais a ferramentas Hub** (Mistral function calls). É só texto: não afirme ter gravado no CRM, enviado WhatsApp ou executado ferramentas. Para ver ferramentas a actuar, use uma **conversa real** com lead em sessão (canal configurado).
 - Mantenha tom, limites e playbook como em produção.`;
 
-export type BriefingModoSessao = "briefing_interno" | "simulacao_canal";
+export type BriefingModoSessao = "briefing_interno" | "simulacao_canal" | "simulacao_whatsapp";
+
+export type BriefingSimRespostaParte = BriefingSimOutboundPart & {
+  /** Texto legível para histórico / fallback */
+  display: string;
+};
+
+export type BriefingSimCanalResult = {
+  partes: BriefingSimRespostaParte[];
+  flow_state: BriefingFlowSimState;
+  /** Quando preenchido, resposta IA pós-fluxo no mesmo turno */
+  ia?: BriefingReplyResult;
+  usou_fluxo: boolean;
+};
 
 export type BriefingMensagemLinha = {
   papel: "user" | "assistant";
@@ -289,5 +310,62 @@ export async function executarSimulacaoCanalReply(params: {
     tokens_output: out.tokensSaida,
     custo_brl: brl,
     fontes_conhecimento: pc.fontesConhecimento,
+  };
+}
+
+function partesParaResposta(partes: BriefingSimOutboundPart[]): BriefingSimRespostaParte[] {
+  return partes.map((p) => ({
+    ...p,
+    display: partToDisplayText(p),
+  }));
+}
+
+/** Simulação WhatsApp: fluxo determinístico do playbook + IA após qualificação. */
+export async function executarSimulacaoWhatsappReply(params: {
+  supabase: SupabaseClient;
+  agenteSlug: string;
+  historico: BriefingMensagemLinha[];
+  mensagemUsuario: string;
+  menuChoiceId?: string | null;
+  flowState?: BriefingFlowSimState | null;
+}): Promise<BriefingSimCanalResult> {
+  const prior = params.flowState ?? emptyBriefingFlowSimState();
+  const emFaseIa = prior.complete && prior.handoff_ia;
+
+  if (!emFaseIa) {
+    const definition = await carregarFluxoPublicadoParaSimulacao(params.supabase, params.agenteSlug);
+    if (definition) {
+      const fluxo = await executarPassoSimulacaoFluxo({
+        definition,
+        state: prior,
+        mensagem: params.mensagemUsuario,
+        menuChoiceId: params.menuChoiceId,
+      });
+
+      if (fluxo.handled) {
+        return {
+          partes: partesParaResposta(fluxo.parts),
+          flow_state: fluxo.state,
+          usou_fluxo: true,
+        };
+      }
+    }
+  }
+
+  const ia = await executarSimulacaoCanalReply({
+    agenteSlug: params.agenteSlug,
+    historico: params.historico,
+    mensagemUsuario: params.mensagemUsuario,
+  });
+
+  const nextState: BriefingFlowSimState = emFaseIa
+    ? prior
+    : { ...prior, handoff_ia: true, complete: true, active: false };
+
+  return {
+    partes: [{ kind: "text", text: ia.texto, display: ia.texto }],
+    flow_state: nextState,
+    ia,
+    usou_fluxo: false,
   };
 }
