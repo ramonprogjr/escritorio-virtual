@@ -302,6 +302,7 @@ export async function POST(
       tokens_output: resultado.tokens_output,
       custo_brl: resultado.custo_brl,
       modo,
+      fontes_conhecimento: resultado.fontes_conhecimento,
     },
   });
   if (aErr) return NextResponse.json({ error: aErr.message }, { status: 500 });

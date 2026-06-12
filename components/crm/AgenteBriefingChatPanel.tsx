@@ -3,6 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Send, User, X } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import {
+  formatarFontesConhecimentoLinha,
+  type PromptFonteConhecimento,
+} from "@/lib/ia/prompt-builder";
+
+function fontesConhecimentoFromMetadata(
+  metadata: Record<string, unknown> | undefined
+): PromptFonteConhecimento[] {
+  const raw = metadata?.fontes_conhecimento;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (f): f is PromptFonteConhecimento =>
+        !!f &&
+        typeof f === "object" &&
+        typeof (f as PromptFonteConhecimento).label === "string"
+    )
+    .map((f) => ({
+      id: String((f as PromptFonteConhecimento).id || ""),
+      label: String((f as PromptFonteConhecimento).label),
+      detalhe: (f as PromptFonteConhecimento).detalhe
+        ? String((f as PromptFonteConhecimento).detalhe)
+        : undefined,
+    }));
+}
 
 type Msg = {
   id: string;
@@ -354,9 +379,31 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                         {m.conteudo}
                       </div>
                       {!isUser && m.metadata && typeof m.metadata === "object" && m.metadata.modelo ? (
-                        <div style={{ fontSize: 10, color: "#484f58", marginTop: 6, paddingLeft: 2 }}>
-                          {String(m.metadata.modelo)} · {String(m.metadata.tokens_input ?? "—")}/
-                          {String(m.metadata.tokens_output ?? "—")} tok · ~ R$ {Number(m.metadata.custo_brl ?? 0).toFixed(4)}
+                        <div style={{ marginTop: 6, paddingLeft: 2 }}>
+                          <div style={{ fontSize: 10, color: "#484f58" }}>
+                            {String(m.metadata.modelo)} · {String(m.metadata.tokens_input ?? "—")}/
+                            {String(m.metadata.tokens_output ?? "—")} tok · ~ R${" "}
+                            {Number(m.metadata.custo_brl ?? 0).toFixed(4)}
+                          </div>
+                          {(() => {
+                            const fontes = fontesConhecimentoFromMetadata(m.metadata);
+                            const linha = formatarFontesConhecimentoLinha(fontes);
+                            if (!linha) return null;
+                            return (
+                              <div
+                                style={{
+                                  fontSize: 10,
+                                  color: "#6e7681",
+                                  marginTop: 4,
+                                  lineHeight: 1.45,
+                                }}
+                                title={linha}
+                              >
+                                <span style={{ color: "#484f58" }}>Fontes: </span>
+                                {linha}
+                              </div>
+                            );
+                          })()}
                         </div>
                       ) : null}
                     </div>
