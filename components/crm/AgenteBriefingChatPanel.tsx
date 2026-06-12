@@ -14,8 +14,7 @@ import {
   type BriefingFlowSimState,
 } from "@/lib/playbook/briefing-flow-sim-shared";
 import {
-  BriefingWhatsappBubble,
-  BriefingWhatsappUserBubble,
+  BriefingSimMenuOptions,
   parseSimPartFromMetadata,
 } from "@/components/crm/BriefingWhatsappBubble";
 
@@ -291,7 +290,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               {modoChat === "briefing_interno"
                 ? "Visão de operação: extractos reais (ciclos, logs, acções). Sem invocar ferramentas Hub — isso só na conversa ao vivo com lead em sessão."
                 : modoChat === "simulacao_whatsapp"
-                  ? "Simula o WhatsApp com fluxo do playbook (menus, botões, listas) e depois IA pós-qualificação — igual ao canal ao vivo, sem gravar lead."
+                  ? "Mesmo layout do chat: 1ª fase = fluxo do playbook (menus clicáveis); após qualificar = IA Mistral com contexto do fluxo."
                   : "Só prompt de produção em texto livre; sem motor de fluxo. Útil para testar tom após qualificação."}
             </p>
           </div>
@@ -317,46 +316,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
           </button>
         </div>
 
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
-            minHeight: 0,
-            background: isWhatsappSim
-              ? "linear-gradient(180deg, #0b141a 0%, #111b21 100%)"
-              : "#0d1117",
-          }}
-        >
-          {isWhatsappSim && (
-            <div
-              style={{
-                flexShrink: 0,
-                padding: "10px 14px",
-                background: "#202c33",
-                borderBottom: "1px solid #2a3942",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background: "linear-gradient(145deg, #003b26, #14532d)",
-                  border: "1px solid #22c55e55",
-                }}
-              />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ color: "#e9edef", fontSize: 14, fontWeight: 600 }}>{agenteNome}</div>
-                <div style={{ color: "#8696a0", fontSize: 11 }}>HUB Obra 10+ · simulação</div>
-              </div>
-            </div>
-          )}
-          <div style={{ flex: 1, overflowY: "auto", padding: isWhatsappSim ? "14px 12px 20px" : "16px 18px 20px" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0, background: "#0d1117" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 20px" }}>
             {erro && (
               <div
                 style={{
@@ -375,7 +336,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               </div>
             )}
             {mensagens.length === 0 && !erro && !enviando && (
-              <p style={{ color: isWhatsappSim ? "#8696a0" : "#8b949e", fontSize: 13, lineHeight: 1.55, maxWidth: 640 }}>
+              <p style={{ color: "#8b949e", fontSize: 13, lineHeight: 1.55, maxWidth: 640 }}>
                 {modoChat === "briefing_interno" ? (
                   <>
                     Envie uma mensagem: o <strong style={{ color: "#aebccf" }}>funcionário IA</strong> interpreta{" "}
@@ -415,7 +376,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 )}
               </p>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: isWhatsappSim ? 10 : 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {(() => {
                 const lastInteractiveMenuId = (() => {
                   if (!isWhatsappSim || (flowState.complete && flowState.handoff_ia)) return null;
@@ -428,54 +389,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 return mensagens.map((m) => {
                 const isUser = m.papel === "user";
                 const simPart = !isUser ? parseSimPartFromMetadata(m.metadata) : null;
-
-                if (isWhatsappSim) {
-                  if (isUser) {
-                    return (
-                      <div key={m.id} style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <BriefingWhatsappUserBubble text={m.conteudo} />
-                      </div>
-                    );
-                  }
-                  if (simPart) {
-                    const menuAtivo = m.id === lastInteractiveMenuId;
-                    return (
-                      <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        <BriefingWhatsappBubble
-                          part={simPart}
-                          disabled={enviando || !menuAtivo}
-                          onSelectOption={
-                            simPart.kind === "menu" && menuAtivo
-                              ? (choice, index) => {
-                                  void enviar({
-                                    texto: String(index + 1),
-                                    menuChoiceId: choice.id,
-                                  });
-                                }
-                              : undefined
-                          }
-                        />
-                        {m.metadata && typeof m.metadata === "object" && m.metadata.modelo ? (
-                          <div style={{ paddingLeft: 4, fontSize: 10, color: "#8696a0" }}>
-                            {String(m.metadata.modelo)}
-                            {m.metadata.fase === "ia_pos_fluxo" ? " · pós-fluxo IA" : " · fluxo playbook"}
-                          </div>
-                        ) : null}
-                      </div>
-                    );
-                  }
-                  return (
-                    <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <BriefingWhatsappBubble part={{ kind: "text", text: m.conteudo }} />
-                      {m.metadata && typeof m.metadata === "object" && m.metadata.modelo ? (
-                        <div style={{ paddingLeft: 4, fontSize: 10, color: "#8696a0" }}>
-                          {String(m.metadata.modelo)} · {String(m.metadata.tokens_input ?? "—")}/
-                          {String(m.metadata.tokens_output ?? "—")} tok
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                }
+                const menuAtivo = isWhatsappSim && m.id === lastInteractiveMenuId && simPart?.kind === "menu";
 
                 return (
                   <div
@@ -558,12 +472,29 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                       >
                         {m.conteudo}
                       </div>
+                      {menuAtivo && simPart.kind === "menu" ? (
+                        <BriefingSimMenuOptions
+                          menuType={simPart.menu_type}
+                          choices={simPart.choices}
+                          listButton={simPart.list_button}
+                          disabled={enviando}
+                          onSelectOption={(choice, index) => {
+                            void enviar({
+                              texto: String(index + 1),
+                              menuChoiceId: choice.id,
+                            });
+                          }}
+                        />
+                      ) : null}
                       {!isUser && m.metadata && typeof m.metadata === "object" && m.metadata.modelo ? (
                         <div style={{ marginTop: 6, paddingLeft: 2 }}>
                           <div style={{ fontSize: 10, color: "#484f58" }}>
-                            {String(m.metadata.modelo)} · {String(m.metadata.tokens_input ?? "—")}/
-                            {String(m.metadata.tokens_output ?? "—")} tok · ~ R${" "}
-                            {Number(m.metadata.custo_brl ?? 0).toFixed(4)}
+                            {String(m.metadata.modelo)}
+                            {m.metadata.fase === "fluxo_playbook" ? " · fluxo playbook" : ""}
+                            {m.metadata.fase === "ia_pos_fluxo" ? " · IA pós-qualificação" : ""}
+                            {m.metadata.fase !== "fluxo_playbook" && m.metadata.fase !== "ia_pos_fluxo"
+                              ? ` · ${String(m.metadata.tokens_input ?? "—")}/${String(m.metadata.tokens_output ?? "—")} tok · ~ R$ ${Number(m.metadata.custo_brl ?? 0).toFixed(4)}`
+                              : ""}
                           </div>
                           {(() => {
                             const fontes = fontesConhecimentoFromMetadata(m.metadata);
@@ -608,33 +539,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 );
               });
               })()}
-              {enviando && isWhatsappSim && (
-                <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                  <div
-                    style={{
-                      background: "#005c4b",
-                      borderRadius: "8px 8px 8px 2px",
-                      padding: "12px 16px",
-                      display: "flex",
-                      gap: 6,
-                    }}
-                  >
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: "#ffffff99",
-                          animation: `dotBlink ${0.55 + i * 0.12}s ease-in-out infinite`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {enviando && !isWhatsappSim && (
+              {enviando && (
                 <div
                   style={{
                     display: "flex",
@@ -733,11 +638,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={
-                  isWhatsappSim
-                    ? "Mensagem como no WhatsApp…"
-                    : "Mensagem para o funcionário IA (revisão ou simulação interna)…"
-                }
+                placeholder="Mensagem para o funcionário IA (revisão ou simulação interna)…"
                 rows={2}
                 disabled={enviando}
                 onKeyDown={(e) => {
@@ -770,12 +671,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                   borderRadius: "50%",
                   border: "none",
                   background:
-                    enviando || !input.trim()
-                      ? "#30363d"
-                      : isWhatsappSim
-                        ? "#00a884"
-                        : "linear-gradient(145deg, #003b26, #14532d)",
-                  color: isWhatsappSim ? "#fff" : "#c9a24a",
+                    enviando || !input.trim() ? "#30363d" : "linear-gradient(145deg, #003b26, #14532d)",
+                  color: "#c9a24a",
                   cursor: enviando || !input.trim() ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",

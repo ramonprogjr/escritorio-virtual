@@ -47,7 +47,7 @@ describe("playbook-atendimento-1.md flow", () => {
     expect(validated.definition.id).toBe("atendimento_1_mari_v2");
     const ids = new Set(validated.definition.steps.map((s) => s.id));
     expect(ids.has("triagem_servicos_menu")).toBe(true);
-    expect(ids.has("coletar_email")).toBe(true);
+    expect(ids.has("agradecer_nome")).toBe(true);
     expect(ids.has("arq_boas_vindas")).toBe(true);
   });
 });

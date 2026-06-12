@@ -6,7 +6,7 @@ obra10_agente_nome: "Mari"
 
 # Playbook — Atendimento 1 (Mari · HUB Obra 10+)
 
-> Pré-qualificação WhatsApp alinhada ao fluxo Mari IA (nome → e-mail → triagem → ramos). Após `wa_playbook_complete`, a IA conduz reunião, relatório e dúvidas com ferramentas Hub.
+> Pré-qualificação WhatsApp alinhada ao fluxo Mari IA (nome → triagem → ramos). E-mail pode ser coletado depois pela IA. Após `wa_playbook_complete`, a IA conduz reunião, relatório e dúvidas com ferramentas Hub.
 
 ## Instruções canónicas
 
@@ -108,15 +108,13 @@ Classificação sugerida: ALTO / MÉDIO / BAIXO
       "prompt": "Me fale qual é o seu nome, por gentileza?",
       "field": "nome",
       "input_type": "text",
-      "next": "coletar_email"
+      "next": "agradecer_nome"
     },
     {
-      "id": "coletar_email",
-      "kind": "input",
+      "id": "agradecer_nome",
+      "kind": "message",
       "journey": "triagem",
-      "prompt": "Obrigado. Agora me passe seu e-mail, por favor.",
-      "field": "email",
-      "input_type": "email",
+      "message": "Obrigado pela informação. É um prazer te atender.",
       "next": "triagem_servicos_menu"
     },
     {

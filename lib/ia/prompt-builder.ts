@@ -53,6 +53,9 @@ export interface PromptParams {
   turnosConversa?: TurnoMinimo[];
   /** Sessão reiniciada após TTL — tratar como primeiro contacto (Mari: nome + menu). */
   sessaoReiniciada?: boolean;
+  /** Briefing/simulação CRM: fluxo playbook concluído sem lead real. */
+  simulacaoWaPlaybookComplete?: boolean;
+  simulacaoWaPlaybookAnswers?: Record<string, string>;
 }
 
 /** Fonte de conhecimento injetada no system prompt (para UI de briefing / debug). */
@@ -111,6 +114,16 @@ export async function construirPrompt(params: PromptParams): Promise<PromptCompl
     if (ans && typeof ans === "object" && !Array.isArray(ans)) {
       playbookRespostas = Object.fromEntries(
         Object.entries(ans as Record<string, unknown>)
+          .filter(([, v]) => typeof v === "string" && v.trim())
+          .map(([k, v]) => [k, String(v).trim()])
+      );
+    }
+  } else if (params.simulacaoWaPlaybookComplete) {
+    playbookFluxoConcluido = true;
+    const ans = params.simulacaoWaPlaybookAnswers;
+    if (ans && typeof ans === "object") {
+      playbookRespostas = Object.fromEntries(
+        Object.entries(ans)
           .filter(([, v]) => typeof v === "string" && v.trim())
           .map(([k, v]) => [k, String(v).trim()])
       );

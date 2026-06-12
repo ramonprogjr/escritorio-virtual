@@ -54,19 +54,13 @@ describe("briefing-flow-simulator", () => {
       state,
       mensagem: "Lucas",
     });
-    expect(nome.state.step).toBe("coletar_email");
-
-    const email = await executarPassoSimulacaoFluxo({
-      definition: engine,
-      state: nome.state,
-      mensagem: "lucas@test.com",
-    });
-    expect(email.state.step).toBe("triagem_servicos_menu");
-    expect(email.parts.some((p) => p.kind === "menu")).toBe(true);
+    expect(nome.state.step).toBe("triagem_servicos_menu");
+    expect(nome.parts.some((p) => p.kind === "text" && /prazer te atender/i.test(p.text))).toBe(true);
+    expect(nome.parts.some((p) => p.kind === "menu")).toBe(true);
 
     const triagem = await executarPassoSimulacaoFluxo({
       definition: engine,
-      state: email.state,
+      state: nome.state,
       mensagem: "1",
       menuChoiceId: "op_arq_design",
     });

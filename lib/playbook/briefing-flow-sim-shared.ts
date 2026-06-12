@@ -54,6 +54,12 @@ export function parseBriefingFlowSimState(raw: unknown): BriefingFlowSimState | 
 
 export function partToDisplayText(part: BriefingSimOutboundPart): string {
   if (part.kind === "text") return part.text;
-  if (part.menu_type === "text") return part.text;
-  return part.text;
+  if (part.kind === "menu") {
+    if (part.menu_type === "text") {
+      const lines = part.choices.map((c, i) => `${i + 1}. ${c.label.trim()}`);
+      return [part.text.trim(), ...lines].filter(Boolean).join("\n");
+    }
+    return part.text.trim();
+  }
+  return "";
 }

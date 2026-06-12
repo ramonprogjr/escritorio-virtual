@@ -266,6 +266,8 @@ export async function executarSimulacaoCanalReply(params: {
   agenteSlug: string;
   historico: BriefingMensagemLinha[];
   mensagemUsuario: string;
+  simulacaoWaPlaybookComplete?: boolean;
+  simulacaoWaPlaybookAnswers?: Record<string, string>;
 }): Promise<BriefingReplyResult> {
   const turnosConversa = params.historico.map((m) => ({
     role: (m.papel === "user" ? "user" : "assistant") as "user" | "assistant",
@@ -278,6 +280,8 @@ export async function executarSimulacaoCanalReply(params: {
     turnosAnteriores: params.historico.length,
     mensagemAtual: params.mensagemUsuario,
     turnosConversa: [...turnosConversa, { role: "user", content: params.mensagemUsuario }],
+    simulacaoWaPlaybookComplete: params.simulacaoWaPlaybookComplete,
+    simulacaoWaPlaybookAnswers: params.simulacaoWaPlaybookAnswers,
   });
   if (!pc) {
     throw new Error(
@@ -356,6 +360,8 @@ export async function executarSimulacaoWhatsappReply(params: {
     agenteSlug: params.agenteSlug,
     historico: params.historico,
     mensagemUsuario: params.mensagemUsuario,
+    simulacaoWaPlaybookComplete: emFaseIa || prior.complete,
+    simulacaoWaPlaybookAnswers: prior.answers,
   });
 
   const nextState: BriefingFlowSimState = emFaseIa
