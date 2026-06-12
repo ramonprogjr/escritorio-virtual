@@ -340,6 +340,10 @@ function AtendimentoContent() {
       }
       setLeadSel(prev => prev ? { ...prev, humano_responsavel: undefined } : prev);
       setLeads(prev => prev.map(l => l.id === leadSel.id ? { ...l, humano_responsavel: undefined } : l));
+      setSendStrip({
+        kind: "success",
+        text: "IA reativada. Peça ao lead para enviar uma nova mensagem no WhatsApp.",
+      });
     } catch {
       setSendStrip({ kind: "error", text: "Erro de rede ao devolver." });
     }
@@ -772,12 +776,12 @@ function AtendimentoContent() {
                   <Info size={14} strokeWidth={2} aria-hidden />
                   Info
                 </button>
-                {assumido && (
+                {humanoAtual && (
                   <button
                     type="button"
                     onClick={() => void devolverIA()}
                     className="flex items-center gap-1.5 bg-sky-950/50 hover:bg-sky-950/70 border border-sky-500/35 text-sky-100 text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                    title="Voltar a responder com IA"
+                    title="Voltar a responder com IA no WhatsApp"
                   >
                     <Bot size={14} strokeWidth={2} className="text-sky-300 shrink-0" aria-hidden />
                     Devolver à IA
@@ -788,6 +792,21 @@ function AtendimentoContent() {
 
             {/* Mensagens */}
             <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+              {humanoAtual && (
+                <div className="rounded-lg border border-amber-500/35 bg-amber-950/35 px-3 py-2.5 text-[12px] text-amber-100/95 mb-3 leading-relaxed">
+                  <span className="font-semibold text-amber-200">IA pausada nesta conversa.</span>{" "}
+                  Responsável: <span className="font-medium">{humanoAtual}</span>. O agente não responde
+                  automaticamente no WhatsApp até clicar em{" "}
+                  <button
+                    type="button"
+                    onClick={() => void devolverIA()}
+                    className="underline underline-offset-2 text-sky-300 hover:text-sky-200 font-medium"
+                  >
+                    Devolver à IA
+                  </button>
+                  .
+                </div>
+              )}
               {mensagensLoadError && (
                 <div className="rounded-lg border border-red-500/35 bg-red-950/40 px-3 py-2 text-[12px] text-red-200/95 mb-3">
                   {mensagensLoadError}
@@ -1176,7 +1195,7 @@ function AtendimentoContent() {
                   <button
                     type="button"
                     onClick={() => { void devolverIA(); setInfoOpen(false); }}
-                    disabled={!assumido}
+                    disabled={!humanoAtual}
                     className={`w-full border ${C.border} bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-40 text-zinc-100 text-[12px] py-2.5 rounded-lg text-left px-3 transition-colors font-medium inline-flex items-center gap-2`}
                   >
                     <Bot size={15} strokeWidth={2} className="text-sky-400/90 shrink-0" aria-hidden />
