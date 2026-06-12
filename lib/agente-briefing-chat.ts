@@ -1,6 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { completarChatPreferindoMistral } from "@/lib/ia/llm-completion";
-import { construirPrompt } from "@/lib/ia/prompt-builder";
+import { construirPrompt, type PromptFonteConhecimento } from "@/lib/ia/prompt-builder";
+
+export type BriefingReplyResult = {
+  texto: string;
+  modelo: string;
+  tokens_input: number;
+  tokens_output: number;
+  custo_brl: number;
+  fontes_conhecimento: PromptFonteConhecimento[];
+};
 
 const MAX_SNAPSHOT_ACOES = 35;
 const MAX_SNAPSHOT_CICLO_LOG = 60;
@@ -169,7 +178,24 @@ export async function executarBriefingReply(params: {
   historico: BriefingMensagemLinha[];
   mensagemUsuario: string;
   memoriasAgenteBloco?: string;
-}): Promise<{ texto: string; modelo: string; tokens_input: number; tokens_output: number; custo_brl: number }> {
+}): Promise<BriefingReplyResult> {
+  const fontesConhecimento: PromptFonteConhecimento[] = [
+    {
+      id: "briefing_ops",
+      label: "Dados operacionais CRM",
+      detalhe: "Ciclos IA, logs, ações, prompts",
+    },
+  ];
+  if (params.cargo?.trim()) {
+    fontesConhecimento.push({ id: "cargo", label: "Cargo do agente", detalhe: params.cargo.trim() });
+  }
+  if (params.promptBaseTrecho?.trim()) {
+    fontesConhecimento.push({ id: "system_base", label: "System prompt base" });
+  }
+  if (params.memoriasAgenteBloco?.trim()) {
+    fontesConhecimento.push({ id: "memorias_agente", label: "Memórias do agente" });
+  }
+
   const identity = [
     `Identidade do agente (para tom de voz): nome=${params.agenteNome}, slug=${params.agenteSlug}`,
     params.cargo ? `Cargo: ${params.cargo}` : null,
@@ -210,6 +236,7 @@ export async function executarBriefingReply(params: {
     tokens_input: out.tokensEntrada,
     tokens_output: out.tokensSaida,
     custo_brl: brl,
+    fontes_conhecimento: fontesConhecimento,
   };
 }
 
@@ -218,7 +245,7 @@ export async function executarSimulacaoCanalReply(params: {
   agenteSlug: string;
   historico: BriefingMensagemLinha[];
   mensagemUsuario: string;
-}): Promise<{ texto: string; modelo: string; tokens_input: number; tokens_output: number; custo_brl: number }> {
+}): Promise<BriefingReplyResult> {
   const turnosConversa = params.historico.map((m) => ({
     role: (m.papel === "user" ? "user" : "assistant") as "user" | "assistant",
     content: m.conteudo,
@@ -261,5 +288,6 @@ export async function executarSimulacaoCanalReply(params: {
     tokens_input: out.tokensEntrada,
     tokens_output: out.tokensSaida,
     custo_brl: brl,
+    fontes_conhecimento: pc.fontesConhecimento,
   };
 }

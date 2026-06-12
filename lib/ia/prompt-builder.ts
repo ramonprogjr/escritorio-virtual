@@ -55,6 +55,20 @@ export interface PromptParams {
   sessaoReiniciada?: boolean;
 }
 
+/** Fonte de conhecimento injetada no system prompt (para UI de briefing / debug). */
+export type PromptFonteConhecimento = {
+  id: string;
+  label: string;
+  detalhe?: string;
+};
+
+export function formatarFontesConhecimentoLinha(fontes: PromptFonteConhecimento[]): string {
+  if (!fontes.length) return "";
+  return fontes
+    .map((f) => (f.detalhe ? `${f.label} (${f.detalhe})` : f.label))
+    .join(" · ");
+}
+
 export interface PromptCompleto {
   systemPrompt: string;
   tokensEstimados: number;
@@ -64,6 +78,7 @@ export interface PromptCompleto {
   fluxoAtual?: string;
   /** Playbook no bucket hub-agent-playbooks (ex.: maria.md). */
   playbookPublicado?: boolean;
+  fontesConhecimento: PromptFonteConhecimento[];
 }
 
 export async function construirPrompt(params: PromptParams): Promise<PromptCompleto | null> {
@@ -156,9 +171,15 @@ export async function construirPrompt(params: PromptParams): Promise<PromptCompl
 
   // 6. Monta o prompt em camadas
   const secoes: string[] = [];
+  const fontesConhecimento: PromptFonteConhecimento[] = [];
 
   // CAMADA 1 — FONTE PRINCIPAL ESTÁTICA
   if (usarPlaybookPublicado) {
+    fontesConhecimento.push({
+      id: "playbook",
+      label: "Playbook publicado",
+      detalhe: playbookPublicado.path || playbookPublicado.mode || undefined,
+    });
     secoes.push(`═══ PLAYBOOK PUBLICADO (FONTE PRINCIPAL) ═══
 Siga o conteúdo abaixo como a fonte principal das instruções estáticas deste agente.
 Origem publicada: ${playbookPublicado.path}
@@ -181,9 +202,18 @@ ${playbookFluxoConcluido
         ? blocoRegrasPosFluxoPlaybookConversacional(playbookPublicado.flowHints)
         : blocoRegrasFluxoSequencialPlaybook(playbookPublicado.flowHints)
     );
+    fontesConhecimento.push({
+      id: playbookFluxoConcluido ? "playbook_pos_fluxo" : "playbook_fluxo_wa",
+      label: playbookFluxoConcluido ? "Modo pós-qualificação" : "Regras fluxo WhatsApp",
+    });
 
     // Fluxo determinístico no inbound pode enviar menus antes da IA; ver inbound-message-processor + menu-triagem-uazapi.
   } else {
+    fontesConhecimento.push({
+      id: "identidade",
+      label: "Identidade + system prompt",
+      detalhe: String(agente.nome ?? params.agenteSlug),
+    });
     const humorLabel = personalidade?.humor_label || "Profissional";
     const personalidadeLabel = personalidade?.personalidade_label || "Direto";
     const tomComunicacao = personalidade?.tom_comunicacao || "profissional";
@@ -194,6 +224,13 @@ ${agente.system_prompt_base}
 COMPORTAMENTO: Humor ${humorLabel} + Personalidade ${personalidadeLabel}.
 Tom de comunicação: ${tomComunicacao}.
 ${personalidade?.descricao_comportamento || ""}`);
+    if (personalidade) {
+      fontesConhecimento.push({
+        id: "personalidade",
+        label: "Personalidade do agente",
+        detalhe: `${personalidadeLabel} / ${humorLabel}`,
+      });
+    }
   }
 
   const turnosAnteriores = params.sessaoReiniciada
@@ -221,6 +258,7 @@ ${personalidade?.descricao_comportamento || ""}`);
         playbookPublicado: usarPlaybookPublicado,
       })
     );
+    fontesConhecimento.push({ id: "primeiro_atendimento_wa", label: "Primeiro atendimento WhatsApp" });
   }
 
   if (params.sessaoReiniciada && canalWhatsapp) {
@@ -228,10 +266,16 @@ ${personalidade?.descricao_comportamento || ""}`);
 Passou o prazo sem mensagens deste lead. Trate como **primeiro contacto** nesta conversa:
 - Não retome assuntos antigos (imóveis, orçamentos ou fluxos anteriores) salvo se o cliente mencionar agora.
 - Siga o POP: saudação, pedir nome se faltar, menu de triagem quando aplicável.`);
+    fontesConhecimento.push({ id: "nova_sessao", label: "Reinício de sessão (TTL)" });
   }
 
   // CAMADA 2 — EXECUÇÃO DESTE TURNO (só com catálogo de cargo, sem playbook publicado)
   if (cargoCatalogo && !usarPlaybookPublicado) {
+    fontesConhecimento.push({
+      id: "cargo",
+      label: "Catálogo de cargo",
+      detalhe: String(cargoCatalogo.titulo ?? agente.cargo ?? "").trim() || undefined,
+    });
     const linhas: string[] = [];
     const saudacao = String(cargoCatalogo.saudacao_cliente ?? "").trim();
     const comprimentoPadrao = String(cargoCatalogo.comprimento_padrao ?? "").trim();
@@ -283,6 +327,7 @@ Passou o prazo sem mensagens deste lead. Trate como **primeiro contacto** nesta 
     }
 
     secoes.push(`═══ EXECUÇÃO DESTE TURNO ═══\n${linhas.join("\n")}`);
+    fontesConhecimento.push({ id: "execucao_turno", label: "Execução deste turno (cargo)" });
   }
 
   // CAMADA 2.5 — RAG do agente (documentos anexados no wizard)
@@ -309,6 +354,12 @@ Passou o prazo sem mensagens deste lead. Trate como **primeiro contacto** nesta 
 Use estes trechos quando forem relevantes para a pergunta atual. Se um trecho de documento conflitar com texto genérico de molde, priorize o documento; se não houver evidência suficiente, diga que vai verificar.
 
 ${ragTexto}`);
+      const nomesRag = [...new Set(trechosRag.map((t) => t.nomeArquivo).filter(Boolean))];
+      fontesConhecimento.push({
+        id: "rag",
+        label: "Documentos RAG",
+        detalhe: nomesRag.length ? nomesRag.join(", ") : `${trechosRag.length} trecho(s)`,
+      });
     }
   }
 
@@ -324,6 +375,11 @@ ${ragTexto}`);
     secoes.push(`═══ MERCADO ATUAL: ${mercadoLabels[params.mercado] || params.mercado} ═══
 Você está atendendo um lead do segmento ${params.mercado}.
 Adapte sua linguagem e conhecimento para este contexto específico.`);
+    fontesConhecimento.push({
+      id: "mercado",
+      label: "Segmento de mercado",
+      detalhe: params.mercado,
+    });
   }
 
   // CAMADA 4 — REGRAS (fallback quando ainda não existe playbook publicado)
@@ -345,22 +401,36 @@ Adapte sua linguagem e conhecimento para este contexto específico.`);
     if (regras && regras.length > 0) {
       regrasTexto += `\n\nREGRAS ESPECÍFICAS:\n${regras.map(r => `• ${r.instrucao}`).join("\n")}`;
     }
-    if (regrasTexto) secoes.push(`═══ REGRAS ═══\n${regrasTexto}`);
+    if (regrasTexto) {
+      secoes.push(`═══ REGRAS ═══\n${regrasTexto}`);
+      fontesConhecimento.push({
+        id: "regras_ia",
+        label: "Regras IA do agente",
+        detalhe: regras?.length ? `${regras.length} regra(s)` : undefined,
+      });
+    }
   }
 
   // CAMADA 5 — MEMÓRIAS DO LEAD
   if (memorias.length > 0) {
     const memTexto = memorias.map(m => `• [${m.chave}] ${m.valor}`).join("\n");
     secoes.push(`═══ O QUE VOCÊ LEMBRA DESTE LEAD ═══\n${memTexto}`);
+    fontesConhecimento.push({
+      id: "memorias_lead",
+      label: "Memórias do lead",
+      detalhe: `${memorias.length} item(ns)`,
+    });
   }
 
   if (memoriasAgenteTexto) {
     secoes.push(memoriasAgenteTexto);
+    fontesConhecimento.push({ id: "memorias_agente", label: "Memórias do agente" });
   }
 
   // CAMADA 6 — ETAPA DO FLUXO
   if (params.etapaFluxo) {
     secoes.push(`═══ ETAPA ATUAL DO FLUXO ═══\n${params.etapaFluxo}`);
+    fontesConhecimento.push({ id: "etapa_fluxo", label: "Etapa do fluxo Hub" });
   }
 
   // CAMADA 7 — REGRAS UNIVERSAIS
@@ -386,6 +456,7 @@ Adapte sua linguagem e conhecimento para este contexto específico.`);
     }
   }
   secoes.push(`═══ REGRAS UNIVERSAIS ═══\n${regrasUniversais.map((r) => `- ${r}`).join("\n")}`);
+  fontesConhecimento.push({ id: "regras_universais", label: "Regras universais runtime" });
 
   const systemPrompt = secoes.join("\n\n");
   const tokensEstimados = Math.ceil(systemPrompt.length / 4);
@@ -398,6 +469,7 @@ Adapte sua linguagem e conhecimento para este contexto específico.`);
     agenteNome: agente.nome as string,
     fluxoAtual: params.etapaFluxo,
     playbookPublicado: usarPlaybookPublicado,
+    fontesConhecimento,
   };
 }
 
