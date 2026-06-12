@@ -6,6 +6,7 @@ import type {
   PlaybookFlowDefinition,
   PlaybookFlowStep,
   PlaybookFlowStepKind,
+  PlaybookFlowMenuFormat,
 } from "@/lib/playbook/flow-definition-types";
 
 export type FlowNodeKind = Extract<PlaybookFlowStepKind, "message" | "input" | "menu" | "complete">;
@@ -24,6 +25,8 @@ export type FlowVisualNodeData = Record<string, unknown> & {
   inputType?: PlaybookFlowInputType;
   /** Only for menu nodes: list of option labels (ids match edge option ids) */
   menuOptions?: FlowMenuOption[];
+  /** Only for menu nodes: native list/button or numbered text */
+  menuFormat?: PlaybookFlowMenuFormat;
   /** Step id for stable reference */
   stepId?: string;
 };
@@ -57,6 +60,7 @@ export function createDefaultNodeData(kind: FlowNodeKind, order: number): FlowVi
     field: kind === "input" ? `${id}_value` : kind === "menu" ? id : undefined,
     inputType: kind === "input" ? "text" : undefined,
     menuOptions: kind === "menu" ? [{ id: "opcao_1", label: "Opção 1" }] : undefined,
+    menuFormat: kind === "menu" ? "text" : undefined,
   };
 }
 
@@ -89,6 +93,7 @@ export function toVisualNodeData(step: PlaybookFlowStep): FlowVisualNodeData {
       journey: step.journey,
       field: step.field ?? step.id,
       menuOptions: step.options.map((o) => ({ id: o.id, label: o.label })),
+      menuFormat: step.menu_type ?? "list",
       stepId: step.id,
     };
   }

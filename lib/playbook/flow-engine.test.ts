@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   executeFlowEngine,
+  formatMenuOpcoesTexto,
   normMenuChoiceText,
   resolveMenuChoiceId,
   type FlowEngineDefinition,
@@ -45,6 +46,15 @@ describe("resolveMenuChoiceId", () => {
 describe("normMenuChoiceText", () => {
   it("normaliza m² e pontuação", () => {
     expect(normMenuChoiceText("De 50 a 100 m²")).toBe("de 50 a 100 m2");
+  });
+});
+
+describe("formatMenuOpcoesTexto", () => {
+  it("monta lista numerada no corpo da mensagem", () => {
+    const text = formatMenuOpcoesTexto("Qual o tamanho?", MENU_CHOICES);
+    expect(text).toContain("Qual o tamanho?");
+    expect(text).toContain("1. De 50 a 100 m2");
+    expect(text).toContain("3. Acima de 200 m2");
   });
 });
 
@@ -96,5 +106,43 @@ describe("executeFlowEngine menu", () => {
       (call) => call[0]?.step === "arq_prazo" && call[0]?.answers?.arq_tamanho === "m2_100_200"
     );
     expect(persistedToPrazo).toBeTruthy();
+  });
+
+  it("envia opções numeradas quando menu_type=text", async () => {
+    const persistState = vi.fn().mockResolvedValue(undefined);
+    const sendText = vi.fn().mockResolvedValue(undefined);
+    const sendMenu = vi.fn().mockResolvedValue({ ok: true });
+
+    const textDefinition: FlowEngineDefinition = {
+      ...definition,
+      steps: {
+        ...definition.steps,
+        arq_tamanho: {
+          ...(definition.steps.arq_tamanho as { type: "menu" }),
+          menu_type: "text",
+        },
+      },
+    };
+
+    await executeFlowEngine(
+      textDefinition,
+      {
+        step: null,
+        answers: {},
+        mensagem: "",
+        tipoMidia: "texto",
+      },
+      {
+        sendText,
+        sendMenu,
+        resolveChoiceId: () => null,
+        persistState,
+      }
+    );
+
+    expect(sendMenu).not.toHaveBeenCalled();
+    expect(sendText).toHaveBeenCalledWith(
+      expect.stringContaining("1. De 50 a 100 m2")
+    );
   });
 });

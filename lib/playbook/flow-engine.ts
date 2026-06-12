@@ -40,7 +40,7 @@ export type FlowMenuChoice = {
 export type FlowMenuStep = BaseStep & {
   type: "menu";
   text: string;
-  menu_type?: "list" | "button";
+  menu_type?: "list" | "button" | "text";
   list_button?: string;
   choices: FlowMenuChoice[];
   answer_key?: string;
@@ -107,7 +107,7 @@ export type FlowEngineAdapter = {
   sendText: (text: string) => Promise<void>;
   sendMenu: (args: {
     text: string;
-    menuType: "list" | "button";
+    menuType: "list" | "button" | "text";
     listButton?: string;
     choices: string[];
   }) => Promise<{ ok: boolean; erro?: string }>;
@@ -219,6 +219,13 @@ export function resolveMenuChoiceId(
 
 const MAX_AUTO_TRANSITIONS = 12;
 
+/** Monta prompt com opções numeradas (estilo POP Mari no WhatsApp). */
+export function formatMenuOpcoesTexto(prompt: string, choices: FlowMenuChoice[]): string {
+  const header = prompt.trim();
+  const lines = choices.map((choice, index) => `${index + 1}. ${choice.label.trim()}`);
+  return [header, ...lines].filter(Boolean).join("\n");
+}
+
 export async function executeFlowEngine(
   definition: FlowEngineDefinition,
   input: FlowEngineInput,
@@ -317,15 +324,25 @@ export async function executeFlowEngine(
         if (choiceId && step.invalid_prompt) {
           await adapter.sendText(step.invalid_prompt);
         }
-        const menuChoices = step.choices.map((c) => `${c.label}|${c.id}`);
-        const menu = await adapter.sendMenu({
-          text: step.text,
-          menuType: step.menu_type || "list",
-          listButton: step.list_button,
-          choices: menuChoices,
-        });
-        if (!menu.ok && menu.erro) {
-          await adapter.sendText(step.invalid_prompt || "Não consegui abrir o menu agora. Tente novamente em instantes.");
+        const menuType = step.menu_type || "list";
+        if (menuType === "text") {
+          await adapter.sendText(formatMenuOpcoesTexto(step.text, step.choices));
+        } else {
+          const menuChoices = step.choices.map((c) => `${c.label}|${c.id}`);
+          const menu = await adapter.sendMenu({
+            text: step.text,
+            menuType,
+            listButton: step.list_button,
+            choices: menuChoices,
+          });
+          if (!menu.ok) {
+            await adapter.sendText(
+              formatMenuOpcoesTexto(
+                step.text,
+                step.choices
+              )
+            );
+          }
         }
         await adapter.persistState({
           step: currentStepId,

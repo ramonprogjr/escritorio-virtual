@@ -303,13 +303,27 @@ async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogg
     return;
   }
 
-  if (!contexto.lead.pessoa_id) {
+  // Re-busca campos sensíveis do lead direto do banco — o payload pode estar
+  // desatualizado (ex.: humano_responsavel definido depois que o job foi enfileirado).
+  {
     const { data: leadRow } = await supabase
       .from("hub_leads_crm")
-      .select("pessoa_id")
+      .select("pessoa_id, humano_responsavel, agente_responsavel")
       .eq("id", contexto.lead.id)
       .maybeSingle();
-    if (leadRow?.pessoa_id) contexto.lead.pessoa_id = String(leadRow.pessoa_id);
+    if (leadRow) {
+      if (leadRow.pessoa_id) contexto.lead.pessoa_id = String(leadRow.pessoa_id);
+      // humano_responsavel atualizado no DB após o enfileiramento
+      const humanoDb =
+        typeof leadRow.humano_responsavel === "string"
+          ? leadRow.humano_responsavel.trim()
+          : "";
+      contexto.lead.humano_responsavel = humanoDb || null;
+      // agente_responsavel pode ter sido atualizado pelo webhook
+      if (typeof leadRow.agente_responsavel === "string" && leadRow.agente_responsavel.trim()) {
+        contexto.lead.agente_responsavel = leadRow.agente_responsavel.trim();
+      }
+    }
   }
 
   const { validarLeadTelefoneSessao } = await import("@/lib/crm/isolamento-conversa-lead");

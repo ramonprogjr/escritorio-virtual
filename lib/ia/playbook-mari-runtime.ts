@@ -50,3 +50,28 @@ export function blocoRegrasFluxoSequencialPlaybook(flowHintsFromMd?: string | nu
 
   return linhas.join("\n");
 }
+
+/** Após o fluxo determinístico WhatsApp (wa_playbook_complete), a IA conduz conversa livre. */
+export function blocoRegrasPosFluxoPlaybookConversacional(flowHintsFromMd?: string | null): string {
+  const linhas = [
+    "═══ MODO PÓS-QUALIFICAÇÃO (conversa fluida) ═══",
+    "",
+    "O roteiro estruturado de qualificação (nome, e-mail, menus e perguntas sequenciais) **já foi concluído** nesta conversa.",
+    "- **Não** reinicie triagem, **não** peça novamente nome/e-mail se já constam no histórico ou no CRM.",
+    "- **Não** envie menus de qualificação nem repita perguntas já respondidas no fluxo.",
+    "- Responda de forma natural às dúvidas do cliente com base no playbook publicado e nos documentos (RAG).",
+    "- Você pode esclarecer serviços, prazos, processo do HUB, próximos passos e encaminhar para humano quando necessário.",
+    "- Mantenha tom acolhedor da Mari; mensagens curtas (até 3 linhas); sem emojis.",
+    "- Se o cliente quiser recomeçar do zero, confirme antes de orientar a enviar «oi» para reiniciar.",
+  ];
+
+  if (flowHintsFromMd?.trim()) {
+    linhas.push(
+      "",
+      "## Contexto do playbook (referência)",
+      flowHintsFromMd.trim()
+    );
+  }
+
+  return linhas.join("\n");
+}

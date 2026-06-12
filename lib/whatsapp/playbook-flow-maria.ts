@@ -260,8 +260,14 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
         id: stepId,
         type: "menu",
         text: step.prompt.trim(),
-        menu_type: "list",
-        list_button: "Ver opções",
+        menu_type:
+          step.menu_type === "button" || step.menu_type === "text" || step.menu_type === "list"
+            ? step.menu_type
+            : "list",
+        list_button:
+          typeof step.list_button === "string" && step.list_button.trim()
+            ? step.list_button.trim()
+            : "Ver opções",
         answer_key: menuField,
         invalid_prompt: "Escolha uma opção válida no menu para continuarmos.",
         choices,
@@ -1427,6 +1433,9 @@ async function processarPlaybookMariaInboundDynamic(params: {
     });
   }
 
+  // Acumula textos enviados para gravação na fila após o envio
+  const mensagensEnviadasPlaybook: string[] = [];
+
   const result = await executeFlowEngine(
     runtime.definition,
     {
@@ -1439,6 +1448,21 @@ async function processarPlaybookMariaInboundDynamic(params: {
     {
       sendText: async (text) => {
         await enviarTexto(params.telefone, text, params.instanceToken);
+        mensagensEnviadasPlaybook.push(text);
+        try {
+          await params.supabase.from("hub_fila_mensagens").insert({
+            lead_id: params.leadId,
+            agente_id: params.agenteSlug,
+            remetente_numero: params.telefone,
+            canal: "whatsapp",
+            direcao: "saida",
+            conteudo: text,
+            status: "enviado",
+            resposta_enviada: true,
+            enviada_em: new Date().toISOString(),
+            metadata: { feito_por: "playbook_dynamic" },
+          });
+        } catch { /* opcional */ }
       },
       sendMenu: async ({ text, menuType, choices, listButton }) => {
         const out = await enviarMenuUazapi({
@@ -1452,6 +1476,21 @@ async function processarPlaybookMariaInboundDynamic(params: {
         });
         if (out.ok) {
           await marcarMenuTriagemEnviado(params.supabase, params.leadId);
+          mensagensEnviadasPlaybook.push(text);
+          try {
+            await params.supabase.from("hub_fila_mensagens").insert({
+              lead_id: params.leadId,
+              agente_id: params.agenteSlug,
+              remetente_numero: params.telefone,
+              canal: "whatsapp",
+              direcao: "saida",
+              conteudo: text,
+              status: "enviado",
+              resposta_enviada: true,
+              enviada_em: new Date().toISOString(),
+              metadata: { feito_por: "playbook_dynamic_menu", menu_type: menuType },
+            });
+          } catch { /* opcional */ }
         }
         const erro = out.ok ? undefined : "erro" in out ? out.erro : "falha_menu_uazapi";
         return { ok: out.ok, erro };
@@ -1604,8 +1643,11 @@ export async function processarPlaybookMariaInbound(params: {
         });
         return {
           ...dynamicOut,
-          bloquearIa: routing.bloquearIa || dynamicOut.bloquearIa,
+          bloquearIa: (routing.bloquearIa || dynamicOut.bloquearIa) ?? false,
         };
+      }
+      if (dynamicOut.motivo === "playbook_concluido_permitir_ia") {
+        return { handled: false, motivo: dynamicOut.motivo, bloquearIa: false };
       }
       console.info("[playbook-flow] dynamic flow unavailable, fallback evaluation", {
         agente: params.agenteSlug,
