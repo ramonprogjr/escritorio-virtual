@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
@@ -39,17 +39,17 @@ import {
   ragExtensaoAceita,
 } from "@/lib/hub/rag-formatos";
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
 
-/** Passos do assistente â€” apÃ³s Â«FerramentasÂ» e criar agente, passos 7â€“8 sÃ£o pÃ³s-criaÃ§Ã£o. */
+/** Passos do assistente — após «Ferramentas» e criar agente, passos 7–8 são pós-criação. */
 const WIZARD_STEP_LABELS = [
   "Cargo",
   "Identidade",
   "Personalidade",
   "Documentos",
-  "RevisÃ£o",
+  "Revisão",
   "Ferramentas",
   "Materiais",
   "Canal",
@@ -58,7 +58,7 @@ const WIZARD_STEP_LABELS = [
 const SEGMENTO_COR: Record<string, string> = {
   Marketing: "#3b82f6",
   Comercial: "#10b981",
-  "OperaÃ§Ãµes": "#f59e0b",
+  "Operações": "#f59e0b",
 };
 
 const NIVEL_COR: Record<string, string> = {
@@ -69,67 +69,67 @@ const NIVEL_COR: Record<string, string> = {
 
 const EIXOS = [
   {
-    nome: "AnalÃ­tico / Criativo",
+    nome: "Analítico / Criativo",
     frases: [
-      "Baseie todas as respostas em dados e lÃ³gica. Evite linguagem subjetiva.",
-      "Priorize dados, mas use analogias simples para clareza quando necessÃ¡rio.",
-      "Equilibre argumentos racionais com exemplos prÃ¡ticos e linguagem acessÃ­vel.",
+      "Baseie todas as respostas em dados e lógica. Evite linguagem subjetiva.",
+      "Priorize dados, mas use analogias simples para clareza quando necessário.",
+      "Equilibre argumentos racionais com exemplos práticos e linguagem acessível.",
       "Use linguagem envolvente, exemplos criativos e storytelling leve.",
-      "Seja criativo, use metÃ¡foras e linguagem que engaje emocionalmente.",
+      "Seja criativo, use metáforas e linguagem que engaje emocionalmente.",
     ],
   },
   {
     nome: "Formal / Informal",
     frases: [
-      "Mantenha linguagem completamente formal. Sem contraÃ§Ãµes nem gÃ­rias.",
-      "Linguagem profissional e clara, pode usar contraÃ§Ãµes ocasionalmente.",
-      "Tom neutro e acessÃ­vel, nem muito formal nem coloquial.",
-      "Linguagem descontraÃ­da e prÃ³xima, como conversa entre colegas.",
-      "Totalmente informal: uso de gÃ­rias leves e tom de conversa casual.",
+      "Mantenha linguagem completamente formal. Sem contrações nem gírias.",
+      "Linguagem profissional e clara, pode usar contrações ocasionalmente.",
+      "Tom neutro e acessível, nem muito formal nem coloquial.",
+      "Linguagem descontraída e próxima, como conversa entre colegas.",
+      "Totalmente informal: uso de gírias leves e tom de conversa casual.",
     ],
   },
   {
     nome: "Direto / Detalhista",
     frases: [
-      "Seja extremamente conciso. MÃ¡ximo 2 frases por resposta.",
-      "Respostas curtas com a informaÃ§Ã£o essencial. Evite explicaÃ§Ãµes longas.",
-      "Resposta completa mas sem excessos. Explique o necessÃ¡rio.",
+      "Seja extremamente conciso. Máximo 2 frases por resposta.",
+      "Respostas curtas com a informação essencial. Evite explicações longas.",
+      "Resposta completa mas sem excessos. Explique o necessário.",
       "Inclua contexto e justificativas relevantes nas respostas.",
-      "Seja completo e detalhado. Antecipe dÃºvidas e inclua exemplos.",
+      "Seja completo e detalhado. Antecipe dúvidas e inclua exemplos.",
     ],
   },
   {
     nome: "Conservador / Arrojado",
     frases: [
       "Seja cauteloso. Prefira caminhos testados e seguros. Aponte riscos.",
-      "Sugira caminhos tradicionais como padrÃ£o, mas apresente alternativas.",
-      "Equilibre sugestÃµes convencionais com oportunidades inovadoras.",
+      "Sugira caminhos tradicionais como padrão, mas apresente alternativas.",
+      "Equilibre sugestões convencionais com oportunidades inovadoras.",
       "Proponha abordagens ousadas e diferenciadas. Destaque oportunidades.",
       "Seja provocador e disruptivo. Proponha ideias inovadoras.",
     ],
   },
   {
-    nome: "EmpÃ¡tico / Objetivo",
+    nome: "Empático / Objetivo",
     frases: [
       "Priorize o lado humano: valide sentimentos antes de resolver.",
-      "ReconheÃ§a o contexto emocional antes de apresentar soluÃ§Ãµes.",
-      "Equilibre empatia e objetividade. Valide brevemente e siga para a soluÃ§Ã£o.",
-      "Foque na soluÃ§Ã£o e nos resultados prÃ¡ticos. Seja cordial mas eficiente.",
-      "Totalmente focado em resultado e eficiÃªncia. Sem rodeios emocionais.",
+      "Reconheça o contexto emocional antes de apresentar soluções.",
+      "Equilibre empatia e objetividade. Valide brevemente e siga para a solução.",
+      "Foque na solução e nos resultados práticos. Seja cordial mas eficiente.",
+      "Totalmente focado em resultado e eficiência. Sem rodeios emocionais.",
     ],
   },
 ];
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function gerarPersonalidade(valores: number[]): string {
   return (
-    "## Tom e estilo de comunicaÃ§Ã£o\n\n" +
+    "## Tom e estilo de comunicação\n\n" +
     EIXOS.map((e, i) => e.frases[valores[i] - 1]).join("\n")
   );
 }
 
-/** Modelos definidos no catÃ¡logo do cargo â€” alguns IDs antigos sÃ£o normalizados para `mistral` no servidor. */
+/** Modelos definidos no catálogo do cargo — alguns IDs antigos são normalizados para `mistral` no servidor. */
 function cargoModelosForaDaListaHub(c: Cargo): string[] {
   const out: string[] = [];
   for (const key of ["modelo_padrao", "modelo_critico", "modelo_alto_valor"] as const) {
@@ -179,7 +179,7 @@ type HubCicloPickListItem = {
 };
 
 function hubCicloTipoLabel(tipo: string): string {
-  if (tipo === "continuo") return "contÃ­nuo";
+  if (tipo === "continuo") return "contínuo";
   if (tipo === "programado") return "programado";
   if (tipo === "gatilho") return "gatilho";
   return tipo;
@@ -218,7 +218,7 @@ function ragFileKey(f: File): string {
 function RagErroAjuda({ mensagem }: { mensagem: string }) {
   if (!mensagem.trim()) return null;
   const pdf = ragErroPdfSemTexto(mensagem);
-  const formato = /formato nÃ£o suportado|nÃ£o indexÃ¡vel/i.test(mensagem);
+  const formato = /formato não suportado|não indexável/i.test(mensagem);
   if (!pdf && !formato) return null;
 
   return (
@@ -236,8 +236,8 @@ function RagErroAjuda({ mensagem }: { mensagem: string }) {
     >
       {pdf ? (
         <p style={{ margin: "0 0 8px" }}>
-          <strong style={{ color: "#58a6ff" }}>PDF sem texto seleccionÃ¡vel.</strong> Muitos PDFs criados com
-          &quot;Imprimir&quot; ou digitalizados nÃ£o indexam. Use{" "}
+          <strong style={{ color: "#58a6ff" }}>PDF sem texto seleccionável.</strong> Muitos PDFs criados com
+          &quot;Imprimir&quot; ou digitalizados não indexam. Use{" "}
           <a
             href={RAG_EXEMPLO_MD_URL}
             download
@@ -247,7 +247,7 @@ function RagErroAjuda({ mensagem }: { mensagem: string }) {
           >
             o ficheiro .md de exemplo
           </a>{" "}
-          ou exporte o mesmo conteÃºdo em <strong style={{ color: "#e6edf3" }}>.docx</strong> /{" "}
+          ou exporte o mesmo conteúdo em <strong style={{ color: "#e6edf3" }}>.docx</strong> /{" "}
           <strong style={{ color: "#e6edf3" }}>.md</strong>.
         </p>
       ) : null}
@@ -276,7 +276,7 @@ function toLinhasLista(raw: unknown): string[] {
   }
   if (typeof raw === "string") {
     return raw
-      .split(/\n|â€¢|- /)
+      .split(/\n|•|- /)
       .map((item) => item.trim())
       .filter(Boolean);
   }
@@ -299,7 +299,7 @@ function normalizarAnalisePlaybook(raw: Record<string, unknown>): PlaybookAnalis
   const resumo =
     pickTexto(nested, ["resumo_executivo", "resumo", "summary", "analise_resumo", "analysis"]) ||
     pickTexto(raw, ["resumo", "summary"]) ||
-    "AnÃ¡lise concluÃ­da sem resumo estruturado.";
+    "Análise concluída sem resumo estruturado.";
   const notaRaw = nested.nota ?? raw.nota;
   const nota =
     typeof notaRaw === "number" && Number.isFinite(notaRaw)
@@ -350,7 +350,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [passo, setPasso] = useState(1);
   const [dialogFecharAssistente, setDialogFecharAssistente] = useState(false);
   const [cargoSelecionado, setCargoSelecionado] = useState<Cargo | null>(null);
-  /** Sem cargo no catÃ¡logo â€” instruÃ§Ãµes sÃ³ do playbook publicado no bucket. */
+  /** Sem cargo no catálogo — instruções só do playbook publicado no bucket. */
   const [somentePlaybook, setSomentePlaybook] = useState(false);
   const [nome, setNome] = useState("");
   const [mercados, setMercados] = useState<string[]>([]);
@@ -366,13 +366,13 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [filtroEspecialidade, setFiltroEspecialidade] = useState<string>("");
 
 
-  /** PadrÃ£o recomendado: copiloto interno. */
+  /** Padrão recomendado: copiloto interno. */
   const [modoOperacao, setModoOperacao] = useState<ModoOperacaoAgente>("jobs_internos");
   /** Onde/quando opera: gravado como hub_ciclos_ia. */
   const [modoExecucao, setModoExecucao] = useState<"interacao" | "tempo_real" | "agenda">("agenda");
   const [agendaIntervalMin, setAgendaIntervalMin] = useState<15 | 60 | 360 | 1440>(60);
 
-  /** `provisionar`: cria linha padrÃ£o + opcional vincular mais; `somente_vincular`: sÃ³ atualiza slugs em hub_ciclos_ia. */
+  /** `provisionar`: cria linha padrão + opcional vincular mais; `somente_vincular`: só atualiza slugs em hub_ciclos_ia. */
   const [hubCicloEstrategia, setHubCicloEstrategia] = useState<"provisionar" | "somente_vincular">(
     "provisionar"
   );
@@ -392,7 +392,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
   const [erroCargos, setErroCargos] = useState(false);
 
-  /** Preenchido apÃ³s POST bem-sucedido em `/api/hub/agentes`. */
+  /** Preenchido após POST bem-sucedido em `/api/hub/agentes`. */
   const [agenteSlugCriado, setAgenteSlugCriado] = useState<string | null>(null);
   const [uazapiSnap, setUazapiSnap] = useState<AgenteUazapiSnapshot | null>(null);
   const [playbookMetaLoading, setPlaybookMetaLoading] = useState(false);
@@ -411,7 +411,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [playbookAnaliseResultado, setPlaybookAnaliseResultado] = useState<PlaybookAnaliseResultado | null>(null);
   const [playbookArquivoPendente, setPlaybookArquivoPendente] = useState<File | null>(null);
   const playbookFlowStatus = assessPlaybookFlowInMarkdown(playbookConteudoAnalise);
-  /** Escolhidos no passo Documentos; enviados e indexados logo apÃ³s Â«Criar agenteÂ». */
+  /** Escolhidos no passo Documentos; enviados e indexados logo após «Criar agente». */
   const [ragPendentes, setRagPendentes] = useState<RagFilaItem[]>([]);
   const [ragPendenteErro, setRagPendenteErro] = useState("");
   const [ragPosCriacaoAviso, setRagPosCriacaoAviso] = useState("");
@@ -419,7 +419,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [ragPreparados, setRagPreparados] = useState(false);
   const [ragUploadTotal, setRagUploadTotal] = useState(0);
   const [ragUploadDone, setRagUploadDone] = useState(0);
-  /** Passo Canal: PATCH do modo WhatsApp antes de acÃ§Ãµes UAZAPI. */
+  /** Passo Canal: PATCH do modo WhatsApp antes de acções UAZAPI. */
   const [syncCanalLoading, setSyncCanalLoading] = useState(false);
 
   useEffect(() => {
@@ -531,7 +531,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   function adicionarRagPendente(file: File | null | undefined) {
     if (!file) return;
     if (!ragExtensaoAceita(file.name)) {
-      setRagPendenteErro(`Formato nÃ£o suportado. Formatos aceites: ${RAG_FORMATOS_RESUMO}.`);
+      setRagPendenteErro(`Formato não suportado. Formatos aceites: ${RAG_FORMATOS_RESUMO}.`);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -544,7 +544,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     }
     const key = ragFileKey(file);
     if (ragPendentes.some((item) => ragFileKey(item.file) === key)) {
-      setRagPendenteErro("Este arquivo jÃ¡ estÃ¡ na lista.");
+      setRagPendenteErro("Este arquivo já está na lista.");
       return;
     }
     setRagPendenteErro("");
@@ -626,8 +626,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     } else {
       setRagPosCriacaoAviso(
         falhas.length === pendentesSnapshot.length
-          ? `Documentos RAG: nenhum foi processado com sucesso. ${falhas.join(" Â· ")}`
-          : `Documentos RAG: processamento parcial. ${falhas.join(" Â· ")}`
+          ? `Documentos RAG: nenhum foi processado com sucesso. ${falhas.join(" · ")}`
+          : `Documentos RAG: processamento parcial. ${falhas.join(" · ")}`
       );
     }
     return falhas;
@@ -644,11 +644,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     try {
       if (!agenteSlugCriado) {
         if ((!somentePlaybook && !cargoSelecionado) || !nome.trim()) {
-          setRagPendenteErro("Preencha cargo (ou modo sÃ³ playbook) e nome antes de processar embeddings.");
+          setRagPendenteErro("Preencha cargo (ou modo só playbook) e nome antes de processar embeddings.");
           return;
         }
         setRagPreparados(true);
-        // Cria o agente e indexa, mas mantÃ©m o utilizador no passo actual (RevisÃ£o/Ferramentas vÃªm a seguir).
+        // Cria o agente e indexa, mas mantém o utilizador no passo actual (Revisão/Ferramentas vêm a seguir).
         await criarAgente({ avancarPasso: false });
         return;
       }
@@ -707,9 +707,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     const tipoAceito = file.type === "text/markdown" || file.type === "text/plain";
     const extAceita = nomeLower.endsWith(".md") || nomeLower.endsWith(".txt");
     if (!tipoAceito && !extAceita) {
-      return "Formato invÃ¡lido. Envie um arquivo .md ou .txt.";
+      return "Formato inválido. Envie um arquivo .md ou .txt.";
     }
-    if (file.size <= 0) return "Arquivo vazio. Escolha um arquivo com conteÃºdo.";
+    if (file.size <= 0) return "Arquivo vazio. Escolha um arquivo com conteúdo.";
     if (file.size > PLAYBOOK_MAX_BYTES) return "Arquivo acima de 2 MB. Reduza o tamanho e tente novamente.";
     return null;
   }
@@ -743,7 +743,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       const texto = (await lerArquivoTexto(file)).trim();
       if (!texto) {
         setPlaybookUploadStatus("erro");
-        setPlaybookUploadMensagem("NÃ£o foi possÃ­vel extrair texto do arquivo.");
+        setPlaybookUploadMensagem("Não foi possível extrair texto do arquivo.");
         setPlaybookUploadPct(0);
         setPlaybookArquivoPendente(null);
         return;
@@ -788,7 +788,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       const texto = (await lerArquivoTexto(file)).trim();
       if (!texto) {
         setPlaybookUploadStatus("erro");
-        setPlaybookUploadMensagem("NÃ£o foi possÃ­vel extrair texto do arquivo.");
+        setPlaybookUploadMensagem("Não foi possível extrair texto do arquivo.");
         setPlaybookUploadPct(0);
         return;
       }
@@ -807,7 +807,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         body: form,
       });
 
-      // Fallback defensivo: se o endpoint novo nÃ£o existir, tenta contrato JSON no endpoint atual.
+      // Fallback defensivo: se o endpoint novo não existir, tenta contrato JSON no endpoint atual.
       if (uploadRes.status === 404 || uploadRes.status === 405) {
         uploadRes = await fetch(`/api/hub/agentes/${encodeURIComponent(slugAlvo)}/playbook`, {
           method: "POST",
@@ -849,7 +849,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
   async function analisarPlaybookComMistral() {
     if (!playbookConteudoAnalise.trim()) {
-      setPlaybookAnaliseErro("Carregue um playbook antes de solicitar anÃ¡lise.");
+      setPlaybookAnaliseErro("Carregue um playbook antes de solicitar análise.");
       return;
     }
 
@@ -897,11 +897,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       }
 
       if (res.status === 503 && !agenteSlugCriado) {
-        setPlaybookAnaliseErro("Configure MISTRAL_API_KEY no servidor para anÃ¡lise com nota.");
+        setPlaybookAnaliseErro("Configure MISTRAL_API_KEY no servidor para análise com nota.");
         return;
       }
 
-      // Fallback final apenas com agente jÃ¡ criado.
+      // Fallback final apenas com agente já criado.
       if (agenteSlugCriado && (res.status === 404 || res.status === 405 || res.status >= 500)) {
         const syncRes = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlugCriado)}/mistral-sync`, {
           method: "POST",
@@ -918,13 +918,13 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           .slice(0, 8);
         setPlaybookAnaliseResultado({
           resumo:
-            "AnÃ¡lise textual local concluÃ­da. Endpoint de anÃ¡lise Mistral ainda indisponÃ­vel neste ambiente.",
+            "Análise textual local concluída. Endpoint de análise Mistral ainda indisponível neste ambiente.",
           nota: null,
           notaComentario: "",
           pontosChave: linhas,
           gaps: [],
           riscos: ["Valide no backend o endpoint POST /playbook/analisar."],
-          recomendacoes: ["Clique novamente apÃ³s configurar MISTRAL_API_KEY."],
+          recomendacoes: ["Clique novamente após configurar MISTRAL_API_KEY."],
           textoBruto: detalhes,
           modelo: null,
           origem: "fallback",
@@ -934,7 +934,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       }
 
       const err = (await res.json().catch(() => ({}))) as { error?: string };
-      setPlaybookAnaliseErro(err.error || `Falha na anÃ¡lise (HTTP ${res.status}).`);
+      setPlaybookAnaliseErro(err.error || `Falha na análise (HTTP ${res.status}).`);
     } catch {
       setPlaybookAnaliseErro("Falha de rede ao analisar o playbook.");
     } finally {
@@ -954,12 +954,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     try {
       const res = await fetch(PLAYBOOK_EXEMPLO_MD_URL, { headers: internalApiHeaders() });
       if (!res.ok) {
-        setPlaybookErro(`Falha ao carregar template padrÃ£o (HTTP ${res.status}).`);
+        setPlaybookErro(`Falha ao carregar template padrão (HTTP ${res.status}).`);
         return;
       }
       const texto = (await res.text()).trim();
       if (!texto) {
-        setPlaybookErro("Template padrÃ£o vazio.");
+        setPlaybookErro("Template padrão vazio.");
         return;
       }
       setPlaybookArquivoNome("playbook-template-v1.md");
@@ -968,11 +968,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       setPlaybookArquivoPendente(null);
       setPlaybookUploadStatus("sucesso");
       setPlaybookUploadPct(100);
-      setPlaybookUploadMensagem("Template padrao v1 aplicado. Ajuste o conteudo e analise o playbook.");
+      setPlaybookUploadMensagem("Template padrão v1 aplicado. Ajuste o conteúdo e analise o playbook.");
       setPlaybookAnaliseErro("");
       setPlaybookAnaliseResultado(null);
     } catch {
-      setPlaybookErro("Falha de rede ao carregar template padrÃ£o.");
+      setPlaybookErro("Falha de rede ao carregar template padrão.");
     }
   }
 
@@ -1122,7 +1122,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       const pe = (await syncRes.json().catch(() => ({}))) as { error?: string };
       setErro(
         pe.error ||
-          "NÃ£o foi possÃ­vel gravar a configuraÃ§Ã£o do agente. Tente de novo ou abra a ficha do agente."
+          "Não foi possível gravar a configuração do agente. Tente de novo ou abra a ficha do agente."
       );
       return false;
     }
@@ -1196,7 +1196,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         };
         const slug = data.agente_slug;
         if (data.ciclo_erro) {
-          console.error("[CRM] Agent criado mas ciclo padrÃ£o falhou:", data.ciclo_erro);
+          console.error("[CRM] Agent criado mas ciclo padrão falhou:", data.ciclo_erro);
         } else if (data.ciclo_aviso) {
           console.warn("[CRM]", data.ciclo_aviso);
         }
@@ -1228,14 +1228,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         setShowConfirm(false);
         if (slug) {
           if (avancarPasso) setPasso(7);
-        } else setErro("Agente criado mas a API nÃ£o devolveu o slug.");
+        } else setErro("Agente criado mas a API não devolveu o slug.");
       } else {
         const data = (await res.json().catch(() => ({}))) as { erro?: string; error?: string };
         setErro(data.erro || data.error || "Erro ao criar agente.");
         setShowConfirm(false);
       }
     } catch {
-      setErro("Falha na requisiÃ§Ã£o.");
+      setErro("Falha na requisição.");
       setShowConfirm(false);
     } finally {
       setCriando(false);
@@ -1297,11 +1297,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             }}
           >
             <h2 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
-              Confirmar criaÃ§Ã£o
+              Confirmar criação
             </h2>
             <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
-              Confirmar criaÃ§Ã£o do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>? Em seguida passarÃ¡ por
-              Materiais (playbook) e, se aplicÃ¡vel, Canal (WhatsApp UAZAPI).
+              Confirmar criação do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>? Em seguida passará por
+              Materiais (playbook) e, se aplicável, Canal (WhatsApp UAZAPI).
             </p>
             {erro && <p style={{ color: "#ef4444", fontSize: 12, marginBottom: 12 }}>{erro}</p>}
             <div style={{ display: "flex", gap: 10 }}>
@@ -1371,12 +1371,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 lineHeight: 1,
               }}
             >
-              â†
+              — —
             </button>
           </div>
           {cargoSelecionado && nome && (
             <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>
-              {nome} Â· {cargoSelecionado.titulo}
+              {nome} · {cargoSelecionado.titulo}
             </p>
           )}
         </div>
@@ -1415,7 +1415,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       fontWeight: 700,
                     }}
                   >
-                    {passado ? "âœ“" : num}
+                    {passado ? "—S" : num}
                   </div>
                   <span
                     style={{
@@ -1468,10 +1468,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           {passo === 1 && (
             <div>
               <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-                Como este agente serÃ¡ instruÃ­do?
+                Como este agente será instruído?
               </h2>
               <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 16px" }}>
-                Escolha um cargo do catÃ¡logo ou carregue um playbook personalizado (.md / .txt) para instruir o agente.
+                Escolha um cargo do catálogo ou carregue um playbook personalizado (.md / .txt) para instruir o agente.
               </p>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
@@ -1482,7 +1482,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   }}
                   style={chip(!somentePlaybook)}
                 >
-                  Cargo do catÃ¡logo
+                  Cargo do catálogo
                 </button>
                 <button
                   type="button"
@@ -1492,7 +1492,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   }}
                   style={chip(somentePlaybook, "#c9a24a")}
                 >
-                  SÃ³ playbook (sem cargo)
+                  Só playbook (sem cargo)
                 </button>
               </div>
 
@@ -1518,7 +1518,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         opacity: playbookUploadStatus === "enviando" || playbookAnaliseLoading ? 0.65 : 1,
                       }}
                     >
-                      Aplicar template padrao v1
+                      Aplicar template padrão v1
                     </button>
                   </div>
                   <PlaybookUploadAnalisePanel
@@ -1697,7 +1697,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                 <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>{c.descricao_curta}</p>
                               )}
                             </div>
-                            {ativo && <span style={{ color: "#c9a24a", fontSize: 16, flexShrink: 0 }}>âœ“</span>}
+                            {ativo && <span style={{ color: "#c9a24a", fontSize: 16, flexShrink: 0 }}>—S</span>}
                           </button>
                         );
                       })}
@@ -1716,7 +1716,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
                   {somentePlaybook
-                    ? "Nome e mercados â€” comportamento vem do playbook no bucket."
+                    ? "Nome e mercados — comportamento vem do playbook no bucket."
                     : "Campos fixos do cargo, nome e mercados."}
                 </p>
               </div>
@@ -1724,12 +1724,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               {!somentePlaybook && cargoSelecionado ? (
               <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
                 <p style={{ color: "#c9a24a", fontSize: 11, fontWeight: 700, margin: "0 0 12px" }}>
-                  Fixo do cargo ðŸ”’
+                  Fixo do cargo —x
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div>
                     <label style={{ fontSize: 11, color: "#8b949e", display: "block", marginBottom: 4 }}>
-                      NÃ­vel
+                      Nível
                     </label>
                     {cargoSelecionado.nivel ? (
                       <span
@@ -1747,12 +1747,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         {cargoSelecionado.nivel}
                       </span>
                     ) : (
-                      <span style={{ color: "#8b949e", fontSize: 13 }}>â€”</span>
+                      <span style={{ color: "#8b949e", fontSize: 13 }}>—</span>
                     )}
                   </div>
                   <p style={{ fontSize: 12, color: "#64748b", margin: 0, lineHeight: 1.5 }}>
-                    InferÃªncia: <strong style={{ color: "#8b949e" }}>Mistral</strong> (Agno). Modelo efectivo em{" "}
-                    <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor â€” sem escolha por agente.
+                    Inferência: <strong style={{ color: "#8b949e" }}>Mistral</strong> (Agno). Modelo efectivo em{" "}
+                    <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor — sem escolha por agente.
                   </p>
                 </div>
               </div>
@@ -1809,7 +1809,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Personalidade
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
-                  Ajuste os 5 eixos para definir o estilo de comunicaÃ§Ã£o do agente.
+                  Ajuste os 5 eixos para definir o estilo de comunicação do agente.
                 </p>
               </div>
 
@@ -1876,8 +1876,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Documentos (RAG)
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
-                  O comportamento operacional (saudaÃ§Ã£o, perguntas essenciais e comprimento padrÃ£o) vem do{" "}
-                  <strong style={{ color: "#adbac7" }}>cargo</strong>. Aqui anexe atÃ©{" "}
+                  O comportamento operacional (saudação, perguntas essenciais e comprimento padrão) vem do{" "}
+                  <strong style={{ color: "#adbac7" }}>cargo</strong>. Aqui anexe até{" "}
                   <strong style={{ color: "#adbac7" }}>{RAG_DOCS_LIMIT} documentos</strong> sobre produto ou
                   empresa para conhecimento factual (RAG).
                 </p>
@@ -1900,12 +1900,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   </p>
                   {typeof cargoSelecionado.saudacao_cliente === "string" && cargoSelecionado.saudacao_cliente.trim() ? (
                     <p style={{ margin: 0, color: "#adbac7", fontSize: 12, lineHeight: 1.5 }}>
-                      <strong style={{ color: "#e6edf3" }}>SaudaÃ§Ã£o:</strong>{" "}
+                      <strong style={{ color: "#e6edf3" }}>Saudação:</strong>{" "}
                       {cargoSelecionado.saudacao_cliente.trim()}
                     </p>
                   ) : (
                     <p style={{ margin: 0, color: "#8b949e", fontSize: 12, lineHeight: 1.5 }}>
-                      Sem saudaÃ§Ã£o padrÃ£o definida no cargo.
+                      Sem saudação padrão definida no cargo.
                     </p>
                   )}
                   {typeof cargoSelecionado.comprimento_padrao === "string" && cargoSelecionado.comprimento_padrao.trim() ? (
@@ -1933,7 +1933,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     </div>
                   ) : (
                     <p style={{ margin: 0, color: "#8b949e", fontSize: 12 }}>
-                      Este cargo nÃ£o exige sequÃªncia de perguntas essenciais.
+                      Este cargo não exige sequência de perguntas essenciais.
                     </p>
                   )}
                 </div>
@@ -1946,10 +1946,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       Documentos para RAG (embeddings)
                     </p>
                     <p style={{ color: "#8b949e", fontSize: 12, margin: "0 0 12px", lineHeight: 1.55 }}>
-                      Recomendado: subir atÃ© <strong style={{ color: "#adbac7" }}>{RAG_DOCS_LIMIT} ficheiros</strong>{" "}
-                      sobre produto, serviÃ§os e empresa. Primeiro ficam sÃ³ no navegador; o envio ao servidor exige um
-                      agente criado. Pode indexar jÃ¡ com <strong style={{ color: "#adbac7" }}>Processar embeddings</strong>{" "}
-                      (cria o agente se ainda nÃ£o existir) ou deixar na fila e concluir no passo{" "}
+                      Recomendado: subir até <strong style={{ color: "#adbac7" }}>{RAG_DOCS_LIMIT} ficheiros</strong>{" "}
+                      sobre produto, serviços e empresa. Primeiro ficam só no navegador; o envio ao servidor exige um
+                      agente criado. Pode indexar já com <strong style={{ color: "#adbac7" }}>Processar embeddings</strong>{" "}
+                      (cria o agente se ainda não existir) ou deixar na fila e concluir no passo{" "}
                       <strong style={{ color: "#adbac7" }}>Ferramentas</strong>. Formatos:{" "}
                       <strong style={{ color: "#adbac7" }}>{RAG_FORMATOS_RESUMO}</strong>.
                     </p>
@@ -1983,7 +1983,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 >
                   {ragPendentes.length >= RAG_DOCS_LIMIT
                     ? "Limite de documentos atingido"
-                    : "Adicionar documento Ã  fila"}
+                    : "Adicionar documento à fila"}
                   <input
                     type="file"
                     accept={RAG_ACCEPT_ATTR}
@@ -2041,7 +2041,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     }}
                   >
                     Agente <strong style={{ color: "#e6edf3" }}>{agenteSlugCriado}</strong> criado. Use{" "}
-                    <strong style={{ color: "#e6edf3" }}>PrÃ³ximo</strong> para RevisÃ£o â†’ Ferramentas â†’ Materiais â†’ Canal.
+                    <strong style={{ color: "#e6edf3" }}>Próximo</strong> para Revisão —  Ferramentas —  Materiais —  Canal.
                   </p>
                 ) : null}
 
@@ -2080,7 +2080,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         : ragPendentes.some((i) => i.status === "concluido")
                           ? "Documentos indexados no servidor."
                           : ragPendentes.every((i) => i.status === "na_fila")
-                            ? "Na fila local â€” clique em Â«Processar embeddings agoraÂ» ou conclua com Â«Criar agenteÂ»."
+                            ? "Na fila local — clique em «Processar embeddings agora» ou conclua com «Criar agente»."
                             : "Aguardando processamento."}
                     </p>
                   </div>
@@ -2135,7 +2135,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                             {item.file.name}
                           </p>
                           <p style={{ color: "#8b949e", fontSize: 11, margin: 0, lineHeight: 1.45 }}>
-                            {formatBytes(item.file.size)} Â·{" "}
+                            {formatBytes(item.file.size)} ·{" "}
                             <span
                               style={{
                                 color:
@@ -2151,7 +2151,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                               }}
                             >
                               {item.status === "concluido"
-                                ? "CONCLUÃDO"
+                                ? "CONCLUÍDO"
                                 : item.status === "erro"
                                   ? "ERRO"
                                   : item.status === "processando"
@@ -2161,9 +2161,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                       : "NA FILA"}
                             </span>
                             {item.status === "na_fila"
-                              ? " â€” ainda sÃ³ no navegador"
+                              ? " — ainda só no navegador"
                               : item.status === "preparado"
-                                ? " â€” pronto para envio"
+                                ? " — pronto para envio"
                                 : ""}
                           </p>
                           {item.mensagem ? (
@@ -2210,10 +2210,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Ferramentas Hub
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
-                  Ligue o motor e active as funÃ§Ãµes que o Mistral pode pedir ao servidor (lead na sessÃ£o). Inclui o catÃ¡logo{" "}
+                  Ligue o motor e active as funções que o Mistral pode pedir ao servidor (lead na sessão). Inclui o catálogo{" "}
                   <strong style={{ color: "#aebccf" }}>builtin</strong> e as ferramentas{" "}
                   <strong style={{ color: "#c9a24a" }}>custom</strong> activas do tenant. Se escolheu{" "}
-                  <strong style={{ color: "#aebccf" }}>WhatsApp</strong> no passo anterior, as sugestÃµes para esse canal
+                  <strong style={{ color: "#aebccf" }}>WhatsApp</strong> no passo anterior, as sugestões para esse canal
                   aparecem em destaque.
                 </p>
               </div>
@@ -2249,7 +2249,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
               {agenteSlugCriado ? (
                 <p style={{ color: "#3fb950", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
-                  Agente <strong style={{ color: "#e6edf3" }}>{agenteSlugCriado}</strong> jÃ¡ foi criado (ex.: ao
+                  Agente <strong style={{ color: "#e6edf3" }}>{agenteSlugCriado}</strong> já foi criado (ex.: ao
                   processar documentos RAG). Grave as ferramentas abaixo e continue para Materiais e Canal.
                 </p>
               ) : null}
@@ -2287,9 +2287,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 }}
               >
                 {criando
-                  ? "A gravarâ€¦"
+                  ? "A gravar⬦"
                   : agenteSlugCriado
-                    ? "Continuar â†’ Materiais"
+                    ? "Continuar —  Materiais"
                     : "Criar agente"}
               </button>
             </div>
@@ -2299,7 +2299,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-                  RevisÃ£o
+                  Revisão
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
                   Confira identidade, cargo e como o copiloto opera (canal e ciclos). Depois configure as ferramentas
@@ -2311,11 +2311,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     <strong style={{ color: "#e6edf3" }}>
                       {ragPendentes.filter((i) => i.status !== "concluido").length}
                     </strong>{" "}
-                    (serÃ£o indexados ao confirmar a criaÃ§Ã£o do agente, se ainda nÃ£o processou no passo Documentos).
+                    (serão indexados ao confirmar a criação do agente, se ainda não processou no passo Documentos).
                   </p>
                 ) : ragPendentes.some((i) => i.status === "concluido") ? (
                   <p style={{ color: "#3fb950", fontSize: 12, margin: "10px 0 0", lineHeight: 1.5 }}>
-                    Documentos RAG jÃ¡ indexados nesta sessÃ£o.
+                    Documentos RAG já indexados nesta sessão.
                   </p>
                 ) : null}
               </div>
@@ -2373,19 +2373,19 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     lineHeight: 1.5,
                   }}
                 >
-                  <strong style={{ color: "#e3b341" }}>Modelo de IA no catÃ¡logo</strong>
+                  <strong style={{ color: "#e3b341" }}>Modelo de IA no catálogo</strong>
                   <br />
-                  Este cargo tem IDs de modelo que o Postgres nÃ£o aceita na tabela de identidade. Ao criar o agente, o
-                  servidor grava <strong>mistral</strong> nesses campos (sinÃ³nimo do modelo definido em{" "}
-                  <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor). Atualize o catÃ¡logo se quiser
+                  Este cargo tem IDs de modelo que o Postgres não aceita na tabela de identidade. Ao criar o agente, o
+                  servidor grava <strong>mistral</strong> nesses campos (sinónimo do modelo definido em{" "}
+                  <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor). Atualize o catálogo se quiser
                   manter outro fabricante explicitamente.
                 </div>
               )}
 
               <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
                 {[
-                  { label: "Nome", value: nome || "â€”" },
-                  { label: "Mercados", value: mercados.join(", ") || "â€”" },
+                  { label: "Nome", value: nome || "—" },
+                  { label: "Mercados", value: mercados.join(", ") || "—" },
                 ].map((row) => (
                   <div
                     key={row.label}
@@ -2415,9 +2415,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   COMO O COPILOTO RODA
                 </p>
                 <p style={{ color: "#6e7781", fontSize: 12, margin: "0 0 14px", lineHeight: 1.5 }}>
-                  Aqui vocÃª define se o modelo <strong style={{ color: "#aebccf" }}>atende no canal</strong> (WhatsApp
-                  legado) ou se fica sÃ³ em <strong style={{ color: "#aebccf" }}>operaÃ§Ãµes internas</strong> por ciclos.
-                  Por padrÃ£o recomendamos o copiloto interno; use o canal quando precisar de fila de atendimento ao vivo.
+                  Aqui você define se o modelo <strong style={{ color: "#aebccf" }}>atende no canal</strong> (WhatsApp
+                  legado) ou se fica só em <strong style={{ color: "#aebccf" }}>operações internas</strong> por ciclos.
+                  Por padrão recomendamos o copiloto interno; use o canal quando precisar de fila de atendimento ao vivo.
                 </p>
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
@@ -2524,13 +2524,13 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     }}
                   >
                     <strong style={{ color: "#e6c06a" }}>Canal WhatsApp:</strong> recomendamos activar resumo do lead,
-                    memÃ³rias e registo de nota. No passo seguinte (<strong style={{ color: "#c9a24a" }}>Ferramentas</strong>
-                    ) estas opÃ§Ãµes aparecem em destaque â€” avance com <strong style={{ color: "#c9a24a" }}>PrÃ³ximo</strong>.
+                    memórias e registo de nota. No passo seguinte (<strong style={{ color: "#c9a24a" }}>Ferramentas</strong>
+                    ) estas opções aparecem em destaque — avance com <strong style={{ color: "#c9a24a" }}>Próximo</strong>.
                   </div>
                 ) : null}
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
-                  TIPO DE EXECUÃ‡ÃƒO DO CICLO PADRÃƒO
+                  TIPO DE EXECU—!ÒO DO CICLO PADRÒO
                 </p>
                 <p
                   style={{
@@ -2546,14 +2546,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 >
                   {modoOperacao === "jobs_internos" ? (
                     <>
-                      O modelo serÃ¡ salvo como <strong style={{ color: "#c9a24a" }}>jobs_internos</strong> e jÃ¡
-                      provisiona um ciclo padrÃ£o em <code style={{ color: "#8b949e" }}>hub_ciclos_ia</code>.
+                      O modelo será salvo como <strong style={{ color: "#c9a24a" }}>jobs_internos</strong> e já
+                      provisiona um ciclo padrão em <code style={{ color: "#8b949e" }}>hub_ciclos_ia</code>.
                     </>
                   ) : (
                     <>
-                      O modelo serÃ¡ salvo como <strong style={{ color: "#c9a24a" }}>canal_whatsapp</strong> â€”
-                      modo <strong style={{ color: "#c9a24a" }}>atendimento no canal</strong> â€” e provisiona ciclo de{" "}
-                      <strong style={{ color: "#c9a24a" }}>gatilho por interaÃ§Ã£o</strong> (cada mensagem no webhook).
+                      O modelo será salvo como <strong style={{ color: "#c9a24a" }}>canal_whatsapp</strong> —
+                      modo <strong style={{ color: "#c9a24a" }}>atendimento no canal</strong> — e provisiona ciclo de{" "}
+                      <strong style={{ color: "#c9a24a" }}>gatilho por interação</strong> (cada mensagem no webhook).
                     </>
                   )}
                 </p>
@@ -2562,7 +2562,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   {(
                     [
                       { id: "provisionar" as const, label: "Criar ciclo do assistente" },
-                      { id: "somente_vincular" as const, label: "SÃ³ associar existentes" },
+                      { id: "somente_vincular" as const, label: "Só associar existentes" },
                     ] as const
                   ).map((opt) => {
                     const at = hubCicloEstrategia === opt.id;
@@ -2611,8 +2611,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           background: "#0d1117",
                         }}
                       >
-                        Para atendimento no WhatsApp (legado), o ciclo padrÃ£o Ã©{" "}
-                        <strong style={{ color: "#c9a24a" }}>sob interaÃ§Ã£o</strong> (gatilho a cada mensagem no canal).
+                        Para atendimento no WhatsApp (legado), o ciclo padrão é{" "}
+                        <strong style={{ color: "#c9a24a" }}>sob interação</strong> (gatilho a cada mensagem no canal).
                       </p>
                     ) : null}
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2623,23 +2623,23 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                 {
                                   id: "interacao" as const,
                                   Icon: Webhook,
-                                  titulo: "Sob interaÃ§Ã£o",
+                                  titulo: "Sob interação",
                                   texto:
-                                    "Dispara por interaÃ§Ã£o no canal; nÃ£o depende de cron para cada mensagem.",
+                                    "Dispara por interação no canal; não depende de cron para cada mensagem.",
                                 },
                               ] as const)
                             : ([
                                 {
                                   id: "tempo_real" as const,
                                   Icon: Zap,
-                                  titulo: "AutomÃ¡tico contÃ­nuo",
+                                  titulo: "Automático contínuo",
                                   texto:
-                                    "Motor interno em ciclo contÃ­nuo. Ãštil para supervisÃ£o e rotinas sem horÃ¡rio fixo.",
+                                    "Motor interno em ciclo contínuo. —atil para supervisão e rotinas sem horário fixo.",
                                 },
                                 {
                                   id: "agenda" as const,
                                   Icon: Clock,
-                                  titulo: "HorÃ¡rio fixo / recorrente",
+                                  titulo: "Horário fixo / recorrente",
                                   texto:
                                     "Ciclo programado (inicia em pausa) com intervalo abaixo; depois configure cron/dispatch e ative.",
                                 },
@@ -2725,7 +2725,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           <option value={15}>15 minutos</option>
                           <option value={60}>1 hora</option>
                           <option value={360}>6 horas</option>
-                          <option value={1440}>â‰ˆ 1 vez por dia</option>
+                          <option value={1440}>—0— 1 vez por dia</option>
                         </select>
                       </div>
                     ) : null}
@@ -2746,10 +2746,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       : "VINCULAR CICLOS EXISTENTES (OPCIONAL)"}
                   </p>
                   {hubCiclosCarregando ? (
-                    <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>A carregar ciclosâ€¦</p>
+                    <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>A carregar ciclos⬦</p>
                   ) : hubCiclosLista.length === 0 ? (
                     <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>
-                      Nenhum ciclo em hub_ciclos_ia. Crie-os em CRM â†’ Ciclos IA.
+                      Nenhum ciclo em hub_ciclos_ia. Crie-os em CRM —  Ciclos IA.
                     </p>
                   ) : (
                     <div
@@ -2791,11 +2791,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                   fontWeight: 700,
                                 }}
                               >
-                                {c.nome || "â€”"}
+                                {c.nome || "—"}
                               </span>
                               <span style={{ color: "#8b949e", fontSize: 11, lineHeight: 1.45 }}>
-                                {c.agente_slug} Â· {hubCicloTipoLabel(c.tipo)}
-                                {!c.ativo ? " Â· inativo" : ""}
+                                {c.agente_slug} · {hubCicloTipoLabel(c.tipo)}
+                                {!c.ativo ? " · inativo" : ""}
                               </span>
                             </span>
                           </label>
@@ -2838,11 +2838,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     RESUMO DO CARGO (ATENDIMENTO)
                   </p>
                   <div style={{ padding: "10px 16px", borderBottom: "1px solid #30363d" }}>
-                    <p style={{ color: "#c9a24a", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>SaudaÃ§Ã£o</p>
+                    <p style={{ color: "#c9a24a", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>Saudação</p>
                     <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>
                       {typeof cargoSelecionado.saudacao_cliente === "string" && cargoSelecionado.saudacao_cliente.trim()
                         ? cargoSelecionado.saudacao_cliente.trim()
-                        : "Sem saudaÃ§Ã£o padrÃ£o no cargo."}
+                        : "Sem saudação padrão no cargo."}
                     </p>
                   </div>
                   <div style={{ padding: "10px 16px", borderBottom: "1px solid #30363d" }}>
@@ -2850,7 +2850,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>
                       {typeof cargoSelecionado.comprimento_padrao === "string" && cargoSelecionado.comprimento_padrao.trim()
                         ? cargoSelecionado.comprimento_padrao.trim()
-                        : "Sem comprimento padrÃ£o definido no cargo."}
+                        : "Sem comprimento padrão definido no cargo."}
                     </p>
                   </div>
                   <div style={{ padding: "10px 16px" }}>
@@ -2869,7 +2869,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       )
                     ) : (
                       <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>
-                        Este cargo nÃ£o exige sequÃªncia de perguntas.
+                        Este cargo não exige sequência de perguntas.
                       </p>
                     )}
                   </div>
@@ -2885,8 +2885,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Materiais (playbook)
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
-                  Gera um ficheiro no Storage com a configuraÃ§Ã£o deste agente, para ferramentas ou equipas que precisem
-                  do playbook num URL estÃ¡vel. Se jÃ¡ passou pelo passo Canal (WhatsApp), use <strong style={{ color: "#aebccf" }}>â† Anterior</strong> a partir desse ecrÃ£ para voltar aqui antes de concluir.
+                  Gera um ficheiro no Storage com a configuração deste agente, para ferramentas ou equipas que precisem
+                  do playbook num URL estável. Se já passou pelo passo Canal (WhatsApp), use <strong style={{ color: "#aebccf" }}>— — Anterior</strong> a partir desse ecrã para voltar aqui antes de concluir.
                 </p>
               </div>
 
@@ -2907,12 +2907,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     textDecoration: "none",
                   }}
                 >
-                  Abrir ficha do agente â†’
+                  Abrir ficha do agente — 
                 </a>
               </div>
 
               {playbookMetaLoading && (
-                <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>A ler estado do playbookâ€¦</p>
+                <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>A ler estado do playbook⬦</p>
               )}
 
               {playbookErro ? (
@@ -2994,7 +2994,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     opacity: playbookUploadStatus === "enviando" || playbookAnaliseLoading ? 0.65 : 1,
                   }}
                 >
-                  Aplicar template padrao v1
+                  Aplicar template padrão v1
                 </button>
               </div>
 
@@ -3008,7 +3008,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   }}
                 >
                   <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 6px" }}>
-                    PLAYBOOK PÃšBLICO
+                    PLAYBOOK P—aBLICO
                   </p>
                   <a
                     href={playbookPublicUrl}
@@ -3021,7 +3021,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </div>
               ) : !playbookMetaLoading && !playbookErro ? (
                 <p style={{ color: "#6e7781", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
-                  Ainda nÃ£o hÃ¡ playbook no Storage para este agente. Use o botÃ£o abaixo para gerar.
+                  Ainda não há playbook no Storage para este agente. Use o botão abaixo para gerar.
                 </p>
               ) : null}
 
@@ -3041,7 +3041,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   opacity: playbookGerando || playbookMetaLoading ? 0.65 : 1,
                 }}
               >
-                {playbookGerando ? "A gerar playbookâ€¦" : "Gerar playbook no Storage"}
+                {playbookGerando ? "A gerar playbook⬦" : "Gerar playbook no Storage"}
               </button>
 
               {ragPosCriacaoAviso ? (
@@ -3074,8 +3074,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                   {modoOperacao === "canal_whatsapp"
-                    ? "Passo 1: regiÃ£o + criar instÃ¢ncia UAZAPI. Passo 2 (opcional agora): QR ou cÃ³digo para ligar o telefone."
-                    : "Este agente estÃ¡ em modo copiloto interno (jobs por ciclo). NÃ£o hÃ¡ WhatsApp neste fluxo â€” pode concluir e gerir ciclos na Central ou na ficha do agente."}
+                    ? "Passo 1: região + criar instância UAZAPI. Passo 2 (opcional agora): QR ou código para ligar o telefone."
+                    : "Este agente está em modo copiloto interno (jobs por ciclo). Não há WhatsApp neste fluxo — pode concluir e gerir ciclos na Central ou na ficha do agente."}
                 </p>
               </div>
 
@@ -3113,8 +3113,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 >
                   <strong style={{ color: "#c9a24a" }}>Ciclos vinculados:</strong> associou ciclos existentes da Central a
                   este agente. Confirme no painel UAZAPI que o <strong style={{ color: "#e6edf3" }}>webhook</strong> aponta
-                  para <code style={{ fontSize: 11, color: "#93c5fd" }}>/api/whatsapp/webhook</code> e que a instÃ¢ncia
-                  abaixo fica <strong style={{ color: "#e6edf3" }}>connected</strong> â€” sÃ³ assim as mensagens disparam a
+                  para <code style={{ fontSize: 11, color: "#93c5fd" }}>/api/whatsapp/webhook</code> e que a instância
+                  abaixo fica <strong style={{ color: "#e6edf3" }}>connected</strong> — só assim as mensagens disparam a
                   IA neste modelo.
                 </div>
               ) : null}
@@ -3123,7 +3123,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 <>
                   {syncCanalLoading ? (
                     <p style={{ color: "#8b949e", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
-                      A gravar modo WhatsApp e configuraÃ§Ã£o no agenteâ€¦
+                      A gravar modo WhatsApp e configuração no agente⬦
                     </p>
                   ) : null}
                   <AgenteUazapiBlock
@@ -3153,8 +3153,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               ) : (
                 <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 16 }}>
                   <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
-                    Para ativar WhatsApp mais tarde, abra a ficha do agente e altere o modo de operaÃ§Ã£o / ciclo ou use o
-                    bloco UAZAPI na Ã¡rea de integraÃ§Ãµes.
+                    Para ativar WhatsApp mais tarde, abra a ficha do agente e altere o modo de operação / ciclo ou use o
+                    bloco UAZAPI na área de integrações.
                   </p>
                 </div>
               )}
@@ -3178,7 +3178,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   cursor: "pointer",
                 }}
               >
-                â† Anterior
+                — — Anterior
               </button>
             )}
             {passo < 6 && (
@@ -3205,7 +3205,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     (passo === 1 && passo1AvancarBloqueado) || (passo === 2 && !nome.trim()) ? 0.4 : 1,
                 }}
               >
-                PrÃ³ximo â†’
+                Próximo — 
               </button>
             )}
             {passo === 7 && agenteSlugCriado ? (
@@ -3224,7 +3224,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   cursor: "pointer",
                 }}
               >
-                Continuar â†’ Canal
+                Continuar —  Canal
               </button>
             ) : null}
             {passo === 8 ? (
@@ -3262,7 +3262,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         }}
       >
         <p style={{ margin: 0, color: "#9cb0c9", fontSize: 13, lineHeight: 1.55 }}>
-          O agente jÃ¡ foi criado. Pode ligar o WhatsApp, gerar playbook e ajustar o canal mais tarde na ficha do
+          O agente já foi criado. Pode ligar o WhatsApp, gerar playbook e ajustar o canal mais tarde na ficha do
           modelo.
         </p>
       </CrmConfirmDialog>
