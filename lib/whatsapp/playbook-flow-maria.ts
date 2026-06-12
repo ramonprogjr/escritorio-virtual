@@ -213,6 +213,10 @@ function makeEngineCompleteStep(
   };
 }
 
+export function compilePlaybookFlowToEngine(definition: PlaybookFlowDefinition): FlowEngineDefinition {
+  return convertStructuredFlowToEngine(definition);
+}
+
 function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): FlowEngineDefinition {
   const steps: Record<string, FlowEngineStep> = {};
   const syntheticCompleteSteps: Record<string, FlowEngineStep> = {};
@@ -1338,7 +1342,8 @@ async function responderFluxoPlaybookIndisponivel(params: {
   };
 }
 
-async function carregarDynamicPlaybookRuntime(
+/** Carrega definição do fluxo publicado (para simulação CRM / testes). */
+export async function carregarDynamicPlaybookRuntime(
   supabase: SupabaseClient,
   agenteSlug: string
 ): Promise<DynamicPlaybookRuntime | null> {

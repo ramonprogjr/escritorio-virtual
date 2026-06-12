@@ -3,10 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   executarBriefingReply,
   executarSimulacaoCanalReply,
+  executarSimulacaoWhatsappReply,
   montarSnapshotOperacionalReadOnly,
   type BriefingMensagemLinha,
   type BriefingModoSessao,
 } from "@/lib/agente-briefing-chat";
+import {
+  BRIEFING_FLOW_SIM_STATE_KEY,
+  parseBriefingFlowSimState,
+} from "@/lib/playbook/briefing-flow-simulator";
 import { extrairESalvarMemoriasAgente, formatarBlocoMemoriasAgente, listarMemoriasAgente } from "@/lib/ia/memoria-agente";
 
 function db() {
@@ -74,6 +79,7 @@ function cacheInvalidateBriefingGet(slug: string, sessaoId: string | null) {
 function normalizarModoBriefing(v: unknown): BriefingModoSessao {
   const s = String(v ?? "").trim();
   if (s === "simulacao_canal") return "simulacao_canal";
+  if (s === "simulacao_whatsapp") return "simulacao_whatsapp";
   return "briefing_interno";
 }
 
@@ -164,7 +170,13 @@ export async function POST(
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
-  let body: { sessao_id?: string | null; mensagem?: string; modo?: unknown };
+  let body: {
+    sessao_id?: string | null;
+    mensagem?: string;
+    modo?: unknown;
+    menu_choice_id?: string | null;
+    flow_state?: unknown;
+  };
   try {
     body = await request.json();
   } catch {
@@ -262,6 +274,126 @@ export async function POST(
 
   let resultado;
   try {
+    if (modo === "simulacao_whatsapp") {
+      const flowState = parseBriefingFlowSimState(body.flow_state);
+      const sim = await executarSimulacaoWhatsappReply({
+        supabase,
+        agenteSlug: slug,
+        historico: historicoParaModelo,
+        mensagemUsuario: textoUser,
+        menuChoiceId: body.menu_choice_id ?? null,
+        flowState,
+      });
+      resultado = sim.ia ?? {
+        texto: sim.partes.map((p) => p.display).join("\n\n"),
+        modelo: "playbook-flow",
+        tokens_input: 0,
+        tokens_output: 0,
+        custo_brl: 0,
+        fontes_conhecimento: [
+          {
+            id: "playbook_flow",
+            label: sim.usou_fluxo ? "Fluxo WhatsApp (playbook)" : "Prompt produção (pós-fluxo)",
+          },
+        ],
+      };
+
+      const assistantRows: Array<{
+        sessao_id: string;
+        papel: string;
+        conteudo: string;
+        metadata: Record<string, unknown>;
+      }> = [];
+
+      for (const parte of sim.partes) {
+        assistantRows.push({
+          sessao_id: sessaoId,
+          papel: "assistant",
+          conteudo: parte.display,
+          metadata: {
+            modo,
+            sim_part: parte,
+            [BRIEFING_FLOW_SIM_STATE_KEY]: sim.flow_state,
+            ...(sim.ia && parte.kind === "text" && parte.text === sim.ia.texto
+              ? {
+                  modelo: sim.ia.modelo,
+                  tokens_input: sim.ia.tokens_input,
+                  tokens_output: sim.ia.tokens_output,
+                  custo_brl: sim.ia.custo_brl,
+                  fontes_conhecimento: sim.ia.fontes_conhecimento,
+                  fase: "ia_pos_fluxo",
+                }
+              : sim.usou_fluxo
+                ? { fase: "fluxo_playbook", modelo: "playbook-flow" }
+                : {}),
+          },
+        });
+      }
+
+      if (assistantRows.length === 0) {
+        assistantRows.push({
+          sessao_id: sessaoId,
+          papel: "assistant",
+          conteudo: resultado.texto,
+          metadata: {
+            modo,
+            modelo: resultado.modelo,
+            tokens_input: resultado.tokens_input,
+            tokens_output: resultado.tokens_output,
+            custo_brl: resultado.custo_brl,
+            fontes_conhecimento: resultado.fontes_conhecimento,
+            [BRIEFING_FLOW_SIM_STATE_KEY]: sim.flow_state,
+          },
+        });
+      }
+
+      for (const row of assistantRows) {
+        const { error: aErr } = await supabase.from("hub_crm_agente_briefing_mensagem").insert(row);
+        if (aErr) return NextResponse.json({ error: aErr.message }, { status: 500 });
+      }
+
+      try {
+        await extrairESalvarMemoriasAgente(supabase, {
+          agenteSlug: slug,
+          mensagemUsuario: textoUser,
+          respostaIA: resultado.texto,
+          origem: "briefing",
+        });
+      } catch {
+        /* opcional */
+      }
+
+      await supabase
+        .from("hub_crm_agente_briefing_sessao")
+        .update({ atualizado_em: new Date().toISOString() })
+        .eq("id", sessaoId);
+      cacheInvalidateBriefingGet(slug, sessaoId);
+
+      const { data: mensagens, error: mErr } = await supabase
+        .from("hub_crm_agente_briefing_mensagem")
+        .select("id, papel, conteudo, criado_em, metadata")
+        .eq("sessao_id", sessaoId)
+        .order("criado_em", { ascending: true })
+        .limit(500);
+
+      if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 });
+
+      const payload = {
+        sessao_id: sessaoId,
+        modo,
+        mensagens: mensagens || [],
+        flow_state: sim.flow_state,
+        ultima_resposta_meta: {
+          modelo: resultado.modelo,
+          tokens_input: resultado.tokens_input,
+          tokens_output: resultado.tokens_output,
+          custo_brl: resultado.custo_brl,
+        },
+      };
+      cacheSetBriefingGet(slug, sessaoId, payload);
+      return NextResponse.json(payload);
+    }
+
     if (modo === "simulacao_canal") {
       resultado = await executarSimulacaoCanalReply({
         agenteSlug: slug,

@@ -52,20 +52,31 @@ function extractFencedJsonBlocks(markdown: string): Array<{ info: string; code: 
   return blocks;
 }
 
+function countTaggedFlowFences(markdown: string): number {
+  return extractFencedJsonBlocks(markdown).filter((block) =>
+    isObra10PlaybookFlowFence(block.info)
+  ).length;
+}
+
 function findTaggedFence(markdown: string): ParsedWithSource | null {
-  const blocks = extractFencedJsonBlocks(markdown);
+  const blocks = extractFencedJsonBlocks(markdown).filter((block) =>
+    isObra10PlaybookFlowFence(block.info)
+  );
+  if (!blocks.length) return null;
+
+  let lastValid: ParsedWithSource | null = null;
   for (const block of blocks) {
-    if (!isObra10PlaybookFlowFence(block.info)) continue;
     const parsed = parseJsonSafe(block.code);
-    if (!parsed) {
-      return {
-        parsed: null,
-        source: "tagged_fence",
-      };
-    }
-    return { parsed, source: "tagged_fence" };
+    if (!parsed) continue;
+    lastValid = { parsed, source: "tagged_fence" };
   }
-  return null;
+
+  if (lastValid) return lastValid;
+
+  return {
+    parsed: null,
+    source: "tagged_fence",
+  };
 }
 
 function findFallbackSchemaBlock(markdown: string): ParsedWithSource | null {
@@ -93,6 +104,7 @@ export function parsePlaybookFlowFromMarkdown(markdown: string): ParsePlaybookFl
   }
 
   const tagged = findTaggedFence(markdown);
+  const taggedFenceCount = countTaggedFlowFences(markdown);
   if (tagged) {
     if (!tagged.parsed) {
       return {
@@ -100,7 +112,10 @@ export function parsePlaybookFlowFromMarkdown(markdown: string): ParsePlaybookFl
         reason: "invalid_json",
         errors: [
           "Bloco `obra10_playbook_flow` encontrado, mas o JSON está inválido.",
-          "Revise vírgulas, aspas duplas e chaves do bloco fenced.",
+          taggedFenceCount > 1
+            ? `Foram encontrados ${taggedFenceCount} blocos de fluxo — remova duplicatas e deixe apenas um fence válido.`
+            : "Revise vírgulas, aspas duplas e chaves do bloco fenced.",
+          "Tipos suportados no fluxo: message, menu, input, complete (não use condition, trigger, validation no JSON).",
         ],
       };
     }
