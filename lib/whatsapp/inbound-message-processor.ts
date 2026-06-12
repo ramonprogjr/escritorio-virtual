@@ -264,7 +264,7 @@ export async function processarMensagemInboundWhatsapp(params: {
           bloquear_ia: playbookOut.bloquearIa ?? playbookRouting.bloquearIa,
           motivo: playbookOut.motivo ?? playbookRouting.motivo ?? null,
         });
-        if (playbookOut.skipIa || playbookOut.bloquearIa || playbookRouting.bloquearIa) {
+        if (playbookOut.skipIa !== false && (playbookOut.skipIa || playbookOut.bloquearIa || playbookRouting.bloquearIa)) {
           return;
         }
       } else if (playbookRouting.bloquearIa) {

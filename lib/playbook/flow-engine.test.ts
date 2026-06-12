@@ -58,6 +58,36 @@ describe("formatMenuOpcoesTexto", () => {
   });
 });
 
+describe("executeFlowEngine send_text", () => {
+  it("agrupa mensagens consecutivas send_text num único envio", async () => {
+    const sendText = vi.fn(async () => {});
+    const definition: FlowEngineDefinition = {
+      start_step: "a",
+      steps: {
+        a: { id: "a", type: "send_text", text: "Olá", next_step: "b" },
+        b: { id: "b", type: "send_text", text: "Sou a Mari", next_step: "c" },
+        c: { id: "c", type: "ask_text", prompt: "Seu nome?", answer_key: "nome", next_step: "fim" },
+        fim: { id: "fim", type: "complete" },
+      },
+    };
+
+    await executeFlowEngine(
+      definition,
+      { step: null, answers: {}, mensagem: "oi", tipoMidia: "texto" },
+      {
+        sendText,
+        sendMenu: async () => ({ ok: true }),
+        resolveChoiceId: () => null,
+        persistState: async () => {},
+      }
+    );
+
+    expect(sendText).toHaveBeenCalledTimes(2);
+    expect(sendText.mock.calls[0][0]).toBe("Olá\n\nSou a Mari");
+    expect(sendText.mock.calls[1][0]).toBe("Seu nome?");
+  });
+});
+
 describe("executeFlowEngine menu", () => {
   const definition: FlowEngineDefinition = {
     start_step: "arq_tamanho",

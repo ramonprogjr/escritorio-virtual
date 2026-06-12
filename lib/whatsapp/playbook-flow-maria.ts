@@ -30,6 +30,10 @@ import {
   type HubAgenteIdentidadePlaybookRow,
 } from "@/lib/hub/agente-playbook-routing";
 import { temReferenciaPlaybookPublicado } from "@/lib/hub/agente-instrucao-modo";
+import {
+  playbookIaAposTriagemEnabled,
+  isTriagemInicialMenuStep,
+} from "@/lib/whatsapp/playbook-fluido-config";
 
 export type PlaybookStep =
   | "aguardar_nome"
@@ -169,21 +173,50 @@ function makeSyntheticCompleteStepId(stepId: string, suffix: string): string {
 }
 
 function textFromCompleteAction(
-  step: PlaybookFlowStep & { complete?: { summary?: string } },
+  step: PlaybookFlowStep & { complete?: { summary?: string; user_message?: string } },
   fallback: string
-): string {
+): { text: string; internalSummary?: string } {
+  const userMessage =
+    step.complete && typeof step.complete.user_message === "string"
+      ? step.complete.user_message.trim()
+      : "";
   const summary =
     step.complete && typeof step.complete.summary === "string"
       ? step.complete.summary.trim()
       : "";
-  if (summary) return summary;
-  if (typeof step.title === "string" && step.title.trim()) return step.title.trim();
-  return fallback;
+  if (userMessage) return { text: userMessage, internalSummary: summary || undefined };
+  if (summary) return { text: "", internalSummary: summary };
+  if (typeof step.title === "string" && step.title.trim()) {
+    return { text: step.title.trim() };
+  }
+  return { text: fallback };
+}
+
+function makeEngineCompleteStep(
+  stepId: string,
+  source: PlaybookFlowStep & { complete?: { summary?: string; user_message?: string; crm_patch?: unknown } },
+  fallback: string,
+  opts?: {
+    handoff_ia?: boolean;
+    crm_patch?: Record<string, unknown>;
+    internalSummary?: string;
+  }
+): FlowEngineStep {
+  const { text, internalSummary } = textFromCompleteAction(source, fallback);
+  return {
+    id: stepId,
+    type: "complete",
+    text,
+    internalSummary: opts?.internalSummary || internalSummary,
+    handoff_ia: opts?.handoff_ia,
+    complete_crm_patch: opts?.crm_patch,
+  };
 }
 
 function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): FlowEngineDefinition {
   const steps: Record<string, FlowEngineStep> = {};
   const syntheticCompleteSteps: Record<string, FlowEngineStep> = {};
+  const iaAposTriagem = playbookIaAposTriagemEnabled();
 
   for (const step of definition.steps) {
     const stepId = step.id.trim();
@@ -192,11 +225,11 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
       let nextStep = typeof step.next === "string" && step.next.trim() ? step.next.trim() : undefined;
       if (!nextStep && step.complete) {
         nextStep = makeSyntheticCompleteStepId(stepId, "message");
-        syntheticCompleteSteps[nextStep] = {
-          id: nextStep,
-          type: "complete",
-          text: textFromCompleteAction(step, "Concluí essa etapa. Nosso time seguirá por aqui."),
-        };
+        syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(
+          nextStep,
+          step,
+          "Concluí essa etapa. Nosso time seguirá por aqui."
+        );
       }
       steps[stepId] = {
         id: stepId,
@@ -211,11 +244,11 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
       let nextStep = typeof step.next === "string" && step.next.trim() ? step.next.trim() : undefined;
       if (!nextStep && step.complete) {
         nextStep = makeSyntheticCompleteStepId(stepId, "input");
-        syntheticCompleteSteps[nextStep] = {
-          id: nextStep,
-          type: "complete",
-          text: textFromCompleteAction(step, "Perfeito, concluí essa etapa."),
-        };
+        syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(
+          nextStep,
+          step,
+          "Perfeito, concluí essa etapa."
+        );
       }
       steps[stepId] = {
         id: stepId,
@@ -231,15 +264,28 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
     }
 
     if (step.kind === "menu") {
+      const menuField =
+        "field" in step && typeof step.field === "string" && step.field.trim()
+          ? step.field.trim()
+          : stepId;
+      const handoffTriagem = iaAposTriagem && isTriagemInicialMenuStep(stepId, menuField);
+
       const choices = step.options.map((option) => {
         let nextStep = typeof option.next === "string" && option.next.trim() ? option.next.trim() : undefined;
-        if (!nextStep && option.complete) {
+        if (handoffTriagem) {
           nextStep = makeSyntheticCompleteStepId(stepId, option.id);
-          syntheticCompleteSteps[nextStep] = {
-            id: nextStep,
-            type: "complete",
-            text: option.complete.summary?.trim() || "Perfeito, vou encaminhar internamente e seguimos por aqui.",
-          };
+          syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(nextStep, step, "", {
+            handoff_ia: true,
+            crm_patch: option.crm_patch as Record<string, unknown> | undefined,
+            internalSummary: `Triagem: ${option.label} (${option.id})`,
+          });
+        } else if (!nextStep && option.complete) {
+          nextStep = makeSyntheticCompleteStepId(stepId, option.id);
+          syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(
+            nextStep,
+            { ...step, complete: option.complete },
+            "Perfeito, vou encaminhar internamente e seguimos por aqui."
+          );
         }
         if (!nextStep && step.on_select?.[option.id]) {
           nextStep = String(step.on_select[option.id]).trim() || undefined;
@@ -250,11 +296,6 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
           next_step: nextStep,
         };
       });
-
-      const menuField =
-        "field" in step && typeof step.field === "string" && step.field.trim()
-          ? step.field.trim()
-          : stepId;
 
       steps[stepId] = {
         id: stepId,
@@ -269,18 +310,20 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
             ? step.list_button.trim()
             : "Ver opções",
         answer_key: menuField,
-        invalid_prompt: "Escolha uma opção válida no menu para continuarmos.",
+        invalid_prompt: handoffTriagem
+          ? "Toque em uma das opções do menu acima para eu te direcionar melhor."
+          : "Escolha uma opção válida no menu para continuarmos.",
         choices,
       };
       continue;
     }
 
     if (step.kind === "complete") {
-      steps[stepId] = {
-        id: stepId,
-        type: "complete",
-        text: textFromCompleteAction(step, "Concluído. Nosso time seguirá com você por aqui."),
-      };
+      steps[stepId] = makeEngineCompleteStep(
+        stepId,
+        step,
+        "Concluído. Nosso time seguirá com você por aqui."
+      );
     }
   }
 
@@ -1517,7 +1560,47 @@ async function processarPlaybookMariaInboundDynamic(params: {
       onNameCaptured: async (name) => {
         await atualizarLeadPlaybook(params.supabase, params.leadId, params.agenteSlug, { nome: name });
       },
-      onStepComplete: async (stepId, answers) => {
+      onStepComplete: async (stepId, answers, completeMeta) => {
+        if (completeMeta?.internalSummary) {
+          try {
+            await params.supabase.from("hub_atividades").insert({
+              lead_id: params.leadId,
+              tipo: "nota",
+              descricao: completeMeta.internalSummary,
+              feito_por: params.agenteSlug,
+              feito_por_tipo: "ia",
+              metadata: { origem: "playbook_complete_summary", step_id: stepId },
+            });
+          } catch {
+            /* hub_atividades opcional */
+          }
+        }
+
+        if (completeMeta?.handoffIa) {
+          const patchArgs: Record<string, unknown> = {
+            metadata: {
+              wa_playbook_complete: true,
+              fase_atendimento: "ia_pos_triagem",
+              wa_playbook_answers: answers,
+            },
+          };
+          if (completeMeta.crmPatch && typeof completeMeta.crmPatch === "object") {
+            Object.assign(patchArgs, completeMeta.crmPatch);
+            if (
+              completeMeta.crmPatch.metadata &&
+              typeof completeMeta.crmPatch.metadata === "object"
+            ) {
+              patchArgs.metadata = {
+                ...(patchArgs.metadata as Record<string, unknown>),
+                ...(completeMeta.crmPatch.metadata as Record<string, unknown>),
+                wa_playbook_complete: true,
+              };
+            }
+          }
+          await atualizarLeadPlaybook(params.supabase, params.leadId, params.agenteSlug, patchArgs);
+          return;
+        }
+
         switch (stepId) {
           case "complete_arquitetura":
             await atualizarLeadPlaybook(params.supabase, params.leadId, params.agenteSlug, {

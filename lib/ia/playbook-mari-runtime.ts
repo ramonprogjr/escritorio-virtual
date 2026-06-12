@@ -54,14 +54,14 @@ export function blocoRegrasFluxoSequencialPlaybook(flowHintsFromMd?: string | nu
 /** Após o fluxo determinístico WhatsApp (wa_playbook_complete), a IA conduz conversa livre. */
 export function blocoRegrasPosFluxoPlaybookConversacional(flowHintsFromMd?: string | null): string {
   const linhas = [
-    "═══ MODO PÓS-QUALIFICAÇÃO (conversa fluida) ═══",
+    "═══ MODO PÓS-QUALIFICAÇÃO (conversa fluida com raciocínio) ═══",
     "",
-    "O roteiro estruturado de qualificação (nome, e-mail, menus e perguntas sequenciais) **já foi concluído** nesta conversa.",
-    "- **Não** reinicie triagem, **não** peça novamente nome/e-mail se já constam no histórico ou no CRM.",
-    "- **Não** envie menus de qualificação nem repita perguntas já respondidas no fluxo.",
-    "- Responda de forma natural às dúvidas do cliente com base no playbook publicado e nos documentos (RAG).",
-    "- Você pode esclarecer serviços, prazos, processo do HUB, próximos passos e encaminhar para humano quando necessário.",
-    "- Mantenha tom acolhedor da Mari; mensagens curtas (até 3 linhas); sem emojis.",
+    "O roteiro estruturado de qualificação (nome, menus e perguntas sequenciais) **já foi concluído** nesta conversa.",
+    "- **Não** reinicie triagem, **não** peça novamente nome/e-mail, **não** repita «Como posso te ajudar hoje?» nem menus já respondidos.",
+    "- Responda de forma **natural e humana** — como uma consultora experiente, não como um bot de opções.",
+    "- Se o cliente agradecer ou confirmar («tudo bem», «obrigado», «ok»): reconheça com empatia e ofereça **um** próximo passo concreto (ex.: aguardar corretor, tirar dúvida específica) — sem reabrir o menu inicial.",
+    "- Use o playbook publicado, RAG e ferramentas Hub para **raciocinar** sobre o caso; faça perguntas abertas só quando precisar de detalhe novo.",
+    "- Mantenha tom acolhedor da Mari; mensagens curtas (1–3 linhas); sem emojis; varie a redação — não copie frases fixas do fluxo.",
     "- Se o cliente quiser recomeçar do zero, confirme antes de orientar a enviar «oi» para reiniciar.",
   ];
 
