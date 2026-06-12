@@ -13,7 +13,14 @@ export function playbookIaAposTriagemEnabled(): boolean {
 
 export function isTriagemInicialMenuStep(stepId: string, field?: string): boolean {
   const id = stepId.trim().toLowerCase();
-  if (id === "triagem_inicial_menu" || id.includes("triagem_inicial")) return true;
+  if (
+    id === "triagem_inicial_menu" ||
+    id === "menu_inicial" ||
+    id.includes("triagem_inicial") ||
+    id.includes("menu_inicial")
+  ) {
+    return true;
+  }
   const f = (field || "").trim().toLowerCase();
-  return f === "triagem" || f === "triagem_inicial";
+  return f === "triagem" || f === "triagem_inicial" || f === "objetivo";
 }

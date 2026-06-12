@@ -3,7 +3,7 @@ import { parsePlaybookFlowFromMarkdown } from "./flow-parse";
 import { validatePlaybookFlowDefinition } from "./flow-validate";
 
 const FLOW_SECTION_RE = /\n---\n\n## Bloco de fluxo din[aá]mico[\s\S]*$/i;
-const FLOW_FENCE_RE = /```[^\n]*obra10_playbook_flow[^\n]*\n[\s\S]*?```/i;
+const FLOW_FENCE_RE = /```[^\n]*obra10_playbook_flow[^\n]*\n[\s\S]*?```/gi;
 const FRONTMATTER_RE = /^---\s*\n[\s\S]*?\n---\s*(?:\n|$)/;
 const MARKDOWN_HEADING_RE = /(^|\n)#{1,6}\s+\S/;
 
@@ -80,7 +80,7 @@ export function adaptarMarkdownParaMotorWhatsapp(
     if (!parsed.ok) return false;
     return validatePlaybookFlowDefinition(parsed.definition).ok;
   })();
-  const base = narrativeBase.replace(FLOW_SECTION_RE, "").trimEnd();
+  const base = stripAllPlaybookFlowBlocks(narrativeBase);
   const markdown = base + renderPlaybookFlowBlockToMarkdown(validatedTemplate.definition);
 
   return {
@@ -105,16 +105,20 @@ function renderPlaybookFlowFence(definition: PlaybookFlowDefinition): string {
  * Atualiza apenas o fence `json obra10_playbook_flow` quando já existe;
  * caso não exista, anexa o bloco dinâmico completo ao final.
  */
+/** Remove todos os fences e secções de fluxo duplicados antes de inserir um novo. */
+export function stripAllPlaybookFlowBlocks(markdown: string): string {
+  return String(markdown ?? "")
+    .replace(FLOW_SECTION_RE, "")
+    .replace(FLOW_FENCE_RE, "")
+    .trimEnd();
+}
+
 export function upsertPlaybookFlowBlockInMarkdown(
   markdown: string,
   definition: PlaybookFlowDefinition
 ): string {
-  const source = String(markdown ?? "");
-  const fence = renderPlaybookFlowFence(definition);
-  if (FLOW_FENCE_RE.test(source)) {
-    return source.replace(FLOW_FENCE_RE, fence);
-  }
-  return `${source.trimEnd()}${renderPlaybookFlowBlockToMarkdown(definition)}`;
+  const stripped = stripAllPlaybookFlowBlocks(markdown);
+  return `${stripped}${renderPlaybookFlowBlockToMarkdown(definition)}`;
 }
 
 /**
