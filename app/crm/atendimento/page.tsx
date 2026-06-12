@@ -432,19 +432,22 @@ function AtendimentoContent() {
 
   // Header slot
   useEffect(() => {
-    setSlot(
-      <div className="flex items-center gap-3">
-        <span className="text-zinc-400 text-sm hidden sm:inline">
-          {carregando ? "A carregar…" : `${leads.length} conversa${leads.length !== 1 ? "s" : ""}`}
-        </span>
-        {meuNome && (
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#c9a24a]/25 bg-[#c9a24a]/10 px-3 py-1 text-[11px] text-[#c9a24a] font-medium">
-            <UserCheck size={12} strokeWidth={2.5} />
-            {meuNome}
+    setSlot({
+      path: pathname,
+      actions: (
+        <div className="flex items-center gap-3">
+          <span className="text-zinc-400 text-sm hidden sm:inline">
+            {carregando ? "A carregar…" : `${leads.length} conversa${leads.length !== 1 ? "s" : ""}`}
           </span>
-        )}
-      </div>
-    );
+          {meuNome && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#c9a24a]/25 bg-[#c9a24a]/10 px-3 py-1 text-[11px] text-[#c9a24a] font-medium">
+              <UserCheck size={12} strokeWidth={2.5} />
+              {meuNome}
+            </span>
+          )}
+        </div>
+      ),
+    });
     return () => setSlot(null);
   }, [setSlot, leads.length, carregando, meuNome, pathname]);
 
