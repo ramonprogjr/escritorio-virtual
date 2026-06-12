@@ -134,7 +134,12 @@ export async function processarMensagemInboundWhatsapp(params: {
       : "sdr";
 
   if (humanoResponsavelAtivo) {
-    log.info("wa.processor.ia_skipped", { reason: "humano_responsavel_ativo" });
+    log.info("wa.processor.ia_skipped", {
+      reason: "humano_responsavel_ativo",
+      lead_id: lead.id,
+      humano_responsavel: lead.humano_responsavel?.trim(),
+      agente_slug: typeof agente?.agente_slug === "string" ? agente.agente_slug : undefined,
+    });
     try {
       await supabase.from("hub_atividades").insert({
         lead_id: lead.id,
