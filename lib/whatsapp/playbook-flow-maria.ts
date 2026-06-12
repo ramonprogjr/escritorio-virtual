@@ -1479,6 +1479,9 @@ async function processarPlaybookMariaInboundDynamic(params: {
         } catch { /* opcional */ }
       },
       sendMenu: async ({ text, menuType, choices, listButton }) => {
+        if (menuType === "text") {
+          return { ok: true };
+        }
         const out = await enviarMenuUazapi({
           telefone: params.telefone,
           instanceToken: params.instanceToken,
