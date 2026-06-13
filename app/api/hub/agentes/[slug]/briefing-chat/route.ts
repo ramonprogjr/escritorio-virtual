@@ -11,6 +11,7 @@ import {
 import {
   BRIEFING_FLOW_SIM_STATE_KEY,
   parseBriefingFlowSimState,
+  resolverFlowStateParaSimulacao,
 } from "@/lib/playbook/briefing-flow-simulator";
 import { extrairESalvarMemoriasAgente, formatarBlocoMemoriasAgente, listarMemoriasAgente } from "@/lib/ia/memoria-agente";
 
@@ -248,7 +249,7 @@ export async function POST(
 
   const { data: historicoRows, error: hErr } = await supabase
     .from("hub_crm_agente_briefing_mensagem")
-    .select("papel, conteudo")
+    .select("papel, conteudo, metadata")
     .eq("sessao_id", sessaoId)
     .order("criado_em", { ascending: true })
     .limit(MAX_HISTORICO_MENSAGENS);
@@ -257,7 +258,7 @@ export async function POST(
 
   const historico: BriefingMensagemLinha[] = (historicoRows || [])
     .filter(
-      (r): r is { papel: string; conteudo: string } =>
+      (r) =>
         (r.papel === "user" || r.papel === "assistant") && typeof r.conteudo === "string"
     )
     .map((r) => ({ papel: r.papel as "user" | "assistant", conteudo: r.conteudo }));
@@ -275,7 +276,10 @@ export async function POST(
   let resultado;
   try {
     if (modo === "simulacao_whatsapp") {
-      const flowState = parseBriefingFlowSimState(body.flow_state);
+      const flowState = resolverFlowStateParaSimulacao(
+        body.flow_state,
+        (historicoRows || []) as Array<{ papel: string; metadata?: unknown }>
+      );
       const sim = await executarSimulacaoWhatsappReply({
         supabase,
         agenteSlug: slug,
@@ -305,11 +309,16 @@ export async function POST(
         metadata: Record<string, unknown>;
       }> = [];
 
+      const seenDisplays = new Set<string>();
       for (const parte of sim.partes) {
+        const display = (parte.display ?? "").trim();
+        if (!display) continue;
+        if (seenDisplays.has(display)) continue;
+        seenDisplays.add(display);
         assistantRows.push({
           sessao_id: sessaoId,
           papel: "assistant",
-          conteudo: parte.display,
+          conteudo: display,
           metadata: {
             modo,
             sim_part: parte,
@@ -341,10 +350,11 @@ export async function POST(
       }
 
       if (assistantRows.length === 0) {
+        const fallbackTexto = resultado.texto?.trim() || "…";
         assistantRows.push({
           sessao_id: sessaoId,
           papel: "assistant",
-          conteudo: resultado.texto,
+          conteudo: fallbackTexto,
           metadata: {
             modo,
             modelo: resultado.modelo,

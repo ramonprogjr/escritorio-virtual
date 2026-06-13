@@ -21,6 +21,7 @@ import type { PlaybookFlowDefinition, PlaybookFlowStep } from "@/lib/playbook/fl
 import { parsePlaybookFlowFromMarkdown } from "@/lib/playbook/flow-parse";
 import { ensureMarkdownWithWhatsappFlow } from "@/lib/playbook/playbook-flow-template";
 import { validatePlaybookFlowDefinition } from "@/lib/playbook/flow-validate";
+import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
 import { loadPublishedPlaybookRuntimeSource } from "@/lib/playbook/published-runtime";
 import {
   AGENTE_IDENTIDADE_PLAYBOOK_SELECT,
@@ -278,7 +279,11 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
         let nextStep = typeof option.next === "string" && option.next.trim() ? option.next.trim() : undefined;
         if (handoffTriagem) {
           nextStep = makeSyntheticCompleteStepId(stepId, option.id);
-          syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(nextStep, step, "", {
+          syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(
+            nextStep,
+            step,
+            "Perfeito, registrei sua escolha.",
+            {
             handoff_ia: true,
             crm_patch: option.crm_patch as Record<string, unknown> | undefined,
             internalSummary: `Triagem: ${option.label} (${option.id})`,
@@ -301,14 +306,21 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
         };
       });
 
+      const opcaoCount = step.options.length;
+      const menuTypeResolvido = sugerirMenuTypeUazapi(
+        opcaoCount,
+        step.menu_type === "button" || step.menu_type === "list" || step.menu_type === "text"
+          ? step.menu_type
+          : undefined
+      );
+      const menuTypeWhatsapp =
+        menuTypeResolvido === "text" ? sugerirMenuTypeUazapi(opcaoCount) : menuTypeResolvido;
+
       steps[stepId] = {
         id: stepId,
         type: "menu",
         text: step.prompt.trim(),
-        menu_type:
-          step.menu_type === "button" || step.menu_type === "text" || step.menu_type === "list"
-            ? step.menu_type
-            : "list",
+        menu_type: menuTypeWhatsapp,
         list_button:
           typeof step.list_button === "string" && step.list_button.trim()
             ? step.list_button.trim()

@@ -57,6 +57,9 @@ describe("briefing-flow-simulator", () => {
     expect(nome.state.step).toBe("triagem_servicos_menu");
     expect(nome.parts.some((p) => p.kind === "text" && /prazer te atender/i.test(p.text))).toBe(true);
     expect(nome.parts.some((p) => p.kind === "menu")).toBe(true);
+    expect(nome.parts.filter((p) => p.kind === "menu").length).toBe(1);
+    const menuPart = nome.parts.find((p) => p.kind === "menu");
+    expect(menuPart?.menu_type).toBe("list");
 
     const triagem = await executarPassoSimulacaoFluxo({
       definition: engine,
@@ -64,6 +67,11 @@ describe("briefing-flow-simulator", () => {
       mensagem: "1",
       menuChoiceId: "op_arq_design",
     });
-    expect(triagem.parts.some((p) => p.kind === "text" && /homologados/i.test(p.text))).toBe(true);
+    expect(triagem.skip_ia).toBe(false);
+    expect(triagem.state.complete).toBe(true);
+    expect(triagem.state.handoff_ia).toBe(true);
+    expect(triagem.parts.some((p) => p.kind === "text" && /registrei sua escolha/i.test(p.text))).toBe(
+      true
+    );
   });
 });

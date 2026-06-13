@@ -67,6 +67,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
   const [sessaoId, setSessaoId] = useState<string | null>(null);
   const [mensagens, setMensagens] = useState<Msg[]>([]);
   const [flowState, setFlowState] = useState<BriefingFlowSimState>(emptyBriefingFlowSimState());
+  const flowStateRef = useRef(flowState);
+  const mensagensRef = useRef(mensagens);
   const [input, setInput] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
@@ -96,6 +98,26 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
   }, [open, agenteSlug, modoChat]);
 
   useEffect(() => {
+    flowStateRef.current = flowState;
+  }, [flowState]);
+
+  useEffect(() => {
+    mensagensRef.current = mensagens;
+  }, [mensagens]);
+
+  function flowStateParaEnvio(): BriefingFlowSimState {
+    const atual = flowStateRef.current;
+    if (atual.step || atual.complete) return atual;
+    const lastAssistant = [...mensagensRef.current]
+      .reverse()
+      .find((m) => m.papel === "assistant");
+    const recovered = parseBriefingFlowSimState(
+      lastAssistant?.metadata?.[BRIEFING_FLOW_SIM_STATE_KEY]
+    );
+    return recovered ?? atual;
+  }
+
+  useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens, enviando, open]);
 
@@ -115,7 +137,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
         modo: modoChat,
       };
       if (isWhatsappSim) {
-        body.flow_state = flowState;
+        body.flow_state = flowStateParaEnvio();
         if (extra?.menuChoiceId) body.menu_choice_id = extra.menuChoiceId;
       }
       const res = await fetch(base, {
@@ -457,12 +479,13 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                           })}
                         </span>
                       </div>
+                      {(m.conteudo?.trim() || simPart?.kind === "menu") ? (
                       <div
                         style={{
                           background: isUser ? "#1c2a3a" : "#161b22",
                           border: `1px solid ${isUser ? "#388bfd44" : "#30363d"}`,
                           borderRadius: isUser ? "16px 16px 6px 16px" : "16px 16px 16px 6px",
-                          padding: "12px 14px",
+                          padding: m.conteudo?.trim() ? "12px 14px" : 0,
                           fontSize: 13,
                           color: "#e6edf3",
                           lineHeight: 1.55,
@@ -470,8 +493,9 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                           ...(isOptimisticUserMessage(m) ? { animation: "bubbleIn 0.28s ease-out" } : {}),
                         }}
                       >
-                        {m.conteudo}
+                        {m.conteudo?.trim() ? m.conteudo : null}
                       </div>
+                      ) : null}
                       {menuAtivo && simPart.kind === "menu" ? (
                         <BriefingSimMenuOptions
                           menuType={simPart.menu_type}

@@ -26,6 +26,7 @@ export {
   emptyBriefingFlowSimState,
   parseBriefingFlowSimState,
   partToDisplayText,
+  resolverFlowStateParaSimulacao,
 } from "@/lib/playbook/briefing-flow-sim-shared";
 
 export type BriefingFlowSimStepResult = {
@@ -187,6 +188,7 @@ function enrichPartsWithActiveMenu(
   parts: BriefingSimOutboundPart[]
 ): BriefingSimOutboundPart[] {
   if (!stepId || stepId === "concluido") return parts;
+  if (parts.some((p) => p.kind === "menu")) return parts;
   const step = definition.steps[stepId];
   if (!step || step.type !== "menu") return parts;
 

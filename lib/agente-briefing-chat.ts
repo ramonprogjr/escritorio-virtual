@@ -347,10 +347,48 @@ export async function executarSimulacaoWhatsappReply(params: {
       });
 
       if (fluxo.handled) {
+        if (fluxo.skip_ia) {
+          return {
+            partes: partesParaResposta(fluxo.parts),
+            flow_state: fluxo.state,
+            usou_fluxo: true,
+          };
+        }
+
+        const flowPartes = partesParaResposta(fluxo.parts);
+        let ia: BriefingReplyResult;
+        try {
+          ia = await executarSimulacaoCanalReply({
+            agenteSlug: params.agenteSlug,
+            historico: params.historico,
+            mensagemUsuario: params.mensagemUsuario,
+            simulacaoWaPlaybookComplete: true,
+            simulacaoWaPlaybookAnswers: fluxo.state.answers,
+          });
+        } catch (e) {
+          const detalhe = e instanceof Error ? e.message : "IA indisponível";
+          const fallback =
+            flowPartes.length > 0
+              ? flowPartes
+              : partesParaResposta([
+                  {
+                    kind: "text",
+                    text: `Registrei sua escolha. A IA pós-qualificação não respondeu (${detalhe}). Verifique MISTRAL_API_KEY e republique o playbook.`,
+                  },
+                ]);
+          return {
+            partes: fallback,
+            flow_state: fluxo.state,
+            usou_fluxo: true,
+          };
+        }
+
+        const iaParte = { kind: "text" as const, text: ia.texto, display: ia.texto };
         return {
-          partes: partesParaResposta(fluxo.parts),
+          partes: flowPartes.length > 0 ? [...flowPartes, iaParte] : [iaParte],
           flow_state: fluxo.state,
-          usou_fluxo: true,
+          ia,
+          usou_fluxo: flowPartes.length > 0,
         };
       }
     }

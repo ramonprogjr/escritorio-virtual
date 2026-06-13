@@ -15,12 +15,19 @@ export function isTriagemInicialMenuStep(stepId: string, field?: string): boolea
   const id = stepId.trim().toLowerCase();
   if (
     id === "triagem_inicial_menu" ||
+    id === "triagem_servicos_menu" ||
     id === "menu_inicial" ||
     id.includes("triagem_inicial") ||
+    id.includes("triagem_servicos") ||
     id.includes("menu_inicial")
   ) {
     return true;
   }
   const f = (field || "").trim().toLowerCase();
-  return f === "triagem" || f === "triagem_inicial" || f === "objetivo";
+  return (
+    f === "triagem" ||
+    f === "triagem_inicial" ||
+    f === "triagem_servicos_menu" ||
+    f === "objetivo"
+  );
 }

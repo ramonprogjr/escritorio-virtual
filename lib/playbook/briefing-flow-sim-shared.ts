@@ -52,6 +52,27 @@ export function parseBriefingFlowSimState(raw: unknown): BriefingFlowSimState | 
   };
 }
 
+export function resolverFlowStateParaSimulacao(
+  bodyRaw: unknown,
+  historicoComMetadata: Array<{ papel: string; metadata?: unknown }>
+): BriefingFlowSimState {
+  const fromBody = parseBriefingFlowSimState(bodyRaw) ?? emptyBriefingFlowSimState();
+  if (fromBody.step || fromBody.complete) return fromBody;
+
+  for (let i = historicoComMetadata.length - 1; i >= 0; i -= 1) {
+    const row = historicoComMetadata[i];
+    if (row.papel !== "assistant") continue;
+    const meta =
+      row.metadata && typeof row.metadata === "object"
+        ? (row.metadata as Record<string, unknown>)
+        : null;
+    const recovered = parseBriefingFlowSimState(meta?.[BRIEFING_FLOW_SIM_STATE_KEY]);
+    if (recovered && (recovered.step || recovered.complete)) return recovered;
+  }
+
+  return fromBody;
+}
+
 export function partToDisplayText(part: BriefingSimOutboundPart): string {
   if (part.kind === "text") return part.text;
   if (part.kind === "menu") {
