@@ -1,13 +1,12 @@
 import { uazapiFetchJson } from "@/lib/whatsapp/uazapi-http";
 
-/** Triagem inicial — Playbook Unificado Maria (5 opções, tipo list). */
+/** Triagem Mari — somente Arquitetura e Imobiliário (4 opções, tipo button). */
 export const MENU_PLAYBOOK_TRIAGEM_INICIAL = [
   "[O que você precisa hoje?]",
-  "Projeto arquitetura / design|triagem_arq|Projeto, interiores ou reforma",
-  "Comprar, vender ou alugar imóvel|triagem_imob|Mercado imobiliário",
-  "Arquiteto/corretor homologação|triagem_homolog|Cadastro profissional ou parceria",
-  "Proprietário anunciar imóvel|triagem_prop_anunciar|Quero anunciar meu imóvel",
-  "Outro|triagem_outro|Outro assunto",
+  "Arquitetura e projetos|triagem_arq|Projeto, interiores ou design",
+  "Obra / reforma|triagem_obra|Construção ou reforma com projeto",
+  "Comprar ou alugar imóvel|triagem_imob_cliente|Mercado imobiliário — compra ou locação",
+  "Vender ou anunciar imóvel|triagem_imob_prop|Proprietário — venda ou locação",
 ] as const;
 
 /** Opções legadas (compatibilidade IA / docs antigos). */
