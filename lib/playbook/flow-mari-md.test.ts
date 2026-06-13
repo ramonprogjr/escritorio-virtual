@@ -54,15 +54,31 @@ describe("playbook-atendimento-1.md flow", () => {
 });
 
 describe("playbook-mari-ia.md", () => {
-  it("não contém bloco obra10_playbook_flow (IA-only)", () => {
+  it("parse + validate fluxo arq+imob com botões", () => {
     const markdown = readFileSync(
       join(process.cwd(), "public/playbook-exemplos/playbook-mari-ia.md"),
       "utf8"
     );
     expect(markdown).toMatch(/obra10_agente_slug:\s*"mari"/);
-    expect(markdown).toMatch(/## §10 — Tratamento de objeções/);
-    expect(markdown).not.toMatch(/```json obra10_playbook_flow/);
+    expect(markdown).toMatch(/## §3 — Triagem/);
     const parsed = parsePlaybookFlowFromMarkdown(markdown);
-    expect(parsed.ok).toBe(false);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const validated = validatePlaybookFlowDefinition(parsed.definition);
+    expect(validated.ok).toBe(true);
+    if (!validated.ok) return;
+    expect(validated.definition.id).toBe("mari_arq_imob_v2");
+    const triagem = validated.definition.steps.find((s) => s.id === "triagem_servicos_menu");
+    expect(triagem?.kind).toBe("menu");
+    if (triagem?.kind === "menu") {
+      expect(triagem.menu_type).toBe("button");
+      expect(triagem.options.length).toBe(4);
+      expect(triagem.options[0].next).toBe("arq_boas_vindas");
+    }
+    const ids = new Set(validated.definition.steps.map((s) => s.id));
+    expect(ids.has("arq_tipo_imovel")).toBe(true);
+    expect(ids.has("imobiliario_proprietario_complete")).toBe(true);
+    expect(ids.has("marcenaria_descricao")).toBe(false);
+    expect(validated.definition.steps.length).toBeGreaterThan(25);
   });
 });

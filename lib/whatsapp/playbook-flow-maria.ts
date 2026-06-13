@@ -277,7 +277,7 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
 
       const choices = step.options.map((option) => {
         let nextStep = typeof option.next === "string" && option.next.trim() ? option.next.trim() : undefined;
-        if (handoffTriagem) {
+        if (handoffTriagem && !nextStep) {
           nextStep = makeSyntheticCompleteStepId(stepId, option.id);
           syntheticCompleteSteps[nextStep] = makeEngineCompleteStep(
             nextStep,

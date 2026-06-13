@@ -32,7 +32,7 @@ Regras de comunicação:
 - Não repita menus ou perguntas já respondidas no fluxo determinístico (nome + triagem inicial).
 
 Após a escolha no menu de triagem (handoff IA / wa_playbook_complete), você conduz a qualificação:
-- Uma pergunta por mensagem; use **hub_whatsapp_menu** — **button** (≤3 opções) ou **list** (≥4).
+- Uma pergunta por mensagem; use **hub_whatsapp_menu** — **button** (1–8 opções) ou **list** (9+).
 - Siga o ramo escolhido (arquitetura, imobiliário, parceiro, outro) conforme playbook publicado.
 - Grave dados com hub_atualizar_lead; ao encerrar, hub_registar_nota_lead.
 - Objeções e silêncio: siga §10 do playbook (empatia, validação de urgência, cliente_desistiu se confirmar desistência).
@@ -163,92 +163,63 @@ Estas etapas **não** estão no JSON; a IA conduz após o handoff.
       "kind": "menu",
       "journey": "triagem",
       "field": "triagem_servicos",
-      "prompt": "Para começarmos, me conta o que você está buscando:",
-      "menu_type": "list",
-      "list_button": "Ver opções",
+      "prompt": "Como posso te ajudar hoje?",
+      "menu_type": "button",
       "options": [
         {
-          "id": "op_arq_design",
-          "label": "Projeto de arquitetura / Design de interiores",
+          "id": "op_arq",
+          "label": "Arquitetura e projetos",
           "complete": {
             "type": "complete",
-            "summary": "Triagem: projeto de arquitetura / design de interiores — handoff IA."
+            "summary": "Triagem: arquitetura e projetos — handoff IA."
           },
           "crm_patch": {
             "interesse_principal": "arquitetura",
             "fluxo_ativo": "fluxo_arquitetura",
             "lead_kind": "cliente_projetos",
-            "triagem_escolha": "Projeto de arquitetura / Design de interiores"
+            "triagem_escolha": "Arquitetura e projetos"
           }
         },
         {
-          "id": "op_obra_reforma",
-          "label": "Construção ou reforma",
+          "id": "op_obra",
+          "label": "Obra / reforma",
           "complete": {
             "type": "complete",
-            "summary": "Triagem: construção ou reforma — handoff IA."
+            "summary": "Triagem: obra / reforma — handoff IA."
           },
           "crm_patch": {
             "interesse_principal": "obra_reforma",
-            "fluxo_ativo": "fluxo_arquitetura",
+            "fluxo_ativo": "fluxo_arquitetura_obra",
             "lead_kind": "cliente_projetos",
-            "triagem_escolha": "Construção ou reforma"
+            "triagem_escolha": "Obra / reforma"
           }
         },
         {
-          "id": "op_marcenaria",
-          "label": "Marcenaria sob medida ou móveis planejados",
+          "id": "op_imob_cliente",
+          "label": "Comprar ou alugar imóvel",
           "complete": {
             "type": "complete",
-            "summary": "Triagem: marcenaria — handoff IA."
-          },
-          "crm_patch": {
-            "interesse_principal": "marcenaria",
-            "fluxo_ativo": "marcenaria",
-            "lead_kind": "cliente_projetos",
-            "triagem_escolha": "Marcenaria sob medida"
-          }
-        },
-        {
-          "id": "op_imobiliario",
-          "label": "Comprar, vender ou alugar um imóvel",
-          "complete": {
-            "type": "complete",
-            "summary": "Triagem: imobiliário — handoff IA."
+            "summary": "Triagem: comprar ou alugar — handoff IA."
           },
           "crm_patch": {
             "interesse_principal": "imobiliario",
-            "fluxo_ativo": "fluxo_imobiliario",
+            "fluxo_ativo": "fluxo1",
             "lead_kind": "cliente_imobiliario",
-            "triagem_escolha": "Comprar, vender ou alugar imóvel"
+            "triagem_escolha": "Comprar ou alugar imóvel"
           }
         },
         {
-          "id": "op_homolog",
-          "label": "Sou arquiteto / designer ou fornecedor e quero me homologar",
+          "id": "op_imob_prop",
+          "label": "Vender ou anunciar imóvel",
           "complete": {
             "type": "complete",
-            "summary": "Triagem: homologação parceiro — handoff IA."
+            "summary": "Triagem: vender ou anunciar — handoff IA."
           },
           "crm_patch": {
-            "interesse_principal": "parceiro",
-            "fluxo_ativo": "fluxo3",
-            "lead_kind": "imobiliaria_corretor",
-            "triagem_escolha": "Homologação parceiro"
-          }
-        },
-        {
-          "id": "op_outro",
-          "label": "Outro (me explique o que necessita)",
-          "complete": {
-            "type": "complete",
-            "summary": "Triagem: outro assunto — handoff IA."
-          },
-          "crm_patch": {
-            "interesse_principal": "outro",
-            "fluxo_ativo": "outro",
-            "lead_kind": "outro",
-            "triagem_escolha": "Outro assunto"
+            "interesse_principal": "imobiliario",
+            "fluxo_ativo": "fluxo2",
+            "lead_kind": "cliente_imobiliario",
+            "triagem_escolha": "Vender ou anunciar imóvel"
           }
         }
       ]

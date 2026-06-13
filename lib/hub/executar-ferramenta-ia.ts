@@ -13,6 +13,7 @@ import {
   validarLeadTelefoneSessao,
 } from "@/lib/crm/isolamento-conversa-lead";
 import { iaCriarCadastroCrm } from "@/lib/crm/ia-criar-cadastro";
+import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
 
 export type FerramentaHubContexto = {
   leadId: string;
@@ -470,9 +471,14 @@ async function executarFerramentaHubBuiltin(
         });
       }
 
+      const tipoResolvido =
+        tipo === "list" || tipo === "button"
+          ? sugerirMenuTypeUazapi(opcoes.length, tipo)
+          : tipo;
+
       const body: Record<string, unknown> = {
         number,
-        type: tipo,
+        type: tipoResolvido,
         text: texto,
         choices: opcoes,
       };
@@ -480,8 +486,12 @@ async function executarFerramentaHubBuiltin(
       const rodape = typeof args.rodape === "string" ? args.rodape.trim() : "";
       if (rodape) body.footerText = rodape.slice(0, 500);
 
-      const listaBtn = typeof args.texto_botao_lista === "string" ? args.texto_botao_lista.trim() : "";
-      if (listaBtn) body.listButton = listaBtn.slice(0, 120);
+      if (tipoResolvido === "list") {
+        const listaBtn =
+          typeof args.texto_botao_lista === "string" ? args.texto_botao_lista.trim() : "";
+        if (listaBtn) body.listButton = listaBtn.slice(0, 120);
+        else body.listButton = "Ver opções";
+      }
 
       if (tipo === "poll") {
         const ms = args.max_opcoes_selecionaveis;
