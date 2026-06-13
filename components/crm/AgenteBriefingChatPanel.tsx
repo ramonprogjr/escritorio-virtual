@@ -490,7 +490,9 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                         <div style={{ marginTop: 6, paddingLeft: 2 }}>
                           <div style={{ fontSize: 10, color: "#484f58" }}>
                             {String(m.metadata.modelo)}
-                            {m.metadata.fase === "fluxo_playbook" ? " · fluxo playbook" : ""}
+                            {m.metadata.fase === "fluxo_playbook"
+                              ? " · qualificação (sem LLM)"
+                              : ""}
                             {m.metadata.fase === "ia_pos_fluxo" ? " · IA pós-qualificação" : ""}
                             {m.metadata.fase !== "fluxo_playbook" && m.metadata.fase !== "ia_pos_fluxo"
                               ? ` · ${String(m.metadata.tokens_input ?? "—")}/${String(m.metadata.tokens_output ?? "—")} tok · ~ R$ ${Number(m.metadata.custo_brl ?? 0).toFixed(4)}`

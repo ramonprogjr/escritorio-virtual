@@ -324,7 +324,17 @@ export async function POST(
                   fase: "ia_pos_fluxo",
                 }
               : sim.usou_fluxo
-                ? { fase: "fluxo_playbook", modelo: "playbook-flow" }
+                ? {
+                    fase: "fluxo_playbook",
+                    modelo: "playbook-flow",
+                    fontes_conhecimento: [
+                      {
+                        id: "playbook_flow_json",
+                        label: "Fluxo playbook (JSON)",
+                        detalhe: "Motor determinístico — sem Mistral nesta fase",
+                      },
+                    ],
+                  }
                 : {}),
           },
         });
