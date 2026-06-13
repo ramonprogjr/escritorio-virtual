@@ -2,9 +2,13 @@
 
 import { Loader2, Download } from "lucide-react";
 import {
+  PLAYBOOK_ATENDIMENTO_1_ARQUIVO,
+  PLAYBOOK_ATENDIMENTO_1_MD_URL,
   PLAYBOOK_EXEMPLO_ARQUIVO,
   PLAYBOOK_EXEMPLO_LEGADO_MARI_MD_URL,
   PLAYBOOK_EXEMPLO_MD_URL,
+  PLAYBOOK_MARI_IA_ARQUIVO,
+  PLAYBOOK_MARI_IA_MD_URL,
 } from "@/lib/playbook/playbook-exemplo";
 
 export type PlaybookUploadStatus = "idle" | "hover" | "enviando" | "sucesso" | "erro";
@@ -173,6 +177,24 @@ export function PlaybookUploadAnalisePanel({
             style={{ color: "#8b949e", textDecoration: "none" }}
           >
             Exemplo Mari (legado)
+          </a>
+          {" Â· "}
+          <a
+            href={PLAYBOOK_ATENDIMENTO_1_MD_URL}
+            download={PLAYBOOK_ATENDIMENTO_1_ARQUIVO}
+            onClick={(e) => e.stopPropagation()}
+            style={{ color: "#58a6ff", textDecoration: "none" }}
+          >
+            Atendimento 1 (triagem + IA)
+          </a>
+          {" Â· "}
+          <a
+            href={PLAYBOOK_MARI_IA_MD_URL}
+            download={PLAYBOOK_MARI_IA_ARQUIVO}
+            onClick={(e) => e.stopPropagation()}
+            style={{ color: "#58a6ff", textDecoration: "none" }}
+          >
+            Mari IA (só playbook)
           </a>
         </p>
         <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>

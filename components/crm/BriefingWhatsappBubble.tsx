@@ -16,13 +16,7 @@ export type BriefingSimPartMetadata = {
   display?: string;
 };
 
-type Props = {
-  part: BriefingSimPartMetadata;
-  disabled?: boolean;
-  onSelectOption?: (choice: BriefingSimMenuChoice, index: number) => void;
-};
-
-export function BriefingWhatsappMenuOptions({
+export function BriefingSimMenuOptions({
   menuType,
   choices,
   listButton,
@@ -46,12 +40,12 @@ export function BriefingWhatsappMenuOptions({
         style={{
           marginTop: 8,
           width: "100%",
-          padding: "10px 12px",
+          padding: "9px 12px",
           borderRadius: 8,
-          border: "1px solid #00a88455",
-          background: "#0b141a",
-          color: "#00a884",
-          fontSize: 13,
+          border: "1px solid #c9a24a55",
+          background: "#21262d",
+          color: "#d6b976",
+          fontSize: 12,
           fontWeight: 600,
           cursor: disabled ? "not-allowed" : "pointer",
           textAlign: "center",
@@ -63,23 +57,22 @@ export function BriefingWhatsappMenuOptions({
   }
 
   const btnStyle = (fullWidth: boolean): React.CSSProperties => ({
-    padding: "9px 12px",
+    padding: "8px 11px",
     borderRadius: 8,
-    border: "1px solid #00a88444",
-    background: "#111b21",
-    color: "#e9edef",
+    border: "1px solid #30363d",
+    background: "#0d1117",
+    color: "#e6edf3",
     fontSize: 12,
     fontWeight: 500,
     cursor: disabled ? "not-allowed" : "pointer",
-    textAlign: "center",
+    textAlign: "left",
     lineHeight: 1.35,
     width: fullWidth ? "100%" : undefined,
     flex: fullWidth ? undefined : "1 1 45%",
   });
 
   const items = choices.map((choice, index) => {
-    const label =
-      menuType === "text" ? `${index + 1}. ${choice.label}` : choice.label;
+    const label = menuType === "text" ? `${index + 1}. ${choice.label}` : choice.label;
     return (
       <button
         key={choice.id}
@@ -108,98 +101,6 @@ export function BriefingWhatsappMenuOptions({
   );
 }
 
-export function BriefingWhatsappBubble({
-  part,
-  disabled,
-  onSelectOption,
-}: Props) {
-  return (
-    <div style={{ maxWidth: "min(92%, 420px)" }}>
-      <div
-        style={{
-          background: "#005c4b",
-          color: "#e9edef",
-          borderRadius: "8px 8px 8px 2px",
-          padding: "8px 10px 6px",
-          fontSize: 13.5,
-          lineHeight: 1.45,
-          whiteSpace: "pre-wrap",
-          boxShadow: "0 1px 0.5px rgba(0,0,0,0.13)",
-        }}
-      >
-        {part.kind === "text" ? part.text : part.text}
-        {part.kind === "menu" && part.menu_type === "text" && (
-          <div style={{ marginTop: 6, opacity: 0.92 }}>
-            {part.choices.map((c, i) => (
-              <div key={c.id} style={{ marginTop: i === 0 ? 0 : 2 }}>
-                {i + 1}. {c.label}
-              </div>
-            ))}
-          </div>
-        )}
-        <div
-          style={{
-            textAlign: "right",
-            fontSize: 10,
-            color: "#ffffff99",
-            marginTop: 4,
-          }}
-        >
-          agora
-        </div>
-      </div>
-      {part.kind === "menu" && part.menu_type !== "text" ? (
-        <BriefingWhatsappMenuOptions
-          menuType={part.menu_type}
-          choices={part.choices}
-          listButton={part.list_button}
-          disabled={disabled}
-          onSelectOption={onSelectOption}
-        />
-      ) : null}
-      {part.kind === "menu" && part.menu_type === "text" ? (
-        <BriefingWhatsappMenuOptions
-          menuType="text"
-          choices={part.choices}
-          disabled={disabled}
-          onSelectOption={onSelectOption}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-export function BriefingWhatsappUserBubble({ text }: { text: string }) {
-  return (
-    <div style={{ maxWidth: "min(92%, 420px)", marginLeft: "auto" }}>
-      <div
-        style={{
-          background: "#202c33",
-          color: "#e9edef",
-          borderRadius: "8px 8px 2px 8px",
-          padding: "8px 10px 6px",
-          fontSize: 13.5,
-          lineHeight: 1.45,
-          whiteSpace: "pre-wrap",
-          boxShadow: "0 1px 0.5px rgba(0,0,0,0.13)",
-        }}
-      >
-        {text}
-        <div
-          style={{
-            textAlign: "right",
-            fontSize: 10,
-            color: "#ffffff66",
-            marginTop: 4,
-          }}
-        >
-          agora ✓✓
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function parseSimPartFromMetadata(
   metadata: Record<string, unknown> | undefined
 ): BriefingSimPartMetadata | null {
@@ -215,7 +116,10 @@ export function parseSimPartFromMetadata(
         ? p.menu_type
         : "text";
     const choices = (p.choices as unknown[])
-      .filter((c): c is BriefingSimMenuChoice => !!c && typeof c === "object" && typeof (c as BriefingSimMenuChoice).id === "string")
+      .filter(
+        (c): c is BriefingSimMenuChoice =>
+          !!c && typeof c === "object" && typeof (c as BriefingSimMenuChoice).id === "string"
+      )
       .map((c) => ({ id: c.id, label: String(c.label || c.id) }));
     return {
       kind: "menu",

@@ -6,13 +6,13 @@ obra10_agente_nome: "Mari"
 
 # Playbook — Atendimento 1 (Mari · HUB Obra 10+)
 
-> Pré-qualificação WhatsApp alinhada ao fluxo Mari IA (nome → e-mail → triagem → ramos). Após `wa_playbook_complete`, a IA conduz reunião, relatório e dúvidas com ferramentas Hub.
+> **Agente `atendimento_1`:** fluxo determinístico **mínimo** (nome → menu triagem UAZAPI `list`) → **handoff IA** (`PLAYBOOK_IA_APOS_TRIAGEM`). Qualificação sequencial (arquitetura, imobiliário, etc.) fica na **Mistral** com `hub_whatsapp_menu` e `hub_atualizar_lead`.
 
 ## Instruções canónicas
 
 - **Prompt unificado:** espelha `construirPrompt` (sem memórias/mercado injectados na publicação).
-- **Fluxo WhatsApp:** bloco `obra10_playbook_flow` — apenas `message`, `input`, `menu`, `complete`.
-- **Pós-qualificação:** IA gera card de reunião e relatório de lead (formato abaixo).
+- **Fluxo WhatsApp:** bloco `obra10_playbook_flow` — apenas triagem (nome + menu). Sem subfluxos longos no JSON.
+- **Pós-triagem:** com `PLAYBOOK_IA_APOS_TRIAGEM=true`, a IA conduz qualificação, reunião, relatório e dúvidas.
 - **Ferramentas:** `hub_atualizar_lead`, `hub_registar_nota_lead`, `hub_lead_resumo`, `hub_whatsapp_menu`.
 
 ---
@@ -29,9 +29,15 @@ Regras de comunicação:
 - Nunca diga que é chatbot; nunca revele cargo interno ("Estrategista Digital").
 - Responda primeiro à pergunta do cliente; depois conduza o próximo passo.
 - Use o nome do cliente quando já confirmado no histórico ou CRM.
-- Não repita menus ou perguntas já respondidas no fluxo determinístico.
+- Não repita menus ou perguntas já respondidas no fluxo determinístico (nome + triagem inicial).
 
-Após qualificação concluída (wa_playbook_complete), você pode:
+Após a escolha no menu de triagem (handoff IA / wa_playbook_complete), você conduz a qualificação:
+- Uma pergunta por mensagem; use **hub_whatsapp_menu** — **button** (≤3 opções) ou **list** (≥4).
+- Siga o ramo escolhido (arquitetura, imobiliário, parceiro, outro) conforme playbook publicado.
+- Grave dados com hub_atualizar_lead; ao encerrar, hub_registar_nota_lead.
+- Objeções e silêncio: siga §10 do playbook (empatia, validação de urgência, cliente_desistiu se confirmar desistência).
+
+Depois da qualificação, você pode:
 - Agendar ou confirmar reunião com especialista (formato REUNIÃO AGENDADA).
 - Enviar Relatório de Lead – HUB Obra 10+ com todos os dados coletados.
 - Tirar dúvidas sobre HUB, homologação, prazos e próximos passos.
@@ -84,15 +90,50 @@ Classificação sugerida: ALTO / MÉDIO / BAIXO
 
 ---
 
+## Qualificação pós-triagem (IA — referência)
+
+Estas etapas **não** estão no JSON; a IA conduz após o handoff.
+
+### Arquitetura / obra / marcenaria (`fluxo_arquitetura`, `marcenaria`)
+
+1. Tipo de imóvel (menu **list** se >3 tipos).
+2. Tamanho aproximado (m²) — menu **list** ou **button** para faixas.
+3. Localização (cidade / bairro) — texto livre.
+4. Prazo para iniciar — menu **list**.
+5. **Validação de urgência** (§10): antes do handoff, menu **button** — «Quero conversar com especialista» vs «Ainda estou pesquisando»; grave `necessidade_validada`.
+
+### Imobiliário (`fluxo_imobiliario`)
+
+1. Intenção: comprar / vender / alugar — menu **button** (3 opções).
+2. Subfluxo conforme intenção (cliente final, proprietário, corretor).
+
+### Parceiro (`fluxo3`)
+
+1. Tipo de parceria (arquiteto, designer, fornecedor) — menu **button** ou **list**.
+2. Dados de contato e portfólio quando aplicável.
+
+### Outro (`outro`)
+
+1. Descrição livre do que precisa.
+2. Encaminhar ao time humano.
+
+### Objeções e silêncio (§10 — IA)
+
+- Detecte objeções («caro», «pressa», «pensar», «quanto custa», «projeto pronto») e responda com empatia (tabela no playbook Mari §10).
+- Follow-up único por silêncio com opção de encerrar; se desistência confirmada → `cliente_desistiu: true`.
+- Menu opcional de objeções via **hub_whatsapp_menu** (button/list) quando cliente pedir ajuda ou hesitar.
+
+---
+
 ## Bloco de fluxo dinamico (obrigatorio para WhatsApp)
 
 ```json obra10_playbook_flow
 {
   "obra10_playbook_flow_schema": 1,
-  "id": "atendimento_1_mari_v2",
-  "version": "2.0.0",
+  "id": "atendimento_1_triagem_ia_v3",
+  "version": "3.0.0",
   "entry_step_id": "inicio_saudacao",
-  "journeys": ["triagem", "arquitetura", "imobiliario"],
+  "journeys": ["triagem"],
   "steps": [
     {
       "id": "inicio_saudacao",
@@ -108,442 +149,109 @@ Classificação sugerida: ALTO / MÉDIO / BAIXO
       "prompt": "Me fale qual é o seu nome, por gentileza?",
       "field": "nome",
       "input_type": "text",
-      "next": "coletar_email"
+      "next": "agradecer_nome"
     },
     {
-      "id": "coletar_email",
-      "kind": "input",
+      "id": "agradecer_nome",
+      "kind": "message",
       "journey": "triagem",
-      "prompt": "Obrigado. Agora me passe seu e-mail, por favor.",
-      "field": "email",
-      "input_type": "email",
+      "message": "Obrigado pela informação. É um prazer te atender.",
       "next": "triagem_servicos_menu"
     },
     {
       "id": "triagem_servicos_menu",
       "kind": "menu",
       "journey": "triagem",
+      "field": "triagem_servicos",
       "prompt": "Para começarmos, me conta o que você está buscando:",
-      "menu_type": "text",
+      "menu_type": "list",
+      "list_button": "Ver opções",
       "options": [
         {
           "id": "op_arq_design",
           "label": "Projeto de arquitetura / Design de interiores",
-          "next": "arq_boas_vindas",
+          "complete": {
+            "type": "complete",
+            "summary": "Triagem: projeto de arquitetura / design de interiores — handoff IA."
+          },
           "crm_patch": {
             "interesse_principal": "arquitetura",
             "fluxo_ativo": "fluxo_arquitetura",
-            "lead_kind": "cliente_projetos"
+            "lead_kind": "cliente_projetos",
+            "triagem_escolha": "Projeto de arquitetura / Design de interiores"
           }
         },
         {
           "id": "op_obra_reforma",
           "label": "Construção ou reforma",
-          "next": "arq_boas_vindas",
+          "complete": {
+            "type": "complete",
+            "summary": "Triagem: construção ou reforma — handoff IA."
+          },
           "crm_patch": {
             "interesse_principal": "obra_reforma",
             "fluxo_ativo": "fluxo_arquitetura",
-            "lead_kind": "cliente_projetos"
+            "lead_kind": "cliente_projetos",
+            "triagem_escolha": "Construção ou reforma"
           }
         },
         {
           "id": "op_marcenaria",
           "label": "Marcenaria sob medida ou móveis planejados",
-          "next": "marcenaria_descricao",
+          "complete": {
+            "type": "complete",
+            "summary": "Triagem: marcenaria — handoff IA."
+          },
           "crm_patch": {
             "interesse_principal": "marcenaria",
             "fluxo_ativo": "marcenaria",
-            "lead_kind": "cliente_projetos"
+            "lead_kind": "cliente_projetos",
+            "triagem_escolha": "Marcenaria sob medida"
           }
         },
         {
           "id": "op_imobiliario",
           "label": "Comprar, vender ou alugar um imóvel",
-          "next": "imobiliario_router",
+          "complete": {
+            "type": "complete",
+            "summary": "Triagem: imobiliário — handoff IA."
+          },
           "crm_patch": {
             "interesse_principal": "imobiliario",
             "fluxo_ativo": "fluxo_imobiliario",
-            "lead_kind": "cliente_imobiliario"
+            "lead_kind": "cliente_imobiliario",
+            "triagem_escolha": "Comprar, vender ou alugar imóvel"
           }
         },
         {
           "id": "op_homolog",
           "label": "Sou arquiteto / designer ou fornecedor e quero me homologar",
-          "next": "imobiliario_parceiro_intencao",
+          "complete": {
+            "type": "complete",
+            "summary": "Triagem: homologação parceiro — handoff IA."
+          },
           "crm_patch": {
             "interesse_principal": "parceiro",
             "fluxo_ativo": "fluxo3",
-            "lead_kind": "imobiliaria_corretor"
+            "lead_kind": "imobiliaria_corretor",
+            "triagem_escolha": "Homologação parceiro"
           }
         },
         {
           "id": "op_outro",
           "label": "Outro (me explique o que necessita)",
-          "next": "atendimento_outro_descricao"
+          "complete": {
+            "type": "complete",
+            "summary": "Triagem: outro assunto — handoff IA."
+          },
+          "crm_patch": {
+            "interesse_principal": "outro",
+            "fluxo_ativo": "outro",
+            "lead_kind": "outro",
+            "triagem_escolha": "Outro assunto"
+          }
         }
       ]
-    },
-    {
-      "id": "arq_boas_vindas",
-      "kind": "message",
-      "journey": "arquitetura",
-      "message": "Ótima escolha! Aqui você terá acesso a arquitetos já homologados pelo HUB, com segurança garantida em contrato.",
-      "next": "arq_tipo_imovel"
-    },
-    {
-      "id": "arq_tipo_imovel",
-      "kind": "menu",
-      "journey": "arquitetura",
-      "prompt": "Para qual tipo de imóvel você precisa do projeto de arquitetura ou design de interiores?",
-      "menu_type": "text",
-      "options": [
-        { "id": "arq_tipo_ap", "label": "Apartamento", "next": "arq_tamanho" },
-        { "id": "arq_tipo_casa", "label": "Casa", "next": "arq_tamanho" },
-        { "id": "arq_tipo_com", "label": "Comercial / Corporativo", "next": "arq_tamanho" },
-        { "id": "arq_tipo_ind", "label": "Industrial ou Logístico", "next": "arq_tamanho" },
-        { "id": "arq_tipo_pred", "label": "Predial ou condomínio", "next": "arq_tamanho" },
-        { "id": "arq_tipo_hosp", "label": "Hospitalar ou clínicas", "next": "arq_tamanho" },
-        { "id": "arq_tipo_outro", "label": "Outro (pode explicar)", "next": "arq_tamanho" }
-      ]
-    },
-    {
-      "id": "arq_tamanho",
-      "kind": "menu",
-      "journey": "arquitetura",
-      "prompt": "Qual o tamanho aproximado do imóvel?",
-      "menu_type": "text",
-      "options": [
-        { "id": "arq_m2_ate50", "label": "até 50 m²", "next": "arq_localizacao" },
-        { "id": "arq_m2_51_250", "label": "de 51 a 250 m²", "next": "arq_localizacao" },
-        { "id": "arq_m2_251_500", "label": "de 251 a 500 m²", "next": "arq_localizacao" },
-        { "id": "arq_m2_mais500", "label": "mais de 500 m²", "next": "arq_localizacao" }
-      ]
-    },
-    {
-      "id": "arq_localizacao",
-      "kind": "input",
-      "journey": "arquitetura",
-      "prompt": "Em qual cidade e bairro será realizado o projeto?",
-      "field": "arq_localizacao",
-      "input_type": "text",
-      "next": "arq_prazo"
-    },
-    {
-      "id": "arq_prazo",
-      "kind": "menu",
-      "journey": "arquitetura",
-      "prompt": "Qual o prazo desejado para iniciar o projeto?",
-      "menu_type": "text",
-      "options": [
-        { "id": "arq_prazo_imediato", "label": "Imediatamente", "next": "arq_encerrar_prep" },
-        { "id": "arq_prazo_30", "label": "Dentro de 30 dias", "next": "arq_encerrar_prep" },
-        { "id": "arq_prazo_60", "label": "Dentro de 60 dias", "next": "arq_encerrar_prep" },
-        { "id": "arq_prazo_90", "label": "Dentro de 90 dias", "next": "arq_encerrar_prep" },
-        { "id": "arq_prazo_mais", "label": "Mais para frente / Não tenho certeza", "next": "arq_encerrar_prep" }
-      ]
-    },
-    {
-      "id": "arq_encerrar_prep",
-      "kind": "message",
-      "journey": "arquitetura",
-      "message": "Perfeito, obrigado pelas informações.\n\nEu cuido dessa fase inicial e vou solicitar que os arquitetos responsáveis entrem em contato para dar continuidade ao seu projeto.",
-      "next": "arq_encerrar"
-    },
-    {
-      "id": "arq_encerrar",
-      "kind": "complete",
-      "journey": "arquitetura",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "arquitetura",
-        "summary": "Lead qualificado — arquitetura/design: tipo, tamanho, local e prazo registrados.",
-        "crm_patch": {
-          "estagio": "qualificacao_inicial_concluida",
-          "potencial": "MEDIO",
-          "lead_kind": "cliente_projetos",
-          "fluxo_ativo": "fluxo_arquitetura"
-        }
-      }
-    },
-    {
-      "id": "marcenaria_descricao",
-      "kind": "input",
-      "journey": "arquitetura",
-      "prompt": "Conte em poucas palavras o que você precisa em marcenaria que eu encaminho para o time certo.",
-      "field": "marcenaria_descricao",
-      "input_type": "text",
-      "next": "marcenaria_encerramento"
-    },
-    {
-      "id": "marcenaria_encerramento",
-      "kind": "message",
-      "journey": "arquitetura",
-      "message": "Obrigado! Já encaminhei para o time de marcenaria. Em breve alguém fala com você por aqui.",
-      "next": "marcenaria_complete"
-    },
-    {
-      "id": "marcenaria_complete",
-      "kind": "complete",
-      "journey": "arquitetura",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "time_humano",
-        "summary": "Lead marcenaria — descrição registrada; encaminhado ao time.",
-        "crm_patch": {
-          "estagio": "Lead recebido",
-          "lead_kind": "cliente_projetos",
-          "fluxo_ativo": "marcenaria",
-          "potencial": "MEDIO"
-        }
-      }
-    },
-    {
-      "id": "imobiliario_router",
-      "kind": "menu",
-      "journey": "imobiliario",
-      "prompt": "O que você busca no mercado imobiliário?",
-      "menu_type": "text",
-      "options": [
-        {
-          "id": "imob_comprar",
-          "label": "Comprar",
-          "next": "imobiliario_cliente_final_prep",
-          "crm_patch": { "intencao_imobiliario": "comprar", "lead_kind": "cliente_imobiliario" }
-        },
-        {
-          "id": "imob_vender",
-          "label": "Vender",
-          "next": "imobiliario_proprietario_operacao",
-          "crm_patch": { "intencao_imobiliario": "vender" }
-        },
-        {
-          "id": "imob_alugar",
-          "label": "Alugar",
-          "next": "imobiliario_cliente_final_prep",
-          "crm_patch": { "intencao_imobiliario": "alugar", "lead_kind": "cliente_imobiliario" }
-        },
-        {
-          "id": "imob_anunciar",
-          "label": "Anunciar imóvel",
-          "next": "imobiliario_proprietario_operacao",
-          "crm_patch": { "intencao_imobiliario": "anunciar" }
-        },
-        {
-          "id": "imob_outro",
-          "label": "Outro",
-          "next": "atendimento_outro_descricao"
-        }
-      ]
-    },
-    {
-      "id": "imobiliario_cliente_final_prep",
-      "kind": "message",
-      "journey": "imobiliario",
-      "message": "Eu cuido desse primeiro contato e já vou te direcionar para o corretor responsável.\n\nEle vai te chamar por aqui com as informações. Eu continuo acompanhando seu atendimento.",
-      "next": "imobiliario_cliente_final_complete"
-    },
-    {
-      "id": "imobiliario_cliente_final_complete",
-      "kind": "complete",
-      "journey": "imobiliario",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "imobiliario",
-        "summary": "Cliente final — compra ou locação; encaminhado ao corretor.",
-        "crm_patch": {
-          "estagio": "Lead recebido — compra/locacao",
-          "lead_kind": "cliente_imobiliario",
-          "fluxo_ativo": "fluxo1",
-          "potencial": "ALTO"
-        }
-      }
-    },
-    {
-      "id": "imobiliario_proprietario_operacao",
-      "kind": "menu",
-      "journey": "imobiliario",
-      "prompt": "Você quer vender ou alugar esse imóvel?",
-      "options": [
-        { "id": "prop_vender", "label": "Vender", "next": "imobiliario_proprietario_cidade", "crm_patch": { "intencao_imobiliario": "vender" } },
-        { "id": "prop_alugar", "label": "Alugar", "next": "imobiliario_proprietario_cidade", "crm_patch": { "intencao_imobiliario": "alugar" } }
-      ]
-    },
-    {
-      "id": "imobiliario_proprietario_cidade",
-      "kind": "input",
-      "journey": "imobiliario",
-      "prompt": "Qual a cidade e o bairro onde está o imóvel?",
-      "field": "prop_localizacao",
-      "input_type": "text",
-      "next": "imobiliario_proprietario_tamanho"
-    },
-    {
-      "id": "imobiliario_proprietario_tamanho",
-      "kind": "menu",
-      "journey": "imobiliario",
-      "prompt": "Qual o tamanho aproximado do imóvel?",
-      "options": [
-        { "id": "tam_ate50", "label": "até 50 m²", "next": "imobiliario_proprietario_valor" },
-        { "id": "tam_51_250", "label": "de 51 a 250 m²", "next": "imobiliario_proprietario_valor" },
-        { "id": "tam_251_500", "label": "de 251 a 500 m²", "next": "imobiliario_proprietario_valor" },
-        { "id": "tam_mais500", "label": "mais de 500 m²", "next": "imobiliario_proprietario_valor" }
-      ]
-    },
-    {
-      "id": "imobiliario_proprietario_valor",
-      "kind": "input",
-      "journey": "imobiliario",
-      "prompt": "Qual o valor que você está pedindo?",
-      "field": "prop_valor",
-      "input_type": "text",
-      "next": "imobiliario_proprietario_fotos"
-    },
-    {
-      "id": "imobiliario_proprietario_fotos",
-      "kind": "message",
-      "journey": "imobiliario",
-      "message": "Se tiver fotos ou vídeos, pode me enviar por aqui. Isso ajuda bastante na análise do imóvel.",
-      "next": "imobiliario_proprietario_prep"
-    },
-    {
-      "id": "imobiliario_proprietario_prep",
-      "kind": "message",
-      "journey": "imobiliario",
-      "message": "Vou encaminhar tudo para um corretor especialista. Ele entra em contato para alinhar os próximos passos.",
-      "next": "imobiliario_proprietario_complete"
-    },
-    {
-      "id": "imobiliario_proprietario_complete",
-      "kind": "complete",
-      "journey": "imobiliario",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "imobiliario",
-        "summary": "Proprietário qualificado: operação, localização, tamanho e valor.",
-        "crm_patch": {
-          "estagio": "Captacao de imovel",
-          "lead_kind": "cliente_imobiliario",
-          "fluxo_ativo": "fluxo2",
-          "potencial": "MEDIO"
-        }
-      }
-    },
-    {
-      "id": "imobiliario_parceiro_intencao",
-      "kind": "menu",
-      "journey": "imobiliario",
-      "prompt": "Você quer cadastrar um imóvel ou falar sobre parceria / homologação?",
-      "options": [
-        { "id": "parc_cadastro", "label": "Cadastrar imóvel", "next": "parceiro_cidade" },
-        { "id": "parc_parceria", "label": "Parceria ou homologação", "next": "parceiro_parceria_prep" }
-      ]
-    },
-    {
-      "id": "parceiro_cidade",
-      "kind": "input",
-      "journey": "imobiliario",
-      "prompt": "Qual a cidade e o bairro do imóvel?",
-      "field": "parc_imovel_localizacao",
-      "input_type": "text",
-      "next": "parceiro_tamanho"
-    },
-    {
-      "id": "parceiro_tamanho",
-      "kind": "menu",
-      "journey": "imobiliario",
-      "prompt": "Qual o tamanho aproximado?",
-      "options": [
-        { "id": "parc_tam_ate50", "label": "até 50 m²", "next": "parceiro_valor" },
-        { "id": "parc_tam_51_250", "label": "de 51 a 250 m²", "next": "parceiro_valor" },
-        { "id": "parc_tam_251_500", "label": "de 251 a 500 m²", "next": "parceiro_valor" },
-        { "id": "parc_tam_mais500", "label": "mais de 500 m²", "next": "parceiro_valor" }
-      ]
-    },
-    {
-      "id": "parceiro_valor",
-      "kind": "input",
-      "journey": "imobiliario",
-      "prompt": "Qual o valor?",
-      "field": "parc_imovel_valor",
-      "input_type": "text",
-      "next": "parceiro_cadastro_prep"
-    },
-    {
-      "id": "parceiro_cadastro_prep",
-      "kind": "message",
-      "journey": "imobiliario",
-      "message": "Vou direcionar para o time responsável dar andamento ao cadastro.",
-      "next": "parceiro_cadastro_complete"
-    },
-    {
-      "id": "parceiro_cadastro_complete",
-      "kind": "complete",
-      "journey": "imobiliario",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "parcerias",
-        "summary": "Parceiro cadastrando imóvel — dados básicos registrados.",
-        "crm_patch": {
-          "estagio": "Parceiros ou Imovel indicado",
-          "lead_kind": "imobiliaria_corretor",
-          "fluxo_ativo": "fluxo3",
-          "potencial": "MEDIO"
-        }
-      }
-    },
-    {
-      "id": "parceiro_parceria_prep",
-      "kind": "message",
-      "journey": "imobiliario",
-      "message": "Perfeito. Vou direcionar seu contato para o time de homologação e parcerias.",
-      "next": "parceiro_parceria_complete"
-    },
-    {
-      "id": "parceiro_parceria_complete",
-      "kind": "complete",
-      "journey": "imobiliario",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "parcerias",
-        "summary": "Parceiro interessado em homologação ou parceria.",
-        "crm_patch": {
-          "estagio": "Parceiros ou Imovel indicado",
-          "lead_kind": "imobiliaria_corretor",
-          "fluxo_ativo": "fluxo3",
-          "potencial": "MEDIO"
-        }
-      }
-    },
-    {
-      "id": "atendimento_outro_descricao",
-      "kind": "input",
-      "journey": "triagem",
-      "prompt": "Sem problema! Conte em poucas palavras o que você precisa que eu encaminho para o time certo.",
-      "field": "outro_descricao",
-      "input_type": "text",
-      "next": "atendimento_outro_encerramento"
-    },
-    {
-      "id": "atendimento_outro_encerramento",
-      "kind": "message",
-      "journey": "triagem",
-      "message": "Obrigado! Já encaminhei para o time responsável. Em breve alguém fala com você por aqui.",
-      "next": "atendimento_outro_complete"
-    },
-    {
-      "id": "atendimento_outro_complete",
-      "kind": "complete",
-      "journey": "triagem",
-      "complete": {
-        "type": "complete",
-        "handoff_to": "time_humano",
-        "summary": "Lead com outro assunto — encaminhado ao time.",
-        "crm_patch": {
-          "lead_kind": "outro",
-          "fluxo_ativo": "outro",
-          "potencial": "BAIXO"
-        }
-      }
     }
   ]
 }

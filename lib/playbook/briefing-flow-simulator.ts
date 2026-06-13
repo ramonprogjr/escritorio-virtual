@@ -26,6 +26,7 @@ export {
   emptyBriefingFlowSimState,
   parseBriefingFlowSimState,
   partToDisplayText,
+  resolverFlowStateParaSimulacao,
 } from "@/lib/playbook/briefing-flow-sim-shared";
 
 export type BriefingFlowSimStepResult = {
@@ -36,12 +37,25 @@ export type BriefingFlowSimStepResult = {
   handled: boolean;
 };
 
+const FLOW_SIM_CACHE_TTL_MS = 120_000;
+const flowSimCache = new Map<string, { expireAt: number; definition: FlowEngineDefinition }>();
+
 export async function carregarFluxoPublicadoParaSimulacao(
   supabase: SupabaseClient,
   agenteSlug: string
 ): Promise<FlowEngineDefinition | null> {
+  const key = agenteSlug.trim().toLowerCase();
+  if (key) {
+    const hit = flowSimCache.get(key);
+    if (hit && hit.expireAt > Date.now()) return hit.definition;
+  }
+
   const runtime = await carregarDynamicPlaybookRuntime(supabase, agenteSlug);
-  return runtime?.definition ?? null;
+  const definition = runtime?.definition ?? null;
+  if (key && definition) {
+    flowSimCache.set(key, { expireAt: Date.now() + FLOW_SIM_CACHE_TTL_MS, definition });
+  }
+  return definition;
 }
 
 function toMenuChoices(choices: FlowMenuChoice[]): BriefingSimMenuChoice[] {
@@ -174,6 +188,7 @@ function enrichPartsWithActiveMenu(
   parts: BriefingSimOutboundPart[]
 ): BriefingSimOutboundPart[] {
   if (!stepId || stepId === "concluido") return parts;
+  if (parts.some((p) => p.kind === "menu")) return parts;
   const step = definition.steps[stepId];
   if (!step || step.type !== "menu") return parts;
 

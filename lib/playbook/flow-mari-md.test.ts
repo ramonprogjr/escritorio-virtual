@@ -44,10 +44,25 @@ describe("playbook-atendimento-1.md flow", () => {
       return;
     }
 
-    expect(validated.definition.id).toBe("atendimento_1_mari_v2");
+    expect(validated.definition.id).toBe("atendimento_1_triagem_ia_v3");
     const ids = new Set(validated.definition.steps.map((s) => s.id));
     expect(ids.has("triagem_servicos_menu")).toBe(true);
-    expect(ids.has("coletar_email")).toBe(true);
-    expect(ids.has("arq_boas_vindas")).toBe(true);
+    expect(ids.has("agradecer_nome")).toBe(true);
+    expect(validated.definition.steps.length).toBe(4);
+    expect(ids.has("arq_boas_vindas")).toBe(false);
+  });
+});
+
+describe("playbook-mari-ia.md", () => {
+  it("não contém bloco obra10_playbook_flow (IA-only)", () => {
+    const markdown = readFileSync(
+      join(process.cwd(), "public/playbook-exemplos/playbook-mari-ia.md"),
+      "utf8"
+    );
+    expect(markdown).toMatch(/obra10_agente_slug:\s*"mari"/);
+    expect(markdown).toMatch(/## §10 — Tratamento de objeções/);
+    expect(markdown).not.toMatch(/```json obra10_playbook_flow/);
+    const parsed = parsePlaybookFlowFromMarkdown(markdown);
+    expect(parsed.ok).toBe(false);
   });
 });
