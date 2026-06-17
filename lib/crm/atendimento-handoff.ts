@@ -93,13 +93,39 @@ export async function cancelarJobsIa(
 export interface AssumirParams {
   leadId: string;
   operador: OperadorInfo;
+  /** Origem do handoff — ex.: crm, whatsapp_comando, whatsapp_from_me */
+  via?: string;
+}
+
+/** Converte operador WhatsApp (allowlist) em OperadorInfo mínimo. */
+export function operadorInfoFromWhatsapp(op: { slug: string; nome: string }): OperadorInfo {
+  return {
+    slug: op.slug,
+    nome: op.nome,
+    email: "",
+    role: "operador",
+  };
+}
+
+export async function leadIdPorTelefone(
+  supabase: SupabaseClient,
+  telefone: string
+): Promise<string | null> {
+  const tel = telefoneConversaId(telefone);
+  if (tel.length < 10) return null;
+  const { data } = await supabase
+    .from("hub_leads_crm")
+    .select("id")
+    .eq("telefone", tel)
+    .maybeSingle();
+  return data?.id ? String(data.id) : null;
 }
 
 export async function assumirAtendimentoCrm(
   supabase: SupabaseClient,
   params: AssumirParams
 ): Promise<{ ok: boolean; jobsCancelados: number; erro?: string }> {
-  const { leadId, operador } = params;
+  const { leadId, operador, via = "crm" } = params;
   const agora = new Date().toISOString();
 
   // Busca lead para obter telefone e metadata
@@ -130,7 +156,7 @@ export async function assumirAtendimentoCrm(
       ...metaBase,
       fase_atendimento: "atendimento_humano",
       humano_assumiu_em: agora,
-      humano_assumiu_via: "crm",
+      humano_assumiu_via: via,
       humano_nome: operador.nome,
       ...(humanoAnterior && humanoAnterior !== operador.slug
         ? { humano_anterior: humanoAnterior }
@@ -173,10 +199,10 @@ export async function assumirAtendimentoCrm(
     await supabase.from("hub_atividades").insert({
       lead_id: leadId,
       tipo: "ia_acao",
-      descricao: `Atendimento assumido por ${operador.nome} via CRM.`,
+      descricao: `Atendimento assumido por ${operador.nome} via ${via}.`,
       feito_por: operador.slug,
       feito_por_tipo: "humano",
-      metadata: { via: "crm", jobs_cancelados: jobsCancelados },
+      metadata: { via, jobs_cancelados: jobsCancelados },
       tenant_id: defaultTenantId(),
     });
   } catch (e) {
@@ -191,13 +217,36 @@ export async function assumirAtendimentoCrm(
 export interface DevolverParams {
   leadId: string;
   operador: OperadorInfo;
+  via?: string;
+}
+
+export async function assumirPorTelefone(
+  supabase: SupabaseClient,
+  telefoneLead: string,
+  operador: OperadorInfo,
+  via = "whatsapp_comando"
+): Promise<{ ok: boolean; jobsCancelados: number; erro?: string }> {
+  const leadId = await leadIdPorTelefone(supabase, telefoneLead);
+  if (!leadId) return { ok: false, jobsCancelados: 0, erro: "Lead não encontrado para este telefone" };
+  return assumirAtendimentoCrm(supabase, { leadId, operador, via });
+}
+
+export async function devolverPorTelefone(
+  supabase: SupabaseClient,
+  telefoneLead: string,
+  operador: OperadorInfo,
+  via = "whatsapp_comando"
+): Promise<{ ok: boolean; erro?: string }> {
+  const leadId = await leadIdPorTelefone(supabase, telefoneLead);
+  if (!leadId) return { ok: false, erro: "Lead não encontrado para este telefone" };
+  return devolverAtendimentoIA(supabase, { leadId, operador, via });
 }
 
 export async function devolverAtendimentoIA(
   supabase: SupabaseClient,
   params: DevolverParams
 ): Promise<{ ok: boolean; erro?: string }> {
-  const { leadId, operador } = params;
+  const { leadId, operador, via = "crm" } = params;
   const agora = new Date().toISOString();
 
   const { data: lead, error: leadErr } = await supabase
@@ -252,10 +301,10 @@ export async function devolverAtendimentoIA(
     await supabase.from("hub_atividades").insert({
       lead_id: leadId,
       tipo: "ia_acao",
-      descricao: `Atendimento devolvido para a IA por ${operador.nome}.`,
+      descricao: `Atendimento devolvido para a IA por ${operador.nome} via ${via}.`,
       feito_por: operador.slug,
       feito_por_tipo: "humano",
-      metadata: { via: "crm" },
+      metadata: { via },
       tenant_id: defaultTenantId(),
     });
   } catch (e) {

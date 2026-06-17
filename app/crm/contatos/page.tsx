@@ -14,6 +14,7 @@ interface Contato {
   receber_novo_lead: boolean;
   receber_aprovacao: boolean;
   receber_encaminhamento: boolean;
+  pode_comandar_ia?: boolean;
   canal: string;
 }
 
@@ -48,6 +49,7 @@ export default function ContatosPage() {
   const [form, setForm] = useState({
     nome: "", telefone: "", email: "", cargo: "", canal: "whatsapp",
     receber_novo_lead: true, receber_aprovacao: true, receber_encaminhamento: true,
+    pode_comandar_ia: false,
   });
 
   const carregar = useCallback(async () => {
@@ -60,7 +62,7 @@ export default function ContatosPage() {
   useEffect(() => { carregar(); }, [carregar]);
 
   function resetForm() {
-    setForm({ nome: "", telefone: "", email: "", cargo: "", canal: "whatsapp", receber_novo_lead: true, receber_aprovacao: true, receber_encaminhamento: true });
+    setForm({ nome: "", telefone: "", email: "", cargo: "", canal: "whatsapp", receber_novo_lead: true, receber_aprovacao: true, receber_encaminhamento: true, pode_comandar_ia: false });
     setEditando(null);
   }
 
@@ -95,6 +97,7 @@ export default function ContatosPage() {
       nome: c.nome, telefone: c.telefone, email: c.email || "", cargo: c.cargo || "",
       canal: c.canal, receber_novo_lead: c.receber_novo_lead,
       receber_aprovacao: c.receber_aprovacao, receber_encaminhamento: c.receber_encaminhamento,
+      pode_comandar_ia: c.pode_comandar_ia === true,
     });
     setEditando(c.id);
     setMostraNovo(true);
@@ -176,6 +179,7 @@ export default function ContatosPage() {
                 ["receber_novo_lead", "Novo lead"],
                 ["receber_aprovacao", "Aprovação pendente"],
                 ["receber_encaminhamento", "Encaminhamento"],
+                ["pode_comandar_ia", "Pode comandar IA (/ia-off, /ia pausa…)"],
               ] as const).map(([key, label]) => (
                 <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "#e6edf3", fontSize: 13 }}>{label}</span>
@@ -230,6 +234,7 @@ export default function ContatosPage() {
                 {c.receber_novo_lead && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#34d39915", color: "#34d399", border: "1px solid #34d39930" }}>novo lead</span>}
                 {c.receber_aprovacao && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#ef444415", color: "#ef4444", border: "1px solid #ef444430" }}>aprovação</span>}
                 {c.receber_encaminhamento && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#a78bfa15", color: "#a78bfa", border: "1px solid #a78bfa30" }}>encaminhamento</span>}
+                {c.pode_comandar_ia && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#c9a24a15", color: "#c9a24a", border: "1px solid #c9a24a30" }}>comandos IA</span>}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => iniciarEdicao(c)}

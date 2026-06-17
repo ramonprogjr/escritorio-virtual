@@ -6,6 +6,27 @@ const UUID_RE =
 
 const SELECT = "id, codigo, titulo, status, negocio_id, obra_id, criado_em, atualizado_em";
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const configErr = crmConfigError();
+  if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
+
+  const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+  const { data, error } = await crmDb()
+    .from("hub_projetos")
+    .select(SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+  return NextResponse.json({ data });
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

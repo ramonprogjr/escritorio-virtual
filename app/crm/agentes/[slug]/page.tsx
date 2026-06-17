@@ -7,6 +7,7 @@ import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
 import { AgentePlaybookCalibracaoDrawer } from "@/components/crm/AgentePlaybookCalibracaoDrawer";
 import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
 import { AgenteUazapiBlock, type AgenteUazapiSnapshot } from "@/components/crm/AgenteUazapiBlock";
+import { AgenteIaWhatsappPauseToggle } from "@/components/crm/AgenteIaWhatsappPauseToggle";
 import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
 import {
   mergeUsoFerramentasComPadraoPreservandoCustom,
@@ -1115,6 +1116,7 @@ export default function AgentePage() {
             }}
           >
             {agente.modo_operacao === "canal_whatsapp" ? (
+              <>
               <AgenteUazapiBlock
                 agenteSlug={slug}
                 agenteNome={agente.nome}
@@ -1165,6 +1167,8 @@ export default function AgentePage() {
                   });
                 }}
               />
+              <AgenteIaWhatsappPauseToggle agenteSlug={slug} />
+              </>
             ) : null}
             <AgenteFerramentasIaBlock
               motorHabilitado={motorFerramentasHub}
