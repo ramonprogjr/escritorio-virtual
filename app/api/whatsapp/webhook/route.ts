@@ -29,6 +29,14 @@ import { dispararProcessamentoJobsWhatsapp } from "@/lib/whatsapp/trigger-job-pr
 import { runWhatsappWorkerTick } from "@/lib/workers/whatsapp-job-worker";
 import { supersedeJobsAntigosMesmoTelefone } from "@/lib/whatsapp/supersede-jobs-antigos";
 import { ativarAtendimentoHumanoPorMensagemDoCelular } from "@/lib/whatsapp/human-handoff-from-device";
+import { lerPausaGlobalAgente } from "@/lib/whatsapp/ia-global-pause";
+import { telefoneOperadorAutorizado } from "@/lib/whatsapp/operador-allowlist";
+import {
+  executarComandoOperador,
+  parseComandoOperador,
+  textoPareceComandoOperador,
+} from "@/lib/whatsapp/operador-comandos";
+import { resolverAgenteSlugWhatsappLinha } from "@/lib/whatsapp/resolver-agente-slug-linha";
 
 let warnedMissingWebhookSecret = false;
 const WEBHOOK_DEDUPE_TTL_MS = 2 * 60 * 1000;
@@ -519,6 +527,93 @@ export async function POST(request: NextRequest) {
       linhaWa.kind === "agent_instance"
         ? { instanceToken: linhaWa.instanceToken as string }
         : {};
+
+    const agenteSlugLinha = await resolverAgenteSlugWhatsappLinha(supabase, linhaWa);
+
+    // ── Comandos operador → linha comercial (allowlist) ─────────────────────
+    const operadorAuth = await telefoneOperadorAutorizado(supabase, telefone);
+    if (operadorAuth) {
+      if (!agenteSlugLinha) {
+        if (parseComandoOperador(mensagemFinal) || textoPareceComandoOperador(mensagemFinal)) {
+          await enviarMensagemWhatsApp(
+            telefone,
+            "Não foi possível identificar a linha WhatsApp deste comando. Verifique a instância no CRM.",
+            waSendOpts
+          );
+          return trace.json(
+            { status: "comando_erro", reason: "agente_slug_ausente" },
+            200,
+            "operador_comando_sem_linha"
+          );
+        }
+        log.info("wa.webhook.operador_ignorado", {
+          telefone: trace.maskTelefone(telefone),
+          preview: mensagemFinal.slice(0, 40),
+          reason: "sem_agente_slug",
+        });
+        return trace.json(
+          { status: "ignored", reason: "operador_sem_linha" },
+          200,
+          "operador_ignored"
+        );
+      }
+
+      const parsedCmd = parseComandoOperador(mensagemFinal);
+      if (parsedCmd) {
+        const resultado = await executarComandoOperador({
+          supabase,
+          telefoneOperador: telefone,
+          operador: operadorAuth,
+          agenteSlug: agenteSlugLinha,
+          texto: mensagemFinal,
+        });
+        await enviarMensagemWhatsApp(telefone, resultado.respostaOperador, waSendOpts);
+        log.info("wa.webhook.operador_comando", {
+          telefone: trace.maskTelefone(telefone),
+          ok: resultado.ok,
+          comando: resultado.comando ?? null,
+          agente_slug: agenteSlugLinha,
+        });
+        return trace.json(
+          {
+            status: resultado.ok ? "comando_ok" : "comando_erro",
+            comando: resultado.comando ?? null,
+            agente_slug: agenteSlugLinha,
+          },
+          200,
+          resultado.ok ? "operador_comando_ok" : "operador_comando_erro"
+        );
+      }
+      if (textoPareceComandoOperador(mensagemFinal)) {
+        await enviarMensagemWhatsApp(
+          telefone,
+          "Comando não reconhecido. Envie /ia ajuda para ver a lista.",
+          waSendOpts
+        );
+        return trace.json({ status: "comando_invalido" }, 200, "operador_comando_invalido");
+      }
+      log.info("wa.webhook.operador_ignorado", {
+        telefone: trace.maskTelefone(telefone),
+        preview: mensagemFinal.slice(0, 40),
+      });
+      return trace.json({ status: "ignored", reason: "operador_sem_comando" }, 200, "operador_ignored");
+    }
+
+    // ── Pausa global da linha (leads) ───────────────────────────────────────
+    if (agenteSlugLinha) {
+      const pauseGlobal = await lerPausaGlobalAgente(supabase, agenteSlugLinha);
+      if (pauseGlobal.pausada) {
+        log.info("wa.webhook.ia_global_pausada", {
+          telefone: trace.maskTelefone(telefone),
+          agente_slug: agenteSlugLinha,
+        });
+        return trace.json(
+          { status: "ignored", reason: "ia_global_pausada", agente_slug: agenteSlugLinha },
+          200,
+          "ia_global_pausada"
+        );
+      }
+    }
 
     log.info("wa.webhook.message_inbound", {
       telefone: trace.maskTelefone(telefone),

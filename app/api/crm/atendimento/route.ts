@@ -25,13 +25,24 @@ export async function GET(request: NextRequest) {
       query = query.eq("estagio", estagio);
     }
 
-    const { data, error } = await query;
+    const [{ data, error }, { data: agentesWa }] = await Promise.all([
+      query,
+      supabase
+        .from("hub_agente_identidade")
+        .select("ia_whatsapp_pausada")
+        .eq("tenant_id", tenantId)
+        .eq("modo_operacao", "canal_whatsapp")
+        .eq("ativo", true),
+    ]);
 
     if (error) {
       return NextResponse.json({ error: error.message, leads: [] }, { status: 500 });
     }
 
-    return NextResponse.json({ leads: data || [] });
+    const ia_whatsapp_pausada_global =
+      Array.isArray(agentesWa) && agentesWa.some((r) => r.ia_whatsapp_pausada === true);
+
+    return NextResponse.json({ leads: data || [], ia_whatsapp_pausada_global });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown error";
     return NextResponse.json({ error: msg, leads: [] }, { status: 500 });

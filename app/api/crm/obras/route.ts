@@ -2,21 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
 
+const SELECT = "id, codigo, titulo, status, cidade, estado, data_inicio, negocio_id, imovel_id, criado_em";
+
 export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
   const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const status = request.nextUrl.searchParams.get("status") || "";
+  const negocioId = request.nextUrl.searchParams.get("negocio_id") || "";
 
-  let query = crmDb()
+  const db = crmDb();
+  let query = db
     .from("hub_obras")
-    .select("id, codigo, titulo, status, cidade, estado, data_inicio, negocio_id, criado_em", { count: "exact" })
-    .eq("tenant_id", tenantId)
+    .select(SELECT, { count: "exact" })
     .order("criado_em", { ascending: false })
     .limit(50);
 
   if (status) query = query.eq("status", status);
+  if (negocioId) query = query.eq("negocio_id", negocioId);
 
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -51,10 +55,11 @@ export async function POST(request: NextRequest) {
     endereco: body.endereco || null,
     cidade: body.cidade || null,
     estado: body.estado || null,
+    data_inicio: body.data_inicio || null,
     tenant_id: tenantId,
   };
 
-  const { data, error } = await crmDb().from("hub_obras").insert(row).select().single();
+  const { data, error } = await crmDb().from("hub_obras").insert(row).select(SELECT).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data }, { status: 201 });
 }

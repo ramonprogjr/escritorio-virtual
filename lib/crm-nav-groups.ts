@@ -6,13 +6,10 @@ import {
   Wallet,
   Users,
   Briefcase,
-  User,
   Building2,
-  Handshake,
   Package,
   Home,
   HardHat,
-  Truck,
   MessageSquare,
   MessageCircle,
   ClipboardCheck,
@@ -26,6 +23,10 @@ import {
   Bell,
   UserCog,
   Shield,
+  Compass,
+  Paintbrush,
+  Hammer,
+  CheckSquare,
 } from "lucide-react";
 
 export type CrmNavItem = {
@@ -33,9 +34,7 @@ export type CrmNavItem = {
   label: string;
   icon: LucideIcon;
   extra?: { href: string; label: string };
-  /** Badge opcional ao lado do rótulo (ex.: Copiloto em breve). */
   navBadge?: string;
-  /** Ocultar para utilizadores sem papel admin (owner/admin). */
   adminOnly?: boolean;
 };
 
@@ -46,7 +45,6 @@ export type CrmNavGroup = {
   items: CrmNavItem[];
 };
 
-/** Fonte de verdade do menu lateral — ver docs/menu-navegacao-consolidado.md */
 export const CRM_NAV_GROUPS: CrmNavGroup[] = [
   {
     id: "visao",
@@ -65,48 +63,8 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     items: [
       { href: "/crm/leads", label: "Leads", icon: Users },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase },
-      { href: "/crm/tarefas", label: "Tarefas", icon: ClipboardList },
+      { href: "/crm/tarefas", label: "Tarefas", icon: CheckSquare },
     ],
-  },
-  {
-    id: "cadastros",
-    label: "Cadastros",
-    sectionIcon: User,
-    items: [
-      { href: "/crm/cadastro", label: "Cadastro", icon: User },
-      { href: "/crm/parceiros", label: "Parceiros", icon: Handshake },
-    ],
-  },
-  {
-    id: "produtos",
-    label: "Produtos",
-    sectionIcon: Package,
-    items: [{ href: "/crm/imoveis", label: "Imóveis", icon: Home }],
-  },
-  {
-    id: "obras",
-    label: "Obras",
-    sectionIcon: HardHat,
-    items: [
-      { href: "/crm/obras", label: "Obras", icon: HardHat },
-      { href: "/crm/pedidos", label: "Pedidos", icon: Truck },
-    ],
-  },
-  {
-    id: "financeiro",
-    label: "Financeiro",
-    sectionIcon: ClipboardList,
-    items: [
-      { href: "/crm/financeiro", label: "Visão financeira", icon: Wallet },
-      { href: "/crm/financeiro/pagar", label: "Contas a pagar", icon: ClipboardList },
-      { href: "/crm/financeiro/receber", label: "Contas a receber", icon: LineChart },
-    ],
-  },
-  {
-    id: "projetos",
-    label: "Projetos",
-    sectionIcon: Package,
-    items: [{ href: "/crm/projetos", label: "Projetos", icon: LayoutTemplate }],
   },
   {
     id: "atendimento",
@@ -119,6 +77,35 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     ],
   },
   {
+    id: "arquitetura",
+    label: "Arquitetura",
+    sectionIcon: Compass,
+    items: [
+      { href: "/crm/projetos", label: "Projeto", icon: Compass },
+      {
+        href: "/crm/design-interiores",
+        label: "Design de Interiores",
+        icon: Paintbrush,
+        navBadge: "Em breve",
+      },
+    ],
+  },
+  {
+    id: "engenharia",
+    label: "Engenharia",
+    sectionIcon: HardHat,
+    items: [
+      { href: "/crm/obras", label: "Construção", icon: Building2 },
+      { href: "/crm/pedidos", label: "Reforma", icon: Hammer },
+    ],
+  },
+  {
+    id: "produto",
+    label: "Produto",
+    sectionIcon: Package,
+    items: [{ href: "/crm/imoveis", label: "Imóveis", icon: Home }],
+  },
+  {
     id: "marketing",
     label: "Marketing",
     sectionIcon: Radio,
@@ -126,7 +113,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
   },
   {
     id: "ia",
-    label: "IA & Automação",
+    label: "IA e Automação",
     sectionIcon: Sparkles,
     items: [
       {
@@ -160,6 +147,16 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
         icon: Shield,
         adminOnly: true,
       },
+    ],
+  },
+  {
+    id: "financeiro",
+    label: "Financeiro",
+    sectionIcon: Wallet,
+    items: [
+      { href: "/crm/financeiro", label: "Visão financeira", icon: Wallet },
+      { href: "/crm/financeiro/pagar", label: "Contas a pagar", icon: ClipboardList },
+      { href: "/crm/financeiro/receber", label: "Contas a receber", icon: LineChart },
     ],
   },
 ];

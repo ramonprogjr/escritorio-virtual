@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
 
   const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const obraId = request.nextUrl.searchParams.get("obra_id");
+  const status = request.nextUrl.searchParams.get("status");
 
   let query = crmDb()
     .from("hub_pedidos_material")
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
     .limit(100);
 
   if (obraId) query = query.eq("obra_id", obraId);
+  if (status) query = query.eq("status", status);
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

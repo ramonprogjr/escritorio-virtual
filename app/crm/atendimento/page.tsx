@@ -116,6 +116,7 @@ function AtendimentoContent() {
   const [mensagensLoadError, setMensagensLoadError] = useState<string | null>(null);
   const [carregandoMensagens, setCarregandoMensagens] = useState(false);
   const [sendStrip, setSendStrip] = useState<{ kind: "error" | "success" | "info"; text: string } | null>(null);
+  const [linhaIaPausadaGlobal, setLinhaIaPausadaGlobal] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const leadsCarregados = useRef(false);
@@ -177,6 +178,7 @@ function AtendimentoContent() {
     const qs = filtro !== "todos" ? `?estagio=${filtro}` : "";
     const res = await fetch(`/api/crm/atendimento${qs}`, { headers: internalApiHeaders() });
     const json = await res.json();
+    setLinhaIaPausadaGlobal(json.ia_whatsapp_pausada_global === true);
     setLeads((json.leads ?? []).map((d: Record<string, unknown>) => ({
       id: d.id as string,
       nome: (d.nome as string) || "Lead",
@@ -449,11 +451,16 @@ function AtendimentoContent() {
               {meuNome}
             </span>
           )}
+          {linhaIaPausadaGlobal && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/35 bg-amber-950/40 px-3 py-1 text-[11px] text-amber-200 font-medium">
+              Linha em modo manual
+            </span>
+          )}
         </div>
       ),
     });
     return () => setSlot(null);
-  }, [setSlot, leads.length, carregando, meuNome, pathname]);
+  }, [setSlot, leads.length, carregando, meuNome, linhaIaPausadaGlobal, pathname]);
 
   // ── Modo do lead selecionado ──────────────────────────────────────────────
   /** Badge de modo: label + cor CSS */
@@ -541,8 +548,18 @@ function AtendimentoContent() {
       >
         {/* Topo: título + operador */}
         <div className={`flex items-center justify-between gap-2 border-b ${C.border} px-3 py-3`}>
-          <div>
-            <p className="text-zinc-100 text-sm font-semibold">Inbox</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-zinc-100 text-sm font-semibold">Inbox</p>
+              {linhaIaPausadaGlobal && (
+                <span
+                  className="inline-flex items-center rounded-full border border-amber-500/35 bg-amber-950/40 px-2 py-0.5 text-[9px] text-amber-200 font-semibold uppercase tracking-wide"
+                  title="IA pausada em todas as conversas — reative no agente WhatsApp ou com /ia-on"
+                >
+                  Modo manual
+                </span>
+              )}
+            </div>
             <p className="text-zinc-500 text-[11px]">
               {carregando ? "A carregar…" : `${leadsFiltrados.length} / ${leads.length} conversas`}
             </p>
@@ -792,6 +809,13 @@ function AtendimentoContent() {
 
             {/* Mensagens */}
             <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+              {linhaIaPausadaGlobal && !humanoAtual && (
+                <div className="rounded-lg border border-amber-500/35 bg-amber-950/35 px-3 py-2.5 text-[12px] text-amber-100/95 mb-3 leading-relaxed">
+                  <span className="font-semibold text-amber-200">Linha em modo manual.</span>{" "}
+                  A IA não responde automaticamente a novos leads até reativar no agente WhatsApp ou enviar{" "}
+                  <code className="text-[11px] text-amber-100/90">/ia-on</code> pelo celular autorizado.
+                </div>
+              )}
               {humanoAtual && (
                 <div className="rounded-lg border border-amber-500/35 bg-amber-950/35 px-3 py-2.5 text-[12px] text-amber-100/95 mb-3 leading-relaxed">
                   <span className="font-semibold text-amber-200">IA pausada nesta conversa.</span>{" "}
