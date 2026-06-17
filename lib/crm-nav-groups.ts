@@ -6,6 +6,8 @@ import {
   Wallet,
   Users,
   Briefcase,
+  User,
+  Handshake,
   Building2,
   Package,
   Home,
@@ -64,6 +66,15 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       { href: "/crm/leads", label: "Leads", icon: Users },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase },
       { href: "/crm/tarefas", label: "Tarefas", icon: CheckSquare },
+    ],
+  },
+  {
+    id: "cadastros",
+    label: "Cadastros",
+    sectionIcon: User,
+    items: [
+      { href: "/crm/cadastro", label: "Cadastro", icon: User },
+      { href: "/crm/parceiros", label: "Parceiros", icon: Handshake },
     ],
   },
   {
