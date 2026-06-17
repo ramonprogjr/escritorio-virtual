@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createHubLogger, type HubLogger } from "@/lib/observability/hub-log";
 import { defaultTenantId } from "@/lib/tenant-default";
 import { avaliarJobDuplicado } from "@/lib/whatsapp/anti-duplicata-resposta";
+import { revalidarPausaGlobalAntesProcessor } from "@/lib/whatsapp/ia-global-pause";
 import { processarMensagemInboundWhatsapp } from "@/lib/whatsapp/inbound-message-processor";
 import { resolverLinhaWhatsAppInbound } from "@/lib/whatsapp/resolver-linha-whatsapp";
 
@@ -125,6 +126,19 @@ type ReconstructedContext = {
   agente: { agente_slug: string } | null;
   waSendOpts?: { instanceToken?: string | null };
 };
+
+/** Slug do agente usado para revalidar pausa global antes do processor. */
+export function resolverAgenteSlugDoJob(
+  job: Pick<HubMsgJob, "agente_slug">,
+  contexto: Pick<ReconstructedContext, "lead" | "agente">
+): string {
+  return (
+    (typeof job.agente_slug === "string" && job.agente_slug.trim()) ||
+    (typeof contexto.lead.agente_responsavel === "string" && contexto.lead.agente_responsavel.trim()) ||
+    (typeof contexto.agente?.agente_slug === "string" && contexto.agente.agente_slug.trim()) ||
+    ""
+  );
+}
 
 function reconstruirContexto(job: HubMsgJob): ReconstructedContext {
   const payload = parsePayload(job);
@@ -323,6 +337,24 @@ async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogg
       if (typeof leadRow.agente_responsavel === "string" && leadRow.agente_responsavel.trim()) {
         contexto.lead.agente_responsavel = leadRow.agente_responsavel.trim();
       }
+    }
+  }
+
+  const agenteSlugJob = resolverAgenteSlugDoJob(job, contexto);
+  if (agenteSlugJob) {
+    const pause = await revalidarPausaGlobalAntesProcessor(supabase, agenteSlugJob);
+    if (pause.pausada) {
+      await updateJobStatus(supabase, job, {
+        status: "done",
+        last_error: pause.lastError ?? "ia_global_pausada",
+        locked_at: null,
+        locked_by: null,
+      });
+      log.info("wa.worker.job_skip_global_pause", {
+        job_id: job.id,
+        agente_slug: agenteSlugJob,
+      });
+      return;
     }
   }
 

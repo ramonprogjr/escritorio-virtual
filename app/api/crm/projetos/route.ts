@@ -8,13 +8,12 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const negocioId = request.nextUrl.searchParams.get("negocio_id");
 
-  let query = crmDb()
+  const db = crmDb();
+  let query = db
     .from("hub_projetos")
     .select(SELECT)
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
     .order("criado_em", { ascending: false })
     .limit(100);
 
