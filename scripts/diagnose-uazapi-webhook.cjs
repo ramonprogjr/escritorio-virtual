@@ -1,5 +1,5 @@
 /**
- * Diagnóstico UAZAPI ↔ Render webhook (não imprime tokens completos).
+ * Diagnóstico UAZAPI ↔ webhook da app (NEXT_PUBLIC_APP_URL; não imprime tokens completos).
  * Uso: node scripts/diagnose-uazapi-webhook.cjs
  *      npm run diagnose:uazapi
  *
@@ -85,7 +85,7 @@ async function main() {
     ? `${appUrl}/api/whatsapp/webhook?wh=${encodeURIComponent(wh)}`
     : `${appUrl}/api/whatsapp/webhook`;
 
-  console.log("\n=== Diagnóstico UAZAPI → Webhook Render ===\n");
+  console.log("\n=== Diagnóstico UAZAPI → Webhook (NEXT_PUBLIC_APP_URL) ===\n");
   console.log("UAZAPI_BASE_URL:", base || "(ausente)");
   console.log("NEXT_PUBLIC_APP_URL:", appUrl || "(ausente)");
   console.log("WEBHOOK_SECRET:", wh ? `${wh.slice(0, 4)}… (${wh.length} chars)` : "(ausente)");
@@ -148,8 +148,16 @@ async function main() {
       console.log("     events:", JSON.stringify(cfg.events));
       console.log("     excludeMessages:", JSON.stringify(cfg.excludeMessages));
       const cfgUrl = String(cfg.url || "");
-      if (cfgUrl && !cfgUrl.includes("escritorio-virtual-9c2o.onrender.com")) {
-        console.log("     [!!] URL global NÃO aponta para Render!");
+      if (!appUrl) {
+        console.log("     [!!] NEXT_PUBLIC_APP_URL ausente — defina no .env para validar o webhook");
+      } else if (cfgUrl) {
+        const cfgBase = cfgUrl.split("?")[0];
+        const expectedBase = expectedWebhook.split("?")[0];
+        if (cfgBase !== expectedBase) {
+          console.log(
+            `     [!!] URL global não bate com NEXT_PUBLIC_APP_URL (esperado: ${maskUrl(expectedWebhook)})`
+          );
+        }
       }
       if (cfgUrl && wh && !cfgUrl.includes("wh=")) {
         console.log("     [!!] URL global sem ?wh= (auth pode falhar se UAZAPI não enviar header)");
@@ -158,7 +166,7 @@ async function main() {
         const u = new URL(cfgUrl);
         const cfgWh = u.searchParams.get("wh");
         if (cfgWh !== wh) {
-          console.log("     [!!] ?wh= na UAZAPI ≠ WEBHOOK_SECRET do .env/Render");
+          console.log("     [!!] ?wh= na UAZAPI ≠ WEBHOOK_SECRET do .env");
         }
       }
     } else {
@@ -254,13 +262,13 @@ async function main() {
         console.log(`     • ${name} | ${chatid}`);
         console.log(`       última: ${last || "—"} | fromMe: ${fromMe} | "${lastTxt}"`);
       }
-      console.log("     → Se vê chat recente mas Render não recebe POST, falha é só no disparo do webhook UAZAPI.");
+      console.log("     → Se vê chat recente mas a app não recebe POST, falha é só no disparo do webhook UAZAPI.");
     } else {
       console.log("     (nenhum chat 1:1 recente — confirme que enviou msg para o número da instância acima)");
     }
   }
 
-  console.log("\n--- Teste POST Render (resolver de instância) ---");
+  console.log("\n--- Teste POST app (resolver de instância) ---");
   if (appUrl && wh) {
     const url = `${appUrl}/api/whatsapp/webhook?wh=${encodeURIComponent(wh)}`;
     const msgBase = {
@@ -302,20 +310,20 @@ async function main() {
 
     if (semId?.reason === "instancia_desconhecida_sem_fallback_global") {
       console.log(
-        "     [!!] Render ainda sem resolver novo (token / único agente connected)."
+        "     [!!] App ainda sem resolver novo (token / único agente connected)."
       );
-      console.log("     → Faça deploy do código atual ou defina UAZAPI_INSTANCE_TOKEN no Render.");
+      console.log("     → Faça deploy do código atual ou defina UAZAPI_INSTANCE_TOKEN no ambiente.");
     }
     if (comToken?.reason === "instancia_desconhecida_sem_fallback_global") {
-      console.log("     [!!] Render ignora token no body — precisa deploy.");
+      console.log("     [!!] App ignora token no body — precisa deploy.");
     }
     if (comId?.agente === "maria" || comId?.status === "ok") {
-      console.log("     [OK] Com `instance` no JSON o Render já roteia para Maria.");
+      console.log("     [OK] Com `instance` no JSON a app já roteia para Maria.");
     }
   }
 
   console.log("\n=== Conclusão rápida ===");
-  console.log("Se POST Render [OK] mas WhatsApp real não gera log wa.webhook.received:");
+  console.log("Se POST na app [OK] mas WhatsApp real não gera log wa.webhook.received:");
   console.log("  → UAZAPI não dispara webhook em mensagens reais (sessão, painel ou instância errada).");
   console.log("  → Reconecte QR, confira /globalwebhook/errors e envie msg de outro telefone.\n");
 }
