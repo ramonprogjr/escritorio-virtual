@@ -26,12 +26,13 @@ export type MobileMoreItem = {
 };
 
 export const MOBILE_MORE_ITEMS: MobileMoreItem[] = [
+  { label: "Cadastros", href: "/crm/cadastro" },
   { label: "Leads", href: "/crm/leads", badgeKey: "leads" },
+  { label: "Negócios", href: "/crm/negocios" },
+  { label: "Parceiros", href: "/crm/parceiros" },
   { label: "Aprovações", href: "/crm/aprovacoes", badgeKey: "aprovacoes" },
   { label: "Agentes IA", href: "/crm/agentes" },
   { label: "Analytics", href: "/crm/analytics" },
-  { label: "Negócios", href: "/crm/negocios" },
-  { label: "Parceiros", href: "/crm/parceiros" },
   { label: "Financeiro", href: "/crm/financeiro" },
   { label: "Relatórios", href: "/crm/relatorios" },
   { label: "Configurações", href: "/crm/configuracoes" },
@@ -39,6 +40,7 @@ export const MOBILE_MORE_ITEMS: MobileMoreItem[] = [
 ];
 
 const SHEET_PREFIXES = [
+  "/crm/cadastro",
   "/crm/leads",
   "/crm/aprovacoes",
   "/crm/agentes",
@@ -85,6 +87,7 @@ export function isMobileShellRoute(pathname: string): boolean {
 export function mobilePageTitle(pathname: string): string {
   if (pathname === "/office") return "Escritório";
   if (pathname === "/crm") return "Pulso";
+  if (pathname === "/crm/cadastro" || pathname.startsWith("/crm/cadastro/")) return "Cadastros";
   if (pathname === "/crm/leads") return "Leads";
   if (pathname.startsWith("/crm/leads/")) return "Lead";
   if (pathname === "/crm/atendimento") return "Atendimento";

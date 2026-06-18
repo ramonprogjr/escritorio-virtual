@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 /**
  * distDir tem de ser relativo à raiz do projeto (Next.js não aceita path absoluto).
@@ -14,7 +15,7 @@ const nextConfig: NextConfig = {
    * Mantemos bloco turbos explícito para compatibilizar Next 16 quando
    * também há customizações de webpack (usadas no modo dev --webpack).
    */
-  turbopack: {},
+  turbopack: { root: path.resolve(".") },
   webpack: (config, { dev }) => {
     if (dev) {
       // Evita falhas de PackFileCacheStrategy (rename/open) em pastas sincronizadas pelo OneDrive.

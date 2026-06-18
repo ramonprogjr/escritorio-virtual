@@ -63,17 +63,10 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     label: "Vendas",
     sectionIcon: Briefcase,
     items: [
+      { href: "/crm/cadastro", label: "Cadastros", icon: User },
       { href: "/crm/leads", label: "Leads", icon: Users },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase },
       { href: "/crm/tarefas", label: "Tarefas", icon: ClipboardList },
-    ],
-  },
-  {
-    id: "cadastros",
-    label: "Cadastros",
-    sectionIcon: User,
-    items: [
-      { href: "/crm/cadastro", label: "Cadastro", icon: User },
       { href: "/crm/parceiros", label: "Parceiros", icon: Handshake },
     ],
   },

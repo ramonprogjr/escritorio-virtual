@@ -49,7 +49,7 @@ function CrmNavItemLabel({ item, expanded }: { item: CrmNavItem; expanded: boole
   );
 }
 
-const NESTED_GROUP_EXCLUDE_IDS = new Set(["vendas", "ia", "cadastros"]);
+const NESTED_GROUP_EXCLUDE_IDS = new Set(["vendas", "ia"]);
 
 function splitSistemaItems(items: CrmNavItem[]) {
   const root = items.find(item => item.href === "/crm/configuracoes");
