@@ -64,22 +64,6 @@ export function CrmRastreioBusca() {
             }}
           />
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "7px 10px",
-            borderRadius: 8,
-            border: "1px solid #c9a24a55",
-            background: "#c9a24a18",
-            color: "#c9a24a",
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "…" : "Ir"}
-        </button>
       </form>
       {(erro || cadeia) && (
         <div
