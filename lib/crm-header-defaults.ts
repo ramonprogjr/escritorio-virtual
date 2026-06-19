@@ -102,6 +102,10 @@ export function defaultCrmHeaderForPath(pathname: string): CrmHeaderDefault {
       title: "Configurações",
       subtitle: "Regras operacionais sem precisar de programador",
     },
+    "progresso-sistema": {
+      title: "Progresso sistema",
+      subtitle: "Cronograma PDFs Hub Obra10+ vs implementação atual — gaps, fases e deploy",
+    },
     "onboarding-tenant": {
       title: "Onboarding",
       subtitle: "Configuração inicial multi-empresa (administradores)",

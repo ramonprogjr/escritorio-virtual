@@ -36,6 +36,7 @@ export const MOBILE_MORE_ITEMS: MobileMoreItem[] = [
   { label: "Financeiro", href: "/crm/financeiro" },
   { label: "Relatórios", href: "/crm/relatorios" },
   { label: "Configurações", href: "/crm/configuracoes" },
+  { label: "Progresso sistema", href: "/crm/progresso-sistema" },
   { label: "Integrações", href: "/crm/integracoes" },
 ];
 
@@ -51,6 +52,7 @@ const SHEET_PREFIXES = [
   "/crm/financeiro",
   "/crm/relatorios",
   "/crm/configuracoes",
+  "/crm/progresso-sistema",
   "/crm/integracoes",
   "/crm/pessoas",
   "/crm/empresas",
@@ -100,6 +102,7 @@ export function mobilePageTitle(pathname: string): string {
   if (pathname.startsWith("/crm/negocios")) return "Negócios";
   if (pathname.startsWith("/crm/parceiros")) return "Parceiros";
   if (pathname === "/crm/configuracoes") return "Configurações";
+  if (pathname === "/crm/progresso-sistema") return "Progresso sistema";
   if (pathname === "/crm/integracoes") return "Integrações";
   return "Obra10+";
 }

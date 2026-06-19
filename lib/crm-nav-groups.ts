@@ -144,6 +144,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     sectionIcon: Settings,
     items: [
       { href: "/crm/configuracoes", label: "Configurações", icon: Settings },
+      { href: "/crm/progresso-sistema", label: "Progresso sistema", icon: LineChart },
       { href: "/crm/integracoes", label: "Integrações", icon: Plug },
       { href: "/crm/contatos", label: "Contatos de notificação", icon: Bell },
       { href: "/crm/usuarios", label: "Usuários & Permissões", icon: UserCog },

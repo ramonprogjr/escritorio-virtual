@@ -1,5 +1,7 @@
 # Aderência CRM — PDFs Hub Obra10+
 
+**Cronograma online (vivo):** abra no CRM em [Sistema → Progresso sistema](/crm/progresso-sistema) (`/crm/progresso-sistema`). A matriz abaixo complementa o checklist técnico de deploy.
+
 Matriz **requisito → sistema atual** (branch `feature/escritorio-visual`, pós-sync com produção).  
 Fontes: *Hub_Obra10_Funil_Operacional_CRM.pdf* e *Hub_Obra10_Documento_Funcional_Consolidado.pdf*.
 
