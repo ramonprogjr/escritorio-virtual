@@ -6,7 +6,9 @@
     "dev": "node scripts/dev-insecure-tls.cjs",
     "dev:strict-tls": "next dev -p 3001",
     "dev:insecure-tls": "node scripts/dev-insecure-tls.cjs",
-    "build": "next build",
+    "verify:progresso": "npm run collect:entregas-git && tsx scripts/verify-progresso-sistema.ts",
+    "collect:entregas-git": "tsx scripts/collect-relatorio-entregas-git.ts",
+    "build": "npm run verify:progresso && next build",
     "start": "next start",
     "worker:whatsapp": "node scripts/worker-whatsapp.js",
     "test": "vitest run",
@@ -33,6 +35,7 @@
     "@xyflow/react": "^12.10.1",
     "lucide-react": "^0.468.0",
     "next": "^16.2.4",
+    "pdfkit": "^0.19.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwindcss": "^4",
@@ -42,8 +45,10 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "tsx": "^4.20.3",
     "vitest": "^3.2.4"
   }
 }

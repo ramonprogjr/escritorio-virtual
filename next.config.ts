@@ -8,6 +8,8 @@ import path from "path";
 const nextConfig: NextConfig = {
   /** Oculta o badge flutuante "N" do Next.js em dev (sobrepunha a barra mobile). */
   devIndicators: false,
+  /** pdfkit lê fontes .afm em disco — não pode ir no bundle webpack/turbopack. */
+  serverExternalPackages: ["pdfkit", "fontkit"],
   ...(process.env.NODE_ENV === "development"
     ? { distDir: process.env.NEXT_DIST_DIR?.trim() || ".next-dev" }
     : {}),
@@ -16,7 +18,12 @@ const nextConfig: NextConfig = {
    * também há customizações de webpack (usadas no modo dev --webpack).
    */
   turbopack: { root: path.resolve(".") },
-  webpack: (config, { dev }) => {
+  webpack: (config, { dev, isServer }) => {
+    if (isServer) {
+      const prev = config.externals;
+      const extra = ["pdfkit", "fontkit"];
+      config.externals = Array.isArray(prev) ? [...prev, ...extra] : prev ? [prev, ...extra] : extra;
+    }
     if (dev) {
       // Evita falhas de PackFileCacheStrategy (rename/open) em pastas sincronizadas pelo OneDrive.
       config.cache = { type: "memory" };

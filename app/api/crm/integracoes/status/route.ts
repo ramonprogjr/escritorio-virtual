@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError } from "@/lib/crm/supabase-server";
-import { requireInternalApiKey } from "@/lib/crm/crm-api-auth";
+import { requireCrmOwner, requireInternalApiKey } from "@/lib/crm/crm-api-auth";
 
 export type IntegracaoStatus = {
   id: string;
@@ -16,6 +16,9 @@ export async function GET(request: NextRequest) {
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
   const keyErr = requireInternalApiKey(request);
   if (keyErr) return keyErr;
+
+  const owner = await requireCrmOwner(request);
+  if ("error" in owner) return owner.error;
 
   const uazapiUrl = process.env.UAZAPI_BASE_URL?.trim();
   const uazapiToken = process.env.UAZAPI_INSTANCE_TOKEN?.trim();

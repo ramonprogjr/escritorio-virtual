@@ -1,0 +1,1627 @@
+{
+  "geradoEm": "2026-06-21T02:32:01.749Z",
+  "ambiente": "local",
+  "itens": {
+    "ent-lead": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ent-lead",
+          "ok": true,
+          "detail": "lib/crm/hub-insert-crm.ts",
+          "required": true
+        },
+        {
+          "id": "route-/crm/leads",
+          "ok": true,
+          "detail": "app/crm/leads/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-lib/crm/hub-insert-crm.ts",
+          "ok": true,
+          "detail": "lib/crm/hub-insert-crm.ts",
+          "required": true
+        },
+        {
+          "id": "tbl-leads",
+          "ok": true,
+          "detail": "tabela hub_leads_crm",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-pessoa": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ent-pessoa",
+          "ok": true,
+          "detail": "app/api/crm/pessoas",
+          "required": true
+        },
+        {
+          "id": "route-/crm/cadastro",
+          "ok": true,
+          "detail": "app/crm/cadastro/page.tsx",
+          "required": false
+        },
+        {
+          "id": "tbl-pessoas",
+          "ok": true,
+          "detail": "tabela hub_pessoas",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-empresa": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ent-empresa",
+          "ok": true,
+          "detail": "app/api/crm/empresas",
+          "required": true
+        },
+        {
+          "id": "route-/crm/cadastro",
+          "ok": true,
+          "detail": "app/crm/cadastro/page.tsx",
+          "required": false
+        },
+        {
+          "id": "tbl-empresas",
+          "ok": true,
+          "detail": "tabela hub_empresas",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-fornecedor-class": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ent-fornecedor-class",
+          "ok": true,
+          "detail": "lib/crm/empresa-cadastro.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/empresa-cadastro.ts",
+          "ok": true,
+          "detail": "lib/crm/empresa-cadastro.ts",
+          "required": true
+        },
+        {
+          "id": "grep-segmento",
+          "ok": true,
+          "detail": "encontrado em lib/crm/empresa-cadastro.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-homologado-status": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/parceiros",
+          "ok": true,
+          "detail": "app/crm/parceiros/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/parceiros/page.tsx",
+          "ok": true,
+          "detail": "app/crm/parceiros/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-parceiro-relacao": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "route-/crm/parceiros",
+          "ok": true,
+          "detail": "app/crm/parceiros/page.tsx",
+          "required": false
+        },
+        {
+          "id": "api-parceiros",
+          "ok": false,
+          "detail": "ausente: app/api/crm/parceiros/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Alinhar modelo ao PDF (relação, não entidade principal)"
+    },
+    "ent-vinculo-pe": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ent-vinculo-pe",
+          "ok": true,
+          "detail": "app/api/crm/vinculos/pessoa-empresa",
+          "required": true
+        },
+        {
+          "id": "file-app/api/crm/vinculos/pessoa-empresa/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/vinculos/pessoa-empresa/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-imovel": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/imoveis",
+          "ok": true,
+          "detail": "app/crm/imoveis/page.tsx",
+          "required": false
+        },
+        {
+          "id": "tbl-imoveis",
+          "ok": true,
+          "detail": "tabela hub_imoveis",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ent-produto-servico": {
+      "status": "parcial",
+      "checks": [
+        {
+          "id": "codigo-ent-produto-servico",
+          "ok": true,
+          "detail": "supabase/migrations/20260523120000_crm_integral_core.sql",
+          "required": true
+        },
+        {
+          "id": "tbl-servicos",
+          "ok": true,
+          "detail": "tabela hub_servicos",
+          "required": true
+        },
+        {
+          "id": "ui-produtos",
+          "ok": false,
+          "detail": "ausente: app/crm/produtos/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "UI catálogo produtos/serviços no app principal"
+    },
+    "ent-negocio-centro": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/negocios",
+          "ok": true,
+          "detail": "app/crm/negocios/page.tsx",
+          "required": false
+        },
+        {
+          "id": "tbl-negocios",
+          "ok": true,
+          "detail": "tabela hub_negocios",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "nav-vendas": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-nav-vendas",
+          "ok": true,
+          "detail": "lib/crm-nav-groups.ts",
+          "required": true
+        },
+        {
+          "id": "grep-leads",
+          "ok": true,
+          "detail": "encontrado em lib/crm-nav-groups.ts",
+          "required": true
+        },
+        {
+          "id": "grep-pipeline",
+          "ok": false,
+          "detail": "padrão não encontrado em lib/crm-nav-groups.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "nav-cadastros": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/cadastro",
+          "ok": true,
+          "detail": "app/crm/cadastro/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "nav-homologacao": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/parceiros",
+          "ok": true,
+          "detail": "app/crm/parceiros/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "nav-produtos": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "catalogo-produtos",
+          "ok": false,
+          "detail": "ausente: app/crm/produtos/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Marcenaria, marmoraria, revestimentos, etc."
+    },
+    "nav-projetos-obras": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/projetos",
+          "ok": true,
+          "detail": "app/crm/projetos/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/obras/page.tsx",
+          "ok": true,
+          "detail": "app/crm/obras/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "nav-financeiro": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/financeiro",
+          "ok": true,
+          "detail": "app/crm/financeiro/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "nav-progresso": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/progresso-sistema",
+          "ok": true,
+          "detail": "app/crm/progresso-sistema/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-novo": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-fl-novo",
+          "ok": true,
+          "detail": "lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "migration-20260628120000_hub_pipeline_estagios_pdf_seed.sql",
+          "ok": true,
+          "detail": "encontrado em supabase/migrations",
+          "required": true
+        },
+        {
+          "id": "slug-novo",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-em-atendimento": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/atendimento",
+          "ok": true,
+          "detail": "app/crm/atendimento/page.tsx",
+          "required": false
+        },
+        {
+          "id": "slug-em_atendimento",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "file-app/crm/atendimento/page.tsx",
+          "ok": true,
+          "detail": "app/crm/atendimento/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-aguardando": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-fl-aguardando",
+          "ok": true,
+          "detail": "app/api/hub/followup-config",
+          "required": true
+        },
+        {
+          "id": "slug-aguardando_resposta",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "followup-api",
+          "ok": true,
+          "detail": "app/api/hub/followup-config/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-qualificando": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/leads",
+          "ok": true,
+          "detail": "app/crm/leads/page.tsx",
+          "required": false
+        },
+        {
+          "id": "slug-qualificando",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-encaminhado": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-fl-encaminhado",
+          "ok": true,
+          "detail": "components/crm/leads/LeadEncaminharModal.tsx",
+          "required": true
+        },
+        {
+          "id": "slug-encaminhado",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "file-components/crm/leads/LeadEncaminharModal.tsx",
+          "ok": true,
+          "detail": "components/crm/leads/LeadEncaminharModal.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-convertido": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-fl-convertido",
+          "ok": true,
+          "detail": "app/api/crm/leads/[id]/converter-negocio",
+          "required": true
+        },
+        {
+          "id": "slug-convertido_negocio",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "file-app/api/crm/leads/[id]/converter-negocio/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/leads/[id]/converter-negocio/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-perdido": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-fl-perdido",
+          "ok": true,
+          "detail": "lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "motivos-perda",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "col-motivo",
+          "ok": true,
+          "detail": "coluna hub_leads_crm.motivo_perda",
+          "required": true
+        },
+        {
+          "id": "valida-api",
+          "ok": true,
+          "detail": "encontrado em app/api/crm/leads/[id]/route.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-spam": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "slug-spam_invalido",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-card-kanban": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "kanban-comp",
+          "ok": true,
+          "detail": "encontrado em app/crm/leads/page.tsx",
+          "required": true
+        },
+        {
+          "id": "score",
+          "ok": true,
+          "detail": "encontrado em app/crm/leads/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fl-separacao": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "tbl-leads",
+          "ok": true,
+          "detail": "tabela hub_leads_crm",
+          "required": true
+        },
+        {
+          "id": "tbl-neg",
+          "ok": true,
+          "detail": "tabela hub_negocios",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-imob": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-fn-imob",
+          "ok": true,
+          "detail": "lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "route-/crm/negocios",
+          "ok": true,
+          "detail": "app/crm/negocios/page.tsx",
+          "required": false
+        },
+        {
+          "id": "mercado-imobiliario",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "http-pipelines",
+          "ok": false,
+          "detail": "HTTP 401 http://localhost:3001/api/crm/pipelines?tipo=negocio",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-arq": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "mercado-arquitetura",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-obra": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/obras",
+          "ok": true,
+          "detail": "app/crm/obras/page.tsx",
+          "required": false
+        },
+        {
+          "id": "mercado-obra_reforma",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "file-app/crm/obras/page.tsx",
+          "ok": true,
+          "detail": "app/crm/obras/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-eng": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "mercado-engenharia",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-marc": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "mercado-marcenaria_moveis",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-srv": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "mercado-servicos",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-pro": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "mercado-produtos_materiais",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-for": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "mercado-fornecedor_homologacao",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-card": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "neg-page",
+          "ok": true,
+          "detail": "encontrado em app/crm/negocios/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "fn-derivados": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "auto-obra",
+          "ok": false,
+          "detail": "padrão não encontrado em app/api/crm/negocios",
+          "required": false
+        },
+        {
+          "id": "converter-obra",
+          "ok": false,
+          "detail": "ausente: app/api/crm/negocios/[id]/converter-obra/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Automação criar obra/projeto/produto"
+    },
+    "rf-log-etapa": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-rf-log-etapa",
+          "ok": true,
+          "detail": "lib/crm/audit-log.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/audit-log.ts",
+          "ok": true,
+          "detail": "lib/crm/audit-log.ts",
+          "required": true
+        },
+        {
+          "id": "fn-log",
+          "ok": true,
+          "detail": "encontrado em lib/crm/audit-log.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "rf-perda-motivo": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "motivos",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "block-api",
+          "ok": false,
+          "detail": "padrão não encontrado em app/api/crm/leads/[id]/route.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "rf-ganho-validacao": {
+      "status": "parcial",
+      "checks": [
+        {
+          "id": "grep-ganho",
+          "ok": true,
+          "detail": "encontrado em lib/crm/pipelines.ts",
+          "required": true
+        },
+        {
+          "id": "marcar-ganho",
+          "ok": false,
+          "detail": "ausente: app/api/crm/negocios/[id]/marcar-ganho/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Validação gestor/financeiro"
+    },
+    "rf-alerta-parado": {
+      "status": "parcial",
+      "checks": [
+        {
+          "id": "col-prox",
+          "ok": true,
+          "detail": "coluna hub_leads_crm.proxima_acao",
+          "required": true
+        },
+        {
+          "id": "alertas-parados",
+          "ok": false,
+          "detail": "ausente: app/api/crm/alertas/parados/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Alertas automáticos no dashboard"
+    },
+    "rf-ia-limites": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/aprovacoes",
+          "ok": true,
+          "detail": "app/crm/aprovacoes/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/aprovacoes/page.tsx",
+          "ok": true,
+          "detail": "app/crm/aprovacoes/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "rf-ia-sugere": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "file-app/api/crm/distribuicao/sugerir/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/distribuicao/sugerir/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-imob": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-cl-imob",
+          "ok": true,
+          "detail": "lib/crm/lead-campos-por-tipo.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/lead-campos-por-tipo.ts",
+          "ok": true,
+          "detail": "lib/crm/lead-campos-por-tipo.ts",
+          "required": true
+        },
+        {
+          "id": "file-components/crm/leads/LeadRapidoSideover.tsx",
+          "ok": true,
+          "detail": "components/crm/leads/LeadRapidoSideover.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-arq": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-arq",
+          "ok": true,
+          "detail": "encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-obra": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-obra",
+          "ok": true,
+          "detail": "encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-servico": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-srv",
+          "ok": true,
+          "detail": "encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-produto": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-pro",
+          "ok": true,
+          "detail": "encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-homolog": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-hom",
+          "ok": true,
+          "detail": "encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-dinamicos": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-metragem",
+          "ok": true,
+          "detail": "encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "cl-canais": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "grep-origem",
+          "ok": false,
+          "detail": "padrão não encontrado em lib/crm/lead-campos-por-tipo.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "padrão não encontrado em lib/crm/lead-campos-por-tipo.ts"
+    },
+    "ng-campos": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/negocios",
+          "ok": true,
+          "detail": "app/crm/negocios/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ng-participantes": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ng-participantes",
+          "ok": true,
+          "detail": "app/api/crm/negocios/[id]",
+          "required": true
+        },
+        {
+          "id": "file-app/api/crm/negocios/[id]/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/negocios/[id]/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ng-drawer": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "grep-drawer",
+          "ok": false,
+          "detail": "padrão não encontrado em app/crm/negocios/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "Ordem: origem → mercado → participantes → financeiro"
+    },
+    "ng-vinculos-neg": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "vinculos-neg",
+          "ok": false,
+          "detail": "ausente: app/api/crm/negocios/[id]/vinculos/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "UI linguagem simples"
+    },
+    "ng-converter": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-ng-converter",
+          "ok": true,
+          "detail": "app/api/crm/leads/[id]/converter-negocio",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ng-seguranca": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "file-lib/crm/crm-permissoes.ts",
+          "ok": true,
+          "detail": "lib/crm/crm-permissoes.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "enc-registro": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-enc-registro",
+          "ok": true,
+          "detail": "app/api/crm/encaminhamentos",
+          "required": true
+        },
+        {
+          "id": "enc-api",
+          "ok": true,
+          "detail": "app/api/crm/encaminhamentos/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "enc-status": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "grep-enc",
+          "ok": true,
+          "detail": "encontrado em app/api/crm/encaminhamentos/route.ts",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "enc-ia-first": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/aprovacoes",
+          "ok": true,
+          "detail": "app/crm/aprovacoes/page.tsx",
+          "required": false
+        },
+        {
+          "id": "flag-enc",
+          "ok": false,
+          "detail": "CRM_ENCAMINHAMENTO_V2 não definido ou diferente",
+          "required": false
+        },
+        {
+          "id": "file-app/api/crm/encaminhamentos/[id]/aprovar/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/encaminhamentos/[id]/aprovar/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "enc-criterios": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "file-app/api/crm/distribuicao/sugerir/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/distribuicao/sugerir/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "pa-tipos": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "tbl-acoes",
+          "ok": true,
+          "detail": "tabela hub_proximas_acoes",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "pa-obrigatoria": {
+      "status": "parcial",
+      "checks": [
+        {
+          "id": "codigo-pa-obrigatoria",
+          "ok": true,
+          "detail": "lib/crm/feature-flags.ts",
+          "required": true
+        },
+        {
+          "id": "flag-pa",
+          "ok": false,
+          "detail": "CRM_PROXIMA_ACAO_OBRIGATORIA não definido ou diferente",
+          "required": true
+        },
+        {
+          "id": "grep-flag",
+          "ok": true,
+          "detail": "encontrado em lib/crm/feature-flags.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Bloqueio global na API"
+    },
+    "pa-tarefas-ui": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/tarefas",
+          "ok": true,
+          "detail": "app/crm/tarefas/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/tarefas/page.tsx",
+          "ok": true,
+          "detail": "app/crm/tarefas/page.tsx",
+          "required": true
+        },
+        {
+          "id": "edit-ui",
+          "ok": false,
+          "detail": "padrão não encontrado em app/crm/tarefas/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "pa-atraso": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "alertas-atraso",
+          "ok": false,
+          "detail": "ausente: app/api/crm/alertas/atrasadas/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Alertas dashboard + inbox"
+    },
+    "pa-ia-sugere": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "grep-sugere",
+          "ok": false,
+          "detail": "padrão não encontrado em lib/ia",
+          "required": false
+        }
+      ],
+      "oQueFalta": "Campo IA na ficha lead/negócio"
+    },
+    "po-proj-lista": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/projetos",
+          "ok": true,
+          "detail": "app/crm/projetos/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "po-proj-ficha": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "file-app/api/crm/projetos/[id]/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/projetos/[id]/route.ts",
+          "required": true
+        },
+        {
+          "id": "ui-briefing",
+          "ok": false,
+          "detail": "padrão não encontrado em app/crm/projetos",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "po-obra-lista": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/obras",
+          "ok": true,
+          "detail": "app/crm/obras/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "po-obra-ficha": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/obras",
+          "ok": true,
+          "detail": "app/crm/obras/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/obras/[id]/page.tsx",
+          "ok": true,
+          "detail": "app/crm/obras/[id]/page.tsx",
+          "required": true
+        },
+        {
+          "id": "diario",
+          "ok": false,
+          "detail": "padrão não encontrado em app/crm/obras",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "po-pedidos": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/pedidos",
+          "ok": true,
+          "detail": "app/crm/pedidos/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "po-fin-dash": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/financeiro",
+          "ok": true,
+          "detail": "app/crm/financeiro/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "po-comissoes": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "mod-comissoes",
+          "ok": false,
+          "detail": "ausente: app/crm/comissoes/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Módulo comissões previstas/pagas"
+    },
+    "po-fin-entidade": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "grep-fin-tab",
+          "ok": false,
+          "detail": "padrão não encontrado em app/crm/negocios/[id]/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "Abas financeiro nas fichas"
+    },
+    "ix-ia-preenche": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/agentes",
+          "ok": true,
+          "detail": "app/crm/agentes/page.tsx",
+          "required": false
+        },
+        {
+          "id": "webhook-wa",
+          "ok": true,
+          "detail": "app/api/whatsapp/webhook/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ix-confianca": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "ui-conf",
+          "ok": false,
+          "detail": "padrão não encontrado em components",
+          "required": false
+        }
+      ],
+      "oQueFalta": "UI alta/média/baixa por campo"
+    },
+    "ix-3-cliques": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "file-components/crm/leads/LeadRapidoSideover.tsx",
+          "ok": true,
+          "detail": "components/crm/leads/LeadRapidoSideover.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ix-duplicidade": {
+      "status": "gap",
+      "checks": [
+        {
+          "id": "file-app/api/crm/verificar-documento/route.ts",
+          "ok": false,
+          "detail": "ausente: app/api/crm/verificar-documento/route.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "Mesclar com permissão mestre"
+    },
+    "ix-permissoes": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/usuarios",
+          "ok": true,
+          "detail": "app/crm/usuarios/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/usuarios/page.tsx",
+          "ok": true,
+          "detail": "app/crm/usuarios/page.tsx",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/crm-permissoes.ts",
+          "ok": true,
+          "detail": "lib/crm/crm-permissoes.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "ix-logs": {
+      "status": "parcial",
+      "checks": [
+        {
+          "id": "codigo-ix-logs",
+          "ok": true,
+          "detail": "lib/crm/audit-log.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/audit-log.ts",
+          "ok": true,
+          "detail": "lib/crm/audit-log.ts",
+          "required": true
+        },
+        {
+          "id": "ui-auditoria",
+          "ok": false,
+          "detail": "ausente: app/crm/auditoria/page.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "UI auditoria no app principal"
+    },
+    "ix-copiloto": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/agentes-reais",
+          "ok": true,
+          "detail": "app/crm/agentes-reais/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/agentes-reais/page.tsx",
+          "ok": true,
+          "detail": "app/crm/agentes-reais/page.tsx",
+          "required": true
+        },
+        {
+          "id": "copiloto-real",
+          "ok": true,
+          "detail": "encontrado em app/crm/agentes-reais/page.tsx",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-auth": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-inf-auth",
+          "ok": true,
+          "detail": "lib/auth/crm-session.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/auth/crm-session.ts",
+          "ok": true,
+          "detail": "lib/auth/crm-session.ts",
+          "required": true
+        },
+        {
+          "id": "file-proxy.ts",
+          "ok": true,
+          "detail": "proxy.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-tenant": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "migration-20260530120000_hub_pessoas_tenant_backfill.sql",
+          "ok": true,
+          "detail": "encontrado em supabase/migrations",
+          "required": true
+        },
+        {
+          "id": "tbl-tenant",
+          "ok": true,
+          "detail": "tabela hub_tenants",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-render": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "render-yaml",
+          "ok": true,
+          "detail": "render.yaml",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-pipeline-v2": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "flag-pipe",
+          "ok": true,
+          "detail": "encontrado em lib/crm/feature-flags.ts",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-migrations-pdf": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "migration-20260628120000_hub_pipeline_estagios_pdf_seed.sql",
+          "ok": true,
+          "detail": "encontrado em supabase/migrations",
+          "required": true
+        },
+        {
+          "id": "col-estagio",
+          "ok": true,
+          "detail": "coluna hub_leads_crm.estagio_funil",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-whatsapp": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/canais",
+          "ok": true,
+          "detail": "app/crm/canais/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/api/whatsapp/webhook/route.ts",
+          "ok": true,
+          "detail": "app/api/whatsapp/webhook/route.ts",
+          "required": true
+        },
+        {
+          "id": "env-uazapi",
+          "ok": false,
+          "detail": "UAZAPI_BASE_URL não definido ou diferente",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-analytics": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "route-/crm/analytics",
+          "ok": true,
+          "detail": "app/crm/analytics/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/crm/analytics/page.tsx",
+          "ok": true,
+          "detail": "app/crm/analytics/page.tsx",
+          "required": true
+        },
+        {
+          "id": "http-analytics",
+          "ok": false,
+          "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-leads",
+          "required": false
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-relatorio-diario": {
+      "status": "ok",
+      "checks": [
+        {
+          "id": "codigo-inf-relatorio-diario",
+          "ok": true,
+          "detail": "lib/crm/relatorio-git-entregas.ts",
+          "required": true
+        },
+        {
+          "id": "route-/crm/progresso-sistema",
+          "ok": true,
+          "detail": "app/crm/progresso-sistema/page.tsx",
+          "required": false
+        },
+        {
+          "id": "file-app/api/crm/relatorio-diario/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/relatorio-diario/route.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/relatorio-diario-aggregate.ts",
+          "ok": true,
+          "detail": "lib/crm/relatorio-diario-aggregate.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/relatorio-diario-pdf.ts",
+          "ok": true,
+          "detail": "lib/crm/relatorio-diario-pdf.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/relatorio-deploy-resumo.ts",
+          "ok": true,
+          "detail": "lib/crm/relatorio-deploy-resumo.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/relatorio-git-entregas.ts",
+          "ok": true,
+          "detail": "lib/crm/relatorio-git-entregas.ts",
+          "required": true
+        },
+        {
+          "id": "file-scripts/collect-relatorio-entregas-git.ts",
+          "ok": true,
+          "detail": "scripts/collect-relatorio-entregas-git.ts",
+          "required": true
+        },
+        {
+          "id": "file-lib/crm/relatorio-entregas.generated.json",
+          "ok": true,
+          "detail": "lib/crm/relatorio-entregas.generated.json",
+          "required": true
+        },
+        {
+          "id": "ui-relatorio-dia",
+          "ok": true,
+          "detail": "encontrado em components/crm/ProgressoSistemaDashboard.tsx",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    },
+    "inf-legado-office": {
+      "status": "legado",
+      "checks": [
+        {
+          "id": "legado",
+          "ok": true,
+          "detail": "status manual: legado",
+          "required": true
+        }
+      ],
+      "oQueFalta": "—"
+    }
+  },
+  "deploy": {
+    "mig-refinement": {
+      "id": "mig-refinement",
+      "ok": true,
+      "detail": "OK"
+    },
+    "mig-pipeline-seed": {
+      "id": "mig-pipeline-seed",
+      "ok": true,
+      "detail": "OK"
+    },
+    "flag-pipeline": {
+      "id": "flag-pipeline",
+      "ok": false,
+      "detail": "CRM_PIPELINE_V2 não definido ou diferente"
+    },
+    "flag-encaminhamento": {
+      "id": "flag-encaminhamento",
+      "ok": false,
+      "detail": "CRM_ENCAMINHAMENTO_V2 não definido ou diferente"
+    },
+    "smoke-kanban": {
+      "id": "smoke-kanban",
+      "ok": false,
+      "detail": "HTTP 401 http://localhost:3001/api/crm/pipelines?tipo=lead"
+    },
+    "smoke-analytics": {
+      "id": "smoke-analytics",
+      "ok": false,
+      "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-leads"
+    },
+    "smoke-negocios": {
+      "id": "smoke-negocios",
+      "ok": false,
+      "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-negocios"
+    }
+  }
+}

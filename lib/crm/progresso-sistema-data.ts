@@ -1,5 +1,5 @@
-/** Matriz viva: PDFs Hub Obra10+ vs implementação atual. Atualizar ao fechar gaps. */
-export const PROGRESSO_SISTEMA_REVISAO = "2026-06-18";
+/** Matriz viva: PDFs Hub Obra10+ vs implementação atual. Status vem do verify no deploy. */
+export const PROGRESSO_SISTEMA_REVISAO = "2026-06-22";
 
 export type ProgressoStatus = "ok" | "parcial" | "gap" | "legado";
 export type ProgressoFase = "F0" | "F1" | "F2" | "F3" | "F4" | "F5";
@@ -93,7 +93,7 @@ export const PROGRESSO_BLOCOS: ProgressoBloco[] = [
       item({ id: "nav-produtos", pdfRef: "Consolidado P2", titulo: "Produtos e ativos (catálogo amplo)", status: "gap", fase: "F4", prioridade: "P1", oQueTemos: "Imóveis no menu", oQueFalta: "Marcenaria, marmoraria, revestimentos, etc." }),
       item({ id: "nav-projetos-obras", pdfRef: "Consolidado P2", titulo: "Projetos e Obras", status: "parcial", fase: "F3", prioridade: "P1", oQueTemos: "Menus /crm/projetos e /crm/obras", oQueFalta: "Fichas operacionais completas", rota: "/crm/projetos" }),
       item({ id: "nav-financeiro", pdfRef: "Consolidado P2", titulo: "Financeiro completo", status: "parcial", fase: "F3", prioridade: "P1", oQueTemos: "Visão + pagar/receber", oQueFalta: "Comissões, repasses, histórico por entidade", rota: "/crm/financeiro" }),
-      item({ id: "nav-progresso", pdfRef: "Plano interno", titulo: "Progresso sistema (cronograma PDF vs código)", status: "ok", fase: "F0", prioridade: "P0", oQueTemos: "Esta página", oQueFalta: "Manter atualizada ao fechar gaps", rota: "/crm/progresso-sistema" }),
+      item({ id: "nav-progresso", pdfRef: "Plano interno", titulo: "Progresso sistema (cronograma PDF vs código)", status: "ok", fase: "F0", prioridade: "P0", oQueTemos: "Esta página + PDF do dia (commits Git + operação + estado)", oQueFalta: "Manter matriz atualizada ao fechar gaps", rota: "/crm/progresso-sistema" }),
     ],
   },
   {
@@ -235,51 +235,11 @@ export const PROGRESSO_BLOCOS: ProgressoBloco[] = [
       item({ id: "inf-migrations-pdf", pdfRef: "—", titulo: "Migrations PDF aplicadas em prod", status: "gap", fase: "F1", prioridade: "P0", oQueTemos: "No repositório", oQueFalta: "db push staging + produção", migration: "20260628120000_hub_pipeline_estagios_pdf_seed.sql" }),
       item({ id: "inf-whatsapp", pdfRef: "—", titulo: "WhatsApp UAZAPI + webhook", status: "parcial", fase: "F0", prioridade: "P1", oQueTemos: "Rotas + agentes", oQueFalta: "CRON_SECRET, UAZAPI no Render", rota: "/crm/canais" }),
       item({ id: "inf-analytics", pdfRef: "—", titulo: "Analytics funil PDF", status: "ok", fase: "F0", prioridade: "P1", oQueTemos: "FUNIL_LEAD_ETAPAS + funil por mercado", oQueFalta: "Validar pós-migration prod", rota: "/crm/analytics" }),
+      item({ id: "inf-relatorio-diario", pdfRef: "Plano interno", titulo: "Relatório diário PDF (Progresso + operação)", status: "ok", fase: "F0", prioridade: "P1", oQueTemos: "PDF: commits Git do dia + estado enxuto + operação CRM", oQueFalta: "Fase 2: envio WhatsApp automático à Nice", rota: "/crm/progresso-sistema", codigo: "lib/crm/relatorio-git-entregas.ts" }),
       item({ id: "inf-legado-office", pdfRef: "—", titulo: "Canvas /office (legado)", status: "legado", fase: "F0", prioridade: "P2", oQueTemos: "Simulação visual mantida", oQueFalta: "Não remover sem plano", rota: "/office" }),
     ],
   },
 ];
-
-const STATUS_SCORE: Record<ProgressoStatus, number> = {
-  ok: 100,
-  parcial: 50,
-  gap: 0,
-  legado: 100,
-};
-
-export function allProgressoItens(): ProgressoItem[] {
-  return PROGRESSO_BLOCOS.flatMap((b) => b.itens);
-}
-
-export function computeProgressoStats(itens: ProgressoItem[] = allProgressoItens()) {
-  const actionable = itens.filter((i) => i.status !== "legado");
-  const total = actionable.length;
-  const sum = actionable.reduce((acc, i) => acc + STATUS_SCORE[i.status], 0);
-  const globalPct = total > 0 ? Math.round(sum / total) : 0;
-  const ok = itens.filter((i) => i.status === "ok").length;
-  const parcial = itens.filter((i) => i.status === "parcial").length;
-  const gap = itens.filter((i) => i.status === "gap").length;
-  const gapP0 = itens.filter((i) => i.status === "gap" && i.prioridade === "P0").length;
-  const byFase = (["F0", "F1", "F2", "F3", "F4", "F5"] as ProgressoFase[]).map((f) => {
-    const phaseItems = itens.filter((i) => i.fase === f && i.status !== "legado");
-    const count = itens.filter((i) => i.fase === f).length;
-    const okCount = phaseItems.filter((i) => i.status === "ok").length;
-    const parcialCount = phaseItems.filter((i) => i.status === "parcial").length;
-    const gapCount = phaseItems.filter((i) => i.status === "gap").length;
-    const pct =
-      phaseItems.length > 0
-        ? Math.round(phaseItems.reduce((a, i) => a + STATUS_SCORE[i.status], 0) / phaseItems.length)
-        : 0;
-    const emAberto = parcialCount + gapCount;
-    return { fase: f, count, pct, okCount, parcialCount, gapCount, emAberto, actionable: phaseItems.length };
-  });
-  const byBloco = PROGRESSO_BLOCOS.map((b) => {
-    const bi = b.itens.filter((i) => i.status !== "legado");
-    const pct = bi.length > 0 ? Math.round(bi.reduce((a, i) => a + STATUS_SCORE[i.status], 0) / bi.length) : 0;
-    return { id: b.id, titulo: b.titulo, pct, total: b.itens.length };
-  });
-  return { globalPct, ok, parcial, gap, gapP0, total: itens.length, actionableTotal: total, byFase, byBloco };
-}
 
 /** Cadeia de valor do PDF Consolidado (fechamento). */
 export const CADEIA_VALOR = [
@@ -290,24 +250,8 @@ export const CADEIA_VALOR = [
   { id: "projeto-obra-fin", label: "Financeiro", sub: "Comissão e repasse", rota: "/crm/financeiro" },
 ] as const;
 
-const FASE_ORDER: Record<ProgressoFase, number> = { F0: 0, F1: 1, F2: 2, F3: 3, F4: 4, F5: 5 };
-
-/** Itens P0 ainda em aberto (gap ou parcial), ordenados por fase. */
-export function getProximosPassos(itens: ProgressoItem[] = allProgressoItens()): ProgressoItem[] {
-  return itens
-    .filter((i) => i.prioridade === "P0" && (i.status === "gap" || i.status === "parcial"))
-    .sort((a, b) => FASE_ORDER[a.fase] - FASE_ORDER[b.fase]);
-}
-
-const PRIORIDADE_ORDER: Record<ProgressoPrioridade, number> = { P0: 0, P1: 1, P2: 2 };
-const STATUS_SORT_ORDER: Record<ProgressoStatus, number> = { gap: 0, parcial: 1, ok: 2, legado: 3 };
-
-function sortItensFase(items: ProgressoItem[]): ProgressoItem[] {
-  return [...items].sort((a, b) => {
-    const pd = PRIORIDADE_ORDER[a.prioridade] - PRIORIDADE_ORDER[b.prioridade];
-    if (pd !== 0) return pd;
-    return STATUS_SORT_ORDER[a.status] - STATUS_SORT_ORDER[b.status];
-  });
+export function allProgressoItens(): ProgressoItem[] {
+  return PROGRESSO_BLOCOS.flatMap((b) => b.itens);
 }
 
 const ITEM_BLOCO_MAP: Record<string, string> = {};
@@ -315,88 +259,10 @@ for (const bloco of PROGRESSO_BLOCOS) {
   for (const it of bloco.itens) ITEM_BLOCO_MAP[it.id] = bloco.id;
 }
 
-const FASES_LIST: ProgressoFase[] = ["F0", "F1", "F2", "F3", "F4", "F5"];
-
-/** Todos os itens da fase (exceto legado), ordenados P0→P2 e gap→parcial→ok. */
-export function getItensPorFase(fase: ProgressoFase, itens: ProgressoItem[] = allProgressoItens()): ProgressoItem[] {
-  return sortItensFase(itens.filter((i) => i.fase === fase && i.status !== "legado"));
-}
-
-/** Só gap e parcial da fase. */
-export function getItensAbertosPorFase(fase: ProgressoFase, itens: ProgressoItem[] = allProgressoItens()): ProgressoItem[] {
-  return sortItensFase(itens.filter((i) => i.fase === fase && (i.status === "gap" || i.status === "parcial")));
-}
-
-export function getBlocoIdPorItem(itemId: string): string | null {
-  return ITEM_BLOCO_MAP[itemId] ?? null;
-}
-
-export function countP0AbertoFase(fase: ProgressoFase, itens: ProgressoItem[] = allProgressoItens()): number {
-  return itens.filter(
-    (i) => i.fase === fase && i.prioridade === "P0" && (i.status === "gap" || i.status === "parcial")
-  ).length;
-}
-
-/** Fase anterior mais próxima que ainda tem P0 em aberto (para aviso de dependência). */
-export function faseAnteriorComP0Aberto(fase: ProgressoFase, itens: ProgressoItem[] = allProgressoItens()): ProgressoFase | null {
-  const idx = FASE_ORDER[fase];
-  for (let i = idx - 1; i >= 0; i--) {
-    const prev = FASES_LIST[i]!;
-    if (countP0AbertoFase(prev, itens) > 0) return prev;
-  }
-  return null;
-}
-
 export function getFaseInfo(fase: ProgressoFase): ProgressoFaseInfo | undefined {
   return PROGRESSO_FASES.find((f) => f.id === fase);
 }
 
-export function getBlocoPct(blocoId: string): number {
-  const bloco = PROGRESSO_BLOCOS.find((b) => b.id === blocoId);
-  if (!bloco) return 0;
-  const bi = bloco.itens.filter((i) => i.status !== "legado");
-  if (bi.length === 0) return 0;
-  return Math.round(bi.reduce((a, i) => a + STATUS_SCORE[i.status], 0) / bi.length);
-}
-
-/** Status por etapa do funil de leads (bloco 3). */
-export function getFunilLeadViz(): { slug: string; label: string; status: ProgressoStatus }[] {
-  const bloco = PROGRESSO_BLOCOS.find((b) => b.id === "funil-leads");
-  const map: Record<string, string> = {
-    "fl-novo": "Novo",
-    "fl-em-atendimento": "Em atendimento",
-    "fl-aguardando": "Aguardando resposta",
-    "fl-qualificando": "Qualificando",
-    "fl-encaminhado": "Encaminhado",
-    "fl-convertido": "Convertido",
-    "fl-perdido": "Perdido",
-    "fl-spam": "Spam",
-  };
-  return (bloco?.itens ?? [])
-    .filter((i) => map[i.id])
-    .map((i) => ({ slug: i.id, label: map[i.id]!, status: i.status }));
-}
-
-/** Progresso por mercado de negócio (bloco 4). */
-export function getMercadosViz(): { label: string; status: ProgressoStatus; pct: number }[] {
-  const bloco = PROGRESSO_BLOCOS.find((b) => b.id === "funil-negocios");
-  return (bloco?.itens ?? [])
-    .filter((i) => i.id.startsWith("fn-") && i.id !== "fn-card" && i.id !== "fn-derivados")
-    .map((i) => ({
-      label: i.titulo.replace(/^Mercado\s+/i, "").replace(/\s*\(\d+.*\)$/, ""),
-      status: i.status,
-      pct: STATUS_SCORE[i.status],
-    }));
-}
-
-export function getDeployStats() {
-  const total = DEPLOY_CHECKLIST.length;
-  const local = DEPLOY_CHECKLIST.filter((d) => d.local).length;
-  const staging = DEPLOY_CHECKLIST.filter((d) => d.staging).length;
-  const producao = DEPLOY_CHECKLIST.filter((d) => d.producao).length;
-  const bloqueadores = DEPLOY_CHECKLIST.filter(
-    (d) => (d.id.startsWith("mig-") || d.id.startsWith("smoke-")) && !d.producao
-  );
-  const bloqueadoresPendentes = bloqueadores.length;
-  return { total, local, staging, producao, bloqueadoresPendentes, bloqueadoresTotal: bloqueadores.length };
+export function getBlocoIdPorItem(itemId: string): string | null {
+  return ITEM_BLOCO_MAP[itemId] ?? null;
 }

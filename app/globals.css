@@ -442,3 +442,64 @@ body {
   background: radial-gradient(ellipse at center, transparent 40%, rgba(13,17,23,0.8) 100%);
   pointer-events: none;
 }
+
+/* Hub landing pública */
+.hub-landing-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 92, 61, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(201, 162, 74, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, #0d1117 0%, #0a0e14 100%);
+}
+
+.hub-landing-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 39.5H40 M39.5 0V40' fill='none' stroke='%23ffffff' stroke-opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.6;
+}
+
+.hub-reveal,
+.hub-reveal-delay {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.hub-reveal-delay {
+  transition-delay: 0.12s;
+}
+
+.hub-reveal.hub-visible,
+.hub-reveal-delay.hub-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hub-scroll-fade::before,
+.hub-scroll-fade::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hub-scroll-fade::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--obra-dark, #0d1117) 0%, transparent 100%);
+}
+
+.hub-scroll-fade::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--obra-dark, #0d1117) 0%, transparent 100%);
+}
+
+@media (min-width: 768px) {
+  .hub-module-card:focus-visible {
+    outline: 2px solid var(--obra-dourado, #c9a24a);
+    outline-offset: 2px;
+  }
+}

@@ -51,7 +51,10 @@ function displayNameFromUser(user: Pick<User, "email" | "user_metadata">): strin
 function formatRolePill(role: string): string {
   const r = role.trim().toLowerCase();
   if (r === "owner") return "Owner";
-  if (r === "admin") return "Admin";
+  if (r === "gestor" || r === "admin") return "Gestor";
+  if (r === "comercial" || r === "vendedor") return "Comercial";
+  if (r === "financeiro") return "Financeiro";
+  if (r === "atendente") return "Atendente";
   if (!r) return "";
   return role;
 }

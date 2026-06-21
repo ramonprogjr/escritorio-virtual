@@ -2,12 +2,22 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { crmApiHeaders } from "@/lib/internal-api-headers-client";
+import type { RelatorioDiarioPayload } from "@/lib/crm/relatorio-diario-aggregate";
 import {
   PROGRESSO_BLOCOS,
   PROGRESSO_FASES,
   PROGRESSO_SISTEMA_REVISAO,
   DEPLOY_CHECKLIST,
   CADEIA_VALOR,
+  getBlocoIdPorItem,
+  getFaseInfo,
+  type ProgressoFase,
+  type ProgressoItem,
+  type ProgressoPrioridade,
+  type ProgressoStatus,
+} from "@/lib/crm/progresso-sistema-data";
+import {
   computeProgressoStats,
   getProximosPassos,
   getBlocoPct,
@@ -16,15 +26,12 @@ import {
   getDeployStats,
   getItensAbertosPorFase,
   getItensPorFase,
-  getBlocoIdPorItem,
-  getFaseInfo,
   faseAnteriorComP0Aberto,
   countP0AbertoFase,
-  type ProgressoFase,
-  type ProgressoItem,
-  type ProgressoPrioridade,
-  type ProgressoStatus,
-} from "@/lib/crm/progresso-sistema-data";
+  mergeProgressoItens,
+  getProgressoVerificacaoMeta,
+  type ProgressoItemMerged,
+} from "@/lib/crm/progresso-sistema-runtime";
 
 const STATUS_LABEL: Record<ProgressoStatus, string> = {
   ok: "OK",
@@ -64,8 +71,10 @@ function KpiCard({ label, value, sub, accent }: { label: string; value: string |
   );
 }
 
-function ItemRow({ item }: { item: ProgressoItem }) {
+function ItemRow({ item }: { item: ProgressoItemMerged }) {
   const highlight = item.oQueFalta !== "—";
+  const merged = item as ProgressoItemMerged;
+  const failedChecks = merged.verificacao?.filter((c) => !c.ok) ?? [];
   return (
     <tr
       className="border-t border-[#30363d] hover:bg-[#1c2128]"
@@ -74,6 +83,22 @@ function ItemRow({ item }: { item: ProgressoItem }) {
       <td className="px-3 py-2.5 align-top">
         <p className="text-[13px] font-medium text-[#e6edf3]">{item.titulo}</p>
         <p className="mt-0.5 font-mono text-[10px] text-[#6e7681]">{item.pdfRef}</p>
+        {failedChecks.length > 0 ? (
+          <details className="mt-1">
+            <summary className="cursor-pointer text-[10px] text-[#58a6ff]">
+              {failedChecks.length} evidência(s) pendente(s)
+            </summary>
+            <ul className="mt-1 space-y-0.5 text-[10px] text-[#8b949e]">
+              {merged.verificacao?.map((c) => (
+                <li key={c.id} style={{ color: c.ok ? "#3fb950" : "#f87171" }}>
+                  {c.ok ? "✓" : "✗"} {c.id}: {c.detail}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : merged.verificacao && merged.verificacao.length > 0 ? (
+          <p className="mt-1 text-[10px] text-[#3fb950]">Verificado no deploy ({merged.verificacao.length} checks)</p>
+        ) : null}
       </td>
       <td className="px-3 py-2.5 align-top text-xs text-[#8b949e]">{item.oQueTemos}</td>
       <td className="px-3 py-2.5 align-top text-xs" style={{ color: highlight ? "#e6edf3" : "#8b949e" }}>
@@ -274,8 +299,164 @@ function FaseDetalhePanel({
   );
 }
 
+function hojeIsoLocal(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function ontemIsoLocal(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+async function parseRelatorioApiError(res: Response): Promise<string> {
+  const fallback = `Erro ${res.status}`;
+  const clone = res.clone();
+  try {
+    const body = (await clone.json()) as { error?: string };
+    if (body.error?.trim()) return body.error.trim();
+  } catch {
+    /* HTML ou corpo vazio */
+  }
+  try {
+    const text = (await res.text()).replace(/\s+/g, " ").trim();
+    if (text) return text.length > 200 ? `${text.slice(0, 200)}…` : text;
+  } catch {
+    /* ignore */
+  }
+  return fallback;
+}
+
+function RelatorioDoDiaSection() {
+  const [date, setDate] = useState(hojeIsoLocal);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [preview, setPreview] = useState<RelatorioDiarioPayload | null>(null);
+
+  async function baixarPdf() {
+    setLoading(true);
+    setErro(null);
+    try {
+      const headers = await crmApiHeaders();
+      const res = await fetch(`/api/crm/relatorio-diario?format=pdf&date=${encodeURIComponent(date)}`, { headers });
+      if (!res.ok) {
+        throw new Error(await parseRelatorioApiError(res));
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `obra10-relatorio-${date}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao gerar PDF.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function carregarPreview() {
+    setLoading(true);
+    setErro(null);
+    try {
+      const headers = await crmApiHeaders();
+      const res = await fetch(`/api/crm/relatorio-diario?format=json&date=${encodeURIComponent(date)}`, { headers });
+      if (!res.ok) {
+        throw new Error(await parseRelatorioApiError(res));
+      }
+      setPreview((await res.json()) as RelatorioDiarioPayload);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao carregar preview.");
+      setPreview(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section
+      className="rounded-xl border p-4"
+      style={{ borderColor: "#c9a24a44", background: "#161b22" }}
+    >
+      <h2 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a]">Relatório do dia</h2>
+      <p className="mt-1 text-xs text-[#8b949e]">
+        Lista commits Git do dia (o que desenvolveu), estado resumido do sistema, operação CRM e equipa. Gere o PDF
+        e envie manualmente no WhatsApp.
+      </p>
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">
+          Data
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-lg border px-3 py-2 text-sm text-[#e6edf3]"
+            style={{ borderColor: "#30363d", background: "#0d1117" }}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => setDate(ontemIsoLocal())}
+          className="rounded-lg border px-3 py-2 text-xs text-[#8b949e] hover:border-[#c9a24a55]"
+          style={{ borderColor: "#30363d" }}
+        >
+          Ontem
+        </button>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void baixarPdf()}
+          className="rounded-lg px-4 py-2 text-xs font-bold text-[#0d1117] disabled:opacity-50"
+          style={{ background: "#c9a24a" }}
+        >
+          {loading ? "A gerar…" : "Gerar PDF"}
+        </button>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void carregarPreview()}
+          className="rounded-lg border px-4 py-2 text-xs font-medium text-[#e6edf3] hover:border-[#c9a24a55] disabled:opacity-50"
+          style={{ borderColor: "#30363d", background: "#0d1117" }}
+        >
+          Pré-visualizar JSON
+        </button>
+        <a
+          href="https://wa.me/5511950864013"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-lg border px-4 py-2 text-xs text-[#3fb950] hover:border-[#22c55e55]"
+          style={{ borderColor: "#30363d" }}
+        >
+          WhatsApp Nice
+        </a>
+      </div>
+      {erro ? <p className="mt-2 text-xs text-[#f87171]">{erro}</p> : null}
+      {preview ? (
+        <pre
+          className="mt-3 max-h-64 overflow-auto rounded-lg border p-3 text-[10px] text-[#8b949e]"
+          style={{ borderColor: "#30363d", background: "#0d1117" }}
+        >
+          {JSON.stringify(preview, null, 2)}
+        </pre>
+      ) : null}
+    </section>
+  );
+}
+
 export function ProgressoSistemaDashboard() {
-  const stats = useMemo(() => computeProgressoStats(), []);
+  const mergedItens = useMemo(() => mergeProgressoItens(), []);
+  const verificacaoMeta = useMemo(() => getProgressoVerificacaoMeta(), []);
+  const stats = useMemo(() => computeProgressoStats(mergedItens), [mergedItens]);
   const proximos = useMemo(() => getProximosPassos(), []);
   const funilLead = useMemo(() => getFunilLeadViz(), []);
   const mercados = useMemo(() => getMercadosViz(), []);
@@ -292,9 +473,12 @@ export function ProgressoSistemaDashboard() {
   const filtrosRef = useRef<HTMLDivElement | null>(null);
 
   const blocosFiltrados = useMemo(() => {
+    const byId = Object.fromEntries(mergedItens.map((i) => [i.id, i]));
     const q = busca.trim().toLowerCase();
     return PROGRESSO_BLOCOS.map((bloco) => {
-      const itens = bloco.itens.filter((item) => {
+      const itens = bloco.itens
+        .map((i) => byId[i.id] ?? i)
+        .filter((item) => {
         if (filtroStatus && item.status !== filtroStatus) return false;
         if (filtroFase && item.fase !== filtroFase) return false;
         if (filtroPrioridade && item.prioridade !== filtroPrioridade) return false;
@@ -308,7 +492,7 @@ export function ProgressoSistemaDashboard() {
       });
       return { ...bloco, itens };
     }).filter((b) => b.itens.length > 0);
-  }, [busca, filtroStatus, filtroFase, filtroPrioridade]);
+  }, [busca, filtroStatus, filtroFase, filtroPrioridade, mergedItens]);
 
   function toggleBloco(id: string) {
     setBlocosAbertos((prev) => {
@@ -355,8 +539,18 @@ export function ProgressoSistemaDashboard() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 pb-10 pt-4 md:px-6">
       <p className="text-sm text-[#8b949e]">
         Comparação viva entre os PDFs <em>Funil Operacional CRM</em> e <em>Documento Funcional Consolidado</em> e o
-        código em produção. Revisão: {PROGRESSO_SISTEMA_REVISAO}.
+        código em produção. Revisão matriz: {PROGRESSO_SISTEMA_REVISAO}.
+        {verificacaoMeta.geradoEm ? (
+          <>
+            {" "}
+            · <strong className="text-[#c9a24a]">Verificado no deploy</strong>{" "}
+            {new Date(verificacaoMeta.geradoEm).toLocaleString("pt-BR")}
+            {verificacaoMeta.ambiente ? ` (${verificacaoMeta.ambiente})` : ""}
+          </>
+        ) : null}
       </p>
+
+      <RelatorioDoDiaSection />
 
       <section
         className="rounded-xl border px-4 py-3"
@@ -375,6 +569,10 @@ export function ProgressoSistemaDashboard() {
           <li>
             <strong className="text-[#e6edf3]">Fases F0–F5</strong> = cronograma sugerido; a barra mostra % concluída
             na fase, não só quantidade de itens. Clique numa fase para ver o que falta e ir direto à matriz.
+          </li>
+          <li>
+            Status <strong className="text-[#e6edf3]">OK / Parcial / Gap</strong> é recalculado automaticamente em cada
+            deploy (<code className="text-[#8b949e]">verify:progresso</code>) — expanda evidências na matriz
           </li>
           <li>
             Regra central do PDF: <em>Lead → atendimento → negócio → projeto/obra → financeiro</em>
@@ -590,17 +788,25 @@ export function ProgressoSistemaDashboard() {
             <tbody>
               {DEPLOY_CHECKLIST.map((row) => {
                 const isBlocker = row.id.startsWith("mig-") || row.id.startsWith("smoke-");
+                const autoOk =
+                  deployStats.verificado && "deployDetalhe" in deployStats
+                    ? deployStats.deployDetalhe?.[row.id]?.ok
+                    : undefined;
+                const checked = autoOk ?? row.producao;
                 return (
                   <tr key={row.id} className="border-t border-[#30363d]">
                     <td className="px-2 py-2 text-[#e6edf3]">
                       {row.label}
-                      {isBlocker && !row.producao ? (
+                      {isBlocker && !checked ? (
                         <span className="ml-1.5 text-[9px] font-bold uppercase text-[#f87171]">bloqueador</span>
+                      ) : null}
+                      {autoOk === false && deployStats.deployDetalhe?.[row.id]?.detail ? (
+                        <p className="mt-0.5 text-[9px] text-[#8b949e]">{deployStats.deployDetalhe[row.id].detail}</p>
                       ) : null}
                     </td>
                     {(["local", "staging", "producao"] as const).map((env) => (
                       <td key={env} className="px-2 py-2">
-                        <span style={{ color: row[env] ? "#3fb950" : "#6e7681" }}>{row[env] ? "✓" : "—"}</span>
+                        <span style={{ color: checked ? "#3fb950" : "#6e7681" }}>{checked ? "✓" : "—"}</span>
                       </td>
                     ))}
                   </tr>
@@ -736,8 +942,8 @@ export function ProgressoSistemaDashboard() {
       ) : null}
 
       <footer className="border-t border-[#30363d] pt-4 text-center text-[10px] text-[#6e7681]">
-        Hub Obra10+ · Matriz derivada dos PDFs funcionais · Atualize{" "}
-        <code className="text-[#8b949e]">lib/crm/progresso-sistema-data.ts</code> ao fechar gaps
+        Hub Obra10+ · Status automático via <code className="text-[#8b949e]">npm run verify:progresso</code> no deploy ·
+        Matriz em <code className="text-[#8b949e]">lib/crm/progresso-sistema-data.ts</code>
       </footer>
     </div>
   );

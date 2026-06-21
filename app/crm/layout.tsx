@@ -13,8 +13,10 @@ import {
   isCrmNavPathActive,
   type CrmNavItem,
 } from "@/lib/crm-nav-groups";
+import { crmPodeVerRota, crmRotaInicial } from "@/lib/crm/crm-permissoes";
 import { Obra10LogoBadge, Obra10BrandHeader } from "@/components/brand/Obra10Brand";
 import { CrmQueryProvider } from "@/components/crm/CrmQueryProvider";
+import { CrmTenantProvider } from "@/components/crm/CrmTenantContext";
 import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
 import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
@@ -173,6 +175,13 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     syncOpenDrawer();
   }, [syncOpenDrawer]);
 
+  useEffect(() => {
+    if (!userRole || !pathname?.startsWith("/crm")) return;
+    if (!crmPodeVerRota(userRole, pathname)) {
+      router.replace(crmRotaInicial(userRole));
+    }
+  }, [userRole, pathname, router]);
+
   function toggleSidebar() {
     setCollapsedFlyoutId(null);
     setSidebarExpanded(prev => {
@@ -193,6 +202,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   if (slimMobile) {
     return (
       <CrmQueryProvider>
+        <CrmTenantProvider>
         <CrmHeaderProvider>
           <CrmShellProvider value={{ sidebarExpanded: false, toggleSidebar: () => {} }}>
             <div
@@ -203,12 +213,14 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             </div>
           </CrmShellProvider>
         </CrmHeaderProvider>
+        </CrmTenantProvider>
       </CrmQueryProvider>
     );
   }
 
   return (
     <CrmQueryProvider>
+    <CrmTenantProvider>
     <CrmHeaderProvider>
       <CrmShellProvider value={{ sidebarExpanded, toggleSidebar }}>
         <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
@@ -801,6 +813,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </div>
       </CrmShellProvider>
     </CrmHeaderProvider>
+    </CrmTenantProvider>
     </CrmQueryProvider>
   );
 }

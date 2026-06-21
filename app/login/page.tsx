@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -51,6 +52,9 @@ function LoginForm() {
     }
     if (searchParams.get("sessao") === "invalida") {
       setMsg("Sessão expirada ou inválida no navegador. Entre novamente.");
+    }
+    if (searchParams.get("confirmed") === "1") {
+      setMsg("E-mail confirmado. Entre com a sua senha para continuar o onboarding.");
     }
   }, [searchParams]);
 
@@ -216,6 +220,12 @@ function LoginForm() {
 
           <p className="mt-10 text-center text-[11px] leading-relaxed text-[var(--obra-texto-3,#484f58)]">
             Problemas para entrar? Contate o administrador da sua organização.
+          </p>
+          <p className="mt-4 text-center text-xs text-[var(--obra-texto-2,#8b949e)]">
+            Ainda não tem conta?{" "}
+            <Link href="/cadastre-se" className="font-medium text-[var(--obra-dourado,#c9a24a)] hover:underline">
+              Cadastre a sua empresa
+            </Link>
           </p>
         </div>
       </div>

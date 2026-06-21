@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
+import { tenantIdFromRequest } from "@/lib/tenant-default";
 
 export async function POST(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
+
+  const auth = await requireCrmFinanceiro(request);
+  if ("error" in auth) return auth.error;
 
   const body = (await request.json().catch(() => ({}))) as {
     tipo?: string;
@@ -33,7 +37,7 @@ export async function POST(request: NextRequest) {
       ? String(body.vencimento).slice(0, 10)
       : null;
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = tenantIdFromRequest(request.headers) || auth.ctx.tenantId;
   const supabase = crmDb();
 
   const row = {

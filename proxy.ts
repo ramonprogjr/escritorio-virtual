@@ -10,6 +10,7 @@ import { getSafeReturnPath } from "@/lib/auth/safe-return-path";
 function isPublicApiPath(pathname: string): boolean {
   if (pathname.startsWith("/api/whatsapp")) return true;
   if (pathname.startsWith("/api/health")) return true;
+  if (pathname.startsWith("/api/public/")) return true;
   if (pathname === "/api/parceiros/portal/verify") return true;
   if (pathname.startsWith("/api/validar/")) return true;
   if (pathname.startsWith("/api/ciclos/")) return true;
@@ -45,6 +46,23 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
+  }
+
+  if (pathname === "/cadastre-se" || pathname.startsWith("/cadastre-se/")) {
+    if (sessionUser) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/crm/onboarding-tenant";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname === "/" && sessionUser) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/crm";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   if (pathname === "/office" || pathname.startsWith("/office/")) {
@@ -104,6 +122,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
+    "/cadastre-se",
+    "/cadastre-se/:path*",
     "/office",
     "/office/:path*",
     "/crm",

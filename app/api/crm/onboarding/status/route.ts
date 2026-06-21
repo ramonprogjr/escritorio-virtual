@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { crmDb, crmConfigError } from "@/lib/crm/supabase-server";
 import { buildHealthResponse } from "@/lib/crm/health-checks";
 import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
-import { requireInternalApiKey } from "@/lib/crm/crm-api-auth";
+import { requireCrmOwner, requireInternalApiKey } from "@/lib/crm/crm-api-auth";
 
 export type OnboardingStep = {
   id: string;
@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
   const keyErr = requireInternalApiKey(request);
   if (keyErr) return keyErr;
+
+  const owner = await requireCrmOwner(request);
+  if ("error" in owner) return owner.error;
 
   const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const supabase = crmDb();

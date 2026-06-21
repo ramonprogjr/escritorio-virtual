@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.test.ts"],
+    exclude: ["**/node_modules/**", "**/escritorio-virtual/**"],
     globals: false,
   },
   resolve: {

@@ -31,7 +31,8 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: "Obra10+",
-  description: "Central de operações da Obra10+ — leads, agentes e campanhas em tempo real",
+  description:
+    "Hub Obra10+ — CRM, funis comerciais, WhatsApp com IA, multi-agente e gestão financeira para construção e mercado imobiliário.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

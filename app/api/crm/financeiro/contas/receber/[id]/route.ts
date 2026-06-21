@@ -1,3 +1,4 @@
+import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,6 +13,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireCrmFinanceiro(request);
+  if ("error" in auth) return auth.error;
+
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as { status?: string };
   const status = body.status?.trim();

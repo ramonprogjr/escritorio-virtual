@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmDb } from "@/lib/crm/supabase-server";
 import {
-  APP_ROLES,
   crmApiConfigError,
-  normalizeAppRole,
-  requireCrmAdmin,
+  normalizeEquipaRole,
+  requireCrmGestor,
   requireInternalApiKey,
+  resolveInviteTenantId,
 } from "@/lib/crm/crm-api-auth";
-
-const USER_SELECT = "id, auth_id, email, name, role, status, criado_em, atualizado_em";
+import { convidarColaboradorCrm } from "@/lib/crm/convidar-colaborador";
+import {
+  fetchTenantNomeExibicao,
+  listEquipaUsersForTenant,
+} from "@/lib/crm/users-equipa";
+import { isMissingPgColumn } from "@/lib/tenant-default";
+import { isCrmOwnerRole } from "@/lib/crm/crm-permissoes";
 
 export async function GET(request: NextRequest) {
   const config = crmApiConfigError();
@@ -16,80 +21,90 @@ export async function GET(request: NextRequest) {
   const keyErr = requireInternalApiKey(request);
   if (keyErr) return keyErr;
 
-  const adminErr = await requireCrmAdmin(request);
-  if (adminErr) return adminErr;
+  const gestor = await requireCrmGestor(request);
+  if ("error" in gestor) return gestor.error;
 
-  const { data, error } = await crmDb()
-    .from("users")
-    .select(USER_SELECT)
-    .order("criado_em", { ascending: false });
+  const supabase = crmDb();
+  const empresaDefault = await fetchTenantNomeExibicao(supabase, gestor.ctx.tenantId);
+  const { data, error } = await listEquipaUsersForTenant(
+    supabase,
+    gestor.ctx.tenantId,
+    empresaDefault
+  );
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ data: data ?? [] });
+  if (error) {
+    const msg = error.message ?? String(error);
+    if (msg.includes("criado_em") || msg.includes("tenant_id")) {
+      return NextResponse.json(
+        {
+          error:
+            "Esquema de utilizadores desatualizado. Aplique a migração users_rbac_tenant no Supabase.",
+        },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+  return NextResponse.json({ data, tenantId: gestor.ctx.tenantId });
 }
 
 export async function POST(request: NextRequest) {
-  const adminErr = await requireCrmAdmin(request);
-  if (adminErr) return adminErr;
+  const gestor = await requireCrmGestor(request);
+  if ("error" in gestor) return gestor.error;
 
   const body = (await request.json().catch(() => ({}))) as {
     email?: string;
     name?: string;
     role?: string;
+    tenant_id?: string;
   };
 
   const email = body.email?.trim().toLowerCase();
-  const name = body.name?.trim() || email?.split("@")[0] || "Utilizador";
-  const role = normalizeAppRole(body.role ?? "vendedor");
-
   if (!email) return NextResponse.json({ error: "E-mail obrigatório" }, { status: 400 });
+
+  const roleRaw = body.role?.trim();
+  if (!roleRaw) {
+    return NextResponse.json({ error: "Permissão obrigatória." }, { status: 400 });
+  }
+
+  const role = normalizeEquipaRole(roleRaw);
   if (!role) {
-    return NextResponse.json(
-      { error: `Papel inválido. Use: ${APP_ROLES.join(", ")}` },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Permissão inválida." }, { status: 400 });
+  }
+
+  if (body.tenant_id && !isCrmOwnerRole(gestor.ctx.role)) {
+    return NextResponse.json({ error: "Apenas owners podem convidar noutra empresa." }, { status: 403 });
+  }
+
+  const resolved = resolveInviteTenantId(gestor.ctx, body.tenant_id);
+  if ("error" in resolved) {
+    return NextResponse.json({ error: resolved.error }, { status: 400 });
   }
 
   const supabase = crmDb();
 
-  const { data: existing } = await supabase.from("users").select("id").eq("email", email).maybeSingle();
-  if (existing) {
-    return NextResponse.json({ error: "Já existe utilizador com este e-mail." }, { status: 409 });
+  if (isCrmOwnerRole(gestor.ctx.role) && body.tenant_id) {
+    const { data: tenantRow } = await supabase
+      .from("hub_tenants")
+      .select("id")
+      .eq("id", resolved.tenantId)
+      .maybeSingle();
+    if (!tenantRow) {
+      return NextResponse.json({ error: "Empresa não encontrada." }, { status: 404 });
+    }
   }
 
-  const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: { name },
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || ""}/login`,
+  const result = await convidarColaboradorCrm(supabase, {
+    email,
+    name: body.name?.trim() || email.split("@")[0] || "Utilizador",
+    role,
+    tenantId: resolved.tenantId,
+    actorRole: gestor.ctx.role,
   });
 
-  if (inviteError) {
-    return NextResponse.json({ error: inviteError.message }, { status: 500 });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const authId = inviteData.user?.id;
-  if (!authId) {
-    return NextResponse.json({ error: "Convite enviado mas sem ID de utilizador." }, { status: 500 });
-  }
-
-  const { data: row, error: upsertError } = await supabase
-    .from("users")
-    .upsert(
-      {
-        auth_id: authId,
-        email,
-        name,
-        role,
-        status: "Ativo",
-        atualizado_em: new Date().toISOString(),
-      },
-      { onConflict: "auth_id" }
-    )
-    .select(USER_SELECT)
-    .single();
-
-  if (upsertError) {
-    return NextResponse.json({ error: upsertError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ data: row, invited: true }, { status: 201 });
+  return NextResponse.json({ data: result.data, invited: true }, { status: 201 });
 }

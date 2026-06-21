@@ -22,7 +22,7 @@
 /build
 
 # misc
-.claude/
+escritorio-virtual/
 .DS_Store
 *.pem
 

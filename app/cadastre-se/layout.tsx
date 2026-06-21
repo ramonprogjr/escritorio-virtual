@@ -1,0 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cadastre a sua empresa | Obra10+ Hub",
+  description: "Adira à plataforma Obra10+ Hub — cadastro de empresas com confirmação por e-mail.",
+};
+
+export default function CadastreSeLayout({ children }: { children: React.ReactNode }) {
+  return children;
+}

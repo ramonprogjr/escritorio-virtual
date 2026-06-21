@@ -63,7 +63,7 @@ function timingSafeStringEqual(a: string, b: string): boolean {
 }
 
 /** Verifica origem do webhook quando WEBHOOK_SECRET está definido (HMAC ou segredo em header/Bearer). */
-function webhookAutenticado(request: NextRequest, rawBody: string, secret: string): boolean {
+export function webhookAutenticado(request: NextRequest, rawBody: string, secret: string): boolean {
   const sig =
     request.headers.get("x-hub-signature-256") ||
     request.headers.get("x-signature");

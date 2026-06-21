@@ -1,0 +1,104 @@
+{
+  "geradoEm": "2026-06-21T02:31:59.061Z",
+  "dias": 7,
+  "commits": [
+    {
+      "hash": "873ab382974b6a59c64f23bd6accf21c4ca62f4e",
+      "hashCurto": "873ab38",
+      "mensagem": "adicionar Progresso sistema com cronograma por fase expansível",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-19T03:54:44.000Z",
+      "hora": "00:54",
+      "arquivos": [
+        "app/crm/progresso-sistema/page.tsx",
+        "components/crm/ProgressoSistemaDashboard.tsx",
+        "docs/crm-aderencia-pdfs.md",
+        "lib/crm-header-defaults.ts",
+        "lib/crm-nav-groups.ts",
+        "lib/crm/progresso-sistema-data.ts",
+        "lib/mobile/nav.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 4,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "d97e59b9c2f27d093bb980c2bfd32c7c680851b6",
+      "hashCurto": "d97e59b",
+      "mensagem": "remover botão Ir do header universal",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-19T02:36:20.000Z",
+      "hora": "23:36",
+      "arquivos": [
+        "components/crm/CrmRastreioBusca.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "c841d227951d70621f14a69cbe45c8e09d67106d",
+      "hashCurto": "c841d22",
+      "mensagem": "excluir vitest.config.ts do type-check do Next em producao",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-18T23:32:58.000Z",
+      "hora": "20:32",
+      "arquivos": [
+        "tsconfig.json"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "58bb32275a3c167fb7cef2bb1347abc002639a77",
+      "hashCurto": "58bb322",
+      "mensagem": "validar webhook via NEXT_PUBLIC_APP_URL em vez de URL fixa do Render",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-18T22:55:55.000Z",
+      "hora": "19:55",
+      "arquivos": [
+        "scripts/diagnose-uazapi-webhook.cjs"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "d764648f299f40a8260bd6f61e88a2c832ca15bf",
+      "hashCurto": "d764648",
+      "mensagem": "move tailwind to dependencies for Render production build",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-18T22:54:38.000Z",
+      "hora": "19:54",
+      "arquivos": [
+        "package-lock.json",
+        "package.json"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "1ea054b79446900b652e187aeb15a8da9ac715eb",
+      "hashCurto": "1ea054b",
+      "mensagem": "feat cadastros crm",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-18T03:14:15.000Z",
+      "hora": "00:14",
+      "arquivos": [
+        "app/crm/layout.tsx",
+        "lib/crm-nav-groups.ts",
+        "lib/mobile/nav.ts",
+        "next.config.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 3
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmDb, crmConfigError } from "@/lib/crm/supabase-server";
 import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
-import { requireCrmAdmin, requireInternalApiKey } from "@/lib/crm/crm-api-auth";
+import { requireCrmGestor, requireInternalApiKey } from "@/lib/crm/crm-api-auth";
 
 export type TenantSettings = {
   horario_inicio?: string;
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const adminErr = await requireCrmAdmin(request);
-  if (adminErr) return adminErr;
+  const gestor = await requireCrmGestor(request);
+  if ("error" in gestor) return gestor.error;
 
   const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const body = (await request.json().catch(() => ({}))) as TenantSettings;

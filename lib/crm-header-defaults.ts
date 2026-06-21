@@ -64,7 +64,6 @@ export function defaultCrmHeaderForPath(pathname: string): CrmHeaderDefault {
     kpis: { title: "Analytics", subtitle: "KPIs, métricas e tendências — últimas 24h" },
     leads: { title: "Pipeline de Leads" },
     pessoas: { title: "Pessoas" },
-    empresas: { title: "Empresas" },
     imoveis: { title: "Imóveis" },
     negocios: { title: "Negócios" },
     atendimento: { title: "Inbox", subtitle: "Central de conversas e atendimento" },
@@ -96,7 +95,11 @@ export function defaultCrmHeaderForPath(pathname: string): CrmHeaderDefault {
     },
     usuarios: {
       title: "Usuários & Permissões",
-      subtitle: "Gestão de equipe e papéis — em construção",
+      subtitle: "Colaboradores da equipa — permissão e empresa na criação",
+    },
+    empresas: {
+      title: "Empresas",
+      subtitle: "Instalações multi-empresa — admins e colaboradores por tenant",
     },
     configuracoes: {
       title: "Configurações",
@@ -104,7 +107,7 @@ export function defaultCrmHeaderForPath(pathname: string): CrmHeaderDefault {
     },
     "progresso-sistema": {
       title: "Progresso sistema",
-      subtitle: "Cronograma PDFs Hub Obra10+ vs implementação atual — gaps, fases e deploy",
+      subtitle: "Cronograma PDFs Hub Obra10+ vs código — gaps, fases, deploy e export PDF do dia",
     },
     "onboarding-tenant": {
       title: "Onboarding",
