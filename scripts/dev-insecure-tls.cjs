@@ -16,6 +16,8 @@ console.warn(
     `     Cache dev: .next-dev/ (exclua esta pasta do OneDrive se houver erros de chunk)\n`
 );
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+/** Next dev exige NODE_ENV=development; se o shell tiver production, o PostCSS/Tailwind falha em globals.css. */
+process.env.NODE_ENV = "development";
 const { spawn } = require("child_process");
 const child = spawn(
   process.execPath,

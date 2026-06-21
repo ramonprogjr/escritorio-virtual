@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev-insecure-tls.cjs",
-    "dev:strict-tls": "next dev -p 3001",
+    "dev:strict-tls": "node scripts/dev-strict-tls.cjs",
     "dev:insecure-tls": "node scripts/dev-insecure-tls.cjs",
     "verify:progresso": "npm run collect:entregas-git && tsx scripts/verify-progresso-sistema.ts",
     "collect:entregas-git": "tsx scripts/collect-relatorio-entregas-git.ts",
