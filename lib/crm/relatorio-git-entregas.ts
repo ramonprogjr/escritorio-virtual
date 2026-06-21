@@ -1,12 +1,15 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { buildRelatorioDesenvolvimentoEstruturado, type RelatorioDesenvolvimentoEstruturado } from "@/lib/crm/relatorio-desenvolvimento-estruturado";
 import { allProgressoItens, type ProgressoItem } from "@/lib/crm/progresso-sistema-data";
 
 export type RelatorioGitEntrega = {
   hash: string;
   hashCurto: string;
   mensagem: string;
+  /** Mensagem original do Git (com prefixo conventional commit, se existir). */
+  mensagemRaw?: string;
   autor: string;
   dataIso: string;
   hora: string;
@@ -23,6 +26,7 @@ export type RelatorioEntregaRelacionada = {
 export type RelatorioDesenvolvimento = {
   entregas: RelatorioGitEntrega[];
   resumo: string;
+  estruturado: RelatorioDesenvolvimentoEstruturado;
   entregasRelacionadas: RelatorioEntregaRelacionada[];
   fonte: "git-live" | "artefato" | "vazio";
   totais: {
@@ -187,6 +191,7 @@ function toEntrega(raw: { hash: string; mensagem: string; autor: string; dataIso
     hash: raw.hash,
     hashCurto: raw.hash.slice(0, 7),
     mensagem: normalizarMensagemCommit(raw.mensagem),
+    mensagemRaw: raw.mensagem,
     autor: raw.autor,
     dataIso: dataIsoNorm,
     hora: formatHora(dataIsoNorm),
@@ -361,10 +366,12 @@ export function buildDesenvolvimentoDoDia(dateStr: string, dateLabel: string): R
   entregas = entregas.map(normalizarEntrega);
   const entregasRelacionadas = relacionarEntregasComMatriz(entregas);
   const ficheiros = new Set(entregas.flatMap((e) => e.arquivos)).size;
+  const estruturado = buildRelatorioDesenvolvimentoEstruturado(dateLabel, entregas, entregasRelacionadas);
 
   return {
     entregas,
-    resumo: buildResumoDesenvolvimentoNarrativo(dateLabel, entregas, entregasRelacionadas),
+    resumo: estruturado.intro,
+    estruturado,
     entregasRelacionadas,
     fonte,
     totais: {

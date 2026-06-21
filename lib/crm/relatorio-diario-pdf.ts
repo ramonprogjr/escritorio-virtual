@@ -1,20 +1,9 @@
 import type { RelatorioDiarioPayload } from "@/lib/crm/relatorio-diario-aggregate";
 import type { RelatorioDeployResumoItem } from "@/lib/crm/relatorio-deploy-resumo";
+import type { RelatorioSecaoNarrativa } from "@/lib/crm/relatorio-desenvolvimento-estruturado";
 import type { RelatorioGitEntrega } from "@/lib/crm/relatorio-git-entregas";
 
 type PDFDocumentCtor = new (options?: PDFKit.PDFDocumentOptions) => PDFKit.PDFDocument;
-
-const AREA_LABELS: Record<string, string> = {
-  "app/crm": "CRM",
-  "app/hub": "Hub",
-  "app/api": "APIs",
-  "lib/crm": "Lib CRM",
-  "lib/hub": "Lib Hub",
-  "components/crm": "UI CRM",
-  "components/hub": "UI Hub",
-  "supabase/migrations": "Migrations",
-  outros: "Outros",
-};
 
 async function loadPdfDocument(): Promise<PDFDocumentCtor> {
   const mod = await import("pdfkit");
@@ -59,6 +48,13 @@ function paragraph(doc: PDFKit.PDFDocument, text: string) {
   doc.fontSize(10).text(text, { align: "justify", lineGap: 2 });
 }
 
+function bulletList(doc: PDFKit.PDFDocument, items: string[]) {
+  for (const item of items) {
+    ensureSpace(doc, 20);
+    doc.fontSize(10).text(`• ${item}`, { indent: 8, width: doc.page.width - 100, lineGap: 1 });
+  }
+}
+
 function listItemResumo(doc: PDFKit.PDFDocument, item: RelatorioDeployResumoItem, index: number) {
   ensureSpace(doc, 36);
   doc
@@ -70,45 +66,32 @@ function listItemResumo(doc: PDFKit.PDFDocument, item: RelatorioDeployResumoItem
   doc.moveDown(0.15);
 }
 
-function formatAreas(areas: Record<string, number>): string {
-  return Object.entries(areas)
-    .filter(([, n]) => n > 0)
-    .sort(([, a], [, b]) => b - a)
-    .map(([k, n]) => `${AREA_LABELS[k] ?? k} (${n})`)
-    .join(", ");
-}
+function renderSecaoNarrativa(doc: PDFKit.PDFDocument, secao: RelatorioSecaoNarrativa) {
+  ensureSpace(doc, 50);
+  doc.moveDown(0.4);
+  doc.fontSize(11).font("Helvetica-Bold").text(secao.titulo, { width: doc.page.width - 100 });
+  doc.font("Helvetica").fontSize(10);
 
-function renderCommit(doc: PDFKit.PDFDocument, entrega: RelatorioGitEntrega, index: number) {
-  ensureSpace(doc, 48);
-  doc
-    .fontSize(10)
-    .font("Helvetica-Bold")
-    .text(`${index}. ${entrega.hora} · ${entrega.mensagem}`, { width: doc.page.width - 100 });
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(MUTED)
-    .text(
-      `${entrega.autor} · commit ${entrega.hashCurto} · ${entrega.arquivos.length} ficheiro(s) · ${formatAreas(entrega.areas) || "—"}`,
-      { indent: 12, width: doc.page.width - 110 }
-    );
-  const filesPreview = entrega.arquivos.slice(0, 8);
-  if (filesPreview.length > 0) {
-    doc.text(filesPreview.join(", "), { indent: 12, width: doc.page.width - 110, lineGap: 1 });
-    if (entrega.arquivos.length > 8) {
-      doc.text(`… +${entrega.arquivos.length - 8} ficheiros`, { indent: 12 });
-    }
+  if (secao.implementado.length > 0) {
+    subsection(doc, "Implementado:");
+    bulletList(doc, secao.implementado);
   }
-  doc.fillColor("#000000");
+
+  if (secao.corrigido.length > 0) {
+    subsection(doc, "Corrigido:");
+    bulletList(doc, secao.corrigido);
+  }
+
   doc.moveDown(0.2);
 }
 
 function renderDesenvolvimento(doc: PDFKit.PDFDocument, data: RelatorioDiarioPayload) {
   const dev = data.desenvolvimento;
+  const { estruturado } = dev;
 
   sectionTitle(doc, "1. O que implementámos hoje");
 
-  paragraph(doc, dev.resumo);
+  paragraph(doc, estruturado.intro);
   doc.moveDown(0.2);
   doc
     .fontSize(9)
@@ -124,9 +107,12 @@ function renderDesenvolvimento(doc: PDFKit.PDFDocument, data: RelatorioDiarioPay
       doc,
       "Nenhum commit Git nesta data. Se trabalhou sem commit, faça push antes do relatório ou escolha outro dia."
     );
-  } else {
-    doc.moveDown(0.3);
-    dev.entregas.forEach((e, i) => renderCommit(doc, e, i + 1));
+    return;
+  }
+
+  doc.moveDown(0.3);
+  for (const secao of estruturado.secoes) {
+    renderSecaoNarrativa(doc, secao);
   }
 
   if (dev.entregasRelacionadas.length > 0) {
@@ -138,6 +124,40 @@ function renderDesenvolvimento(doc: PDFKit.PDFDocument, data: RelatorioDiarioPay
       doc.fontSize(9).text(`• ${rel.titulo}`, { indent: 8, width: doc.page.width - 100 });
     }
   }
+}
+
+function renderAnexoGit(doc: PDFKit.PDFDocument, commits: RelatorioGitEntrega[]) {
+  if (commits.length === 0) return;
+
+  sectionTitle(doc, "Anexo — Registo Git");
+
+  doc
+    .fontSize(9)
+    .fillColor(MUTED)
+    .text("Lista compacta para auditoria (commits do dia).", { width: doc.page.width - 100 });
+  doc.fillColor("#000000");
+  doc.moveDown(0.3);
+
+  commits.forEach((entrega, index) => {
+    ensureSpace(doc, 28);
+    doc
+      .fontSize(9)
+      .font("Helvetica-Bold")
+      .text(`${index + 1}. ${entrega.hora} · ${entrega.mensagem}`, { width: doc.page.width - 100 });
+    doc
+      .font("Helvetica")
+      .fillColor(MUTED)
+      .text(`${entrega.autor} · ${entrega.hashCurto}`, { indent: 12, width: doc.page.width - 110 });
+    const filesPreview = entrega.arquivos.slice(0, 3);
+    if (filesPreview.length > 0) {
+      doc.text(filesPreview.join(", "), { indent: 12, width: doc.page.width - 110, lineGap: 1 });
+      if (entrega.arquivos.length > 3) {
+        doc.text(`… +${entrega.arquivos.length - 3} ficheiros`, { indent: 12 });
+      }
+    }
+    doc.fillColor("#000000");
+    doc.moveDown(0.15);
+  });
 }
 
 function renderEstadoSistema(doc: PDFKit.PDFDocument, progresso: RelatorioDiarioPayload["progresso"]) {
@@ -184,7 +204,7 @@ export async function buildRelatorioDiarioPdf(data: RelatorioDiarioPayload): Pro
     doc
       .fontSize(9)
       .fillColor(MUTED)
-      .text(`Resumo de desenvolvimento e estado do sistema — ${meta.dateLabel}`, { align: "center" });
+      .text(`Resumo por áreas (Implementado / Corrigido) + estado do sistema — ${meta.dateLabel}`, { align: "center" });
     doc
       .fontSize(9)
       .text(
@@ -196,6 +216,7 @@ export async function buildRelatorioDiarioPdf(data: RelatorioDiarioPayload): Pro
 
     renderDesenvolvimento(doc, data);
     renderEstadoSistema(doc, progresso);
+    renderAnexoGit(doc, data.desenvolvimento.estruturado.anexoCommits);
 
     doc.moveDown(1.5);
     ensureSpace(doc, 30);
