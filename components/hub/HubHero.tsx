@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HUB_HERO } from "@/lib/hub/landing-content";
+import { HubLeadForm } from "@/components/hub/HubLeadForm";
 
 export function HubHero() {
   return (
     <section className="relative mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
-      <div className="hub-reveal max-w-3xl">
+      <div className="grid items-start gap-10 lg:grid-cols-[1fr,min(420px,100%)] lg:gap-12">
+        <div className="hub-reveal max-w-3xl">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--obra-dourado,#c9a24a)]">
           {HUB_HERO.eyebrow}
         </p>
@@ -33,8 +34,8 @@ export function HubHero() {
         </div>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Link
-            href="/cadastre-se"
+          <a
+            href="#cadastre"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold text-[var(--obra-dourado-light,#e0b86a)] transition-transform active:scale-[0.99]"
             style={{
               background:
@@ -44,7 +45,7 @@ export function HubHero() {
           >
             {HUB_HERO.ctaPrimary}
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </a>
           <a
             href="#modulos"
             className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[var(--obra-borda,#30363d)] px-6 text-sm font-medium text-[var(--obra-texto,#e6edf3)] transition-colors hover:border-[var(--obra-dourado,#c9a24a)]/40"
@@ -52,6 +53,9 @@ export function HubHero() {
             {HUB_HERO.ctaSecondary}
           </a>
         </div>
+        </div>
+
+        <HubLeadForm variant="hero" />
       </div>
 
       <div

@@ -18,6 +18,15 @@ function revelarNoViewport(nodes: NodeListOf<Element>) {
   return observer;
 }
 
+function revelarAcimaDobra() {
+  document.querySelectorAll(".hub-reveal, .hub-reveal-delay").forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.92) {
+      el.classList.add("hub-visible");
+    }
+  });
+}
+
 function revelarPorHash(hash: string) {
   const id = hash.replace(/^#/, "");
   if (!id) return;
@@ -30,12 +39,7 @@ function revelarPorHash(hash: string) {
     });
   }
 
-  document.querySelectorAll(".hub-reveal, .hub-reveal-delay").forEach((el) => {
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight * 0.85) {
-      el.classList.add("hub-visible");
-    }
-  });
+  revelarAcimaDobra();
 }
 
 /** Revelação suave ao scroll na landing Hub. */
@@ -46,6 +50,8 @@ export function HubScrollReveal() {
 
     if (window.location.hash) {
       revelarPorHash(window.location.hash);
+    } else {
+      revelarAcimaDobra();
     }
 
     const observer = revelarNoViewport(nodes);
