@@ -1,6 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchCrmMetricas, type CrmMetricas } from "@/lib/crm/dashboard-aggregate";
-import { safeCount } from "@/lib/crm/metricas-safe";
 import {
   computeProgressoStats,
   getDeployStats,
@@ -12,7 +10,6 @@ import {
 import type { ProgressoFase } from "@/lib/crm/progresso-sistema-data";
 import { buildResumoDeployLegivel, type RelatorioDeployResumo } from "@/lib/crm/relatorio-deploy-resumo";
 import { buildDesenvolvimentoDoDia, type RelatorioDesenvolvimento } from "@/lib/crm/relatorio-git-entregas";
-import { isMissingPgColumn } from "@/lib/tenant-default";
 import artifact from "@/lib/crm/progresso-verificacao.generated.json";
 import type { ProgressoVerificacaoArtifact } from "@/lib/crm/progresso-checks-types";
 
@@ -23,26 +20,6 @@ export type RelatorioDiarioMeta = {
   appUrl: string;
   tenant: { id: string; nome: string | null };
   geradoPor: { email: string | null; name: string | null };
-};
-
-export type RelatorioDiarioOperacao = {
-  leadsNovos: number;
-  leadsQualificadosDia: number;
-  encaminhamentos: number;
-  alertasAbertos: number;
-  taxaQualificacao: number;
-  metricas: CrmMetricas;
-  negociosCriados: number;
-  negociosFechados: number;
-  mensagensEntrada: number;
-  mensagensSaida: number;
-  aprovacoesPendentes: number;
-};
-
-export type RelatorioDiarioEquipa = {
-  usuariosAtivos: number;
-  porPermissao: Record<string, number>;
-  convitesDia: number;
 };
 
 export type RelatorioDiarioProgresso = {
@@ -63,8 +40,6 @@ export type RelatorioDiarioProgresso = {
 export type RelatorioDiarioPayload = {
   meta: RelatorioDiarioMeta;
   desenvolvimento: RelatorioDesenvolvimento;
-  operacao: RelatorioDiarioOperacao;
-  equipa: RelatorioDiarioEquipa;
   progresso: RelatorioDiarioProgresso;
 };
 
@@ -77,13 +52,6 @@ export function parseRelatorioDate(dateParam: string | null | undefined): string
   const d = dateParam.trim();
   if (!DATE_RE.test(d)) return fallback;
   return d;
-}
-
-export function dayBoundsUtc(dateStr: string): { start: string; end: string } {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const start = new Date(Date.UTC(y!, m! - 1, d!));
-  const end = new Date(Date.UTC(y!, m! - 1, d! + 1));
-  return { start: start.toISOString(), end: end.toISOString() };
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -115,73 +83,6 @@ async function fetchGeradoPor(
   };
 }
 
-async function countEncaminhamentosDia(
-  supabase: SupabaseClient,
-  start: string,
-  end: string
-): Promise<number> {
-  const byEncaminhado = await safeCount(
-    supabase
-      .from("hub_encaminhamentos")
-      .select("id", { count: "exact", head: true })
-      .gte("encaminhado_em", start)
-      .lt("encaminhado_em", end)
-  );
-  if (byEncaminhado > 0) return byEncaminhado;
-  return safeCount(
-    supabase
-      .from("hub_encaminhamentos")
-      .select("id", { count: "exact", head: true })
-      .gte("enviado_em", start)
-      .lt("enviado_em", end)
-  );
-}
-
-async function fetchEquipaResumo(
-  supabase: SupabaseClient,
-  tenantId: string,
-  start: string,
-  end: string
-): Promise<RelatorioDiarioEquipa> {
-  let select = "role, status, criado_em, tenant_id";
-  let { data, error } = await supabase.from("users").select(select);
-
-  if (error && isMissingPgColumn(error, "tenant_id")) {
-    select = "role, status, criado_em";
-    ({ data, error } = await supabase.from("users").select(select));
-  }
-  if (error && isMissingPgColumn(error, "criado_em")) {
-    select = "role, status, created_at, tenant_id";
-    ({ data, error } = await supabase.from("users").select(select));
-  }
-
-  const rows = (error ? [] : (data ?? [])) as unknown as Record<string, unknown>[];
-  const filtered = rows.filter((r) => {
-    const tid = r.tenant_id != null ? String(r.tenant_id) : null;
-    if (tid && tid !== tenantId) return false;
-    const status = String(r.status ?? "").trim().toLowerCase();
-    return !status || status === "ativo";
-  });
-
-  const porPermissao: Record<string, number> = {};
-  for (const r of filtered) {
-    const role = String(r.role ?? "—").toLowerCase();
-    porPermissao[role] = (porPermissao[role] ?? 0) + 1;
-  }
-
-  const convitesDia = filtered.filter((r) => {
-    const criado = String(r.criado_em ?? r.created_at ?? "");
-    if (!criado) return false;
-    return criado >= start && criado < end;
-  }).length;
-
-  return {
-    usuariosAtivos: filtered.length,
-    porPermissao,
-    convitesDia,
-  };
-}
-
 export async function aggregateRelatorioDiario(
   supabase: SupabaseClient,
   opts: {
@@ -190,82 +91,10 @@ export async function aggregateRelatorioDiario(
     date: string;
   }
 ): Promise<RelatorioDiarioPayload> {
-  const { start, end } = dayBoundsUtc(opts.date);
-  const [tenantNome, geradoPor, metricas] = await Promise.all([
+  const [tenantNome, geradoPor] = await Promise.all([
     fetchTenantNome(supabase, opts.tenantId),
     fetchGeradoPor(supabase, opts.userId),
-    fetchCrmMetricas(supabase, opts.tenantId, start),
   ]);
-
-  const [
-    leadsNovos,
-    leadsQualificadosDia,
-    encaminhamentos,
-    alertasAbertos,
-    negociosCriados,
-    negociosFechados,
-    mensagensEntrada,
-    mensagensSaida,
-    equipa,
-  ] = await Promise.all([
-    safeCount(
-      supabase
-        .from("hub_leads_crm")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", opts.tenantId)
-        .gte("criado_em", start)
-        .lt("criado_em", end)
-    ),
-    safeCount(
-      supabase
-        .from("hub_leads_crm")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", opts.tenantId)
-        .eq("estagio", "qualificado")
-        .gte("atualizado_em", start)
-        .lt("atualizado_em", end)
-    ),
-    countEncaminhamentosDia(supabase, start, end),
-    safeCount(
-      supabase.from("hub_alertas").select("id", { count: "exact", head: true }).eq("resolvido", false)
-    ),
-    safeCount(
-      supabase
-        .from("hub_negocios")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", opts.tenantId)
-        .gte("criado_em", start)
-        .lt("criado_em", end)
-    ),
-    safeCount(
-      supabase
-        .from("hub_negocios")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", opts.tenantId)
-        .in("status", ["fechado_ganho", "fechado_perdido", "ganho", "perdido"])
-        .gte("atualizado_em", start)
-        .lt("atualizado_em", end)
-    ),
-    safeCount(
-      supabase
-        .from("hub_fila_mensagens")
-        .select("id", { count: "exact", head: true })
-        .eq("direcao", "entrada")
-        .gte("criado_em", start)
-        .lt("criado_em", end)
-    ),
-    safeCount(
-      supabase
-        .from("hub_fila_mensagens")
-        .select("id", { count: "exact", head: true })
-        .eq("direcao", "saida")
-        .gte("criado_em", start)
-        .lt("criado_em", end)
-    ),
-    fetchEquipaResumo(supabase, opts.tenantId, start, end),
-  ]);
-
-  const taxaQualificacao = leadsNovos > 0 ? Math.round((leadsQualificadosDia / leadsNovos) * 100) : 0;
 
   const merged = mergeProgressoItens();
   const stats = computeProgressoStats(merged);
@@ -304,20 +133,6 @@ export async function aggregateRelatorioDiario(
       geradoPor,
     },
     desenvolvimento,
-    operacao: {
-      leadsNovos,
-      leadsQualificadosDia,
-      encaminhamentos,
-      alertasAbertos,
-      taxaQualificacao,
-      metricas,
-      negociosCriados,
-      negociosFechados,
-      mensagensEntrada,
-      mensagensSaida,
-      aprovacoesPendentes: metricas.aprovacoesPendentes,
-    },
-    equipa,
     progresso: {
       verificacaoMeta,
       stats,

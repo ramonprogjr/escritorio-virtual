@@ -1,7 +1,122 @@
 {
-  "geradoEm": "2026-06-21T02:31:59.061Z",
+  "geradoEm": "2026-06-21T03:27:34.423Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "327af539561b370c61e3d85a4fbdf208b5b4a1dc",
+      "hashCurto": "327af53",
+      "mensagem": "move @types/pdfkit to dependencies for Render type-check",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T03:03:00.000Z",
+      "hora": "00:03",
+      "arquivos": [
+        "package.json"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "219c486cea0b889bd364a7f888132fa62a280a93",
+      "hashCurto": "219c486",
+      "mensagem": "move tsx to dependencies for Render production build",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T02:51:04.000Z",
+      "hora": "23:51",
+      "arquivos": [
+        "package.json"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "33fa768d5535efd78199e29dd7b05f7dd192cf5f",
+      "hashCurto": "33fa768",
+      "mensagem": "landing pública, cadastro de empresas, relatório PDF diário e progresso automático",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T02:38:33.000Z",
+      "hora": "23:38",
+      "arquivos": [
+        ".env.example",
+        ".gitignore",
+        "app/api/crm/financeiro/contas/pagar/[id]/route.ts",
+        "app/api/crm/financeiro/contas/receber/[id]/route.ts",
+        "app/api/crm/financeiro/contas/route.ts",
+        "app/api/crm/financeiro/dashboard/route.ts",
+        "app/api/crm/integracoes/status/route.ts",
+        "app/api/crm/me/context/route.ts",
+        "app/api/crm/onboarding/status/route.ts",
+        "app/api/crm/relatorio-diario/route.ts",
+        "app/api/crm/tenant-settings/route.ts",
+        "app/api/crm/tenants/route.ts",
+        "app/api/crm/usuarios/[id]/route.ts",
+        "app/api/crm/usuarios/route.ts",
+        "app/api/public/cadastro-empresa/route.ts",
+        "app/api/whatsapp/webhook/route.ts",
+        "app/cadastre-se/layout.tsx",
+        "app/cadastre-se/page.tsx",
+        "app/crm/empresas/page.tsx",
+        "app/crm/layout.tsx",
+        "app/crm/usuarios/page.tsx",
+        "app/globals.css",
+        "app/layout.tsx",
+        "app/login/page.tsx",
+        "app/page.tsx",
+        "components/crm/CrmPermissaoSelect.tsx",
+        "components/crm/CrmSessionFooter.tsx",
+        "components/crm/CrmTenantContext.tsx",
+        "components/crm/CrmUniversalHeader.tsx",
+        "components/crm/ProgressoSistemaDashboard.tsx",
+        "components/hub/HubCtaBand.tsx",
+        "components/hub/HubHero.tsx",
+        "components/hub/HubModuleCard.tsx",
+        "components/hub/HubModuleGrid.tsx",
+        "components/hub/HubPublicShell.tsx",
+        "components/hub/HubPurposeSection.tsx",
+        "components/hub/HubScrollReveal.tsx",
+        "components/hub/HubStepsSection.tsx",
+        "docs/sql/seed-users-rbac.sql",
+        "lib/crm-header-defaults.ts",
+        "lib/crm-nav-groups.ts",
+        "lib/crm/cadastro-empresa-publico.ts",
+        "lib/crm/convidar-colaborador.ts",
+        "lib/crm/crm-api-auth.ts",
+        "lib/crm/crm-permissoes.ts",
+        "lib/crm/progresso-checks-registry.ts",
+        "lib/crm/progresso-checks-types.ts",
+        "lib/crm/progresso-sistema-data.ts",
+        "lib/crm/progresso-sistema-runtime.ts",
+        "lib/crm/relatorio-deploy-resumo.ts",
+        "lib/crm/relatorio-diario-aggregate.ts",
+        "lib/crm/relatorio-diario-pdf.ts",
+        "lib/crm/relatorio-git-entregas.ts",
+        "lib/crm/tenant-slug.ts",
+        "lib/crm/users-equipa.ts",
+        "lib/hub/landing-content.ts",
+        "next.config.ts",
+        "package.json",
+        "proxy.ts",
+        "scripts/apply-users-rbac-migration.mjs",
+        "scripts/collect-relatorio-entregas-git.ts",
+        "scripts/seed-users-rbac.mjs",
+        "scripts/verify-progresso-sistema.ts",
+        "supabase/migrations/20260620190000_users_rbac_tenant.sql",
+        "tsconfig.json",
+        "vitest.config.ts"
+      ],
+      "areas": {
+        "outros": 16,
+        "app/api": 14,
+        "app/hub": 4,
+        "app/crm": 3,
+        "components/crm": 5,
+        "components/hub": 8,
+        "lib/crm": 14,
+        "lib/hub": 1,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "873ab382974b6a59c64f23bd6accf21c4ca62f4e",
       "hashCurto": "873ab38",
@@ -75,11 +190,10 @@
       "dataIso": "2026-06-18T22:54:38.000Z",
       "hora": "19:54",
       "arquivos": [
-        "package-lock.json",
         "package.json"
       ],
       "areas": {
-        "outros": 2
+        "outros": 1
       }
     },
     {

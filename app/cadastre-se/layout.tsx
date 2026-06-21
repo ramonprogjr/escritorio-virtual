@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HubPublicShell } from "@/components/hub/HubPublicShell";
 
 export const metadata: Metadata = {
   title: "Cadastre a sua empresa | Obra10+ Hub",
@@ -6,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CadastreSeLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <HubPublicShell>{children}</HubPublicShell>;
 }

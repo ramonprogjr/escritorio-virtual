@@ -60,12 +60,44 @@ function commitDateKeyLocal(dataIso: string): string {
 
 const AREA_LABELS: Record<string, string> = {
   "app/crm": "CRM (páginas)",
+  "app/hub": "Hub público (páginas)",
   "app/api": "APIs",
   "lib/crm": "Biblioteca CRM",
+  "lib/hub": "Biblioteca Hub",
   "components/crm": "Componentes CRM",
+  "components/hub": "Componentes Hub",
   "supabase/migrations": "Migrations BD",
   outros: "Outros",
 };
+
+const ARQUIVO_RELATORIO_EXCLUIR_PREFIXOS = [
+  ".cursor/",
+  ".ai-skills/",
+  ".next/",
+  ".next-dev/",
+  "node_modules/",
+];
+
+const ARQUIVO_RELATORIO_EXCLUIR_NOMES = new Set([
+  "package-lock.json",
+  "pnpm-lock.yaml",
+  "yarn.lock",
+]);
+
+/** Exclui ruído (IDE, cache, locks) dos ficheiros listados no relatório. */
+export function filtrarArquivoRelatorio(filePath: string): boolean {
+  const p = filePath.replace(/\\/g, "/").trim();
+  if (!p) return false;
+  const base = p.split("/").pop() ?? p;
+  if (ARQUIVO_RELATORIO_EXCLUIR_NOMES.has(base)) return false;
+  if (p.endsWith(".generated.json") || p.endsWith(".tsbuildinfo")) return false;
+  if (ARQUIVO_RELATORIO_EXCLUIR_PREFIXOS.some((prefix) => p.startsWith(prefix))) return false;
+  return true;
+}
+
+function filtrarArquivosRelatorio(arquivos: string[]): string[] {
+  return arquivos.filter(filtrarArquivoRelatorio);
+}
 
 function repoRoot(): string {
   return process.cwd();
@@ -86,9 +118,14 @@ function runGit(args: string[]): string {
 export function classificarArea(filePath: string): string {
   const p = filePath.replace(/\\/g, "/");
   if (p.startsWith("app/crm/")) return "app/crm";
+  if (p.startsWith("app/cadastre-se/") || p.startsWith("app/login/") || p === "app/page.tsx") {
+    return "app/hub";
+  }
   if (p.startsWith("app/api/")) return "app/api";
   if (p.startsWith("lib/crm/")) return "lib/crm";
+  if (p.startsWith("lib/hub/")) return "lib/hub";
   if (p.startsWith("components/crm/")) return "components/crm";
+  if (p.startsWith("components/hub/")) return "components/hub";
   if (p.startsWith("supabase/migrations/")) return "supabase/migrations";
   return "outros";
 }
@@ -137,8 +174,13 @@ function formatHora(dataIso: string): string {
   }
 }
 
+function normalizarEntrega(entrega: RelatorioGitEntrega): RelatorioGitEntrega {
+  const arquivos = filtrarArquivosRelatorio(entrega.arquivos);
+  return { ...entrega, arquivos, areas: contarAreas(arquivos) };
+}
+
 function toEntrega(raw: { hash: string; mensagem: string; autor: string; dataIso: string }): RelatorioGitEntrega {
-  const arquivos = arquivosDoCommit(raw.hash);
+  const arquivos = filtrarArquivosRelatorio(arquivosDoCommit(raw.hash));
   const parsed = new Date(raw.dataIso);
   const dataIsoNorm = Number.isNaN(parsed.getTime()) ? raw.dataIso : parsed.toISOString();
   return {
@@ -199,7 +241,9 @@ function loadArtifact(): RelatorioEntregasArtifact | null {
 function filterEntregasFromArtifact(dateStr: string): RelatorioGitEntrega[] {
   const art = loadArtifact();
   if (!art?.commits?.length) return [];
-  return art.commits.filter((c) => commitDateKeyLocal(c.dataIso) === dateStr);
+  return art.commits
+    .filter((c) => commitDateKeyLocal(c.dataIso) === dateStr)
+    .map(normalizarEntrega);
 }
 
 function pathsProgressoItem(item: ProgressoItem): string[] {
@@ -247,20 +291,62 @@ function somarAreas(entregas: RelatorioGitEntrega[]): Record<string, number> {
   return total;
 }
 
-export function buildResumoEntregasLegivel(dateLabel: string, entregas: RelatorioGitEntrega[]): string {
-  if (entregas.length === 0) {
-    return `Nenhum commit Git registado em ${dateLabel}. O trabalho do dia pode estar em branch local não commitada ou fora desta janela UTC.`;
-  }
-  const ficheiros = new Set(entregas.flatMap((e) => e.arquivos)).size;
-  const areas = somarAreas(entregas);
-  const areasTxt = Object.entries(areas)
+function formatAreasLegivel(areas: Record<string, number>): string {
+  return Object.entries(areas)
+    .filter(([, n]) => n > 0)
     .sort(([, a], [, b]) => b - a)
     .map(([k, n]) => `${AREA_LABELS[k] ?? k} (${n})`)
     .join(", ");
-  return (
-    `Desenvolvimento em ${dateLabel}: ${entregas.length} commit(s), ${ficheiros} ficheiro(s) alterado(s). ` +
-    `Áreas tocadas: ${areasTxt || "—"}.`
-  );
+}
+
+/** Resumo narrativo estilo “o que fizemos hoje” para o PDF. */
+export function buildResumoDesenvolvimentoNarrativo(
+  dateLabel: string,
+  entregas: RelatorioGitEntrega[],
+  entregasRelacionadas: RelatorioEntregaRelacionada[]
+): string {
+  if (entregas.length === 0) {
+    return (
+      `Em ${dateLabel} não há commits Git registados neste repositório. ` +
+      `Se trabalhou sem commit, faça push antes de gerar o relatório ou escolha outro dia.`
+    );
+  }
+
+  const ficheiros = new Set(entregas.flatMap((e) => e.arquivos)).size;
+  const areas = somarAreas(entregas);
+  const areasTxt = formatAreasLegivel(areas);
+  const partes: string[] = [];
+
+  if (entregas.length === 1) {
+    const e = entregas[0]!;
+    partes.push(
+      `Em ${dateLabel} foi feito 1 commit (${e.hora}): ${e.mensagem}. ` +
+        `Foram alterados ${ficheiros} ficheiro(s) relevante(s)` +
+        (areasTxt ? `, sobretudo em ${areasTxt}.` : ".")
+    );
+  } else {
+    partes.push(
+      `Em ${dateLabel} foram feitos ${entregas.length} commits, com ${ficheiros} ficheiro(s) relevante(s) alterado(s)` +
+        (areasTxt ? ` nas áreas: ${areasTxt}.` : ".")
+    );
+    const destaques = entregas.slice(0, 4).map((e) => `${e.hora} — ${e.mensagem}`);
+    partes.push(`Principais entregas: ${destaques.join("; ")}${entregas.length > 4 ? "…" : "."}`);
+  }
+
+  if (entregasRelacionadas.length > 0) {
+    const titulos = entregasRelacionadas.slice(0, 4).map((r) => r.titulo);
+    partes.push(
+      `Estas alterações ligam-se ao plano Obra10+: ${titulos.join(", ")}` +
+        (entregasRelacionadas.length > 4 ? " e outras funcionalidades da matriz." : ".")
+    );
+  }
+
+  return partes.join(" ");
+}
+
+/** @deprecated Use buildResumoDesenvolvimentoNarrativo */
+export function buildResumoEntregasLegivel(dateLabel: string, entregas: RelatorioGitEntrega[]): string {
+  return buildResumoDesenvolvimentoNarrativo(dateLabel, entregas, []);
 }
 
 export function buildDesenvolvimentoDoDia(dateStr: string, dateLabel: string): RelatorioDesenvolvimento {
@@ -272,12 +358,13 @@ export function buildDesenvolvimentoDoDia(dateStr: string, dateLabel: string): R
     if (entregas.length > 0) fonte = "artefato";
   }
 
+  entregas = entregas.map(normalizarEntrega);
   const entregasRelacionadas = relacionarEntregasComMatriz(entregas);
   const ficheiros = new Set(entregas.flatMap((e) => e.arquivos)).size;
 
   return {
     entregas,
-    resumo: buildResumoEntregasLegivel(dateLabel, entregas),
+    resumo: buildResumoDesenvolvimentoNarrativo(dateLabel, entregas, entregasRelacionadas),
     entregasRelacionadas,
     fonte,
     totais: {

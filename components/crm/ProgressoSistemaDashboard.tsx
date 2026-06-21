@@ -390,8 +390,8 @@ function RelatorioDoDiaSection() {
     >
       <h2 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a]">Relatório do dia</h2>
       <p className="mt-1 text-xs text-[#8b949e]">
-        Lista commits Git do dia (o que desenvolveu), estado resumido do sistema, operação CRM e equipa. Gere o PDF
-        e envie manualmente no WhatsApp.
+        Resumo do dia: commits Git (o que desenvolveu) e estado do sistema face ao plano Obra10+. Gere o PDF e
+        envie manualmente no WhatsApp.
       </p>
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">

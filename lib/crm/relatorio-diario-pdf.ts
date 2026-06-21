@@ -6,9 +6,12 @@ type PDFDocumentCtor = new (options?: PDFKit.PDFDocumentOptions) => PDFKit.PDFDo
 
 const AREA_LABELS: Record<string, string> = {
   "app/crm": "CRM",
+  "app/hub": "Hub",
   "app/api": "APIs",
   "lib/crm": "Lib CRM",
+  "lib/hub": "Lib Hub",
   "components/crm": "UI CRM",
+  "components/hub": "UI Hub",
   "supabase/migrations": "Migrations",
   outros: "Outros",
 };
@@ -56,11 +59,6 @@ function paragraph(doc: PDFKit.PDFDocument, text: string) {
   doc.fontSize(10).text(text, { align: "justify", lineGap: 2 });
 }
 
-function bullet(doc: PDFKit.PDFDocument, label: string, value: string | number) {
-  ensureSpace(doc, 18);
-  doc.fontSize(10).text(`• ${label}: `, { continued: true }).font("Helvetica-Bold").text(String(value)).font("Helvetica");
-}
-
 function listItemResumo(doc: PDFKit.PDFDocument, item: RelatorioDeployResumoItem, index: number) {
   ensureSpace(doc, 36);
   doc
@@ -74,6 +72,7 @@ function listItemResumo(doc: PDFKit.PDFDocument, item: RelatorioDeployResumoItem
 
 function formatAreas(areas: Record<string, number>): string {
   return Object.entries(areas)
+    .filter(([, n]) => n > 0)
     .sort(([, a], [, b]) => b - a)
     .map(([k, n]) => `${AREA_LABELS[k] ?? k} (${n})`)
     .join(", ");
@@ -90,7 +89,7 @@ function renderCommit(doc: PDFKit.PDFDocument, entrega: RelatorioGitEntrega, ind
     .fontSize(9)
     .fillColor(MUTED)
     .text(
-      `${entrega.autor} · commit ${entrega.hashCurto} · ${entrega.arquivos.length} ficheiro(s) · ${formatAreas(entrega.areas)}`,
+      `${entrega.autor} · commit ${entrega.hashCurto} · ${entrega.arquivos.length} ficheiro(s) · ${formatAreas(entrega.areas) || "—"}`,
       { indent: 12, width: doc.page.width - 110 }
     );
   const filesPreview = entrega.arquivos.slice(0, 8);
@@ -107,14 +106,16 @@ function renderCommit(doc: PDFKit.PDFDocument, entrega: RelatorioGitEntrega, ind
 function renderDesenvolvimento(doc: PDFKit.PDFDocument, data: RelatorioDiarioPayload) {
   const dev = data.desenvolvimento;
 
-  sectionTitle(doc, "1. Trabalho técnico do dia — o que desenvolvi");
+  sectionTitle(doc, "1. O que implementámos hoje");
 
-  paragraph(doc, data.desenvolvimento.resumo);
+  paragraph(doc, dev.resumo);
   doc.moveDown(0.2);
   doc
     .fontSize(9)
     .fillColor(MUTED)
-    .text(`Fonte: ${dev.fonte === "git-live" ? "Git (repositório local)" : dev.fonte === "artefato" ? "histórico do último build" : "sem registos"}`);
+    .text(
+      `Fonte: ${dev.fonte === "git-live" ? "Git (repositório local)" : dev.fonte === "artefato" ? "histórico do último build" : "sem registos"}`
+    );
   doc.fillColor("#000000");
 
   if (dev.entregas.length === 0) {
@@ -142,7 +143,7 @@ function renderDesenvolvimento(doc: PDFKit.PDFDocument, data: RelatorioDiarioPay
 function renderEstadoSistema(doc: PDFKit.PDFDocument, progresso: RelatorioDiarioPayload["progresso"]) {
   const rd = progresso.resumoDeploy;
 
-  sectionTitle(doc, "2. Estado do sistema (resumo)");
+  sectionTitle(doc, "2. Onde estamos no sistema");
 
   paragraph(doc, rd.intro);
   doc.moveDown(0.2);
@@ -175,18 +176,15 @@ export async function buildRelatorioDiarioPdf(data: RelatorioDiarioPayload): Pro
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    const { meta, operacao, equipa, progresso } = data;
+    const { meta, progresso } = data;
 
-    doc.fillColor(GOLD).fontSize(20).font("Helvetica-Bold").text("Obra10+ — Relatório do dia", { align: "center" });
+    doc.fillColor(GOLD).fontSize(20).font("Helvetica-Bold").text("Obra10+ — Resumo de desenvolvimento", { align: "center" });
     doc.fillColor("#000000").fontSize(11).font("Helvetica").text(meta.dateLabel, { align: "center" });
     doc.moveDown(0.3);
     doc
       .fontSize(9)
       .fillColor(MUTED)
-      .text(
-        `Este relatório mostra o que foi desenvolvido em ${meta.dateLabel} e o estado actual do CRM.`,
-        { align: "center" }
-      );
+      .text(`Resumo de desenvolvimento e estado do sistema — ${meta.dateLabel}`, { align: "center" });
     doc
       .fontSize(9)
       .text(
@@ -198,30 +196,6 @@ export async function buildRelatorioDiarioPdf(data: RelatorioDiarioPayload): Pro
 
     renderDesenvolvimento(doc, data);
     renderEstadoSistema(doc, progresso);
-
-    sectionTitle(doc, "3. Operação CRM (dia selecionado)");
-    bullet(doc, "Leads novos", operacao.leadsNovos);
-    bullet(doc, "Qualificados (atualizados no dia)", operacao.leadsQualificadosDia);
-    bullet(doc, "Taxa qualificação", `${operacao.taxaQualificacao}%`);
-    bullet(doc, "Encaminhamentos", operacao.encaminhamentos);
-    bullet(doc, "Negócios criados", operacao.negociosCriados);
-    bullet(doc, "Negócios fechados", operacao.negociosFechados);
-    bullet(doc, "Mensagens entrada", operacao.mensagensEntrada);
-    bullet(doc, "Mensagens saída", operacao.mensagensSaida);
-    bullet(doc, "Leads aguardando resposta", operacao.metricas.leadsAguardando);
-    bullet(doc, "Aprovações pendentes", operacao.aprovacoesPendentes);
-    bullet(doc, "Fila mensagens pendente", operacao.metricas.mensagensFilaPendentes);
-    bullet(doc, "Alertas abertos", operacao.alertasAbertos);
-    bullet(doc, "Receita potencial pipeline", `R$ ${operacao.metricas.receitaPotencial.toLocaleString("pt-BR")}`);
-
-    sectionTitle(doc, "4. Equipa");
-    bullet(doc, "Utilizadores ativos", equipa.usuariosAtivos);
-    bullet(doc, "Convites / novos no dia", equipa.convitesDia);
-    doc.moveDown(0.3);
-    doc.fontSize(10).text("Por permissão:");
-    for (const [role, count] of Object.entries(equipa.porPermissao).sort(([a], [b]) => a.localeCompare(b))) {
-      doc.text(`  — ${role}: ${count}`, { indent: 8 });
-    }
 
     doc.moveDown(1.5);
     ensureSpace(doc, 30);

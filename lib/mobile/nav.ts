@@ -81,6 +81,7 @@ export function mobileTabIdFromPath(pathname: string): MobileTabId {
 }
 
 export function isMobileShellRoute(pathname: string): boolean {
+  if (pathname === "/" || pathname.startsWith("/cadastre-se")) return false;
   if (pathname.startsWith("/parceiro/")) return false;
   if (pathname === "/login" || pathname.startsWith("/login/")) return false;
   return true;

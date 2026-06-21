@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Obra10BrandHeaderLink } from "@/components/brand/Obra10Brand";
@@ -12,11 +13,16 @@ const NAV = [
   { href: "#plataforma", label: "Plataforma" },
 ];
 
+function sectionHref(pathname: string, hash: string): string {
+  return pathname === "/" ? hash : `/${hash}`;
+}
+
 type Props = {
   children: React.ReactNode;
 };
 
 export function HubPublicShell({ children }: Props) {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -36,7 +42,7 @@ export function HubPublicShell({ children }: Props) {
             {NAV.map((item) => (
               <a
                 key={item.href}
-                href={item.href}
+                href={sectionHref(pathname, item.href)}
                 className="text-sm text-[var(--obra-texto-2,#8b949e)] transition-colors hover:text-[var(--obra-dourado-light,#e0b86a)]"
               >
                 {item.label}
@@ -79,7 +85,7 @@ export function HubPublicShell({ children }: Props) {
               {NAV.map((item) => (
                 <a
                   key={item.href}
-                  href={item.href}
+                  href={sectionHref(pathname, item.href)}
                   className="text-sm text-[var(--obra-texto-2,#8b949e)]"
                   onClick={() => setMenuOpen(false)}
                 >
