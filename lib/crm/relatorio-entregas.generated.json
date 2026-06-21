@@ -1,7 +1,75 @@
 {
-  "geradoEm": "2026-06-21T03:27:34.423Z",
+  "geradoEm": "2026-06-21T03:53:42.302Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "332a6f0534a303715fdeb0656b7a2fc7c29301a9",
+      "hashCurto": "332a6f0",
+      "mensagem": "formulario de lead na landing e cadastre-se",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T03:48:48.000Z",
+      "hora": "00:48",
+      "arquivos": [
+        "app/api/public/lead-hub/route.ts",
+        "app/cadastre-se/page.tsx",
+        "components/hub/HubHero.tsx",
+        "components/hub/HubLeadForm.tsx",
+        "components/hub/HubScrollReveal.tsx",
+        "lib/crm/lead-hub-publico.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/hub": 1,
+        "components/hub": 3,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "66b2e9a3c53a1c7857fb8e1d3d9d57a207ebdcf8",
+      "hashCurto": "66b2e9a",
+      "mensagem": "forcar NODE_ENV=development para PostCSS/Tailwind em dev",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T03:39:14.000Z",
+      "hora": "00:39",
+      "arquivos": [
+        "package.json",
+        "scripts/dev-insecure-tls.cjs",
+        "scripts/dev-strict-tls.cjs"
+      ],
+      "areas": {
+        "outros": 3
+      }
+    },
+    {
+      "hash": "272f4a3e447f65579db2079f586aee1e327dd68b",
+      "hashCurto": "272f4a3",
+      "mensagem": "cadastre-se funcional e relatorio PDF so de desenvolvimento",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T03:28:22.000Z",
+      "hora": "00:28",
+      "arquivos": [
+        "app/cadastre-se/error.tsx",
+        "app/cadastre-se/layout.tsx",
+        "app/cadastre-se/page.tsx",
+        "app/loading.tsx",
+        "components/crm/ProgressoSistemaDashboard.tsx",
+        "components/hub/CadastreSeForm.tsx",
+        "components/hub/HubPublicShell.tsx",
+        "components/hub/HubScrollReveal.tsx",
+        "components/mobile/MobileDetector.tsx",
+        "lib/crm/relatorio-diario-aggregate.ts",
+        "lib/crm/relatorio-diario-pdf.ts",
+        "lib/crm/relatorio-git-entregas.ts",
+        "lib/mobile/nav.ts"
+      ],
+      "areas": {
+        "app/hub": 3,
+        "outros": 3,
+        "components/crm": 1,
+        "components/hub": 3,
+        "lib/crm": 3
+      }
+    },
     {
       "hash": "327af539561b370c61e3d85a4fbdf208b5b4a1dc",
       "hashCurto": "327af53",
