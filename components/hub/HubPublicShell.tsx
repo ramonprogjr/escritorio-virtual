@@ -107,7 +107,7 @@ export function HubPublicShell({ children }: Props) {
         )}
       </header>
 
-      <main>{children}</main>
+      <main className="relative z-10">{children}</main>
 
       <footer className="border-t border-[var(--obra-borda,#30363d)]/60 py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left sm:px-6 lg:px-8">

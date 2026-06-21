@@ -53,7 +53,7 @@ export function HubLeadForm({ variant = "hero" }: Props) {
 
   const cardClass =
     variant === "hero"
-      ? "hub-reveal rounded-2xl border border-[var(--obra-borda,#30363d)]/80 bg-[var(--obra-dark-2,#161b22)]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:p-8"
+      ? "rounded-2xl border border-[var(--obra-borda,#30363d)]/80 bg-[var(--obra-dark-2,#161b22)]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:p-8"
       : "rounded-2xl border border-[var(--obra-borda,#30363d)] bg-[var(--obra-dark-2,#161b22)] p-6 sm:p-8";
 
   if (success) {
