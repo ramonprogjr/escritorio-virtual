@@ -58,9 +58,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname === "/" && sessionUser) {
+  if (pathname === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = "/crm";
+    url.pathname = sessionUser ? "/crm" : "/login";
     url.search = "";
     return NextResponse.redirect(url);
   }
