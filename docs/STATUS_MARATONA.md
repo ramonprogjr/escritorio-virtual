@@ -91,9 +91,10 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - Em aberto no Bloco J (separados, próximos): `fn-derivados` (ganho→cria obra/projeto), `rf-alerta-parado` (dashboard), `fl-aguardando` (ciclo).
 
 ### 2026-06-23 — Robustez: cobertura de testes em lógica pura crítica (MCP/Playwright fora)
-- Adicionados **43 testes** (vitest), todos verdes, travando comportamento crítico contra regressão:
+- Adicionados **49 testes** (vitest), todos verdes, travando comportamento crítico contra regressão:
   - `caller-identity.test.ts` (6) — identidade por cookie (fix de escalada).
   - `lead-rules.test.ts` (8) + `negocio-rules.test.ts` (9) — guardrails perda/ganho/próxima-ação.
   - `crm-permissoes.test.ts` (15) — RBAC/anti-escalada (auditado: sem furo óbvio).
   - `codigos-rastreio.test.ts` (5) — formato `PREFIXO-AAAA-####` (documenta divergência vs `PS2026001` do doc e o risco de corrida `COUNT+1` — correção real = sequence/trigger via MCP).
+  - `distribuir-lead.test.ts` (6) — scoring de encaminhamento (IA-first): mercado 40 / cidade 30 / UF 15 / carga / homologado 10; corte score<10; ranking; limite. Auditado (matemática confere).
 - `_chk23` OK. Nada em prod foi tocado.
