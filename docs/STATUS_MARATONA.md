@@ -97,4 +97,9 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
   - `crm-permissoes.test.ts` (15) — RBAC/anti-escalada (auditado: sem furo óbvio).
   - `codigos-rastreio.test.ts` (5) — formato `PREFIXO-AAAA-####` (documenta divergência vs `PS2026001` do doc e o risco de corrida `COUNT+1` — correção real = sequence/trigger via MCP).
   - `distribuir-lead.test.ts` (6) — scoring de encaminhamento (IA-first): mercado 40 / cidade 30 / UF 15 / carga / homologado 10; corte score<10; ranking; limite. Auditado (matemática confere).
+
+### 2026-06-23 — Bloco E: migration DRAFT pronta (apply BLOQUEADO no MCP)
+- Usuário pediu "Bloco E", mas o **Supabase MCP segue desconectado** → não dá p/ auditar `pg_policies` restantes nem **aplicar** DDL (service role fala REST, não roda DDL).
+- Escrito **[docs/sql/bloco-e-rls-DRAFT.sql](sql/bloco-e-rls-DRAFT.sql)** — pronto p/ aplicar via MCP com GO: helper `current_user_tenant_id()` (auth.uid()→users) + policies `authenticated` tenant-scoped **create-before-drop** para `hub_leads_crm`/`hub_pessoas`/`hub_contas_receber` + DROP das permissivas (`anon_select`/`hub_acesso_total`/`*_service`). DELETE fica só p/ service_role. Rollback documentado (políticas são reversíveis; nenhum dado apagado).
+- **PENDENTE p/ fechar:** (a) reconectar Supabase MCP; (b) finir auditoria das demais hub_*; (c) aplicar 1 tabela/vez com backup + GO + prova força bruta (anon negado) + app logado OK (incl. realtime).
 - `_chk23` OK. Nada em prod foi tocado.
