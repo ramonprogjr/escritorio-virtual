@@ -89,3 +89,11 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
   - **pa-obrigatoria** — lógica existe + testada (flag ON); flag `CRM_PROXIMA_ACAO_OBRIGATORIA` está **OFF**. Ligar exige confirmar no Playwright que o kanban/move envia `proxima_acao` (senão flipar quebra o drag). **DEFERIDO** até Playwright.
 - **Testes:** `lib/crm/lead-rules.test.ts` (8) + `lib/crm/negocio-rules.test.ts` (9) → **17/17 vitest passam**. `_chk23` OK.
 - Em aberto no Bloco J (separados, próximos): `fn-derivados` (ganho→cria obra/projeto), `rf-alerta-parado` (dashboard), `fl-aguardando` (ciclo).
+
+### 2026-06-23 — Robustez: cobertura de testes em lógica pura crítica (MCP/Playwright fora)
+- Adicionados **43 testes** (vitest), todos verdes, travando comportamento crítico contra regressão:
+  - `caller-identity.test.ts` (6) — identidade por cookie (fix de escalada).
+  - `lead-rules.test.ts` (8) + `negocio-rules.test.ts` (9) — guardrails perda/ganho/próxima-ação.
+  - `crm-permissoes.test.ts` (15) — RBAC/anti-escalada (auditado: sem furo óbvio).
+  - `codigos-rastreio.test.ts` (5) — formato `PREFIXO-AAAA-####` (documenta divergência vs `PS2026001` do doc e o risco de corrida `COUNT+1` — correção real = sequence/trigger via MCP).
+- `_chk23` OK. Nada em prod foi tocado.
