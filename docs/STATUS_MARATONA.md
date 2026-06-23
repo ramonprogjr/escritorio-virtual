@@ -16,8 +16,8 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - DB vivo (`cdjlqsznerdhwqyunodl`): **3 schemas coexistem** — `hub_*` (app vivo, com dados: `hub_leads_crm` 138, `hub_atividades` 214, `hub_fila_mensagens` 105, `hub_msg_jobs` 246); `crm_*`/genérico (legado quase vazio, 1–3 linhas); `membros_*`/`profissionais_*` (projeto separado, mesmo banco). **Migrations do repo (68) ≠ migrations aplicadas (lineage diferente)** → drift a reconciliar antes de qualquer DDL.
 
 ## Blocos
-- [~] **A — Fundação de trabalho** (artefatos) — EM ANDAMENTO
-- [ ] B — Verdade (QA logado)
+- [x] **A — Fundação de trabalho** (artefatos) — CONCLUÍDO (commit `ce8e1d0`; `_chk23` OK)
+- [~] **B — Verdade (QA logado)** — **BLOQUEADO: falta `SUPABASE_SERVICE_ROLE_KEY`**
 - [ ] C — Drift & fronteira
 - [ ] D — Segurança · diagnóstico (advisors)
 - [ ] E — Segurança · RLS `hub_*`
@@ -34,4 +34,9 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 ### 2026-06-23 — Bloco A (fundação)
 - Criados: `docs/STATUS_MARATONA.md`, `docs/PROPOSTA_CONJUNTA.md`, `app/_chk23.js`, `_publicar.ps1`.
 - `_chk23` baseline: **OK** (health 200, login 200, crm 307).
-- Próximo: Bloco B — QA logado real (read-only) na conta `nice.engemp`.
+
+### 2026-06-23 — Bloco B (verdade) — BLOQUEADO no 1º achado
+- Login OK (sessão persistente, conta `nice.engemp`). Shell do CRM renderiza; **design intacto** (baseline `qa/B1-dashboard.png`).
+- **Achado crítico:** `GET /api/crm/dashboard` → **500**, `GET /api/crm/me/context` → **503** (em loop). Causa raiz (stack do servidor): `supabaseKey is required` → **`SUPABASE_SERVICE_ROLE_KEY` VAZIA** no `.env.local`.
+- **Alcance:** a chave é usada em **139 ocorrências / 77 rotas `/api/*`** → todo o dado logado do CRM cai. Por isso o funil mostra **0 leads** apesar de **138** em `hub_leads_crm`. É "renderiza mas não funciona" = 1 segredo faltando, não 77 bugs.
+- **BLOQUEIO (precisa do usuário):** fornecer `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`). Vai em `.env.local` (dev, gitignored) + Render secret (prod). Sem ela, Bloco B não valida o app real.

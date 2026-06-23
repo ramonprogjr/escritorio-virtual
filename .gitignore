@@ -39,6 +39,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# QA artifacts (screenshots de validação, não versionar)
+/qa/
+/.playwright-mcp/
+/login-*.png
+/crm-logado.png
+
 # supabase CLI local link state (não versionar)
 supabase/.temp/
 
