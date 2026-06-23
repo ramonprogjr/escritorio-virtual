@@ -55,4 +55,10 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 ### 2026-06-23 — Bloco D (segurança · diagnóstico) — PARCIAL (Supabase MCP instável)
 - Supabase MCP **flapando** (socket fecha em queries não-triviais; `select 1` e políticas de `users` passaram, as demais derrubaram). Anti-loop: parei de repetir.
 - **Achado que CORRIGE pessimismo anterior:** as políticas **VIVAS** de `public.users` estão **travadas** — `ALL` via `is_hub_admin()`, `SELECT` via `auth_id = auth.uid()`. **NÃO é o `true/true` que o repo sugeria.** ⇒ Confirma **drift repo↔prod: prod está mais seguro que o repo**. A auditoria de segurança tem de ser sobre o **banco VIVO**, não sobre os .sql do repo; os "riscos de RLS" derivados do repo (memória `schema-rls-alinhamento-mestre`) precisam ser **reverificados em prod** antes de qualquer correção.
-- PENDENTE (quando MCP estabilizar): políticas vivas de `hub_leads_crm`, `hub_contas_pagar/receber`, `hub_pessoas`, `hub_empresas`, `hub_negocios`. O achado de código `x-caller-auth-id` independe do MCP e segue válido.
+- **Auditoria viva (parcial, MCP cooperou):** segurança **heterogênea** —
+  - `public.users` 🟢 travada: `ALL` via `is_hub_admin()`, `SELECT` via `auth_id=auth.uid()`.
+  - `hub_leads_crm` 🔴 **ABERTA**: `anon_select` (SELECT, `{anon,authenticated}`, `true`) + `hub_acesso_total` (ALL, `{public}`, `true`) → anon lê/escreve todos os 138 leads **com contato** (viola trava "contato de lead nunca exposto").
+  - `hub_pessoas` 🔴 leitura aberta: `anon_select` (`true`) → PII legível por anon.
+  - `hub_contas_receber` 🔴 **ABERTA**: `hub_contas_receber_service` (ALL, `{public}`, `true`) → financeiro exposto.
+- **Padrão sistêmico:** políticas legadas permissivas (`anon_select`/`hub_acesso_total`/`*_service` com `qual=true`). `users` foi endurecida à parte (migração RBAC posterior). RLS é OR-de-políticas → **corrigir EXIGE remover/substituir as políticas `true`** (não basta adicionar restritiva).
+- PENDENTE: auditar `hub_empresas`, `hub_negocios`, `hub_contas_pagar`, `hub_imoveis`, `hub_msg_jobs`, `hub_fila_mensagens` (1 query/tabela).
