@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireInternalApiKey, crmApiConfigError } from "@/lib/crm/crm-api-auth";
+import { requireInternalApiKey, crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
 import {
   crmHandoffDb,
   resolveOperador,
@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
   const keyErr = requireInternalApiKey(request);
   if (keyErr) return keyErr;
 
-  const authId = request.headers.get("x-caller-auth-id")?.trim();
+  const authId = resolveCallerAuthId(request);
   if (!authId) {
     return NextResponse.json(
-      { error: "Cabeçalho x-caller-auth-id obrigatório." },
-      { status: 403 }
+      { error: "Sessão inválida ou identidade ausente." },
+      { status: 401 }
     );
   }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { defaultTenantId } from "@/lib/tenant-default";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
-import { requireInternalApiKey, crmApiConfigError } from "@/lib/crm/crm-api-auth";
+import { requireInternalApiKey, crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
 import {
   crmHandoffDb,
   resolveOperador,
@@ -23,12 +23,12 @@ export async function POST(request: NextRequest) {
   const keyErr = requireInternalApiKey(request);
   if (keyErr) return keyErr;
 
-  // Identidade do operador (obrigatória)
-  const authId = request.headers.get("x-caller-auth-id")?.trim();
+  // Identidade do operador (obrigatória) — do cookie de sessão, não de header forjável
+  const authId = resolveCallerAuthId(request);
   if (!authId) {
     return NextResponse.json(
-      { error: "Cabeçalho x-caller-auth-id obrigatório." },
-      { status: 403 }
+      { error: "Sessão inválida ou identidade ausente." },
+      { status: 401 }
     );
   }
 

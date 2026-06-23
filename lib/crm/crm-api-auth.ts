@@ -7,7 +7,46 @@ import {
   type CrmNivel,
 } from "@/lib/crm/crm-permissoes";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import { CRM_ACCESS_COOKIE } from "@/lib/auth/crm-session";
 import { NextResponse } from "next/server";
+
+/** `sub` do JWT de sessão = auth.users.id. O proxy já validou assinatura/expiração;
+ *  aqui só decodificamos localmente para derivar a identidade do token (não de header). */
+function decodeJwtSub(token: string): string | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const json = Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+    const sub = JSON.parse(json)?.sub;
+    return typeof sub === "string" && sub.trim() ? sub.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Identidade autoritativa = cookie de sessão httpOnly (`obra10_crm_access`), não header arbitrário. */
+function authIdFromSessionCookie(request: Request): string | null {
+  const cookie = request.headers.get("cookie") || "";
+  const m = cookie.match(new RegExp("(?:^|;\\s*)" + CRM_ACCESS_COOKIE + "=([^;]+)"));
+  if (!m) return null;
+  let token: string;
+  try {
+    token = decodeURIComponent(m[1]);
+  } catch {
+    return null; // cookie percent-encoding inválido → trata como ausente (evita 500)
+  }
+  return decodeJwtSub(token);
+}
+
+/**
+ * Identidade do chamador para rotas CRM: a sessão (cookie httpOnly validado pelo proxy)
+ * tem PRIORIDADE; o header `x-caller-auth-id` (forjável) só vale para chamador interno
+ * SEM cookie (já gated por `x-api-key` no proxy). Use em qualquer rota que precise saber
+ * "quem é o operador" — nunca confie no header diretamente.
+ */
+export function resolveCallerAuthId(request: Request): string | null {
+  return authIdFromSessionCookie(request) ?? (request.headers.get("x-caller-auth-id")?.trim() || null);
+}
 
 export function crmApiConfigError(): NextResponse | null {
   const err = crmConfigError();
@@ -42,12 +81,16 @@ export async function getCallerContext(
   const keyErr = requireInternalApiKey(request);
   if (keyErr) return { error: keyErr };
 
-  const authId = request.headers.get("x-caller-auth-id")?.trim();
+  // Identidade vem do token de sessão validado pelo proxy (cookie httpOnly).
+  // O header `x-caller-auth-id` (forjável pelo cliente) só é fallback para chamador
+  // interno SEM cookie — que já passou pelo gate `x-api-key` do proxy. Com cookie
+  // presente, o header é IGNORADO (fecha escalada por auth_id de outro usuário).
+  const authId = resolveCallerAuthId(request);
   if (!authId) {
     return {
       error: NextResponse.json(
-        { error: "Cabeçalho x-caller-auth-id obrigatório para esta operação." },
-        { status: 403 }
+        { error: "Sessão inválida ou identidade ausente." },
+        { status: 401 }
       ),
     };
   }
