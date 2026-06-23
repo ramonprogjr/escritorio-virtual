@@ -17,7 +17,7 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 
 ## Blocos
 - [x] **A — Fundação de trabalho** (artefatos) — CONCLUÍDO (commit `ce8e1d0`; `_chk23` OK)
-- [~] **B — Verdade (QA logado)** — **BLOQUEADO: falta `SUPABASE_SERVICE_ROLE_KEY`**
+- [~] **B — Verdade (QA logado)** — blocker da service role **RESOLVIDO**; falta verificação de console no browser (Playwright reconectando)
 - [ ] C — Drift & fronteira
 - [ ] D — Segurança · diagnóstico (advisors)
 - [ ] E — Segurança · RLS `hub_*`
@@ -40,3 +40,14 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - **Achado crítico:** `GET /api/crm/dashboard` → **500**, `GET /api/crm/me/context` → **503** (em loop). Causa raiz (stack do servidor): `supabaseKey is required` → **`SUPABASE_SERVICE_ROLE_KEY` VAZIA** no `.env.local`.
 - **Alcance:** a chave é usada em **139 ocorrências / 77 rotas `/api/*`** → todo o dado logado do CRM cai. Por isso o funil mostra **0 leads** apesar de **138** em `hub_leads_crm`. É "renderiza mas não funciona" = 1 segredo faltando, não 77 bugs.
 - **BLOQUEIO (precisa do usuário):** fornecer `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`). Vai em `.env.local` (dev, gitignored) + Render secret (prod). Sem ela, Bloco B não valida o app real.
+
+### 2026-06-23 — Bloco B — BLOQUEIO RESOLVIDO
+- Usuário forneceu a `SUPABASE_SERVICE_ROLE_KEY`. Inserida no `.env.local` (gitignored, NÃO commitada). Chave validada direta no Supabase REST: `HTTP 206`, `hub_leads_crm` = **138 linhas** (chave correta, não estava errada — só vazia).
+- Dev reiniciado (b21i0kjhd) p/ recarregar env. `_chk23` OK (timeout subido p/ 30s por causa do cold-compile do dev).
+- **Prova server-side (curl autenticado):** `POST /api/auth/crm-session` 200 → `GET /api/crm/dashboard` **200** (era 500), corpo com dados reais (`leadsAguardando:120`, `receitaPotencial:8556250`, `agentesAtivos:1`, alertas reais); `GET /api/crm/me/context` **200** `{role:owner,tenantNome:Obra10+}` (o 403 anterior era falta do header `x-caller-auth-id` no curl, não bug).
+- **PENDENTE:** verificação de cold load logado no browser (console 0 erros) — Playwright reconectando; fazer quando voltar. Restam ainda os 2 erros de console vistos antes (React "state update on unmounted"; "Invalid or unexpected token") a confirmar/investigar no browser.
+
+### 🔐 Achado de segurança (Bloco D/E — CONFIRMADO no fluxo, prova de exploit pendente)
+- `lib/crm/crm-api-auth.ts:19` `requireInternalApiKey` **libera** (`return null`) quando `INTERNAL_API_KEY` está vazia (está). Então `/api/crm/*` não exige chave interna.
+- `lib/internal-api-headers-client.ts:9` define `x-caller-auth-id` **no cliente** (do `user.id`); o servidor (`crm-api-auth.ts:45`, e rotas de atendimento) **confia** nesse header p/ identificar o caller. `proxy.ts` **não** injeta/sobrescreve esse header (sem match no grep).
+- **Risco (anti-escalada de papel):** um usuário **autenticado** (cookie de sessão válido p/ passar o `proxy.ts`) pode enviar **outro** `x-caller-auth-id` → o handler busca o `role/tenant` daquele outro usuário em `public.users` e age como ele (impersonation / cross-tenant). Mitigação atual: exige cookie de sessão válido (não é anônimo). Correção no Bloco E: derivar o auth_id da sessão validada no servidor (não confiar no header), e/ou exigir `INTERNAL_API_KEY`. Prova por força bruta a fazer no Bloco D.

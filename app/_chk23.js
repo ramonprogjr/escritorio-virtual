@@ -16,7 +16,7 @@ const ALVOS = [
 
 async function checar(alvo) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
+  const t = setTimeout(() => ctrl.abort(), Number(process.env.CHK_TIMEOUT_MS || 30000));
   try {
     const r = await fetch(BASE + alvo.path, { redirect: "manual", signal: ctrl.signal });
     clearTimeout(t);
