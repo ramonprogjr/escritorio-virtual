@@ -20,7 +20,7 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - [~] **B — Verdade (QA logado)** — blocker da service role **RESOLVIDO**; falta verificação de console no browser (Playwright reconectando)
 - [ ] C — Drift & fronteira
 - [ ] D — Segurança · diagnóstico (advisors)
-- [ ] E — Segurança · RLS `hub_*`
+- [~] **E — Segurança · RLS `hub_*`** — LOTE CRÍTICO aplicado e provado (leads, pessoas, contas_receber, contas_pagar); ~36 tabelas hub_* abertas ainda restam (próximo lote)
 - [ ] F — Segurança · funções/prova
 - [ ] G — Espinha dorsal (migrations PDF aditivas)
 - [ ] H — Anthropic · base
@@ -103,3 +103,17 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - Escrito **[docs/sql/bloco-e-rls-DRAFT.sql](sql/bloco-e-rls-DRAFT.sql)** — pronto p/ aplicar via MCP com GO: helper `current_user_tenant_id()` (auth.uid()→users) + policies `authenticated` tenant-scoped **create-before-drop** para `hub_leads_crm`/`hub_pessoas`/`hub_contas_receber` + DROP das permissivas (`anon_select`/`hub_acesso_total`/`*_service`). DELETE fica só p/ service_role. Rollback documentado (políticas são reversíveis; nenhum dado apagado).
 - **PENDENTE p/ fechar:** (a) reconectar Supabase MCP; (b) finir auditoria das demais hub_*; (c) aplicar 1 tabela/vez com backup + GO + prova força bruta (anon negado) + app logado OK (incl. realtime).
 - `_chk23` OK. Nada em prod foi tocado.
+
+### 2026-06-23 — Bloco E: MCP reconectou → AUDITORIA COMPLETA + LOTE CRÍTICO APLICADO e provado
+- **MCP do Supabase voltou** (sessão nova). Workaround do socket que derruba em payloads multi-linha: **agregar tudo em 1 linha** (`string_agg`) — `pg_get_expr(qual)` quebra a cada >1 linha. Com isso, **auditoria completa de `pg_policies`** das hub_*:
+  - **Padrão sistêmico confirmado, MUITO maior que 3 tabelas:** **~45 policies permissivas (`qual=true`) em ~40 tabelas hub_***. Dois moldes: `anon_select` (SELECT `true` p/ {anon,authenticated}, ~30 tabelas) e `hub_acesso_total`/`*_service`/`*_anon` (ALL `true` p/ `public`, ~15 tabelas). Todas as 93 hub_* têm **RLS ON** (nenhuma aberta por RLS-off).
+- **Correções decisivas ao DRAFT (descobertas no banco vivo):**
+  - `public.users` **NÃO tem `tenant_id`** (e é INTOCÁVEL) → não há mapa user→tenant. **Só 1 tenant** existe. ⇒ helper `current_user_tenant_id()` retorna o **tenant default** (constante). Hoje isto é, na real, **authenticated-only + filtro default**, NÃO isolamento cross-tenant (dados/usuários ainda não suportam).
+  - `hub_pessoas` **não tinha `tenant_id`** → **coluna adicionada (aditiva) + backfill** (empresa→tenant, senão default). O DRAFT teria falhado nessa tabela.
+  - Linhas legadas têm `tenant_id` **NULL** → predicado **tolera NULL** (`or tenant_id is null`) p/ não sumir nada da app.
+- **APLICADO (via apply_migration) no lote crítico, create-before-drop, com snapshot p/ rollback:** `hub_leads_crm`, `hub_pessoas`, `hub_contas_receber`, `hub_contas_pagar`. Ver **[bloco-e-rls-APPLIED.sql](sql/bloco-e-rls-APPLIED.sql)** e **[bloco-e-rls-ROLLBACK.sql](sql/bloco-e-rls-ROLLBACK.sql)**.
+- **PROVA força-bruta (set role no banco vivo):** baseline anon via key pública lia **138 leads + 5 pessoas** (PII — viola "contato nunca exposto"). Pós-fix: **anon = 0/0/0/0** nas 4 tabelas; **authenticated = 138 leads + 5 pessoas** (app intacta). Cliente browser lê como **authenticated** (bridge hidrata sessão Supabase) → telas logadas continuam funcionando.
+- **Hardening pós-advisor:** helper virou **SECURITY INVOKER** (corpo constante não precisa DEFINER) + `revoke execute` de anon/public. Advisor de segurança não lista mais as 4 tabelas em `rls_policy_always_true`.
+- **AINDA ABERTO (próximo lote E):** ~36 tabelas hub_* com o mesmo padrão (inclui `hub_negocios`, `hub_oportunidades`, `hub_parceiros`, `hub_mensagens`, `hub_conversas`, `hub_atividades`, `hub_memorias_lead`, `hub_notas`, `hub_propostas`, `hub_servicos`, `hub_pipelines`, `hub_pipeline_estagios`, `hub_negocio_vinculos`…). Cada uma exige verificar coluna de tenant (várias não têm) antes de escopar.
+- **PENDENTE (não-bloqueante):** QA visual logado (Playwright reconectou) — abrir `/crm` logado e confirmar leads/financeiro renderizando + console limpo. Requer login (senha do usuário). DDL **só no Supabase**; **deploy do app não tocado** (gated até pedido do usuário).
+- `_chk23` OK. Nenhum dado apagado.
