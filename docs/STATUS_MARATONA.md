@@ -62,3 +62,9 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
   - `hub_contas_receber` 🔴 **ABERTA**: `hub_contas_receber_service` (ALL, `{public}`, `true`) → financeiro exposto.
 - **Padrão sistêmico:** políticas legadas permissivas (`anon_select`/`hub_acesso_total`/`*_service` com `qual=true`). `users` foi endurecida à parte (migração RBAC posterior). RLS é OR-de-políticas → **corrigir EXIGE remover/substituir as políticas `true`** (não basta adicionar restritiva).
 - PENDENTE: auditar `hub_empresas`, `hub_negocios`, `hub_contas_pagar`, `hub_imoveis`, `hub_msg_jobs`, `hub_fila_mensagens` (1 query/tabela).
+
+### 2026-06-23 — Bloco B DESBLOQUEADO (service role key carregada)
+- A `SUPABASE_SERVICE_ROLE_KEY` já estava no `.env.local` (válida: `role=service_role`, `ref=cdjlqsznerdhwqyunodl`, não expirada). O erro 500 anterior era **servidor dev stale** — não tinha recarregado o `.env.local`. Resposta ao "a chave está errada?": **não, a chave está certa**; faltava reiniciar.
+- Reiniciei o dev → `_chk23` OK. Verificado por **curl autenticado** (login real → cookie de sessão → rota): `/api/crm/dashboard` **200** (era 500), `/api/crm/leads` **200**, `/api/crm/me/context` **200** (com header `x-caller-auth-id` do browser). O "renderiza mas não funciona" era **1 segredo faltando**, confirmado.
+- **Ajuste de severidade do achado `crm-api-auth`:** forja de `x-caller-auth-id` **sem** cookie válido → **401** (proxy bloqueia). Logo NÃO é acesso não-autenticado; é escalada por usuário **já autenticado** enviando `auth_id` de outro (a confirmar com 2ª conta). Severidade revisada **CRÍTICO → MÉDIO**. Fix ainda recomendado (derivar `auth_id` do token validado server-side; `INTERNAL_API_KEY` fail-closed).
+- Pendências de ferramenta: QA visual logado completo aguarda **Playwright** reconectar; auditoria RLS viva restante + DDL aguardam **Supabase MCP** reconectar (ambos caíram nesta sessão).
