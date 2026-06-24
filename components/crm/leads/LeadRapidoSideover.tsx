@@ -314,7 +314,8 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
               modo="chips"
               opcoes={ORIGEM_OPCOES}
               value={form.origem}
-              onChange={(v) => set("origem", v || form.origem)}
+              onChange={(v) => set("origem", v)}
+              disabled={salvando}
             />
             <div>
               <label className={labelCls} htmlFor="lead-rapido-valor">
