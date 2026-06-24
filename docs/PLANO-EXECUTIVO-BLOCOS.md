@@ -66,6 +66,11 @@ Varredura item a item: cada destino no grupo semanticamente certo, **e a tela co
 - **Colisão "Empresas"** ⚠️ — `/crm/empresas` hoje é **admin multi-tenant** (`/api/crm/tenants`, escritórios/tenants), **não** o cadastro de empresa-cliente. **Recomendação:** renomear esse item para **"Escritórios"** e mantê-lo em Administração; o cadastro PJ do cliente vive em Cadastros (acima). *Confirmar com o Wendel.*
 - **Varredura dos demais** itens/telas (Tarefas, Canais, Pedidos, Relatórios, etc.): confirmar grupo, rótulo e que a tela entrega o prometido.
 
+**Resultado da auditoria (24/jun/2026) — Bloco 1.5 essencialmente FECHADO:**
+- ✅ Integrações → IA e Agentes; Onboarding fora do menu; **Empresas → "Escritórios"** (menu + tela) — desfeita a confusão com cadastro PJ.
+- ✅ **31/31 itens do menu apontam para telas REAIS; zero mismatch.** Único stub: Copiloto (`/crm/agentes-reais`), já marcado "Em breve".
+- ✅ **Cadastros unificado PF/PJ JÁ EXISTE** (não refazer): `/crm/cadastro` é hub com abas **Contatos (PF/PJ, `hub_pessoas`)** + **Empresas-cliente (PJ, `hub_empresas`)**, com `CadastroWizard` (`tipoInicial` PF/PJ) e hooks `useCrmPessoasList`/`useCrmEmpresasList`. → o esforço do B2 vira **enriquecer** (SmartField, ConfidenceBadge, fichas correlacionadas, Imóvel), não construir do zero.
+
 ### Bloco 2 — Cadastros Pipedrive (U2)
 Componentes-base sobre o design system (`SmartField`, `ConfidenceBadge`, `QuickAdd`); fichas correlacionadas navegáveis em 1 clique; entidade **Imóvel**; replicar o padrão da ficha do negócio (próxima-ação/nota/vínculo). Preenchimento por **escolha (chips)** primeiro; voz incremental.
 
