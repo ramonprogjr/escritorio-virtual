@@ -22,10 +22,8 @@ import { resolverTelefoneCadastro } from "@/lib/crm/cadastro-flexivel";
 import { documentoCompleto } from "@/lib/crm/documento-brasil";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { enriquecerLeadComPipeline } from "@/lib/crm/resolve-pipeline";
-import {
-  metadataRoutingLead,
-  resolverAgenteResponsavelLead,
-} from "@/lib/crm/lead-routing-rules";
+import { metadataRoutingLead } from "@/lib/crm/lead-routing-rules";
+import { resolverDestinoLead } from "@/lib/crm/lead-routing-config";
 import { criarVinculoPessoaEmpresa } from "@/lib/crm/pessoa-empresa-vinculo";
 import { isMissingPgColumn, isTenantFkError } from "@/lib/tenant-default";
 
@@ -121,7 +119,7 @@ async function insertLead(
   }
 ): Promise<{ id: string; codigo: string } | null> {
   const mercadoPrincipal = params.mercados[0] ?? "IMB";
-  const agente = resolverAgenteResponsavelLead({
+  const agente = await resolverDestinoLead(supabase, {
     origem: params.origem,
     origem_cadastro: "super_cadastro",
     mercados: params.mercados,

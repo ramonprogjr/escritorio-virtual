@@ -18,10 +18,8 @@ import {
 } from "@/lib/crm/sincronizar-contato-whatsapp";
 import { telefoneConversaId } from "@/lib/crm/isolamento-conversa-lead";
 import { garantirCodigoLead, prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
-import {
-  mercadoWhatsappParaPrefixo,
-  resolverAgenteResponsavelLead,
-} from "@/lib/crm/lead-routing-rules";
+import { mercadoWhatsappParaPrefixo } from "@/lib/crm/lead-routing-rules";
+import { resolverDestinoLead } from "@/lib/crm/lead-routing-config";
 import { enriquecerLeadComPipeline } from "@/lib/crm/resolve-pipeline";
 import { gerarCodigoPessoa } from "@/lib/crm/pessoa-cadastro";
 import { createWhatsappWebhookTrace } from "@/lib/observability/whatsapp-webhook-trace";
@@ -247,7 +245,7 @@ async function encontrarOuCriarLead(telefone: string, nome: string, mercado: str
   }
 
   const mercadoPrefix = mercadoWhatsappParaPrefixo(mercado);
-  const agenteResponsavel = resolverAgenteResponsavelLead({
+  const agenteResponsavel = await resolverDestinoLead(supabase, {
     origem: "whatsapp",
     origem_cadastro: "whatsapp",
     mercados: [mercadoPrefix],

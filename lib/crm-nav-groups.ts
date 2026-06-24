@@ -17,6 +17,7 @@ import {
   MessageCircle,
   ClipboardCheck,
   Radio,
+  Route,
   LayoutTemplate,
   Zap,
   Wrench,
@@ -98,6 +99,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     items: [
       { href: "/crm/atendimento", label: "Inbox", icon: MessageSquare, minRole: "atendente" },
       { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
+      { href: "/crm/distribuicao", label: "Distribuição", icon: Route, minRole: "gestor" },
     ],
   },
   {
