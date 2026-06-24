@@ -19,6 +19,14 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 - [x] **Validação visual via browser (24/jun):** login OK (senha A12345679), menu §8 renderiza, **QuickAdd FAB** visível, deep-link `?novo=1` abre o criador, **chips do lead confirmados** (Tipo de interesse + campo dinâmico viraram chips; Cidade segue texto). Login mostra "Esqueci minha senha".
 - [ ] **Spot-check restante (opcional):** negócio/empresa/imóvel usam o MESMO `SmartField` (alta confiança), mas validar em **mobile** e o fluxo **/redefinir-senha** (depende de SMTP configurado) quando der.
 
+## 🎨 Plano UI/UX (auditoria + diretor, 24/jun) — 4 ondas seguras-autônomas
+Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditivo, gates tsc+vitest+_chk23, sem push/RLS):
+- [x] **Onda A** — #1 cabeçalho contextual no `CadastroSideoverPanel` (some "Visão do cadastro" do config; **verificado no browser**) + #7 PT-BR + ocultar slug técnico. ✅
+- [ ] **Onda B (visual)** — #2 tokenizar tabela-lista de Leads (`gray-*`/`blue-*`→`--obra-*`, l.739-789) + #5 trocar emojis das quick-actions por Lucide + dica de **Ctrl+K** na sidebar.
+- [ ] **Onda C (sinais acionáveis)** — #4 selo de **SLA textual** nos cartões Kanban (rótulo+cor, usa `lib/crm/sla-frescor`) + #3 **dashboard reordenado por urgência** (acionável no topo, % no rodapé).
+- [ ] **Onda D (interação)** — #6 trocar `alert()/confirm()` por `CrmConfirmDialog`/strip dark + #8 **respostas rápidas (templates)** no Inbox + label IA dinâmico (templates = seguro; resposta por IA = trava/B8).
+- **Travas fora do Top 8:** cards de distribuição/SLA-fornecedor/ranking no dashboard (motor+RLS), converter conversa→negócio, respostas por IA, disclosure de menu por plano.
+
 ## 🎨 UX / produto (decisão futura — 🧑 + 🤖)
 - [ ] **`valor_estimado` do lead como faixa:** hoje é numérico (faixa exigiria guardar faixa vs número). Decidir.
 - [ ] **SmartField modo "faixa"** com visual *ordinal* (segmented control) — hoje renderiza igual a chips.
