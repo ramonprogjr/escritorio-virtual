@@ -9,6 +9,8 @@ import { supabase } from "@/lib/supabase/client";
 import { EmptyState } from "@/components/crm/EmptyState";
 import { CadastroFiltrosBar } from "@/components/crm/cadastro/CadastroFiltrosBar";
 import { CadastroListaTable } from "@/components/crm/cadastro/CadastroListaTable";
+import { ColunasMenu } from "@/components/crm/cadastro/ColunasMenu";
+import { useColunasVisiveis } from "@/lib/crm/use-colunas-visiveis";
 import { EMPRESA_SEGMENTOS } from "@/lib/crm/empresa-cadastro";
 import { AREA_ATUACAO_SELECT_OPTIONS } from "@/lib/crm/areas-atuacao";
 import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
@@ -108,6 +110,10 @@ export default function CadastroPage() {
 
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [busca, setBusca] = useState("");
+  const colsPessoas = useColunasVisiveis("crm:cols:pessoas");
+  const colsEmpresas = useColunasVisiveis("crm:cols:empresas");
+  const colunasPessoasVis = COLUNAS_PESSOAS.filter((c) => colsPessoas.isVisivel(c.id));
+  const colunasEmpresasVis = COLUNAS_EMPRESAS.filter((c) => colsEmpresas.isVisivel(c.id));
   const buscaDebounced = useDebouncedValue(busca);
   const [filtroTipo, setFiltroTipo] = useState("");
   const [filtroUf, setFiltroUf] = useState("");
@@ -697,9 +703,13 @@ export default function CadastroPage() {
               <EmptyState message="Nenhum cadastro. Use «Novo cadastro» ou ajuste os filtros." />
             )}
             {!pessoasCarregando && pessoas.length > 0 && (
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <ColunasMenu colunas={COLUNAS_PESSOAS} isVisivel={colsPessoas.isVisivel} alternar={colsPessoas.alternar} restaurar={colsPessoas.restaurar} />
+                </div>
               <CadastroListaTable<PessoaListaRow>
                 rows={pessoas}
-                columns={COLUNAS_PESSOAS}
+                columns={colunasPessoasVis}
                 selectedIds={selecionados}
                 onToggleRow={toggleSelecao}
                 onToggleAll={() => toggleSelecionarTodos(pessoas.map((p) => p.id))}
@@ -723,6 +733,7 @@ export default function CadastroPage() {
                   void excluirRegistro(p.id, "pessoa", label);
                 }}
               />
+              </div>
             )}
           </>
         )}
@@ -748,9 +759,13 @@ export default function CadastroPage() {
               <EmptyState message="Nenhuma empresa. Use «Novo cadastro» (PJ) ou ajuste os filtros." />
             )}
             {!empresasCarregando && empresas.length > 0 && (
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <ColunasMenu colunas={COLUNAS_EMPRESAS} isVisivel={colsEmpresas.isVisivel} alternar={colsEmpresas.alternar} restaurar={colsEmpresas.restaurar} />
+                </div>
               <CadastroListaTable<EmpresaListaRow>
                 rows={empresas}
-                columns={COLUNAS_EMPRESAS}
+                columns={colunasEmpresasVis}
                 selectedIds={selecionados}
                 onToggleRow={toggleSelecao}
                 onToggleAll={() => toggleSelecionarTodos(empresas.map((e) => e.id))}
@@ -774,6 +789,7 @@ export default function CadastroPage() {
                   void excluirRegistro(e.id, "empresa", label);
                 }}
               />
+              </div>
             )}
           </>
         )}
