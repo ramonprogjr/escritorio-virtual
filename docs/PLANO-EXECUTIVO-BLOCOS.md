@@ -28,7 +28,8 @@
 | **1.5** | **Auditoria de informação (menu ↔ tela)** | cada item no grupo certo; **Cadastros unificado PF/PJ**; resolver colisões de nome (2 "Empresas"); alinhar o conteúdo das telas ao menu | B1 | não | médio |
 | **2** | **Cadastros Pipedrive (U2)** | `SmartField` + `ConfidenceBadge` + `QuickAdd`; fichas correlacionadas Pessoa↔Empresa↔Negócio; entidade **Imóvel**; replica o padrão da ficha do negócio | B1 | não | médio |
 | **3** | **CRM do Fornecedor (U3)** | pipelines/Kanban **customizáveis por tenant**; inbox unificado + respostas sugeridas; cartão com SLA | B2 | não | médio |
-| **4** | **Visibilidade & Governança Hub** | regra de visibilidade RLS (`fornecedor_id`; Hub bypassa, §5 spec); **Dashboard do Hub** (cards acionáveis); base da camada Fornecedores | B3 | não | **alto** (RLS) |
+| **3.9** | **Fundação Multi-Tenant** `[pré-req B4/B5]` | `current_user_tenant_id()` dinâmica · `is_hub_owner()` · modelo `fornecedor_id` · provisionar ≥2 tenants | B3 | não | **alto** (auth/RLS) |
+| **4** | **Visibilidade & Governança Hub** | regra de visibilidade RLS (`fornecedor_id`; Hub bypassa, §5 spec); **Dashboard do Hub** (cards acionáveis); base da camada Fornecedores | **B3.9** | não | **alto** (RLS) |
 | **5** | **Motor de Distribuição (U4)** | score multi-critério; modos auto/semi/manual; SLA + redistribuição; Lead Mestre×Vinculado; fila + `RecommendationCard` | B4 | não | alto |
 | **5.5** | **Monetização da rede** | **Licenciamento/Entitlements** (módulo · plano · créditos/tokens; Hub libera) + **Comissão marketplace** (b: % sobre ganho originado de lead do Hub) + **funil 2 níveis · KPIs · SLA** | B4, B5 | não | alto |
 | **6** | **Gestão de Obra (U5)** | Wizard 5 passos (click/talk); EAP/escopo prev×exec×saldo; cronograma+Curva S; medição+gates; `EvidenceCapture`; Compras¹ | B2 (Bloco G existe) | não | alto |
@@ -129,6 +130,22 @@ Gate de elegibilidade + migração idempotente de membro→fornecedor (sem dupli
 
 ### Bloco 8 — IA-first (U6) `[FUTURO]`
 Ativar Anthropic/Bloco H (depende de chave + GO de custo): IA operacional + conversacional + relatórios generativos; Talk-and-Go pleno. **Não ligar antes do manual estar bom.**
+
+---
+
+## ⭐ Pré-requisito descoberto (mesa redonda 24/jun): Fundação Multi-Tenant Real
+
+A auditoria de arquitetura+segurança revelou que **o sistema é single-tenant de verdade hoje**: a função `current_user_tenant_id()` é **hardcoded** para 1 tenant (`obra10`), não existe `fornecedor_id` nas tabelas operacionais, e `is_hub_admin()` aponta para roles que ninguém tem. Por isso, a regra-mãe do B4/B5 — **"fornecedor vê só o seu; Hub vê tudo"** — **não tem como existir ainda**. Isso vira o **bloco-fundação** que destrava B4 e B5:
+
+### Bloco 3.9 — Fundação Multi-Tenant `[pré-requisito de B4/B5]`
+1. **`current_user_tenant_id()` dinâmica** — ler de `users.tenant_id` (adicionar coluna) ou de um JWT claim, em vez do UUID fixo.
+2. **`is_hub_owner()` / Hub-vê-tudo** — helper que distingue owner (Hub) de fornecedor, usado nas policies para o Hub bypassar o filtro de tenant.
+3. **Modelo de `fornecedor_id`** — decidir: fornecedor = tenant próprio (slug/UUID) **ou** coluna `fornecedor_id` nas tabelas. (Liga ao cadastro PJ = escritório, ver monetização §5.5.)
+4. **Provisionar ≥2 tenants reais** para testar isolamento de verdade (hoje só existe `obra10`).
+- **Segurança:** já endurecemos as policies tenant-aware (fatia `rls_crm_core_close_holes`); elas passam a "funcionar de verdade" quando o (1) for dinâmico. Migrações aditivas/reversíveis, com mesa redonda.
+- **Risco:** alto (toca auth/RLS de produção) → fazer com cuidado, gates, rollback, e o Wendel ciente.
+
+**Re-sequenciamento:** **B3.9 (fundação) → B4 (visibilidade + Dashboard do Hub) → B5 (distribuição Lead Mestre×Vinculado)**. O Dashboard do Hub com cards de direcionamento/ranking só mostra números corretos depois da fundação (cross-tenant real).
 
 ---
 
