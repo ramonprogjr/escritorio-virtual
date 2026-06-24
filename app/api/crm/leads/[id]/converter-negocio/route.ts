@@ -41,7 +41,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     String(body.prefixo_mercado || prefixoMercadoFromLead(lead.metadata) || "IMB").trim() ||
     "IMB";
   const titulo = String(body.titulo || `Negócio — ${lead.nome}`).trim();
-  const codigo = await gerarCodigoNegocio(supabase);
+  const codigo = await gerarCodigoNegocio(supabase, prefixo_mercado);
 
   const mercadoSlug =
     MERCADOS_NEGOCIO.find((m) => m.prefixo === prefixo_mercado)?.slug ?? "imobiliario";

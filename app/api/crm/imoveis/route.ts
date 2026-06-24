@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { gerarCodigoSequencial, HUB_PREFIXO_CODIGO } from "@/lib/crm/codigos-rastreio";
 
 function db() {
   return createClient(
@@ -60,9 +61,7 @@ export async function POST(request: NextRequest) {
   const titulo = String(body.titulo || "").trim();
   if (!titulo) return NextResponse.json({ error: "Título obrigatório" }, { status: 400 });
 
-  const year = new Date().getFullYear();
-  const { count } = await supabase.from("hub_imoveis").select("*", { count: "exact", head: true });
-  const codigo = body.codigo || `IMO-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
+  const codigo = body.codigo || (await gerarCodigoSequencial(supabase, "hub_imoveis", HUB_PREFIXO_CODIGO.imovel));
 
   const row = {
     codigo,

@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { HUB_PREFIXO_CODIGO, type HubPrefixoCodigo } from "@/lib/crm/codigos-rastreio";
 
-const CODIGO_REGEX = /^(PES|EMP|LED|NEG|PAR|IMO)-\d{4}-\d{4}$/i;
+// Legado: PES-2026-0001 · Compacto (atual): PS2026001 / NGIMB2026001 (negócio embute mercado).
+const CODIGO_REGEX_LEGADO = /^(PES|EMP|LED|NEG|PAR|IMO)-\d{4}-\d{4}$/i;
+const CODIGO_REGEX_COMPACTO = /^(PS|EM|LD|NG|PC|FR|ES|IM|OB|PJ|SV|PD)[A-Z]*\d{7,}$/i;
+
+/** Prefixo compacto (2 letras) → prefixo legado usado pelos ramos do resolver. */
+const COMPACTO_PARA_LEGADO: Record<string, HubPrefixoCodigo> = {
+  PS: "PES", EM: "EMP", LD: "LED", NG: "NEG", PC: "PAR", IM: "IMO",
+};
 
 export type RastreioNo = {
   tipo: string;
@@ -22,14 +29,17 @@ export type RastreioCadeia = {
 
 export function normalizarCodigoRastreio(raw: string): string | null {
   const c = raw.trim().toUpperCase();
-  if (!CODIGO_REGEX.test(c)) return null;
-  return c;
+  if (CODIGO_REGEX_LEGADO.test(c) || CODIGO_REGEX_COMPACTO.test(c)) return c;
+  return null;
 }
 
 function prefixoDeCodigo(codigo: string): HubPrefixoCodigo | null {
-  const p = codigo.split("-")[0] as HubPrefixoCodigo;
-  if (Object.values(HUB_PREFIXO_CODIGO).includes(p)) return p;
-  return null;
+  if (codigo.includes("-")) {
+    const p = codigo.split("-")[0] as HubPrefixoCodigo;
+    return Object.values(HUB_PREFIXO_CODIGO).includes(p) ? p : null;
+  }
+  // Compacto: as 2 primeiras letras identificam a entidade.
+  return COMPACTO_PARA_LEGADO[codigo.slice(0, 2).toUpperCase()] ?? null;
 }
 
 export async function resolverRastreioCodigo(

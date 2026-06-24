@@ -2,48 +2,55 @@ import { describe, expect, it } from "vitest";
 import { gerarCodigoSequencial, HUB_PREFIXO_CODIGO } from "./codigos-rastreio";
 
 /**
- * Mock mínimo do SupabaseClient: só o caminho .from(tabela).select(..., {count, head}).
- * Documenta o contrato atual. NB: a geração usa COUNT(*)+1 (risco de corrida sob concorrência
- * e formato PREFIXO-AAAA-#### — diverge do `PS2026001` do doc mestre). Correção real = sequence/
- * trigger no banco (Bloco integridade, via MCP). Estes testes travam o comportamento vigente.
+ * Geração de código de rastreio (tipo "CPF", ponta a ponta). Caminho ATUAL = rpc atômica
+ * `crm_proximo_codigo` no banco (contador por ano, sem corrida), formato compacto PS2026001 /
+ * NGIMB2026001. Fallback degradado (PREFIXO-AAAA-####, COUNT+1) só se a rpc indisponível.
  */
-function mockSupabase(count: number | null) {
+function mockComRpc(retorno: string) {
   return {
+    rpc: async () => ({ data: retorno, error: null }),
     from() {
-      return {
-        select: async () => ({ count }),
-      };
+      return { select: async () => ({ count: 0 }) };
     },
   } as unknown as Parameters<typeof gerarCodigoSequencial>[0];
 }
 
-describe("gerarCodigoSequencial — formato PREFIXO-AAAA-####", () => {
+function mockFallback(count: number | null) {
+  return {
+    from() {
+      return { select: async () => ({ count }) };
+    },
+  } as unknown as Parameters<typeof gerarCodigoSequencial>[0];
+}
+
+describe("gerarCodigoSequencial — rpc atômica + fallback", () => {
   const year = new Date().getFullYear();
 
-  it("incrementa a partir do count atual, com padding 4 dígitos", async () => {
-    const code = await gerarCodigoSequencial(mockSupabase(7), "hub_pessoas", HUB_PREFIXO_CODIGO.pessoa);
-    expect(code).toBe(`PES-${year}-0008`);
+  it("usa a rpc e retorna o código compacto (PS2026001)", async () => {
+    const code = await gerarCodigoSequencial(mockComRpc("PS2026001"), "hub_pessoas", HUB_PREFIXO_CODIGO.pessoa);
+    expect(code).toBe("PS2026001");
   });
 
-  it("count 0 → 0001", async () => {
-    expect(await gerarCodigoSequencial(mockSupabase(0), "hub_leads_crm", HUB_PREFIXO_CODIGO.lead)).toBe(
-      `LED-${year}-0001`
+  it("negócio com mercado → rpc retorna NGIMB2026001", async () => {
+    const code = await gerarCodigoSequencial(
+      mockComRpc("NGIMB2026001"),
+      "hub_negocios",
+      HUB_PREFIXO_CODIGO.negocio,
+      "IMB"
     );
+    expect(code).toBe("NGIMB2026001");
   });
 
-  it("count null → 0001 (tabela vazia / sem count)", async () => {
-    expect(await gerarCodigoSequencial(mockSupabase(null), "hub_negocios", HUB_PREFIXO_CODIGO.negocio)).toBe(
+  it("fallback degradado (sem rpc) → PREFIXO-AAAA-#### (sistema não quebra)", async () => {
+    expect(await gerarCodigoSequencial(mockFallback(7), "hub_pessoas", HUB_PREFIXO_CODIGO.pessoa)).toBe(
+      `PES-${year}-0008`
+    );
+    expect(await gerarCodigoSequencial(mockFallback(null), "hub_negocios", HUB_PREFIXO_CODIGO.negocio)).toBe(
       `NEG-${year}-0001`
     );
   });
 
-  it("acima de 9999 não trunca (padStart só preenche)", async () => {
-    expect(await gerarCodigoSequencial(mockSupabase(9999), "hub_imoveis", HUB_PREFIXO_CODIGO.imovel)).toBe(
-      `IMO-${year}-10000`
-    );
-  });
-
-  it("mapa de prefixos estável (rastreio ponta a ponta)", () => {
+  it("mapa de prefixos legado estável (chaves de entidade)", () => {
     expect(HUB_PREFIXO_CODIGO).toEqual({
       pessoa: "PES",
       empresa: "EMP",

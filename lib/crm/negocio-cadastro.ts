@@ -146,6 +146,10 @@ export function validarNegocioCadastro(
   };
 }
 
-export async function gerarCodigoNegocio(supabase: SupabaseClient): Promise<string> {
-  return gerarCodigoSequencial(supabase, "hub_negocios", HUB_PREFIXO_CODIGO.negocio);
+/** Código do negócio embute o mercado p/ rastreio (ex.: NGIMB2026001). */
+export async function gerarCodigoNegocio(
+  supabase: SupabaseClient,
+  prefixoMercado?: string | null
+): Promise<string> {
+  return gerarCodigoSequencial(supabase, "hub_negocios", HUB_PREFIXO_CODIGO.negocio, prefixoMercado);
 }

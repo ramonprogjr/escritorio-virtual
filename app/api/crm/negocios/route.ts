@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const codigo = await gerarCodigoNegocio(supabase);
+  const codigo = await gerarCodigoNegocio(supabase, d.prefixo_mercado);
   const now = new Date().toISOString();
 
   const row: Record<string, unknown> = {
