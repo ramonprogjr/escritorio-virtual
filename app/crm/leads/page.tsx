@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Phone, Share2, Briefcase, StickyNote, XCircle, Ban } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
@@ -737,10 +738,10 @@ export default function LeadsPage() {
               </ul>
             ) : (
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-900 border-b border-gray-800">
+              <thead className="sticky top-0 bg-[#161b22] border-b border-[#30363d]">
                 <tr>
                   {["Nome", "Origem", "Estágio", "Valor", "Score", "Agente", "Atualizado", ""].map(h => (
-                    <th key={h} className="text-left text-xs text-gray-500 font-bold uppercase tracking-wide px-4 py-3">{h}</th>
+                    <th key={h} className="text-left text-xs text-[#8b949e] font-bold uppercase tracking-wide px-4 py-3">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -749,48 +750,48 @@ export default function LeadsPage() {
                   const est = estagiosKanban.find((e) => e.id === estagioParaColunaKanban(lead.estagio));
                   return (
                     <tr key={lead.id} onClick={() => router.push(`/crm/leads/${lead.id}`)}
-                      className="border-b border-gray-800/50 hover:bg-gray-900/60 cursor-pointer transition-colors">
+                      className="border-b border-[#30363d]/60 hover:bg-[#161b22]/60 cursor-pointer transition-colors">
                       <td className="px-4 py-3">
-                        <p className="text-white font-bold">{lead.nome}</p>
+                        <p className="text-[#e6edf3] font-bold">{lead.nome}</p>
                         {(lead.codigo || lead._pessoa_codigo) && (
                           <p className="text-[#c9a24a] font-mono text-xs mt-0.5">
                             {lead.codigo || lead._pessoa_codigo}
                             {lead.codigo && lead._pessoa_codigo && lead.codigo !== lead._pessoa_codigo && (
-                              <span className="text-white/40"> · {lead._pessoa_codigo}</span>
+                              <span className="text-[#8b949e]"> · {lead._pessoa_codigo}</span>
                             )}
                           </p>
                         )}
-                        {lead.telefone && <p className="text-gray-500 text-xs">{lead.telefone}</p>}
+                        {lead.telefone && <p className="text-[#8b949e] text-xs">{lead.telefone}</p>}
                       </td>
                       <td className="px-4 py-3">
                         {lead.origem ? (
                           <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: (ORIGENS_COLOR[lead.origem] || "#6B7280") + "25", color: ORIGENS_COLOR[lead.origem] || "#9CA3AF" }}>
                             {ORIGENS_LABEL[lead.origem] || lead.origem}
                           </span>
-                        ) : <span className="text-gray-600">—</span>}
+                        ) : <span className="text-[#484f58]">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         {est && <span className="text-xs px-2 py-1 rounded-full font-bold" style={{ backgroundColor: est.color + "20", color: est.color }}>{est.label}</span>}
                       </td>
                       <td className="px-4 py-3">
-                        {lead.valor_estimado > 0 ? <span className="text-green-400 font-bold">{moeda(lead.valor_estimado)}</span> : <span className="text-gray-600">—</span>}
+                        {lead.valor_estimado > 0 ? <span className="text-[#22c55e] font-bold">{moeda(lead.valor_estimado)}</span> : <span className="text-[#484f58]">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-12 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${lead.score}%` }} />
+                          <div className="w-12 h-1.5 bg-[#30363d] rounded-full overflow-hidden">
+                            <div className="h-full bg-[#c9a24a] rounded-full" style={{ width: `${lead.score}%` }} />
                           </div>
-                          <span className="text-gray-500 text-xs">{lead.score}</span>
+                          <span className="text-[#8b949e] text-xs">{lead.score}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{lead.agente_responsavel || "—"}</td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">{tempo(lead.atualizado_em)}</td>
+                      <td className="px-4 py-3 text-[#8b949e] text-xs">{lead.agente_responsavel || "—"}</td>
+                      <td className="px-4 py-3 text-[#484f58] text-xs">{tempo(lead.atualizado_em)}</td>
                       <td className="px-4 py-3"><button className="text-[#c9a24a] hover:text-[#e0b86a] text-xs">Ver →</button></td>
                     </tr>
                   );
                 })}
                 {filtrados.length === 0 && (
-                  <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-600 text-sm">Nenhum lead encontrado</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-12 text-center text-[#484f58] text-sm">Nenhum lead encontrado</td></tr>
                 )}
               </tbody>
             </table>
@@ -842,17 +843,18 @@ export default function LeadsPage() {
             </div>
 
             {/* Quick actions */}
-            <div className="flex gap-2 px-5 py-3 border-b border-gray-800 flex-shrink-0 overflow-x-auto">
+            <div className="flex gap-2 px-5 py-3 border-b border-[#30363d] flex-shrink-0 overflow-x-auto">
               {[
-                { label: "📞 Ligar", action: () => {} },
-                { label: "↗ Encaminhar", action: () => setEncaminharLead(detalhe) },
-                { label: "💼 Negócio", action: () => void converterNegocio(detalhe) },
-                { label: "📝 Nota", action: () => setTabDetalhe("notas") },
-                { label: "❌ Perdido", action: () => { setPerdaComoSpam(false); setConfirmandoPerda(true); } },
-                { label: "🚫 Spam", action: () => { setPerdaComoSpam(true); setConfirmandoPerda(true); } },
+                { label: "Ligar", Icon: Phone, action: () => {} },
+                { label: "Encaminhar", Icon: Share2, action: () => setEncaminharLead(detalhe) },
+                { label: "Negócio", Icon: Briefcase, action: () => void converterNegocio(detalhe) },
+                { label: "Nota", Icon: StickyNote, action: () => setTabDetalhe("notas") },
+                { label: "Perdido", Icon: XCircle, action: () => { setPerdaComoSpam(false); setConfirmandoPerda(true); } },
+                { label: "Spam", Icon: Ban, action: () => { setPerdaComoSpam(true); setConfirmandoPerda(true); } },
               ].map(a => (
                 <button key={a.label} onClick={a.action}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 flex-shrink-0 transition-colors">
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[#30363d] text-[#8b949e] hover:text-[#e6edf3] hover:border-[#484f58] flex items-center gap-1.5 flex-shrink-0 transition-colors">
+                  <a.Icon size={13} strokeWidth={2} aria-hidden />
                   {a.label}
                 </button>
               ))}
