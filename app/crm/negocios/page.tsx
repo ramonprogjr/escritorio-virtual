@@ -567,13 +567,13 @@ export default function NegociosPage() {
               </ul>
             ) : (
               <table className="w-full text-sm">
-                <thead className="sticky top-0 border-b border-gray-800 bg-gray-900">
+                <thead className="sticky top-0 border-b border-[#30363d] bg-[#161b22]">
                   <tr>
                     {["Título", "Mercado", "Etapa", "Status", "Valor", "Previsão", "Atualizado", ""].map(
                       (h) => (
                         <th
                           key={h}
-                          className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500"
+                          className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-[#8b949e]"
                         >
                           {h}
                         </th>
@@ -593,7 +593,7 @@ export default function NegociosPage() {
                       <tr
                         key={negocio.id}
                         onClick={() => router.push(`/crm/negocios/${negocio.id}`)}
-                        className="cursor-pointer border-b border-gray-800/50 transition-colors hover:bg-gray-900/60"
+                        className="cursor-pointer border-b border-[#30363d]/50 transition-colors hover:bg-[#161b22]/60"
                       >
                         <td className="px-4 py-3">
                           <p className="font-bold text-white">{negocio.titulo}</p>
@@ -630,14 +630,14 @@ export default function NegociosPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="font-bold text-green-400">
+                          <span className="font-bold text-[#22c55e]">
                             {moeda(negocio.valor_fechado ?? negocio.valor_estimado)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500">
+                        <td className="px-4 py-3 text-xs text-[#8b949e]">
                           {formatData(negocio.data_previsao_fechamento)}
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-600">
+                        <td className="px-4 py-3 text-xs text-[#484f58]">
                           {tempo(negocio.criado_em)}
                         </td>
                         <td className="px-4 py-3">
@@ -648,7 +648,7 @@ export default function NegociosPage() {
                   })}
                   {negocios.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-600">
+                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-[#484f58]">
                         Nenhum negócio encontrado
                       </td>
                     </tr>
