@@ -55,7 +55,11 @@ export type CrmNavGroup = {
   items: CrmNavItem[];
 };
 
-/** Fonte de verdade do menu lateral — ver docs/menu-navegacao-consolidado.md */
+/**
+ * Fonte de verdade do menu lateral — ordenado pelo CAMINHO DE VALOR do doc mestre §4.2
+ * (Lead → Atendimento → Negócio → Projeto → Obra → Pedidos → Financeiro). Aprovações é
+ * destaque (Pilar 2, §8.4). Ver docs/menu-navegacao-consolidado.md.
+ */
 export const CRM_NAV_GROUPS: CrmNavGroup[] = [
   {
     id: "visao",
@@ -68,6 +72,15 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     ],
   },
   {
+    // Pilar 2 do produto (mestre §8.4): toda decisão de dinheiro/comissão/material passa aqui.
+    id: "aprovacoes",
+    label: "Aprovações",
+    sectionIcon: ClipboardCheck,
+    items: [
+      { href: "/crm/aprovacoes", label: "Aprovações", icon: ClipboardCheck, minRole: "gestor" },
+    ],
+  },
+  {
     id: "vendas",
     label: "Vendas",
     sectionIcon: Briefcase,
@@ -76,6 +89,25 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       { href: "/crm/leads", label: "Leads", icon: Users, minRole: "atendente" },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase, minRole: "comercial" },
       { href: "/crm/tarefas", label: "Tarefas", icon: ClipboardList, minRole: "comercial" },
+    ],
+  },
+  {
+    id: "atendimento",
+    label: "Atendimento",
+    sectionIcon: MessageSquare,
+    items: [
+      { href: "/crm/atendimento", label: "Inbox", icon: MessageSquare, minRole: "atendente" },
+      { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
+    ],
+  },
+  {
+    // Rede de captação/execução (mestre §4.1): parceiros (imobiliária/corretor),
+    // fornecedores (PJ por área) e especialistas (mão de obra). Fornecedores/Especialistas
+    // entram quando as telas existirem (formato em memória membros-cadastro-formato).
+    id: "rede",
+    label: "Rede",
+    sectionIcon: Handshake,
+    items: [
       { href: "/crm/parceiros", label: "Parceiros", icon: Handshake, minRole: "comercial" },
     ],
   },
@@ -84,6 +116,12 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     label: "Produtos",
     sectionIcon: Package,
     items: [{ href: "/crm/imoveis", label: "Imóveis", icon: Home, minRole: "comercial" }],
+  },
+  {
+    id: "projetos",
+    label: "Projetos",
+    sectionIcon: Package,
+    items: [{ href: "/crm/projetos", label: "Projetos", icon: LayoutTemplate, minRole: "comercial" }],
   },
   {
     id: "obras",
@@ -102,22 +140,6 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       { href: "/crm/financeiro", label: "Visão financeira", icon: Wallet, minRole: "financeiro" },
       { href: "/crm/financeiro/pagar", label: "Contas a pagar", icon: ClipboardList, minRole: "financeiro" },
       { href: "/crm/financeiro/receber", label: "Contas a receber", icon: LineChart, minRole: "financeiro" },
-    ],
-  },
-  {
-    id: "projetos",
-    label: "Projetos",
-    sectionIcon: Package,
-    items: [{ href: "/crm/projetos", label: "Projetos", icon: LayoutTemplate, minRole: "comercial" }],
-  },
-  {
-    id: "atendimento",
-    label: "Atendimento",
-    sectionIcon: MessageSquare,
-    items: [
-      { href: "/crm/atendimento", label: "Inbox", icon: MessageSquare, minRole: "atendente" },
-      { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
-      { href: "/crm/aprovacoes", label: "Aprovações", icon: ClipboardCheck, minRole: "gestor" },
     ],
   },
   {
