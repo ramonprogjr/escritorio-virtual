@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { SmartField } from "@/components/crm/SmartField";
 
 export type ImovelEditInitial = {
   id: string;
@@ -136,18 +137,32 @@ export function ImovelFormDrawer({ open, onClose, onSaved, initial }: Props) {
         </div>
         <label style={{ display: "block", fontSize: 12, color: "#8b949e", margin: "12px 0 4px" }}>Valor (R$)</label>
         <input value={valor} onChange={(e) => setValor(e.target.value)} type="number" style={inputStyle} />
-        <label style={{ display: "block", fontSize: 12, color: "#8b949e", margin: "12px 0 4px" }}>Tipo</label>
-        <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={inputStyle}>
-          <option value="apartamento">Apartamento</option>
-          <option value="casa">Casa</option>
-          <option value="terreno">Terreno</option>
-          <option value="comercial">Comercial</option>
-        </select>
-        <label style={{ display: "block", fontSize: 12, color: "#8b949e", margin: "12px 0 4px" }}>Finalidade</label>
-        <select value={finalidade} onChange={(e) => setFinalidade(e.target.value)} style={inputStyle}>
-          <option value="venda">Venda</option>
-          <option value="locacao">Locação</option>
-        </select>
+        <div style={{ marginTop: 12 }}>
+          <SmartField
+            label="Tipo"
+            modo="chips"
+            opcoes={[
+              { value: "apartamento", label: "Apartamento" },
+              { value: "casa", label: "Casa" },
+              { value: "terreno", label: "Terreno" },
+              { value: "comercial", label: "Comercial" },
+            ]}
+            value={tipo}
+            onChange={setTipo}
+          />
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <SmartField
+            label="Finalidade"
+            modo="chips"
+            opcoes={[
+              { value: "venda", label: "Venda" },
+              { value: "locacao", label: "Locação" },
+            ]}
+            value={finalidade}
+            onChange={setFinalidade}
+          />
+        </div>
         {erro && <p style={{ color: "#ef4444", fontSize: 12, marginTop: 12 }}>{erro}</p>}
         <div style={{ marginTop: 24, display: "flex", gap: 8 }}>
           <button type="button" onClick={() => void salvar()} disabled={salvando} style={btnPrimary}>

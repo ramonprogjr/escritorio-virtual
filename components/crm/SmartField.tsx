@@ -16,8 +16,8 @@ type Props = {
   label: string;
   /** chips = opções soltas · faixa = faixas ordinais · texto = digitação (fallback). */
   modo: "chips" | "faixa" | "texto";
-  /** Opções para chips/faixa. */
-  opcoes?: SmartOption[];
+  /** Opções para chips/faixa (aceita arrays readonly, ex.: constantes `as const`). */
+  opcoes?: readonly SmartOption[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;

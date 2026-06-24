@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { SmartField } from "@/components/crm/SmartField";
 import { EMPRESA_SEGMENTOS, MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/empresa-cadastro";
 import {
   documentoCompleto,
@@ -284,35 +285,22 @@ export function EmpresaFormDrawer({ open, onClose, onSaved }: Props) {
             />
           </div>
 
-          <div>
-            <label style={LABEL}>Mercado *</label>
-            <select
-              value={form.prefixo_mercado}
-              onChange={(e) => campo("prefixo_mercado", e.target.value)}
-              style={{ ...INPUT, cursor: "pointer" }}
-            >
-              {MERCADOS_PREFIXO_OPTIONS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SmartField
+            label="Mercado"
+            required
+            modo="chips"
+            opcoes={MERCADOS_PREFIXO_OPTIONS}
+            value={form.prefixo_mercado}
+            onChange={(v) => campo("prefixo_mercado", v)}
+          />
 
-          <div>
-            <label style={LABEL}>Segmento</label>
-            <select
-              value={form.segmento}
-              onChange={(e) => campo("segmento", e.target.value)}
-              style={{ ...INPUT, cursor: "pointer" }}
-            >
-              {EMPRESA_SEGMENTOS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SmartField
+            label="Segmento"
+            modo="chips"
+            opcoes={EMPRESA_SEGMENTOS}
+            value={form.segmento}
+            onChange={(v) => campo("segmento", v)}
+          />
 
           <div>
             <label style={LABEL}>E-mail</label>
