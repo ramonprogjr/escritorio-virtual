@@ -5,6 +5,8 @@
 > - **Interface (UI/UX):** Ondas U1–U6 da [`UIUX-AUDITORIA-E-PLANO.md`](UIUX-AUDITORIA-E-PLANO.md) §8.
 >
 > **Status:** v1 — 2026-06-24. Branch `wendel/dev`. **Tudo local — nada pushado/deployado.**
+>
+> **Backlog de features de produto** (check-in obra, compras totem/iFood com spread, voz→materiais, notificações, comunidade feed, diário de obra auto): [BACKLOG-FEATURES.md](BACKLOG-FEATURES.md).
 
 ---
 
