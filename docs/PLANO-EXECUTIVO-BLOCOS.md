@@ -74,6 +74,9 @@ Varredura item a item: cada destino no grupo semanticamente certo, **e a tela co
 ### Bloco 2 — Cadastros Pipedrive (U2)
 Componentes-base sobre o design system (`SmartField`, `ConfidenceBadge`, `QuickAdd`); fichas correlacionadas navegáveis em 1 clique; entidade **Imóvel**; replicar o padrão da ficha do negócio (próxima-ação/nota/vínculo). Preenchimento por **escolha (chips)** primeiro; voz incremental.
 
+**Realidade no código (auditado 24/jun) — grande parte JÁ EXISTE:** em `components/crm/cadastro/` já há `CadastroWizard`, `CadastroFichaTabs`, **`CadastroFichaRelacionados`** (fichas correlacionadas), **`CadastroVinculosPessoaEmpresa`** (vínculo PF↔PJ), sideovers premium, lista/filtros/colunas; e `ImovelFormDrawer`, `NegocioFormDrawer`, `PessoaFormModal`, `EmpresaFormDrawer`. → **O net-new do B2 é só a camada de input "Click/Talk-and-Go":** `SmartField` (chip+voz+texto), `ConfidenceBadge`, `QuickAdd` (FAB). Resto é polimento sobre o que existe.
+- **Gating:** o valor pleno do SmartField/ConfidenceBadge vem com (a) a decisão de UX **faixas vs valor exato** e (b) a **voz** (on-device vs serviço — custo/privacidade, decisão do Wendel); o pré-preenchimento por IA com confiança é Bloco 8. Até lá, Click-and-Go (chips/faixas) carrega.
+
 ### Bloco 3 — CRM do Fornecedor (U3)
 Pipelines/Kanban editáveis por tenant; inbox omnichannel unificado com respostas sugeridas; cartões com selo de SLA.
 
