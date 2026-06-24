@@ -35,6 +35,36 @@ async function resolverPipelineLeadGlobal(supabase: SupabaseClient): Promise<str
   return data?.id ? String(data.id) : null;
 }
 
+/** Resolve pipeline de NEGÓCIO por mercado (fallback: pipeline global). Espelha o de leads. */
+export async function resolverPipelineNegocioPorMercado(
+  supabase: SupabaseClient,
+  mercado: string
+): Promise<string | null> {
+  const m = mercado.trim().toUpperCase();
+  if (m) {
+    const { data: porMercado } = await supabase
+      .from("hub_pipelines")
+      .select("id")
+      .eq("tipo", "negocio")
+      .eq("ativo", true)
+      .eq("mercado_sigla", m)
+      .order("ordem", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (porMercado?.id) return String(porMercado.id);
+  }
+  const { data } = await supabase
+    .from("hub_pipelines")
+    .select("id")
+    .eq("tipo", "negocio")
+    .eq("ativo", true)
+    .is("mercado_sigla", null)
+    .order("ordem", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.id ? String(data.id) : null;
+}
+
 /** Enriquece row de insert/update de lead com pipeline e estagio funil. */
 export async function enriquecerLeadComPipeline(
   supabase: SupabaseClient,

@@ -7,6 +7,7 @@ import {
 } from "@/lib/crm/negocio-cadastro";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { criarVinculosNegocio } from "@/lib/crm/negocio-vinculos";
+import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
 import { defaultTenantId, isMissingPgColumn, isTenantFkError, tenantIdFromRequest } from "@/lib/tenant-default";
 
 function db() {
@@ -371,10 +372,12 @@ export async function POST(request: NextRequest) {
   }
 
   const d = validacao.data;
+  // pipeline_id vem do cliente; se faltar, resolve pelo mercado (negócio entra no funil
+  // do seu mercado automaticamente — fallback pipeline global).
   const pipeline_id =
-    typeof body.pipeline_id === "string" && body.pipeline_id.trim()
+    (typeof body.pipeline_id === "string" && body.pipeline_id.trim()
       ? body.pipeline_id.trim()
-      : null;
+      : null) ?? (await resolverPipelineNegocioPorMercado(supabase, d.prefixo_mercado));
   const empresa_id =
     typeof body.empresa_id === "string" && body.empresa_id.trim()
       ? body.empresa_id.trim()
