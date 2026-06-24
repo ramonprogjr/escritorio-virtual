@@ -32,10 +32,47 @@ export default function EspecialistasPage() {
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-  const [form, setForm] = useState({
+  const [editId, setEditId] = useState<string | null>(null);
+  const FORM_VAZIO = {
     nome: "", telefone: "", cidade: "", uf: "", especialidades: "",
     experiencia: "", tem_equipe: false, tamanho_equipe: "", observacoes: "",
-  });
+  };
+  const [form, setForm] = useState(FORM_VAZIO);
+
+  function fecharForm() {
+    setAberto(false);
+    setEditId(null);
+    setErro("");
+    setForm(FORM_VAZIO);
+  }
+
+  async function editar(id: string) {
+    setErro("");
+    try {
+      const res = await fetch(`/api/crm/especialistas/${id}`, { headers: internalApiHeaders() });
+      const json = (await res.json().catch(() => ({}))) as { data?: Record<string, unknown>; error?: string };
+      if (!res.ok || !json.data) {
+        setErro(json.error || "Não foi possível carregar.");
+        return;
+      }
+      const e = json.data;
+      setForm({
+        nome: String(e.nome ?? ""),
+        telefone: String(e.telefone ?? ""),
+        cidade: String(e.cidade ?? ""),
+        uf: String(e.uf ?? ""),
+        especialidades: Array.isArray(e.especialidades) ? (e.especialidades as string[]).join(", ") : "",
+        experiencia: String(e.experiencia ?? ""),
+        tem_equipe: e.tem_equipe === true,
+        tamanho_equipe: e.tamanho_equipe != null ? String(e.tamanho_equipe) : "",
+        observacoes: String(e.observacoes ?? ""),
+      });
+      setEditId(id);
+      setAberto(true);
+    } catch {
+      setErro("Erro de rede.");
+    }
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -57,20 +94,20 @@ export default function EspecialistasPage() {
     setSalvando(true);
     try {
       const especialidades = form.especialidades.split(",").map((s) => s.trim()).filter(Boolean);
-      const res = await fetch("/api/crm/especialistas", {
-        method: "POST",
+      const payload = {
+        nome: form.nome, telefone: form.telefone, cidade: form.cidade, uf: form.uf,
+        especialidades, experiencia: form.experiencia,
+        tem_equipe: form.tem_equipe, tamanho_equipe: form.tamanho_equipe || null,
+        observacoes: form.observacoes,
+      };
+      const res = await fetch(editId ? `/api/crm/especialistas/${editId}` : "/api/crm/especialistas", {
+        method: editId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-        body: JSON.stringify({
-          nome: form.nome, telefone: form.telefone, cidade: form.cidade, uf: form.uf,
-          especialidades, experiencia: form.experiencia,
-          tem_equipe: form.tem_equipe, tamanho_equipe: form.tamanho_equipe || null,
-          observacoes: form.observacoes,
-        }),
+        body: JSON.stringify(payload),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) { setErro(json.error || "Falha ao salvar."); return; }
-      setForm({ nome: "", telefone: "", cidade: "", uf: "", especialidades: "", experiencia: "", tem_equipe: false, tamanho_equipe: "", observacoes: "" });
-      setAberto(false);
+      fecharForm();
       void carregar();
     } catch {
       setErro("Erro de rede.");
@@ -86,7 +123,10 @@ export default function EspecialistasPage() {
         <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>Especialistas</h1>
         <button
           type="button"
-          onClick={() => setAberto((a) => !a)}
+          onClick={() => {
+            if (aberto) fecharForm();
+            else { setForm(FORM_VAZIO); setEditId(null); setErro(""); setAberto(true); }
+          }}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
         >
           <Plus size={14} strokeWidth={2.5} /> Novo especialista
@@ -126,9 +166,9 @@ export default function EspecialistasPage() {
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button type="button" disabled={salvando} onClick={() => void salvar()}
               style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvando ? "default" : "pointer", opacity: salvando ? 0.6 : 1 }}>
-              {salvando ? "Salvando…" : "Salvar especialista"}
+              {salvando ? "Salvando…" : editId ? "Salvar alterações" : "Salvar especialista"}
             </button>
-            <button type="button" onClick={() => setAberto(false)} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
+            <button type="button" onClick={fecharForm} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
           </div>
         </div>
       )}
@@ -142,7 +182,12 @@ export default function EspecialistasPage() {
       ) : (
         <div style={{ border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
           {lista.map((e, i) => (
-            <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none" }}>
+            <div
+              key={e.id}
+              onClick={() => void editar(e.id)}
+              title="Editar especialista"
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none", cursor: "pointer" }}
+            >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                   {e.nome}

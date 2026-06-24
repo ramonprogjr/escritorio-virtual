@@ -36,10 +36,46 @@ export default function FornecedoresPage() {
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-  const [form, setForm] = useState({
+  const [editId, setEditId] = useState<string | null>(null);
+  const FORM_VAZIO = {
     tipo_pessoa: "PJ", nome: "", cnpj: "", email: "", telefone: "",
     area_atuacao: "", cidade: "", estado: "",
-  });
+  };
+  const [form, setForm] = useState(FORM_VAZIO);
+
+  function fecharForm() {
+    setAberto(false);
+    setEditId(null);
+    setErro("");
+    setForm(FORM_VAZIO);
+  }
+
+  async function editar(id: string) {
+    setErro("");
+    try {
+      const res = await fetch(`/api/crm/fornecedores/${id}`, { headers: internalApiHeaders() });
+      const json = (await res.json().catch(() => ({}))) as { data?: Record<string, unknown>; error?: string };
+      if (!res.ok || !json.data) {
+        setErro(json.error || "Não foi possível carregar.");
+        return;
+      }
+      const f = json.data;
+      setForm({
+        tipo_pessoa: String(f.tipo_pessoa ?? "PJ") === "PF" ? "PF" : "PJ",
+        nome: String(f.nome ?? ""),
+        cnpj: String(f.cnpj ?? f.cpf ?? ""),
+        email: String(f.email ?? ""),
+        telefone: String(f.telefone ?? ""),
+        area_atuacao: String(f.area_atuacao ?? ""),
+        cidade: String(f.cidade ?? ""),
+        estado: String(f.estado ?? ""),
+      });
+      setEditId(id);
+      setAberto(true);
+    } catch {
+      setErro("Erro de rede.");
+    }
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -59,15 +95,14 @@ export default function FornecedoresPage() {
     if (!form.nome.trim()) { setErro("Nome obrigatório."); return; }
     setSalvando(true);
     try {
-      const res = await fetch("/api/crm/fornecedores", {
-        method: "POST",
+      const res = await fetch(editId ? `/api/crm/fornecedores/${editId}` : "/api/crm/fornecedores", {
+        method: editId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json", ...internalApiHeaders() },
         body: JSON.stringify(form),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) { setErro(json.error || "Falha ao salvar."); return; }
-      setForm({ tipo_pessoa: "PJ", nome: "", cnpj: "", email: "", telefone: "", area_atuacao: "", cidade: "", estado: "" });
-      setAberto(false);
+      fecharForm();
       void carregar();
     } catch {
       setErro("Erro de rede.");
@@ -83,7 +118,10 @@ export default function FornecedoresPage() {
         <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>Fornecedores</h1>
         <button
           type="button"
-          onClick={() => setAberto((a) => !a)}
+          onClick={() => {
+            if (aberto) fecharForm();
+            else { setForm(FORM_VAZIO); setEditId(null); setErro(""); setAberto(true); }
+          }}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
         >
           <Plus size={14} strokeWidth={2.5} /> Novo fornecedor
@@ -119,9 +157,9 @@ export default function FornecedoresPage() {
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button type="button" disabled={salvando} onClick={() => void salvar()}
               style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvando ? "default" : "pointer", opacity: salvando ? 0.6 : 1 }}>
-              {salvando ? "Salvando…" : "Salvar fornecedor"}
+              {salvando ? "Salvando…" : editId ? "Salvar alterações" : "Salvar fornecedor"}
             </button>
-            <button type="button" onClick={() => setAberto(false)} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
+            <button type="button" onClick={fecharForm} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
           </div>
         </div>
       )}
@@ -137,7 +175,12 @@ export default function FornecedoresPage() {
           {lista.map((f, i) => {
             const st = STATUS_LABEL[String(f.status_acesso ?? "pendente")] ?? STATUS_LABEL.pendente;
             return (
-              <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none" }}>
+              <div
+                key={f.id}
+                onClick={() => void editar(f.id)}
+                title="Editar fornecedor"
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none", cursor: "pointer" }}
+              >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{f.nome}</p>
                   <p style={{ margin: 0, fontSize: 12, color: "#8b949e" }}>
