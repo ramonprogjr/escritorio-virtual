@@ -34,6 +34,8 @@ type TimelineItem = {
   criado_em: string;
 };
 
+type PessoaMini = { id: string; nome: string; codigo?: string | null };
+
 function formatCurrency(v: number | null) {
   if (v == null) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -59,6 +61,10 @@ export default function NegocioDetalhePage() {
   const [acaoStatus, setAcaoStatus] = useState<"" | "salvando" | "salvo">("");
   const [novaNota, setNovaNota] = useState("");
   const [salvandoNota, setSalvandoNota] = useState(false);
+  const [pessoaVinc, setPessoaVinc] = useState<PessoaMini | null>(null);
+  const [pickerAberto, setPickerAberto] = useState(false);
+  const [buscaPessoa, setBuscaPessoa] = useState("");
+  const [resultadosPessoa, setResultadosPessoa] = useState<PessoaMini[]>([]);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -71,6 +77,7 @@ export default function NegocioDetalhePage() {
         data?: NegocioDetalhe;
         timeline?: TimelineItem[];
         lead?: { nome: string } | null;
+        pessoa?: PessoaMini | null;
         error?: string;
       };
       if (!res.ok) {
@@ -90,6 +97,7 @@ export default function NegocioDetalhePage() {
       }
       setTimeline(json.timeline ?? []);
       setLeadNome(json.lead?.nome ?? null);
+      setPessoaVinc(json.pessoa ?? null);
     } catch {
       setErro("Erro de rede.");
     } finally {
@@ -173,6 +181,37 @@ export default function NegocioDetalhePage() {
       }
     } finally {
       setSalvandoNota(false);
+    }
+  }
+
+  async function buscarPessoas(q: string) {
+    setBuscaPessoa(q);
+    if (q.trim().length < 2) {
+      setResultadosPessoa([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/crm/pessoas?busca=${encodeURIComponent(q.trim())}&limit=8`, {
+        headers: internalApiHeaders(),
+      });
+      const json = (await res.json().catch(() => ({}))) as { data?: PessoaMini[] };
+      setResultadosPessoa(Array.isArray(json.data) ? json.data : []);
+    } catch {
+      setResultadosPessoa([]);
+    }
+  }
+
+  async function definirPessoa(pessoa: PessoaMini | null) {
+    const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+      body: JSON.stringify({ pessoa_id: pessoa?.id ?? null }),
+    });
+    if (res.ok) {
+      setPessoaVinc(pessoa);
+      setPickerAberto(false);
+      setBuscaPessoa("");
+      setResultadosPessoa([]);
     }
   }
 
@@ -439,6 +478,55 @@ export default function NegocioDetalhePage() {
           </Link>
         </p>
       )}
+
+      {/* Pessoa vinculada (editável) */}
+      <div style={{ marginTop: 16, padding: 14, borderRadius: 10, border: "1px solid #30363d", background: "#161b22" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <p style={{ margin: 0, fontSize: 11, color: "#8b949e", flex: 1 }}>PESSOA / DECISOR</p>
+          <button type="button" onClick={() => setPickerAberto((o) => !o)}
+            style={{ background: "none", border: "none", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            {pessoaVinc ? "Trocar" : "Vincular"}
+          </button>
+          {pessoaVinc ? (
+            <button type="button" onClick={() => void definirPessoa(null)}
+              style={{ background: "none", border: "none", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>
+              Desvincular
+            </button>
+          ) : null}
+        </div>
+        {pessoaVinc ? (
+          <Link href={`/crm/pessoas/${pessoaVinc.id}`} style={{ color: "#e6edf3", fontWeight: 600, fontSize: 14 }}>
+            {pessoaVinc.nome}
+            {pessoaVinc.codigo ? <span style={{ color: "#8b949e", fontFamily: "monospace", fontSize: 12 }}> · {pessoaVinc.codigo}</span> : null}
+          </Link>
+        ) : (
+          <p style={{ margin: 0, color: "#8b949e", fontSize: 13 }}>Nenhuma pessoa vinculada.</p>
+        )}
+        {pickerAberto ? (
+          <div style={{ marginTop: 10 }}>
+            <input
+              value={buscaPessoa}
+              onChange={(e) => void buscarPessoas(e.target.value)}
+              placeholder="Buscar por nome, telefone ou código…"
+              autoFocus
+              style={{ width: "100%", padding: 9, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13 }}
+            />
+            {resultadosPessoa.length > 0 ? (
+              <div style={{ marginTop: 6, border: "1px solid #30363d", borderRadius: 8, overflow: "hidden" }}>
+                {resultadosPessoa.map((p, i) => (
+                  <button key={p.id} type="button" onClick={() => void definirPessoa(p)}
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", border: "none", borderTop: i ? "1px solid #21262d" : "none", background: "transparent", color: "#e6edf3", fontSize: 13, cursor: "pointer" }}>
+                    {p.nome}
+                    {p.codigo ? <span style={{ color: "#8b949e", fontFamily: "monospace", fontSize: 11 }}> · {p.codigo}</span> : null}
+                  </button>
+                ))}
+              </div>
+            ) : buscaPessoa.trim().length >= 2 ? (
+              <p style={{ margin: "6px 0 0", color: "#8b949e", fontSize: 12 }}>Nenhuma pessoa encontrada.</p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       <div style={{ marginTop: 24, display: "flex", gap: 8, flexWrap: "wrap" }}>
         {["novo", "qualificando", "qualificado", "proposta", "negociando", "fechamento", "ganho", "perdido"].map((e) => (
