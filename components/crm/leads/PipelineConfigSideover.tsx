@@ -255,14 +255,14 @@ export function PipelineConfigSideover({
         ) : !pipeline ? (
           <p className="text-sm text-[#8b949e]">
             Execute a migração <code className="text-[#c9a24a]">hub_pipelines</code> no Supabase
-            para activar a configuração na base de dados. O kanban usa o template padrão até lá.
+            para ativar a configuração na base de dados. O kanban usa o template padrão até lá.
           </p>
         ) : (
           <>
             <CadastroSideoverPanel titulo={null} descricao={null}>
               <div className="space-y-3">
                 <p className="text-xs leading-relaxed text-[#8b949e]">
-                  Desactive estágios para ocultá-los no kanban. Registos já nesse estágio mantêm-se
+                  Desative estágios para ocultá-los no kanban. Registros já nesse estágio mantêm-se
                   até serem movidos.
                 </p>
                 <ul className="flex flex-col gap-2">
