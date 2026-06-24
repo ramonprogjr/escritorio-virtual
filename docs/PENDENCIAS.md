@@ -15,8 +15,9 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 - [ ] **Auth → Password policy:** mínimo ≥8 + *leaked password protection* (alinhar ao client).
 - [ ] **Trocar a senha** `A12345679` (foi enviada no chat → exposta) por uma forte.
 
-## 👁 Validação (🤖 em andamento)
-- [ ] **Validação visual** desktop + mobile das telas com chips (lead, negócio, empresa, imóvel), do **QuickAdd (FAB)**, e do fluxo **login → esqueci senha → /redefinir-senha**. *(em execução via browser nesta sessão)*
+## 👁 Validação (🤖)
+- [x] **Validação visual via browser (24/jun):** login OK (senha A12345679), menu §8 renderiza, **QuickAdd FAB** visível, deep-link `?novo=1` abre o criador, **chips do lead confirmados** (Tipo de interesse + campo dinâmico viraram chips; Cidade segue texto). Login mostra "Esqueci minha senha".
+- [ ] **Spot-check restante (opcional):** negócio/empresa/imóvel usam o MESMO `SmartField` (alta confiança), mas validar em **mobile** e o fluxo **/redefinir-senha** (depende de SMTP configurado) quando der.
 
 ## 🎨 UX / produto (decisão futura — 🧑 + 🤖)
 - [ ] **`valor_estimado` do lead como faixa:** hoje é numérico (faixa exigiria guardar faixa vs número). Decidir.
@@ -34,4 +35,4 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 - [ ] **B5 distribuição · B5.5 monetização · B6 obra · B7 membros · B8 IA** — futuros (ver plano).
 
 ## ✅ Concluído recente (24/jun — referência)
-Bloco 1 (menu §8), Bloco 1.5 (auditoria + Escritórios), Bloco 2/U2 (QuickAdd + SmartField/ConfidenceBadge + chips em lead/negócio/empresa/imóvel + sideover edição + `disabled` uniforme), "Esqueci minha senha" + `/redefinir-senha` + hardening. Suíte 178/178.
+Bloco 1 (menu §8), Bloco 1.5 (auditoria + Escritórios), Bloco 2/U2 (QuickAdd + SmartField/ConfidenceBadge + chips em lead/negócio/empresa/imóvel + sideover edição + `disabled` uniforme), "Esqueci minha senha" + `/redefinir-senha` + hardening, **fix login intermitente** (retry no `crm-session` — 401 transitório), validação visual do lead via browser. Suíte 178/178.
