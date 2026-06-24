@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Plus, X, ChevronDown, Menu } from "lucide-react";
+import { Plus, X, ChevronDown, Menu, Search } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -255,6 +255,23 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
               </div>
             )}
           </div>
+
+          {sidebarExpanded ? (
+            <button
+              type="button"
+              onClick={() =>
+                window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))
+              }
+              className="mb-2 flex w-full flex-shrink-0 items-center gap-2 rounded-xl border border-[#2b3544] bg-[#0d1117] px-3 py-2 text-xs font-medium text-[#8b949e] transition-colors hover:border-[#c9a24a]/40 hover:text-[#e6edf3]"
+              title="Buscar / ir para… (Ctrl+K)"
+            >
+              <Search size={14} strokeWidth={2} aria-hidden />
+              <span className="flex-1 text-left">Buscar…</span>
+              <kbd className="rounded border border-[#2b3544] bg-[#161b22] px-1.5 py-0.5 text-[10px] font-bold text-[#8b949e]">
+                Ctrl K
+              </kbd>
+            </button>
+          ) : null}
 
           <nav className="flex min-h-0 w-full flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden px-1">
             {sidebarExpanded ? (
