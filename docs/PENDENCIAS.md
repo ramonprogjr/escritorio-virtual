@@ -22,7 +22,7 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 ## 🎨 Plano UI/UX (auditoria + diretor, 24/jun) — 4 ondas seguras-autônomas
 Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditivo, gates tsc+vitest+_chk23, sem push/RLS):
 - [x] **Onda A** — #1 cabeçalho contextual no `CadastroSideoverPanel` (some "Visão do cadastro" do config; **verificado no browser**) + #7 PT-BR + ocultar slug técnico. ✅
-- [ ] **Onda B (visual)** — #2 tokenizar tabela-lista de Leads (`gray-*`/`blue-*`→`--obra-*`, l.739-789) + #5 trocar emojis das quick-actions por Lucide + dica de **Ctrl+K** na sidebar.
+- [x] **Onda B (visual)** ✅ — #2 tabela-lista de Leads tokenizada (`--obra-*`, score dourado); #5 quick-actions com ícones Lucide. **Sub-item pendente:** dica de **Ctrl+K** na sidebar (`app/crm/layout.tsx`) — menor, fácil.
 - [ ] **Onda C (sinais acionáveis)** — #4 selo de **SLA textual** nos cartões Kanban (rótulo+cor, usa `lib/crm/sla-frescor`) + #3 **dashboard reordenado por urgência** (acionável no topo, % no rodapé).
 - [ ] **Onda D (interação)** — #6 trocar `alert()/confirm()` por `CrmConfirmDialog`/strip dark + #8 **respostas rápidas (templates)** no Inbox + label IA dinâmico (templates = seguro; resposta por IA = trava/B8).
 - **Travas fora do Top 8:** cards de distribuição/SLA-fornecedor/ranking no dashboard (motor+RLS), converter conversa→negócio, respostas por IA, disclosure de menu por plano.
