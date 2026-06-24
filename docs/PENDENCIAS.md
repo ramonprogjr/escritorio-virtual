@@ -23,8 +23,8 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditivo, gates tsc+vitest+_chk23, sem push/RLS):
 - [x] **Onda A** — #1 cabeçalho contextual no `CadastroSideoverPanel` (some "Visão do cadastro" do config; **verificado no browser**) + #7 PT-BR + ocultar slug técnico. ✅
 - [x] **Onda B (visual)** ✅ — #2 tabela-lista de Leads tokenizada (`--obra-*`, score dourado); #5 quick-actions com ícones Lucide. **Sub-item pendente:** dica de **Ctrl+K** na sidebar (`app/crm/layout.tsx`) — menor, fácil.
-- [ ] **Onda C (sinais acionáveis)** — #4 selo de **SLA textual** nos cartões Kanban (rótulo+cor, usa `lib/crm/sla-frescor`) + #3 **dashboard reordenado por urgência** (acionável no topo, % no rodapé).
-- [ ] **Onda D (interação)** — #6 trocar `alert()/confirm()` por `CrmConfirmDialog`/strip dark + #8 **respostas rápidas (templates)** no Inbox + label IA dinâmico (templates = seguro; resposta por IA = trava/B8).
+- [x] **Onda C (sinais acionáveis)** ✅ — #4 selo de **SLA textual** no card de lead (rótulo+cor, via `sla-frescor`); #3 **dashboard reordenado por urgência** (Ação agora→Alertas→Leads parados no topo; % no rodapé) + "+ Parceiro" tokenizado. (Card de negócio sem SLA em minutos — semântica de dias = B5.)
+- [~] **Onda D (interação)** — #8 ✅ respostas rápidas (templates) no Inbox + label IA dinâmico. **#6 PENDENTE (deferido por segurança):** trocar `alert()`/`window.confirm()` por `CrmConfirmDialog`/strip dark. Abordagem pronta: em `app/crm/cadastro/page.tsx` (`excluirRegistro` l.449, `excluirSelecionados` l.496) dividir cada função em *requester* (seta estado `confirmExclusao={titulo,mensagem,onConfirmar}`) + *executor* (corpo atual) e renderizar `CrmConfirmDialog danger`; em `app/crm/leads/page.tsx` (`alert()` l.367/388) trocar por strip dark de erro (estado efêmero). Fluxo destrutivo → fazer com calma/revisão.
 - **Travas fora do Top 8:** cards de distribuição/SLA-fornecedor/ranking no dashboard (motor+RLS), converter conversa→negócio, respostas por IA, disclosure de menu por plano.
 
 ## 🎨 UX / produto (decisão futura — 🧑 + 🤖)
