@@ -33,6 +33,8 @@ Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditi
 - [ ] **ConfidenceBadge.onCorrigir** não ligado — depende da IA pré-preencher (Bloco 8).
 - [ ] **Voz (Talk-and-Go)** — "no fim" do roadmap (decidir on-device vs serviço, custo/privacidade).
 - [ ] **Mapear `error.message` do Supabase** para mensagens PT amigáveis no login (UX).
+- [ ] **🆕 Verificar paleta da LISTA de Negócios** (`app/crm/negocios/page.tsx`) — a auditoria suspeitou que repete o drift `gray-*`/`blue-*` da lista de Leads (já tokenizada na Onda B). Conferir e tokenizar se preciso. (🤖 seguro)
+- [ ] **🆕 Migrar criação de Cadastro (wizard PF/PJ) para SmartField** — hoje a criação ainda é formulário tradicional; é o item *grande* do Click-and-Go nos cadastros (auditoria UX). Esforço **G** → fatiar. (🤖 seguro; campos de valor dependem da decisão faixas vs exato)
 
 ## 🔐 Segurança (consideração — 🤖 quando o fluxo existir)
 - [ ] **/redefinir-senha** aceita sessão ativa comum (usuário logado troca senha sem reautenticar — padrão Supabase). Ao criar "trocar senha **dentro do app**", exigir a **senha atual** antes.
@@ -43,9 +45,9 @@ Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditi
 
 ## 🗺 Cronograma (próximos blocos)
 - [x] **Bloco 3 — CRM do fornecedor (fatia segura do diretor) — COMPLETO + verificado (24/jun).** Cartão acionável (próxima-ação no negócio + frescor testado); **config de pipeline** (`PipelineConfigSideover`) já existia, ligada à API e montada em leads/negócios — **verificada no browser pós-RLS** (lista pipelines/estágios, criar/ativar/adicionar via service-role). RLS de estágios endurecido. **Faltam (futuro, não nesta fatia):** reordenar etapa por drag, guard não-destrutivo (não desativar etapa-sistema/com negócios), inbox unificado + respostas sugeridas (depende de IA, B8).
-- [ ] **Polimento menor:** o `PipelineConfigSideover` reusa o `CadastroSideoverPanel`, cujo cabeçalho diz "Visão do cadastro / …registo no CRM" — fora de contexto em config de pipeline. Trocar por texto próprio (baixo risco).
+- [x] **Polimento menor (FEITO — Onda A/#1):** cabeçalho contextual no `CadastroSideoverPanel`; o config de pipeline já não mostra "Visão do cadastro".
 - [ ] **Bloco 4 — Visibilidade & Governança Hub** (RLS `fornecedor_id`, dashboard) — 🔒 só com Wendel.
 - [ ] **B5 distribuição · B5.5 monetização · B6 obra · B7 membros · B8 IA** — futuros (ver plano).
 
 ## ✅ Concluído recente (24/jun — referência)
-Bloco 1 (menu §8), Bloco 1.5 (auditoria + Escritórios), Bloco 2/U2 (QuickAdd + SmartField/ConfidenceBadge + chips em lead/negócio/empresa/imóvel + sideover edição + `disabled` uniforme), "Esqueci minha senha" + `/redefinir-senha` + hardening, **fix login intermitente** (retry no `crm-session` — 401 transitório), validação visual do lead via browser. Suíte 178/178.
+Bloco 1 (menu §8), Bloco 1.5 (auditoria + Escritórios), Bloco 2/U2 (QuickAdd + SmartField/ConfidenceBadge + chips em lead/negócio/empresa/imóvel + sideover edição + `disabled` uniforme), "Esqueci minha senha" + `/redefinir-senha` + hardening, **fix login intermitente** (retry no `crm-session` — 401 transitório), **RLS pipelines aplicado**, validação visual (lead + config + dashboard), e **Plano UI/UX Ondas A–C + D#8** (cabeçalho contextual, tabela tokenizada, Lucide, selo SLA, dashboard por urgência, respostas rápidas). Suíte **182/182**.

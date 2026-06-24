@@ -41,7 +41,7 @@
 
 ## Detalhe por bloco
 
-### Bloco 1 — Navegação da plataforma (U1) `[em execução]`
+### Bloco 1 — Navegação da plataforma (U1) `[✅ FEITO]`
 **Entrega:** reagrupar o menu lateral no modelo §8 usando **apenas rotas existentes** (zero "menu morto"); grupos sem tela (Central IA, Comunidade) ficam de fora até existirem. Depois: **CommandBar** (atalho de teclado; voz incremental).
 
 Árvore-alvo (todas as rotas já existem):
