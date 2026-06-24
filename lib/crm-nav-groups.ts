@@ -77,16 +77,9 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     ],
   },
   {
-    // Pilar 2 do produto (mestre §8.4): toda decisão de dinheiro/comissão/material passa aqui.
-    id: "aprovacoes",
-    label: "Aprovações",
-    sectionIcon: ClipboardCheck,
-    items: [
-      { href: "/crm/aprovacoes", label: "Aprovações", icon: ClipboardCheck, minRole: "gestor" },
-    ],
-  },
-  {
     // §8: Comercial / CRM — funde Vendas + Atendimento. O lado "vender" da plataforma.
+    // Tarefas + Aprovações ficam juntas no fim: são as "filas de ação" do dia a dia.
+    // Aprovações é Pilar 2 (mestre §8.4) — minRole gestor; comercial só vê Tarefas.
     id: "comercial",
     label: "Comercial / CRM",
     sectionIcon: Briefcase,
@@ -97,6 +90,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       { href: "/crm/atendimento", label: "Atendimento", icon: MessageSquare, minRole: "atendente" },
       { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
       { href: "/crm/tarefas", label: "Tarefas", icon: ClipboardList, minRole: "comercial" },
+      { href: "/crm/aprovacoes", label: "Aprovações", icon: ClipboardCheck, minRole: "gestor" },
     ],
   },
   {
