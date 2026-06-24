@@ -94,7 +94,7 @@ type ChatMsg = {
 const emptyForm = (): FormState => ({
   titulo: "",
   prefixo_mercado: "IMB",
-  etapa: "novo_negocio",
+  etapa: "novo",
   valor_estimado: "",
   data_previsao_fechamento: "",
   lead_ids: [],
