@@ -16,6 +16,7 @@ import {
   CadastroTipoBadge,
 } from "@/components/crm/cadastro/CadastroPremiumSideover";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { SmartField } from "@/components/crm/SmartField";
 import {
   labelMercadoPrefixo,
   MERCADOS_PREFIXO_OPTIONS,
@@ -662,36 +663,22 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                 </p>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={LABEL}>Mercado *</label>
-                  <select
-                    value={form.prefixo_mercado}
-                    onChange={(e) => campo("prefixo_mercado", e.target.value)}
-                    style={{ ...INPUT, cursor: "pointer" }}
-                  >
-                    {MERCADOS_PREFIXO_OPTIONS.map((m) => (
-                      <option key={m.value} value={m.value}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={LABEL}>Etapa inicial</label>
-                  <select
-                    value={form.etapa}
-                    onChange={(e) => campo("etapa", e.target.value)}
-                    style={{ ...INPUT, cursor: "pointer" }}
-                  >
-                    {NEGOCIO_ETAPAS.map((item) => (
-                      <option key={item} value={item}>
-                        {ETAPA_LABEL[item] || item}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <SmartField
+                  label="Mercado"
+                  required
+                  modo="chips"
+                  opcoes={MERCADOS_PREFIXO_OPTIONS}
+                  value={form.prefixo_mercado}
+                  onChange={(v) => campo("prefixo_mercado", v)}
+                />
+                <SmartField
+                  label="Etapa inicial"
+                  modo="chips"
+                  opcoes={NEGOCIO_ETAPAS.map((item) => ({ value: item, label: ETAPA_LABEL[item] || item }))}
+                  value={form.etapa}
+                  onChange={(v) => campo("etapa", v)}
+                />
               </div>
 
               <div
