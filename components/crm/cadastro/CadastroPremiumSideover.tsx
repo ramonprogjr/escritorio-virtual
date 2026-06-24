@@ -143,7 +143,18 @@ export function CadastroPremiumSideover({
   );
 }
 
-export function CadastroSideoverPanel({ children }: { children: ReactNode }) {
+export function CadastroSideoverPanel({
+  children,
+  titulo = "Visão do cadastro",
+  descricao = "Dados consolidados do registo no CRM. Alterações em modo edição são auditadas.",
+}: {
+  children: ReactNode;
+  /** Título do cabeçalho do painel. Passe `null` para um painel sem cabeçalho (ex.: config de pipeline). */
+  titulo?: string | null;
+  /** Descrição do cabeçalho. Passe `null` para omitir. */
+  descricao?: string | null;
+}) {
+  const temCabecalho = titulo != null || descricao != null;
   return (
     <div
       style={{
@@ -153,13 +164,17 @@ export function CadastroSideoverPanel({ children }: { children: ReactNode }) {
         overflow: "hidden",
       }}
     >
-      <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(37, 48, 66, 0.9)" }}>
-        <p style={{ color: "#8ea1ba", fontSize: 11, margin: 0, fontWeight: 700 }}>Visão do cadastro</p>
-        <p style={{ margin: "8px 0 0", color: "#9cb0c9", fontSize: 11, lineHeight: 1.5 }}>
-          Dados consolidados do registo no CRM. Alterações em modo edição são auditadas.
-        </p>
-      </div>
-      <div style={{ padding: "6px 14px 12px" }}>{children}</div>
+      {temCabecalho ? (
+        <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(37, 48, 66, 0.9)" }}>
+          {titulo != null ? (
+            <p style={{ color: "#8ea1ba", fontSize: 11, margin: 0, fontWeight: 700 }}>{titulo}</p>
+          ) : null}
+          {descricao != null ? (
+            <p style={{ margin: "8px 0 0", color: "#9cb0c9", fontSize: 11, lineHeight: 1.5 }}>{descricao}</p>
+          ) : null}
+        </div>
+      ) : null}
+      <div style={{ padding: temCabecalho ? "6px 14px 12px" : "12px 14px" }}>{children}</div>
     </div>
   );
 }

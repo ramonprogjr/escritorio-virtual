@@ -42,7 +42,6 @@ export function PipelineConfigSideover({
   const [pipelines, setPipelines] = useState<PipelineComEstagios[]>([]);
   const [pipeline, setPipeline] = useState<PipelineComEstagios | null>(null);
   const [loading, setLoading] = useState(false);
-  const [novoSlug, setNovoSlug] = useState("");
   const [novoLabel, setNovoLabel] = useState("");
   const [novoPipelineNome, setNovoPipelineNome] = useState("");
   const [erro, setErro] = useState("");
@@ -76,7 +75,6 @@ export function PipelineConfigSideover({
     else {
       setPipelines([]);
       setPipeline(null);
-      setNovoSlug("");
       setNovoLabel("");
       setNovoPipelineNome("");
       setErro("");
@@ -93,7 +91,7 @@ export function PipelineConfigSideover({
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setErro(j.error || "Erro ao actualizar estágio");
+      setErro(j.error || "Erro ao atualizar estágio");
       return;
     }
     setPipeline((prev) =>
@@ -111,12 +109,15 @@ export function PipelineConfigSideover({
 
   async function adicionarEstagio() {
     if (!pipeline?.id || pipeline.id === "fallback") return;
-    const slug = novoSlug.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_");
-    const label = novoLabel.trim() || slug;
-    if (!slug) {
-      setErro("Informe um identificador (slug) para o estágio.");
+    const label = novoLabel.trim();
+    if (!label) {
+      setErro("Informe o nome do estágio.");
       return;
     }
+    // Slug técnico é gerado a partir do nome — o usuário só digita o nome (Click-and-Go).
+    const slug =
+      label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 48) ||
+      `etapa_${Date.now().toString(36)}`;
     const headers = { ...internalApiHeaders(), "Content-Type": "application/json" };
     const res = await fetch(`/api/crm/pipelines/${pipeline.id}/estagios`, {
       method: "POST",
@@ -128,7 +129,6 @@ export function PipelineConfigSideover({
       setErro(j.error || "Erro ao criar estágio");
       return;
     }
-    setNovoSlug("");
     setNovoLabel("");
     await carregar();
     onUpdated?.();
@@ -179,12 +179,12 @@ export function PipelineConfigSideover({
       <div className="flex flex-col gap-4 p-1">
         {showPipelineAdmin ? (
           <>
-            <CadastroSideoverPanel>
+            <CadastroSideoverPanel titulo={null} descricao={null}>
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-bold text-[#e6edf3]">Pipelines</p>
                   <p className="mt-1 text-[11px] leading-relaxed text-[#8b949e]">
-                    Selecciona um pipeline para gerir os estágios. Novos pipelines criados aqui
+                    Selecione um pipeline para gerir os estágios. Novos pipelines criados aqui
                     nascem livres, sem vínculo de mercado, e herdam os estágios padrão.
                   </p>
                 </div>
@@ -217,7 +217,7 @@ export function PipelineConfigSideover({
               </div>
             </CadastroSideoverPanel>
 
-            <CadastroSideoverPanel>
+            <CadastroSideoverPanel titulo={null} descricao={null}>
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-bold text-[#e6edf3]">Novo pipeline</p>
@@ -251,7 +251,7 @@ export function PipelineConfigSideover({
         ) : null}
 
         {loading ? (
-          <p className="text-sm text-[#8b949e]">A carregar…</p>
+          <p className="text-sm text-[#8b949e]">Carregando…</p>
         ) : !pipeline ? (
           <p className="text-sm text-[#8b949e]">
             Execute a migração <code className="text-[#c9a24a]">hub_pipelines</code> no Supabase
@@ -259,7 +259,7 @@ export function PipelineConfigSideover({
           </p>
         ) : (
           <>
-            <CadastroSideoverPanel>
+            <CadastroSideoverPanel titulo={null} descricao={null}>
               <div className="space-y-3">
                 <p className="text-xs leading-relaxed text-[#8b949e]">
                   Desactive estágios para ocultá-los no kanban. Registos já nesse estágio mantêm-se
@@ -288,7 +288,7 @@ export function PipelineConfigSideover({
                           className="text-[10px] font-bold"
                           style={{ color: est.ativo ? "#3fb950" : "#6e7781" }}
                         >
-                          {est.ativo ? "ACTIVO" : "INACTIVO"}
+                          {est.ativo ? "ATIVO" : "INATIVO"}
                         </span>
                         <CrmToggleSwitch
                           checked={est.ativo}
@@ -304,15 +304,9 @@ export function PipelineConfigSideover({
                   <p className="mb-2 text-xs font-bold text-[#e6edf3]">Novo estágio</p>
                   <div className="flex flex-col gap-2">
                     <input
-                      value={novoSlug}
-                      onChange={(e) => setNovoSlug(e.target.value)}
-                      placeholder="slug (ex: pre_analise)"
-                      className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#e6edf3]"
-                    />
-                    <input
                       value={novoLabel}
                       onChange={(e) => setNovoLabel(e.target.value)}
-                      placeholder="Nome exibido"
+                      placeholder="Nome do estágio"
                       className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#e6edf3]"
                     />
                     <button
