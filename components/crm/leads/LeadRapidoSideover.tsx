@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Building2, UserPlus } from "lucide-react";
 import { CadastroPremiumSideover } from "@/components/crm/cadastro/CadastroPremiumSideover";
 import { MercadoLeadPicker } from "@/components/crm/leads/MercadoLeadPicker";
+import { SmartField } from "@/components/crm/SmartField";
 import { LEAD_ORIGENS } from "@/lib/crm/lead-cadastro";
 import {
   CAMPOS_POR_TIPO,
@@ -23,6 +24,9 @@ const ORIGEM_LABEL: Record<string, string> = {
   indicacao: "Indicação",
   outro: "Outro",
 };
+
+// Opções de origem como chips (Click-and-Go) — mesmos valores do antigo <select>.
+const ORIGEM_OPCOES = LEAD_ORIGENS.map((o) => ({ value: o, label: ORIGEM_LABEL[o] || o }));
 
 const inputCls =
   "w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a]";
@@ -305,37 +309,25 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
         <section>
           <p className={`${secaoCls} mb-3`}>Comercial</p>
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className={labelCls} htmlFor="lead-rapido-origem">
-                  Origem
-                </label>
-                <select
-                  id="lead-rapido-origem"
-                  value={form.origem}
-                  onChange={(e) => set("origem", e.target.value)}
-                  className={inputCls}
-                >
-                  {LEAD_ORIGENS.map((o) => (
-                    <option key={o} value={o}>
-                      {ORIGEM_LABEL[o] || o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelCls} htmlFor="lead-rapido-valor">
-                  Valor estimado (R$)
-                </label>
-                <input
-                  id="lead-rapido-valor"
-                  value={form.valor_estimado}
-                  onChange={(e) => set("valor_estimado", e.target.value)}
-                  className={inputCls}
-                  placeholder="0"
-                  inputMode="decimal"
-                />
-              </div>
+            <SmartField
+              label="Origem"
+              modo="chips"
+              opcoes={ORIGEM_OPCOES}
+              value={form.origem}
+              onChange={(v) => set("origem", v || form.origem)}
+            />
+            <div>
+              <label className={labelCls} htmlFor="lead-rapido-valor">
+                Valor estimado (R$)
+              </label>
+              <input
+                id="lead-rapido-valor"
+                value={form.valor_estimado}
+                onChange={(e) => set("valor_estimado", e.target.value)}
+                className={inputCls}
+                placeholder="0"
+                inputMode="decimal"
+              />
             </div>
             {form.origem === "indicacao" && (
               <div>
