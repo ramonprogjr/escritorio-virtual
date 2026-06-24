@@ -25,6 +25,7 @@
 |---|---|---|---|---|---|
 | **0 ✅ feito** | Base manual sólida | CRM, cadastros, negócio flexível, roteamento, canais, ficha do negócio, fixes login/drift | — | não | — |
 | **1** | **Navegação da plataforma (U1)** | Menu lateral reagrupado no modelo §8 (**só rotas que existem**) + disclosure por papel/plano + **CommandBar** (atalho; voz depois) | design system (existe) | não | baixo |
+| **1.5** | **Auditoria de informação (menu ↔ tela)** | cada item no grupo certo; **Cadastros unificado PF/PJ**; resolver colisões de nome (2 "Empresas"); alinhar o conteúdo das telas ao menu | B1 | não | médio |
 | **2** | **Cadastros Pipedrive (U2)** | `SmartField` + `ConfidenceBadge` + `QuickAdd`; fichas correlacionadas Pessoa↔Empresa↔Negócio; entidade **Imóvel**; replica o padrão da ficha do negócio | B1 | não | médio |
 | **3** | **CRM do Fornecedor (U3)** | pipelines/Kanban **customizáveis por tenant**; inbox unificado + respostas sugeridas; cartão com SLA | B2 | não | médio |
 | **4** | **Visibilidade & Governança Hub** | regra de visibilidade RLS (`fornecedor_id`; Hub bypassa, §5 spec); **Dashboard do Hub** (cards acionáveis); base da camada Fornecedores | B3 | não | **alto** (RLS) |
@@ -55,6 +56,14 @@ IA e Agentes       Agentes IA · Automações · Ferramentas · Copiloto (Em bre
 Administração      Configurações · Integrações · Contatos notif. · Usuários · Empresas · Onboarding
 ```
 **Preserva:** `minRole` por item e o teste `crm-nav-permissoes.test.ts` (comercial sem Financeiro; atendente com Inbox/Leads; `progresso-sistema` fora do menu).
+
+### Bloco 1.5 — Auditoria de informação (coerência menu ↔ tela)
+Varredura item a item: cada destino no grupo semanticamente certo, **e a tela correspondente coerente** com o que o menu promete (rótulo, conteúdo, permissão). Itens já decididos:
+- **Integrações → IA e Agentes** ✅ (feito) — API-first liga IA/automações a sistemas externos.
+- **Onboarding (tenant) fora do menu** ✅ (feito) — `/crm/onboarding-tenant` é tela solta de setup; rota acessível por URL (owner). O onboarding do **membro** vem do sistema Membros (Bloco 7).
+- **Cadastros unificado PF/PJ** — uma entrada "Cadastros" em Comercial/CRM cobrindo **Pessoa Física** (`hub_pessoas`) e **Pessoa Jurídica / empresa-cliente** (`hub_empresas`), navegáveis e correlacionadas. (Sobrepõe-se ao Bloco 2; aqui define a IA do menu, lá os componentes.)
+- **Colisão "Empresas"** ⚠️ — `/crm/empresas` hoje é **admin multi-tenant** (`/api/crm/tenants`, escritórios/tenants), **não** o cadastro de empresa-cliente. **Recomendação:** renomear esse item para **"Escritórios"** e mantê-lo em Administração; o cadastro PJ do cliente vive em Cadastros (acima). *Confirmar com o Wendel.*
+- **Varredura dos demais** itens/telas (Tarefas, Canais, Pedidos, Relatórios, etc.): confirmar grupo, rótulo e que a tela entrega o prometido.
 
 ### Bloco 2 — Cadastros Pipedrive (U2)
 Componentes-base sobre o design system (`SmartField`, `ConfidenceBadge`, `QuickAdd`); fichas correlacionadas navegáveis em 1 clique; entidade **Imóvel**; replicar o padrão da ficha do negócio (próxima-ação/nota/vínculo). Preenchimento por **escolha (chips)** primeiro; voz incremental.

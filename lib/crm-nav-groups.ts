@@ -26,7 +26,6 @@ import {
   Plug,
   Bell,
   UserCog,
-  Shield,
 } from "lucide-react";
 import {
   crmPodeVerRota,
@@ -152,6 +151,8 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       },
       { href: "/crm/ciclos", label: "Automações", icon: Zap, minRole: "gestor" },
       { href: "/crm/ferramentas", label: "Ferramentas", icon: Wrench, minRole: "gestor" },
+      // Integrações vive aqui (API-first liga IA/automações a sistemas externos), não em Admin.
+      { href: "/crm/integracoes", label: "Integrações", icon: Plug, minRole: "owner" },
       {
         href: "/crm/agentes-reais",
         label: "Copiloto",
@@ -175,16 +176,14 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       { href: "/crm/configuracoes", label: "Configurações", icon: Settings, minRole: "gestor" },
       // "Progresso sistema" (/crm/progresso-sistema) é tracker interno de build — fora do
       // menu do produto. Rota segue acessível por URL (owner) p/ diagnóstico.
-      { href: "/crm/integracoes", label: "Integrações", icon: Plug, minRole: "owner" },
+      // Integrações migrou p/ "IA e Agentes". Onboarding (/crm/onboarding-tenant) saiu do
+      // menu (tela solta de setup do tenant); rota segue acessível por URL (owner).
       { href: "/crm/contatos", label: "Contatos de notificação", icon: Bell, minRole: "owner" },
       { href: "/crm/usuarios", label: "Usuários & Permissões", icon: UserCog, minRole: "gestor" },
+      // ⚠️ "Empresas" aqui = admin multi-tenant (/api/crm/tenants), i.e. ESCRITÓRIOS/tenants,
+      // NÃO o cadastro de empresa-cliente (hub_empresas). A unificação Cadastros PF/PJ é o
+      // cadastro CRM — ver Bloco 1.5. Renomear este p/ "Escritórios" está em avaliação.
       { href: "/crm/empresas", label: "Empresas", icon: Building2, minRole: "owner" },
-      {
-        href: "/crm/onboarding-tenant",
-        label: "Onboarding",
-        icon: Shield,
-        minRole: "owner",
-      },
     ],
   },
 ];
