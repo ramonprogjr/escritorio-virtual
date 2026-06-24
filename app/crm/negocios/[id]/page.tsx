@@ -6,6 +6,7 @@ import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
+import { tipoAlvoPorMercado } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import type { RastreioCadeia } from "@/lib/crm/resolver-rastreio-codigo";
 
@@ -51,6 +52,8 @@ export default function NegocioDetalhePage() {
   const [rastreio, setRastreio] = useState<RastreioCadeia | null>(null);
   const [motivoPendente, setMotivoPendente] = useState<string | null>(null);
   const [motivoSelecionado, setMotivoSelecionado] = useState("");
+  const [derivando, setDerivando] = useState(false);
+  const [derivadoMsg, setDerivadoMsg] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -165,6 +168,37 @@ export default function NegocioDetalhePage() {
     }
   }
 
+  async function gerarDerivado(tipoAlvo?: "obra" | "projeto") {
+    setDerivando(true);
+    setDerivadoMsg(null);
+    try {
+      const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}/converter-obra`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify(tipoAlvo ? { tipo_alvo: tipoAlvo } : {}),
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: { codigo?: string };
+        tipo?: string;
+        ja_existia?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        setDerivadoMsg(json.error || "Não foi possível gerar.");
+        return;
+      }
+      const label = json.tipo === "projeto" ? "Projeto" : "Obra";
+      setDerivadoMsg(
+        `${label} ${json.data?.codigo ?? ""} ${json.ja_existia ? "já existia" : "criada"}.`.trim()
+      );
+      void carregar();
+    } catch {
+      setDerivadoMsg("Erro de rede.");
+    } finally {
+      setDerivando(false);
+    }
+  }
+
   if (carregando) {
     return <p style={{ padding: 24, color: "#8b949e" }}>Carregando...</p>;
   }
@@ -269,6 +303,71 @@ export default function NegocioDetalhePage() {
         <Link href={`/crm/projetos?negocio_id=${negocio.id}`} style={{ color: "#c9a24a", fontWeight: 700 }}>Projetos</Link>
         <Link href="/crm/obras" style={{ color: "#8b949e" }}>Obras</Link>
       </div>
+
+      {(negocio.status === "fechado_ganho" || negocio.etapa === "ganho") &&
+        (() => {
+          const alvo = tipoAlvoPorMercado(negocio.prefixo_mercado);
+          const outro = alvo === "projeto" ? "obra" : "projeto";
+          const labelAlvo = alvo === "projeto" ? "projeto" : "obra";
+          return (
+            <div
+              style={{
+                marginTop: 16,
+                padding: 14,
+                borderRadius: 10,
+                border: "1px solid #c9a24a44",
+                background: "#003b2622",
+              }}
+            >
+              <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
+                Negócio ganho — gerar entrega
+              </p>
+              <p style={{ margin: "0 0 10px", fontSize: 12, color: "#8b949e" }}>
+                Cria a {labelAlvo} ligada a este negócio (padrão do mercado{" "}
+                {labelMercadoPrefixo(negocio.prefixo_mercado)}).
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                  type="button"
+                  disabled={derivando}
+                  onClick={() => void gerarDerivado()}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: "#c9a24a",
+                    color: "#003b26",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: derivando ? "default" : "pointer",
+                    opacity: derivando ? 0.6 : 1,
+                  }}
+                >
+                  {derivando ? "Gerando…" : `Gerar ${labelAlvo}`}
+                </button>
+                <button
+                  type="button"
+                  disabled={derivando}
+                  onClick={() => void gerarDerivado(outro)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: 8,
+                    border: "1px solid #30363d",
+                    background: "transparent",
+                    color: "#8b949e",
+                    fontSize: 12,
+                    cursor: derivando ? "default" : "pointer",
+                  }}
+                >
+                  ou gerar {outro}
+                </button>
+                {derivadoMsg ? (
+                  <span style={{ fontSize: 12, color: "#34d399" }}>{derivadoMsg}</span>
+                ) : null}
+              </div>
+            </div>
+          );
+        })()}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 24 }}>
         <div>

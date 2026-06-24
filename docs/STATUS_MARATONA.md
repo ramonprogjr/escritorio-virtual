@@ -22,7 +22,7 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - [x] **D — Segurança · diagnóstico (advisors)** — rodado; achados triados; **P0 corrigido** (anon podia DELETAR PII via RPC) + view SECURITY DEFINER corrigida; backlog menor documentado
 - [x] **E — Segurança · RLS `hub_*`** — FECHADO (lote 1 crítico + lote 2): **`anon_or_public_open = 0` em TODAS as hub_***. Provado no banco + QA logado. Refinamento tenant é melhoria futura (não-bloqueante).
 - [ ] F — Segurança · funções/prova
-- [~] **G — Espinha dorsal (caminho de valor)** — backbone API feito: `fn-derivados` (negócio ganho→obra/projeto) + `rf-alerta-parado` (leads parados). Sem migration (colunas já existiam). Falta wiring de UI.
+- [x] **G — Espinha dorsal (caminho de valor)** — backbone API + UI: `fn-derivados` (botão "Gerar obra/projeto" no negócio ganho) + `rf-alerta-parado` (widget "Leads parados" no dashboard, provado live com 8 leads). Sem migration. 162/162 testes.
 - [ ] H — Anthropic · base
 - [ ] I — Anthropic · ferramentas
 - [ ] J — Caminho de valor

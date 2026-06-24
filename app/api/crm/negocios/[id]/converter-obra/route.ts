@@ -25,14 +25,17 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const { data: negocio, error: negErr } = await supabase
     .from("hub_negocios")
-    .select("id, codigo, titulo, prefixo_mercado, status, lead_id, tenant_id")
+    .select("id, codigo, titulo, prefixo_mercado, status, etapa, lead_id, tenant_id")
     .eq("id", id)
     .maybeSingle();
 
   if (negErr) return NextResponse.json({ error: negErr.message }, { status: 500 });
   if (!negocio) return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
 
-  if (String(negocio.status) !== "fechado_ganho") {
+  // "Ganho" pode vir como status (fechado_ganho) ou como etapa (ganho) — a UI marca por etapa.
+  const ganho =
+    String(negocio.status) === "fechado_ganho" || String(negocio.etapa) === "ganho";
+  if (!ganho) {
     return NextResponse.json(
       { error: "Apenas negócios ganhos geram obra/projeto." },
       { status: 409 }

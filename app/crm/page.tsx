@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, UserPlus } from "lucide-react";
 import { CrmAcaoAgora } from "@/components/crm/CrmAcaoAgora";
 import { CrmAlertasStrip } from "@/components/crm/CrmAlertasStrip";
+import { CrmLeadsParados } from "@/components/crm/CrmLeadsParados";
 import { CrmEquipeResumo } from "@/components/crm/CrmEquipeResumo";
 import { CrmMetricCard, CrmSectionTitle } from "@/components/crm/CrmMetricCard";
 import { CrmOperacaoResumo } from "@/components/crm/CrmOperacaoResumo";
@@ -166,6 +167,8 @@ export default function DashboardPage() {
           <CrmUltimosLeads leads={dash.leadsRecentes} loading={dash.loading} />
           <CrmOperacaoResumo operacao={dash.operacao} loading={dash.loading} />
         </div>
+
+        <CrmLeadsParados />
 
         <div>
           <CrmSectionTitle>Hoje</CrmSectionTitle>
