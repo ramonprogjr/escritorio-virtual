@@ -34,7 +34,8 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 - [ ] **Backfill `pipeline_id`** em leads/negócios antigos (migração aditiva) — agrupar com o trabalho de RLS de pipelines.
 
 ## 🗺 Cronograma (próximos blocos)
-- [~] **Bloco 3 — CRM do fornecedor** — decisão do diretor: fatia segura. **Feito:** cartão acionável (próxima-ação no negócio + frescor reutilizável testado). **Próximo (Passos 3–5 do diretor):** ligar `PipelineConfigSideover` à API de pipelines (criar/renomear/ordenar/ativar etapa) + guard não-destrutivo. ⚠️ **Depende de tratar o RLS de pipelines acima** (escrita em tabela anon-open) — fazer com Wendel.
+- [x] **Bloco 3 — CRM do fornecedor (fatia segura do diretor) — COMPLETO + verificado (24/jun).** Cartão acionável (próxima-ação no negócio + frescor testado); **config de pipeline** (`PipelineConfigSideover`) já existia, ligada à API e montada em leads/negócios — **verificada no browser pós-RLS** (lista pipelines/estágios, criar/ativar/adicionar via service-role). RLS de estágios endurecido. **Faltam (futuro, não nesta fatia):** reordenar etapa por drag, guard não-destrutivo (não desativar etapa-sistema/com negócios), inbox unificado + respostas sugeridas (depende de IA, B8).
+- [ ] **Polimento menor:** o `PipelineConfigSideover` reusa o `CadastroSideoverPanel`, cujo cabeçalho diz "Visão do cadastro / …registo no CRM" — fora de contexto em config de pipeline. Trocar por texto próprio (baixo risco).
 - [ ] **Bloco 4 — Visibilidade & Governança Hub** (RLS `fornecedor_id`, dashboard) — 🔒 só com Wendel.
 - [ ] **B5 distribuição · B5.5 monetização · B6 obra · B7 membros · B8 IA** — futuros (ver plano).
 
