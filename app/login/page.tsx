@@ -40,6 +40,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [recuperar, setRecuperar] = useState(false);
 
   useEffect(() => {
     const err = searchParams.get("error");
@@ -131,6 +132,37 @@ function LoginForm() {
     router.refresh();
   }
 
+  // Recuperação de senha: envia o link de redefinição por e-mail (Supabase). Não revela se
+  // o e-mail existe (evita enumeração de contas). A página /redefinir-senha conclui o reset.
+  async function onRecuperarSenha(e: FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setMsg(null);
+    const emailEl = document.getElementById("login-email") as HTMLInputElement | null;
+    const emailVal = (emailEl?.value || email).trim();
+    if (!emailVal) {
+      setLoading(false);
+      setMsg("Informe o e-mail.");
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailVal, {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      });
+      setLoading(false);
+      if (error) {
+        setMsg(error.message);
+        return;
+      }
+      setMsg(
+        "Se este e-mail estiver cadastrado, enviamos um link para redefinir a senha. Verifique a caixa de entrada e o spam.",
+      );
+    } catch (err) {
+      setLoading(false);
+      setMsg(messageForAuthRequestFailure(err));
+    }
+  }
+
   return (
     <div className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-[var(--obra-dark,#0d1117)] md:flex-row">
       <style jsx global>{`
@@ -161,7 +193,7 @@ function LoginForm() {
           
           </div>
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <form onSubmit={recuperar ? onRecuperarSenha : onSubmit} className="flex flex-col gap-5">
             <div className="space-y-1.5">
               <label
                 htmlFor="login-email"
@@ -180,34 +212,52 @@ function LoginForm() {
                 className="w-full rounded-xl border border-[var(--obra-borda,#30363d)] bg-[var(--obra-dark-2,#161b22)] px-4 py-3 text-[15px] text-[var(--obra-texto,#e6edf3)] transition-[border-color,box-shadow] placeholder:text-[var(--obra-texto-3,#484f58)] focus:border-[var(--obra-dourado,#c9a24a)] focus:outline-none focus:ring-1 focus:ring-[var(--obra-dourado,#c9a24a)]/35"
               />
             </div>
-            <div className="space-y-1.5">
-              <label
-                htmlFor="login-password"
-                className="text-xs font-medium uppercase tracking-wide text-[var(--obra-texto-2,#8b949e)]"
-              >
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-[var(--obra-borda,#30363d)] bg-[var(--obra-dark-2,#161b22)] py-3 pl-4 pr-12 text-[15px] text-[var(--obra-texto,#e6edf3)] transition-[border-color,box-shadow] placeholder:text-[var(--obra-texto-3,#484f58)] focus:border-[var(--obra-dourado,#c9a24a)] focus:outline-none focus:ring-1 focus:ring-[var(--obra-dourado,#c9a24a)]/35"
-                />
+            {!recuperar ? (
+              <>
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="login-password"
+                    className="text-xs font-medium uppercase tracking-wide text-[var(--obra-texto-2,#8b949e)]"
+                  >
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-[var(--obra-borda,#30363d)] bg-[var(--obra-dark-2,#161b22)] py-3 pl-4 pr-12 text-[15px] text-[var(--obra-texto,#e6edf3)] transition-[border-color,box-shadow] placeholder:text-[var(--obra-texto-3,#484f58)] focus:border-[var(--obra-dourado,#c9a24a)] focus:outline-none focus:ring-1 focus:ring-[var(--obra-dourado,#c9a24a)]/35"
+                    />
+                    <button
+                      type="button"
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                      className="absolute right-0 top-0 flex h-full w-11 items-center justify-center rounded-r-xl text-[var(--obra-texto-2,#8b949e)] transition-colors hover:text-[var(--obra-dourado,#c9a24a)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--obra-dourado,#c9a24a)]/50"
+                      onClick={() => setShowPassword((v: boolean) => !v)}
+                    >
+                      {showPassword ? <EyeOff className="h-[18px] w-[18px]" aria-hidden /> : <Eye className="h-[18px] w-[18px]" aria-hidden />}
+                    </button>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  className="absolute right-0 top-0 flex h-full w-11 items-center justify-center rounded-r-xl text-[var(--obra-texto-2,#8b949e)] transition-colors hover:text-[var(--obra-dourado,#c9a24a)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--obra-dourado,#c9a24a)]/50"
-                  onClick={() => setShowPassword((v: boolean) => !v)}
+                  onClick={() => {
+                    setRecuperar(true);
+                    setMsg(null);
+                  }}
+                  className="-mt-1 self-end text-xs font-medium text-[var(--obra-dourado,#c9a24a)] hover:underline"
                 >
-                  {showPassword ? <EyeOff className="h-[18px] w-[18px]" aria-hidden /> : <Eye className="h-[18px] w-[18px]" aria-hidden />}
+                  Esqueci minha senha
                 </button>
-              </div>
-            </div>
+              </>
+            ) : (
+              <p className="-mt-1 text-sm leading-snug text-[var(--obra-texto-2,#8b949e)]">
+                Informe seu e-mail cadastrado e enviaremos um link para você redefinir a senha.
+              </p>
+            )}
 
             {msg && (
               <div
@@ -228,8 +278,27 @@ function LoginForm() {
                 cursor: loading ? "wait" : "pointer",
               }}
             >
-              {loading ? "Entrando…" : "Entrar"}
+              {recuperar
+                ? loading
+                  ? "Enviando…"
+                  : "Enviar link de recuperação"
+                : loading
+                  ? "Entrando…"
+                  : "Entrar"}
             </button>
+
+            {recuperar && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRecuperar(false);
+                  setMsg(null);
+                }}
+                className="self-center text-xs font-medium text-[var(--obra-texto-2,#8b949e)] transition-colors hover:text-[var(--obra-dourado,#c9a24a)]"
+              >
+                ← Voltar ao login
+              </button>
+            )}
           </form>
 
           <p className="mt-10 text-center text-[11px] leading-relaxed text-[var(--obra-texto-3,#484f58)]">
