@@ -79,7 +79,8 @@ Componentes-base sobre o design system (`SmartField`, `ConfidenceBadge`, `QuickA
 
 **Progresso (24/jun) — U2 net-new entregue (local):**
 - ✅ **QuickAdd (FAB)** global e role-aware (`components/crm/CrmQuickAdd.tsx`): "+" flutuante cria Lead/Negócio/Pessoa/Empresa por deep-link nos criadores existentes (`?novo=1` em leads/negócios, `?novo=pf|pj` em cadastro). Não duplica formulário.
-- ✅ **Primitivos** `ConfidenceBadge` + `SmartField` (+ `smartfield-faixas.ts` puro, testado): chips/faixa/texto, microfone como STUB. **Reutilizáveis, ainda NÃO integrados** em formulários críticos (evitar risco) — prontos para plugar.
+- ✅ **Primitivos** `ConfidenceBadge` + `SmartField` (+ `smartfield-faixas.ts` puro, testado): chips/faixa/texto, microfone como STUB.
+- ✅ **1ª integração real:** no criador rápido de lead (`LeadRapidoSideover`), o campo **Origem** virou **chips Click-and-Go** (era `<select>`) — mesmos valores, sem mudar schema. Padrão pronto para replicar em outros campos categóricos.
 - ⏸ **Pendente (gated, decisão do Wendel):** integrar SmartField nos forms (após decidir **faixas vs valor exato**) e ligar a **voz** (on-device vs serviço — custo/privacidade). Integração em forms críticos deve ser feita com o Wendel presente.
 
 ### Bloco 3 — CRM do Fornecedor (U3)
