@@ -21,6 +21,7 @@ type NegocioDetalhe = {
   valor_estimado: number | null;
   valor_fechado: number | null;
   motivo_perda: string | null;
+  proxima_acao: string | null;
   lead_id: string | null;
   pessoa_id: string | null;
   criado_em: string | null;
@@ -54,6 +55,10 @@ export default function NegocioDetalhePage() {
   const [motivoSelecionado, setMotivoSelecionado] = useState("");
   const [derivando, setDerivando] = useState(false);
   const [derivadoMsg, setDerivadoMsg] = useState<string | null>(null);
+  const [proximaAcao, setProximaAcao] = useState("");
+  const [acaoStatus, setAcaoStatus] = useState<"" | "salvando" | "salvo">("");
+  const [novaNota, setNovaNota] = useState("");
+  const [salvandoNota, setSalvandoNota] = useState(false);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -80,6 +85,8 @@ export default function NegocioDetalhePage() {
           descricao: n.descricao ?? "",
           valor_estimado: n.valor_estimado != null ? String(n.valor_estimado) : "",
         });
+        setProximaAcao(n.proxima_acao ?? "");
+        setAcaoStatus("");
       }
       setTimeline(json.timeline ?? []);
       setLeadNome(json.lead?.nome ?? null);
@@ -131,6 +138,42 @@ export default function NegocioDetalhePage() {
       body: JSON.stringify({ status: "cancelado" }),
     });
     void carregar();
+  }
+
+  /** Auto-save da próxima ação (ao sair do campo). */
+  async function salvarProximaAcao() {
+    if ((negocio?.proxima_acao ?? "") === proximaAcao.trim()) return;
+    setAcaoStatus("salvando");
+    try {
+      const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ proxima_acao: proximaAcao.trim() || null }),
+      });
+      setAcaoStatus(res.ok ? "salvo" : "");
+      if (res.ok) setNegocio((n) => (n ? { ...n, proxima_acao: proximaAcao.trim() || null } : n));
+    } catch {
+      setAcaoStatus("");
+    }
+  }
+
+  async function registrarNota() {
+    const txt = novaNota.trim();
+    if (!txt) return;
+    setSalvandoNota(true);
+    try {
+      const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}/nota`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ descricao: txt }),
+      });
+      if (res.ok) {
+        setNovaNota("");
+        void carregar();
+      }
+    } finally {
+      setSalvandoNota(false);
+    }
   }
 
   async function mudarEtapa(novaEtapa: string) {
@@ -419,7 +462,35 @@ export default function NegocioDetalhePage() {
         ))}
       </div>
 
+      <div style={{ marginTop: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <p style={{ fontSize: 11, color: "#8b949e", margin: 0 }}>PRÓXIMA AÇÃO</p>
+          {acaoStatus === "salvando" ? <span style={{ fontSize: 11, color: "#8b949e" }}>salvando…</span> : null}
+          {acaoStatus === "salvo" ? <span style={{ fontSize: 11, color: "#34d399" }}>salvo ✓</span> : null}
+        </div>
+        <textarea
+          value={proximaAcao}
+          onChange={(e) => { setProximaAcao(e.target.value); setAcaoStatus(""); }}
+          onBlur={() => void salvarProximaAcao()}
+          placeholder="O que fazer a seguir? (salva automaticamente ao sair do campo)"
+          style={{ width: "100%", marginTop: 6, minHeight: 56, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13 }}
+        />
+      </div>
+
       <h2 style={{ marginTop: 32, fontSize: 16 }}>Timeline</h2>
+      <div style={{ display: "flex", gap: 8, margin: "8px 0" }}>
+        <input
+          value={novaNota}
+          onChange={(e) => setNovaNota(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") void registrarNota(); }}
+          placeholder="Registrar uma nota…"
+          style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13 }}
+        />
+        <button type="button" disabled={salvandoNota || !novaNota.trim()} onClick={() => void registrarNota()}
+          style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvandoNota || !novaNota.trim() ? "default" : "pointer", opacity: salvandoNota || !novaNota.trim() ? 0.6 : 1 }}>
+          {salvandoNota ? "…" : "Adicionar"}
+        </button>
+      </div>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {timeline.length === 0 ? (
           <li style={{ color: "#8b949e", fontSize: 13 }}>Sem atividades.</li>
