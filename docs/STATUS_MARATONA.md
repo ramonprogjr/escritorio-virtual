@@ -19,7 +19,7 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - [x] **A — Fundação de trabalho** (artefatos) — CONCLUÍDO (commit `ce8e1d0`; `_chk23` OK)
 - [~] **B — Verdade (QA logado)** — blocker da service role **RESOLVIDO**; falta verificação de console no browser (Playwright reconectando)
 - [ ] C — Drift & fronteira
-- [ ] D — Segurança · diagnóstico (advisors)
+- [x] **D — Segurança · diagnóstico (advisors)** — rodado; achados triados; **P0 corrigido** (anon podia DELETAR PII via RPC) + view SECURITY DEFINER corrigida; backlog menor documentado
 - [x] **E — Segurança · RLS `hub_*`** — FECHADO (lote 1 crítico + lote 2): **`anon_or_public_open = 0` em TODAS as hub_***. Provado no banco + QA logado. Refinamento tenant é melhoria futura (não-bloqueante).
 - [ ] F — Segurança · funções/prova
 - [ ] G — Espinha dorsal (migrations PDF aditivas)
@@ -154,3 +154,9 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - **Causa-raiz:** `hub_migration_v2.sql:238` anexa o trigger `BEFORE UPDATE` (`NEW.atualizado_em = NOW()`) a 8 tabelas, mas **2 não têm a coluna no banco vivo**: `hub_conversas` e `hub_whatsapp_config` → **qualquer UPDATE falhava** (`record "new" has no field "atualizado_em"`). Impacto real: conversas (marcar lida/encerrar/transferir) e config do WhatsApp não atualizavam.
 - **Fix (aditivo, reversível):** `add column atualizado_em timestamptz not null default now()` nas 2 tabelas. Ver [fix-trigger-atualizado-em.sql](sql/fix-trigger-atualizado-em.sql).
 - **Provado:** UPDATE em `hub_conversas` (o backfill de tenant_id que tinha sido pulado) **voltou a funcionar** → conversas agora também com tenant_id backfillado. `_chk23` OK.
+
+### 2026-06-23 — Step 3b / Bloco D (advisors): P0 anon-DELETE corrigido + view SECURITY DEFINER
+- **🔴 P0 (mais grave da sessão):** `get_advisors` + verificação direta acharam **9 funções `SECURITY DEFINER` destrutivas executáveis por ANON** (`has_function_privilege('anon',fn,'execute')=true`): `hub_delete_pessoa_crm`, `hub_delete_empresa_crm`, `hub_delete_seguro` (DELETE genérico em qualquer tabela!), `hub_delete_agente_cascade`, `hub_delete_ciclo_cascade`, `hub_delete_cargo_catalogo`, `hub_backup_automatico`, `rls_auto_enable`, `write_audit_log`. Corpo verificado: **sem guarda de papel**; fazem `SET LOCAL app.delete_authorized=true` p/ furar o trigger `block_unauthorized_delete` e deletam. ⇒ qualquer um com a **anon key (do browser)** podia `POST /rest/v1/rpc/hub_delete_pessoa_crm {p_id}` e **apagar PII**. Pior que a exposição de leitura do Bloco E.
+- **Fix:** `revoke execute` de public/anon/authenticated; `grant` só `service_role` (server). Callers são todos server-side (service-role) → não quebra. **Provado:** anon execute = **false**; service_role = **true**. Ver [bloco-d-hardening-APPLIED.sql](sql/bloco-d-hardening-APPLIED.sql).
+- **ERROR (advisor):** view `vw_hub_auditoria_ferramentas_agentes` era `SECURITY DEFINER` (bypassa RLS do caller) → `set (security_invoker = on)`.
+- **Backlog triado (não-bloqueante):** 38 `function_search_path_mutable` (hardening em lote); `pg_net`/`vector` em `public` (mover é arriscado); bucket `capas` permite listagem (`capas_pub_sel`); `auth_leaked_password_protection` desligado (painel); read-helpers anon-executáveis (baixo risco). Detalhe no SQL acima.
