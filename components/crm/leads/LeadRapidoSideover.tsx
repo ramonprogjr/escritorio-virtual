@@ -191,49 +191,45 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
         </p>
 
         <section>
-          <p className={`${secaoCls} mb-3`}>Tipo de interesse</p>
-          <select
+          <SmartField
+            label="Tipo de interesse"
+            required
+            modo="chips"
+            opcoes={TIPOS_INTERESSE_LEAD.map((t) => ({ value: t.id, label: t.label }))}
             value={form.tipo_interesse}
-            onChange={(e) => {
-              set("tipo_interesse", e.target.value as TipoInteresseLeadId);
+            onChange={(v) => {
+              const id = v as TipoInteresseLeadId;
+              set("tipo_interesse", id);
               set("extras", {});
-              set("mercados", [prefixoMercadoFromTipoInteresse(e.target.value as TipoInteresseLeadId)]);
+              set("mercados", [prefixoMercadoFromTipoInteresse(id)]);
             }}
-            className={inputCls}
-          >
-            {TIPOS_INTERESSE_LEAD.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+            disabled={salvando}
+          />
         </section>
 
         <section>
           <p className={`${secaoCls} mb-3`}>Dados do interesse</p>
           <div className="flex flex-col gap-3">
-            {(CAMPOS_POR_TIPO[form.tipo_interesse] ?? []).map((campo) => (
-              <div key={campo.key}>
-                <label className={labelCls}>
-                  {campo.label}
-                  {campo.obrigatorio ? " *" : ""}
-                </label>
-                {campo.type === "select" && campo.options ? (
-                  <select
-                    className={inputCls}
-                    value={form.extras[campo.key] ?? ""}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, extras: { ...p.extras, [campo.key]: e.target.value } }))
-                    }
-                  >
-                    <option value="">Selecione…</option>
-                    {campo.options.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+            {(CAMPOS_POR_TIPO[form.tipo_interesse] ?? []).map((campo) =>
+              campo.type === "select" && campo.options ? (
+                <SmartField
+                  key={campo.key}
+                  label={campo.label}
+                  required={campo.obrigatorio}
+                  modo="chips"
+                  opcoes={campo.options}
+                  value={form.extras[campo.key] ?? ""}
+                  onChange={(v) =>
+                    setForm((p) => ({ ...p, extras: { ...p.extras, [campo.key]: v } }))
+                  }
+                  disabled={salvando}
+                />
+              ) : (
+                <div key={campo.key}>
+                  <label className={labelCls}>
+                    {campo.label}
+                    {campo.obrigatorio ? " *" : ""}
+                  </label>
                   <input
                     className={inputCls}
                     value={form.extras[campo.key] ?? ""}
@@ -241,9 +237,9 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
                       setForm((p) => ({ ...p, extras: { ...p.extras, [campo.key]: e.target.value } }))
                     }
                   />
-                )}
-              </div>
-            ))}
+                </div>
+              )
+            )}
           </div>
         </section>
 
