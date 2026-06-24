@@ -87,7 +87,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState("");
-  const [openDrawerId, setOpenDrawerId] = useState<string | null>(CRM_NAV_GROUPS[0].id);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ [CRM_NAV_GROUPS[0].id]: true });
   const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({ sistema: true });
   const [collapsedFlyoutId, setCollapsedFlyoutId] = useState<string | null>(null);
   const miniSidebarShellRef = useRef<HTMLDivElement>(null);
@@ -156,7 +156,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   );
 
   const syncOpenDrawer = useCallback(() => {
-    setOpenDrawerId(activeGroupId);
+    if (activeGroupId) {
+      setOpenGroups(prev => (prev[activeGroupId] ? prev : { ...prev, [activeGroupId]: true }));
+    }
   }, [activeGroupId]);
 
   useEffect(() => {
@@ -197,7 +199,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   }
 
   function toggleDrawer(id: string) {
-    setOpenDrawerId(prev => (prev === id ? null : id));
+    setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
   }
 
   if (slimMobile) {
@@ -257,8 +259,34 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             {sidebarExpanded ? (
               <>
                 {navGroups.map(group => {
-                  const open = openDrawerId === group.id;
                   const groupHasActive = group.items.some(item => isCrmNavPathActive(pathname, item.href));
+                  if (group.items.length === 1) {
+                    const only = group.items[0];
+                    const active = isCrmNavPathActive(pathname, only.href);
+                    return (
+                      <Link
+                        key={group.id}
+                        href={only.href}
+                        className={`flex min-h-[40px] w-full flex-shrink-0 items-center gap-2.5 rounded-xl border-l-2 px-3 py-1.5 text-sm font-semibold transition-colors ${
+                          active
+                            ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
+                            : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                        }`}
+                      >
+                        <NavIcon Icon={group.sectionIcon} expanded />
+                        <span className="min-w-0 flex-1 truncate">{group.label}</span>
+                        {only.navBadge ? (
+                          <span
+                            className="shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+                            style={{ background: "#c9a24a18", color: "#c9a24a", border: "1px solid #c9a24a35" }}
+                          >
+                            {only.navBadge}
+                          </span>
+                        ) : null}
+                      </Link>
+                    );
+                  }
+                  const open = !!openGroups[group.id];
                   return (
                     <div key={group.id} className="w-full flex-shrink-0">
                       <button
@@ -395,6 +423,30 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                   const flyoutOpen = collapsedFlyoutId === group.id;
                   const groupHasActive = group.items.some(item => isCrmNavPathActive(pathname, item.href));
                   const SectionIcon = group.sectionIcon;
+                  if (group.items.length === 1) {
+                    const only = group.items[0];
+                    return (
+                      <Link
+                        key={group.id}
+                        href={only.href}
+                        title={group.label}
+                        className={`relative mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${
+                          groupHasActive
+                            ? "bg-[#1a2332] text-[#c9a24a]"
+                            : "text-[#484f58] hover:bg-[#1a2332]/60 hover:text-[#8b949e]"
+                        }`}
+                      >
+                        {groupHasActive && (
+                          <span
+                            className="pointer-events-none absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full"
+                            style={{ background: "#c9a24a" }}
+                            aria-hidden
+                          />
+                        )}
+                        <SectionIcon size={20} strokeWidth={1.5} className="flex-shrink-0" aria-hidden />
+                      </Link>
+                    );
+                  }
                   return (
                     <button
                       key={group.id}
@@ -679,8 +731,28 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto py-2" style={{ WebkitOverflowScrolling: "touch" }}>
             {navGroups.map(group => {
-              const open = openDrawerId === group.id;
               const groupHasActive = group.items.some(item => isCrmNavPathActive(pathname, item.href));
+              if (group.items.length === 1) {
+                const only = group.items[0];
+                const active = isCrmNavPathActive(pathname, only.href);
+                return (
+                  <div key={group.id} className="px-2 pb-1">
+                    <Link
+                      href={only.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex min-h-[44px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
+                        active
+                          ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
+                          : "border-transparent text-[#8b949e] hover:bg-[#1a2332] hover:text-[#c7d5e0]"
+                      }`}
+                    >
+                      <NavIcon Icon={group.sectionIcon} expanded />
+                      <span className="min-w-0 flex-1 truncate">{group.label}</span>
+                    </Link>
+                  </div>
+                );
+              }
+              const open = !!openGroups[group.id];
               return (
                 <div key={group.id} className="px-2 pb-1">
                   <button
