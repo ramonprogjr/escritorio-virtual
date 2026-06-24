@@ -3,9 +3,26 @@
 **Data:** 2026-06-24 · **Escopo:** CRM cliente-final (`-ramon`) · **Status:** plano (aguardando GO; nada codado)
 
 ## Princípio
-Pessoa ↔ Empresa ↔ Negócio ↔ Produto **cruzados e navegáveis em 1 clique** (modelo Pipedrive),
+Pessoa ↔ Empresa ↔ Negócio **cruzados e navegáveis em 1 clique** (modelo Pipedrive),
 com **campos ricos do sistema Membros**, **rastreio por código tipo-CPF** (já implementado:
-PS2026001 / NGIMB2026001), e **IA-first** tecida em cada ponto. Negócio é o centro.
+PS2026001 / NGIMB2026001), e **IA-first + conversacional** tecida em cada ponto. Negócio é o centro.
+
+## Foco de mercado (o "produto" agora)
+O produto inicial **são os mercados de atuação**, não um catálogo de produtos físicos:
+**Imobiliário (IMB) · Arquitetura (ARQ) · Engenharia (ENG) · Serviços (SRV)** + a cadeia
+**projeto → obra → execução** (reforma/obra RFM, **marcenaria** MRC, marmoraria e demais serviços).
+~80% da entrada inicial é **projeto e obra** (e a execução decorrente). **Produto/catálogo físico
+(PRO) e fornecedores (FOR) = futuro.** Os 8 pipelines por mercado já existem; o foco operacional
+são IMB/ARQ/ENG/SRV + RFM/MRC.
+
+## Analytics & Relatórios GENERATIVOS (sob demanda, via Anthropic/Claude)
+As telas de **Relatórios e Analytics não são dashboards estáticos** — são **geradas sob demanda,
+em tempo real, pela Anthropic (Claude)**: o usuário pergunta (conversacional) ou abre "Analytics",
+o sistema reúne os dados relevantes (negócios/leads/funil por mercado), envia ao Claude com o
+contexto, e Claude devolve **análise + narrativa + specs de gráfico + tabela**, customizado e
+personalizado, renderizado na hora. O dashboard fixo atual vira só "vista rápida"; o profundo é gerado.
+*(Depende do Bloco H — chave Anthropic + GO de custo. Arquitetura desenhada provider-agnóstica:
+camada de "analytics agent" pronta agora; Claude pluga quando a chave existir.)*
 
 ## Mapa Pipedrive → -ramon (o que já existe)
 | Pipedrive | -ramon hoje | Lacuna |
@@ -25,10 +42,11 @@ PS2026001 / NGIMB2026001), e **IA-first** tecida em cada ponto. Negócio é o ce
    para ganho (não na criação). *Risco:* checar dependências da NOT NULL (validação de ganho).
 2. **Pessoa ↔ Empresa:** consolidar `hub_pessoas.empresa_id` como empresa primária + permitir
    uma pessoa aparecer nos contatos de uma empresa.
-3. **Produtos como itens do negócio:** nova tabela `hub_negocio_itens`
-   (negocio_id, produto_id/servico_id, descricao, quantidade, preco_unit, total, tenant_id) +
-   recalcular `valor_estimado` do negócio a partir dos itens.
-4. Tudo tenant-scoped + RLS (mesmo padrão do Bloco E) + códigos (PD/SV para produto/serviço).
+3. **Itens/escopo do negócio (serviços e etapas de obra — não catálogo de produto):** tabela
+   `hub_negocio_itens` (negocio_id, descricao, servico_id?, quantidade, preco_unit, total, tenant_id)
+   p/ compor o valor do negócio por **serviço/etapa** (projeto, execução, marcenaria, marmoraria…).
+   Produto físico/catálogo (PRO) fica para depois.
+4. Tudo tenant-scoped + RLS (mesmo padrão do Bloco E) + códigos (SV serviço; PD produto = futuro).
 
 ## Fase 2 — Fichas de detalhe correlacionadas (a "mágica" do Pipedrive)
 - **Ficha do Negócio:** centro + painéis laterais → **Pessoa** (card clicável), **Empresa**,
@@ -38,18 +56,22 @@ PS2026001 / NGIMB2026001), e **IA-first** tecida em cada ponto. Negócio é o ce
 - **Ficha da Empresa:** dados + **Contatos (pessoas)** + Negócios + Atividades.
 - Navegação 1-clique entre fichas (por código/id). Reusar o `⌘K` para pular entre entidades.
 
-## Fase 3 — Campos ricos (Membros) + catálogo de produtos
+## Fase 3 — Campos ricos (Membros) + catálogo de serviços
 - Pessoa/Empresa ganham os campos úteis do Membros (mercados, área, origem, documento, endereço,
   redes) — só o que faz sentido para cliente-final (homologação fica no CRM de Membros).
-- Catálogo `hub_servicos`/produtos com preço/unidade, para alimentar os itens do negócio.
+- Catálogo de **serviços** (`hub_servicos`) por mercado (projeto, execução, marcenaria, marmoraria…)
+  com preço/unidade, p/ alimentar os itens do negócio. Produto físico = futuro.
 
-## Fase 4 — IA-first (tecida em tudo; começa heurística, pluga LLM depois)
+## Fase 4 — IA-first + CONVERSACIONAL (espinha do produto; heurística → Claude)
 - **No cadastro:** dedup automática (telefone/CPF/CNPJ), **sugestão de vínculo** (essa pessoa é
   desta empresa?), enriquecimento, normalização. *(heurística pura primeiro — sem custo.)*
-- **No negócio:** IA sugere **produtos**, **próxima ação**, **resumo da timeline**, score/probabilidade.
-- **Busca:** estender `⌘K` para pessoas/empresas/negócios por nome **ou código**.
-- Provider: hoje Mistral; Anthropic dormente (Bloco H) — a camada de sugestão é desenhada
-  **provider-agnóstica**, ligando o LLM quando houver chave/custo aprovado.
+- **No negócio:** IA sugere **escopo/serviços**, **próxima ação**, **resumo da timeline**, score.
+- **Camada conversacional:** o usuário conversa ("como está o funil de arquitetura?", "resume esse
+  negócio") e a IA responde com dados reais + ações. ⌘K evolui para busca + comandos por linguagem.
+- **Analytics/Relatórios generativos** (ver seção acima): Claude gera a análise/tela sob demanda.
+- Provider: hoje Mistral; **Anthropic/Claude dormente (Bloco H — precisa chave + GO de custo)**.
+  Toda a camada IA é desenhada **provider-agnóstica**: pronta agora (heurística/Mistral), e o
+  **Claude pluga** quando a chave existir — é o que destrava o analytics generativo e o conversacional.
 
 ## Sequência sugerida & travas
 F1 → F2 → F3 → F4, cada fase com migração aditiva + prova logada + commit local (sem deploy).
