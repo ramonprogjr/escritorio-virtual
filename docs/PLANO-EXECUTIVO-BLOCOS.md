@@ -81,14 +81,14 @@ Score multi-critério; modos automático/semiautomático/manual; SLA com redistr
 ### Bloco 5.5 — Monetização da rede (licenciamento + comissão + performance)
 Camada de negócio sobre a base. **O Hub libera tudo.** Três frentes:
 
-**1. Licenciamento / Entitlements** (confirmado, catálogo fechado):
-- 3 eixos: **por módulo** (liga/desliga) · **por plano/pacote** (bundles) · **por créditos/tokens** (consumo).
+**1. Assinatura SaaS / Entitlements** (cobrança recorrente tenant→Hub — **NÃO é comissão, não tem rateio**):
+- Eixos de cobrança: **mensalidade** + **por usuário (seat)** + **por módulo** (liga/desliga) + **por plano/pacote** (bundles) + **créditos/tokens** (algumas features de consumo).
 - Módulos cobráveis: CRM · Atendimento (WhatsApp) · Projetos · Obras · Serviços · Compras · Financeiro · Marketing · IA/Copiloto · Integrações (+ Produtos, futuro). Base (não cobrada): Cadastros+códigos, Dashboard, Usuários/RBAC, Administração.
-- Créditos/tokens: **IA tokens**, **mensagens WhatsApp**, (futuro) armazenamento de evidências, assinaturas.
-- Dados (aditivo): `hub_planos`, `hub_tenant_modulos` (tenant+modulo+ativo+plano+validade → **disclosure por plano** no menu + **guard de rota** por módulo), `hub_tenant_creditos` (saldo+ledger). **Amarrar tenant ↔ cadastro PJ** (escritório = empresa-cadastro).
+- Créditos/tokens: **IA tokens**, **mensagens WhatsApp**, (futuro) armazenamento de evidências, assinaturas digitais.
+- Dados (aditivo): `hub_planos`, `hub_tenant_assinatura` (mensalidade + nº seats + plano + validade), `hub_tenant_modulos` (tenant+modulo+ativo → **disclosure por plano** no menu + **guard de rota** por módulo), `hub_tenant_creditos` (saldo+ledger por tipo). **Amarrar tenant ↔ cadastro PJ** (escritório = empresa-cadastro).
 
-**2. Comissionamento multi-fonte com RATEIO (split)** — o coração da monetização transacional:
-- **Fontes de receita** (todas passam pelo mesmo motor): SaaS (assinatura) · comissão de **venda de imóvel/serviço/produto** · **aluguel de equipamentos** (marketplace % *e* locação própria) · **treinamentos** (venda direta + comissão de indicação).
+**2. Comissionamento multi-fonte com RATEIO (split)** — a monetização **transacional** (≠ assinatura SaaS, que NÃO entra aqui):
+- **Fontes de receita** (todas passam pelo mesmo motor de rateio): comissão de **venda de imóvel/serviço/produto** · **aluguel de equipamentos** (marketplace % *e* locação própria) · **treinamentos** (venda direta + comissão de indicação).
 - **Rateio:** 1 transação → 1 **evento de comissão** → **N beneficiários**, cada um identificado pelo **código único** do cadastro (é PARA ISSO que o código tipo-CPF existe: rastreabilidade + divisão correta). Cada linha tem **papel** (Hub/indicador/vendedor/executor/parceiro), **% fixo ou variável**, e **direção** (Hub **recebe** = conta a receber; **repasse** = conta a pagar).
 - **Percentuais em camadas, sempre editáveis (owner define):** *prefixado* por **tipo × mercado × produto** → *override por acordo* **negócio a negócio / membro a membro** ("muda de acordo para acordo"). Defaults sugeridos por mercado (validar): IMB 1–3% (ou 15–25% da corretagem) · SRV 10–20% · Produto 5–15% · Obra/ENG/ARQ 3–8%.
 - **Base = valor do negócio; fatura no GANHO** (decidido). Vale p/ imóvel/produto/serviço; obra usa o valor do negócio.
