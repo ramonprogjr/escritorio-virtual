@@ -99,6 +99,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     items: [
       { href: "/crm/atendimento", label: "Inbox", icon: MessageSquare, minRole: "atendente" },
       { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
+      { href: "/crm/canais-entrada", label: "Canais de entrada", icon: Radio, minRole: "gestor" },
       { href: "/crm/distribuicao", label: "Distribuição", icon: Route, minRole: "gestor" },
     ],
   },
