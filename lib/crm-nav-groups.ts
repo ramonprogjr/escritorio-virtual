@@ -28,7 +28,7 @@ import {
   Shield,
 } from "lucide-react";
 import {
-  crmNivelAtLeast,
+  crmPodeVerRota,
   isCrmGestorRole,
   type CrmNivel,
 } from "@/lib/crm/crm-permissoes";
@@ -155,7 +155,8 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     sectionIcon: Settings,
     items: [
       { href: "/crm/configuracoes", label: "Configurações", icon: Settings, minRole: "gestor" },
-      { href: "/crm/progresso-sistema", label: "Progresso sistema", icon: LineChart, minRole: "owner" },
+      // "Progresso sistema" (/crm/progresso-sistema) é tracker interno de build — fora do
+      // menu do produto. Rota segue acessível por URL (owner) p/ diagnóstico.
       { href: "/crm/integracoes", label: "Integrações", icon: Plug, minRole: "owner" },
       { href: "/crm/contatos", label: "Contatos de notificação", icon: Bell, minRole: "owner" },
       { href: "/crm/usuarios", label: "Usuários & Permissões", icon: UserCog, minRole: "gestor" },
@@ -175,17 +176,17 @@ export function isCrmAdminRole(role: string): boolean {
   return isCrmGestorRole(role);
 }
 
-function itemMinRole(item: CrmNavItem): CrmNivel {
-  if (item.minRole) return item.minRole;
-  if (item.adminOnly) return "owner";
-  return "comercial";
-}
-
+/**
+ * Filtra grupos/itens pelo MESMO predicado do guard de rota (`crmPodeVerRota`),
+ * para o menu mostrar exatamente o que o papel pode aceder — sem drift menu↔rota.
+ * Honra automaticamente as rotas de papel-exato (ex.: Financeiro fora de `comercial`).
+ * `minRole`/`adminOnly` ficam como documentação do intent por item.
+ */
 export function filterCrmNavGroupsForRole(groups: CrmNavGroup[], role: string): CrmNavGroup[] {
   return groups
     .map(g => ({
       ...g,
-      items: g.items.filter(item => crmNivelAtLeast(role, itemMinRole(item))),
+      items: g.items.filter(item => crmPodeVerRota(role, item.href)),
     }))
     .filter(g => g.items.length > 0);
 }

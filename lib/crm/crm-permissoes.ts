@@ -195,9 +195,29 @@ export function crmMinNivelParaRota(pathname: string): CrmNivel {
   return "comercial";
 }
 
+/**
+ * Rotas cujo acesso é por CONJUNTO EXATO de papéis (funções ortogonais), e NÃO pelo
+ * rank linear. Ex.: Financeiro é uma função própria — `comercial` (rank acima de
+ * `financeiro`) NÃO deve ver/aceder contas a pagar/receber. Sobrepõe ROTA_MIN_NIVEL.
+ * Espelha a capability `crm:financeiro` já existente em PERMISSOES.
+ */
+const ROTA_ROLES_EXATAS: { prefix: string; roles: CrmNivel[] }[] = [
+  { prefix: "/crm/financeiro", roles: ["financeiro", "gestor", "owner"] },
+];
+
+function rotaRolesExatas(pathname: string): CrmNivel[] | null {
+  const path = pathname.split("?")[0] ?? pathname;
+  for (const { prefix, roles } of ROTA_ROLES_EXATAS) {
+    if (path === prefix || path.startsWith(`${prefix}/`)) return roles;
+  }
+  return null;
+}
+
 export function crmPodeVerRota(role: string | null | undefined, pathname: string): boolean {
   const nivel = crmNivelFromRole(role);
   if (!nivel) return false;
+  const exatas = rotaRolesExatas(pathname);
+  if (exatas) return exatas.includes(nivel);
   const min = crmMinNivelParaRota(pathname);
   return NIVEL_RANK[nivel] >= NIVEL_RANK[min];
 }
