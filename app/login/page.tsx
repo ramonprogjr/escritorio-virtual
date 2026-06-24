@@ -151,7 +151,10 @@ function LoginForm() {
       });
       setLoading(false);
       if (error) {
-        setMsg(error.message);
+        // Mensagem neutra: não revela se o e-mail existe nem detalhes técnicos (ex.: rate limit).
+        setMsg(
+          "Não foi possível enviar o link agora. Aguarde alguns instantes e tente novamente.",
+        );
         return;
       }
       setMsg(

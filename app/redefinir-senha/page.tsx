@@ -31,12 +31,22 @@ export default function RedefinirSenhaPage() {
   // o evento PASSWORD_RECOVERY ou uma sessão já presente; senão, marcamos "sem sessão".
   useEffect(() => {
     let ativo = true;
+    // Remove o token de recovery do hash da URL (reduz exposição na barra/histórico).
+    function limparHash() {
+      if (typeof window !== "undefined" && window.location.hash) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    }
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!ativo) return;
-      if (event === "PASSWORD_RECOVERY" || session) setEstado("pronto");
+      if (event === "PASSWORD_RECOVERY" || session) {
+        setEstado("pronto");
+        limparHash();
+      }
     });
     void supabase.auth.getSession().then(({ data }) => {
       if (!ativo) return;
+      if (data.session) limparHash();
       setEstado((prev) => (prev === "concluido" ? prev : data.session ? "pronto" : "sem_sessao"));
     });
     return () => {
