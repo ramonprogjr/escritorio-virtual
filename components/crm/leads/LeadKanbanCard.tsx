@@ -77,11 +77,6 @@ function tempo(iso: string) {
   return `${Math.floor(m / 1440)}d`;
 }
 
-function borderUrgency(iso: string): string {
-  // Frescor do lead (primitivo testável compartilhado). Visual idêntico ao anterior.
-  return frescorLead(iso)?.cor ?? "#EF4444";
-}
-
 function truncar(s: string, n: number) {
   const t = s.trim();
   if (t.length <= n) return t;
@@ -123,7 +118,8 @@ export function LeadKanbanCard({
   const accent = mercadoAccent(mercado);
   const Icon = mercadoIcon(mercado);
   const extras = mercadosExtrasLead(lead.metadata);
-  const urgencia = borderUrgency(lead.atualizado_em);
+  const fr = frescorLead(lead.atualizado_em);
+  const urgencia = fr?.cor ?? "#EF4444";
   const local =
     [lead.pessoa_cidade, lead.pessoa_estado].filter(Boolean).join(" / ") || null;
   const preview =
@@ -203,6 +199,24 @@ export function LeadKanbanCard({
               <span style={{ color: "#64748b", fontSize: 10, fontWeight: 600 }}>
                 {tempo(lead.atualizado_em)}
               </span>
+              {fr ? (
+                <span
+                  title={`SLA de resposta: ${fr.label}`}
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 800,
+                    padding: "2px 6px",
+                    borderRadius: 999,
+                    color: fr.cor,
+                    background: `${fr.cor}1f`,
+                    border: `1px solid ${fr.cor}55`,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {fr.label}
+                </span>
+              ) : null}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               {onEdit ? (

@@ -55,7 +55,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => router.push("/crm/parceiros/novo")}
-            className="rounded-lg border border-[#30363d] px-3 py-1.5 text-xs font-bold text-[#60a5fa] hover:bg-[#21262d]"
+            className="rounded-lg border border-[#30363d] px-3 py-1.5 text-xs font-bold text-[#8b949e] hover:text-[#c9a24a] hover:bg-[#21262d]"
           >
             + Parceiro
           </button>
@@ -159,16 +159,18 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Acionável primeiro — o que exige decisão/ação agora (UX §5) */}
         <CrmAcaoAgora m={m} loading={m.loading} indisponivel={!!dash.erro && !dash.carregado} />
-        <CrmPipelineResumo />
         <CrmAlertasStrip alertas={dash.alertas} loading={dash.loading} />
+        <CrmLeadsParados />
+
+        {/* Visão geral da operação */}
+        <CrmPipelineResumo />
 
         <div className="grid gap-6 xl:grid-cols-2">
           <CrmUltimosLeads leads={dash.leadsRecentes} loading={dash.loading} />
           <CrmOperacaoResumo operacao={dash.operacao} loading={dash.loading} />
         </div>
-
-        <CrmLeadsParados />
 
         <div>
           <CrmSectionTitle>Hoje</CrmSectionTitle>
