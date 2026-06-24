@@ -29,8 +29,12 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 ## 🔐 Segurança (consideração — 🤖 quando o fluxo existir)
 - [ ] **/redefinir-senha** aceita sessão ativa comum (usuário logado troca senha sem reautenticar — padrão Supabase). Ao criar "trocar senha **dentro do app**", exigir a **senha atual** antes.
 
+## 🔒 Segurança multi-tenant — ALTA prioridade (🔒 Wendel)
+- [ ] **RLS de `hub_pipelines` / `hub_pipeline_estagios` está aberto (anon, sem tenant-RLS)** — achado da mesa redonda (diretor + security). Em single-tenant local não vaza, mas **multi-tenant real exige a migração RLS (Bloco 4)**. **Bloqueia** a UI de configuração de etapas em produção. Fazer com o Wendel presente. *(o risco já existe no schema desde a migração `20260620180000`; não foi introduzido agora.)*
+- [ ] **Backfill `pipeline_id`** em leads/negócios antigos (migração aditiva) — agrupar com o trabalho de RLS de pipelines.
+
 ## 🗺 Cronograma (próximos blocos)
-- [ ] **Bloco 3 — CRM do fornecedor** (pipelines/kanban customizáveis por tenant) — 🤖 próximo.
+- [~] **Bloco 3 — CRM do fornecedor** — decisão do diretor: fatia segura. **Feito:** cartão acionável (próxima-ação no negócio + frescor reutilizável testado). **Próximo (Passos 3–5 do diretor):** ligar `PipelineConfigSideover` à API de pipelines (criar/renomear/ordenar/ativar etapa) + guard não-destrutivo. ⚠️ **Depende de tratar o RLS de pipelines acima** (escrita em tabela anon-open) — fazer com Wendel.
 - [ ] **Bloco 4 — Visibilidade & Governança Hub** (RLS `fornecedor_id`, dashboard) — 🔒 só com Wendel.
 - [ ] **B5 distribuição · B5.5 monetização · B6 obra · B7 membros · B8 IA** — futuros (ver plano).
 
