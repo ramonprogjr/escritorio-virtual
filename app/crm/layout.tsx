@@ -52,7 +52,7 @@ function CrmNavItemLabel({ item, expanded }: { item: CrmNavItem; expanded: boole
   );
 }
 
-const NESTED_GROUP_EXCLUDE_IDS = new Set(["vendas", "ia", "rede"]);
+const NESTED_GROUP_EXCLUDE_IDS = new Set(["comercial", "ia", "fornecedores"]);
 
 function splitSistemaItems(items: CrmNavItem[]) {
   const root = items.find(item => item.href === "/crm/configuracoes");
@@ -62,7 +62,7 @@ function splitSistemaItems(items: CrmNavItem[]) {
 }
 
 function getNestedGroupMenu(groupId: string, groupLabel: string, items: CrmNavItem[]) {
-  if (groupId === "sistema") {
+  if (groupId === "administracao") {
     const sistema = splitSistemaItems(items);
     if (!sistema) return null;
     return {
@@ -88,7 +88,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ [CRM_NAV_GROUPS[0].id]: true });
-  const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({ sistema: true });
+  const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({ administracao: true });
   const [collapsedFlyoutId, setCollapsedFlyoutId] = useState<string | null>(null);
   const miniSidebarShellRef = useRef<HTMLDivElement>(null);
   const miniFlyoutRef = useRef<HTMLDivElement>(null);

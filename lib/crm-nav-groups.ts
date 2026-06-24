@@ -57,9 +57,13 @@ export type CrmNavGroup = {
 };
 
 /**
- * Fonte de verdade do menu lateral — ordenado pelo CAMINHO DE VALOR do doc mestre §4.2
- * (Lead → Atendimento → Negócio → Projeto → Obra → Pedidos → Financeiro). Aprovações é
- * destaque (Pilar 2, §8.4). Ver docs/menu-navegacao-consolidado.md.
+ * Fonte de verdade do menu lateral — reagrupado no MODELO DE PLATAFORMA do doc
+ * INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md §8 (Bloco 1 / Onda U1), usando APENAS rotas que
+ * já existem (zero "menu morto"). Grupos do §8 ainda sem tela (Central IA, Comunidade)
+ * ficam de fora até existirem. Ordem: Visão → Aprovações → Comercial → Operações →
+ * Fornecedores → Financeiro → Marketing → IA → Administração.
+ * Ver docs/PLANO-EXECUTIVO-BLOCOS.md e docs/menu-navegacao-consolidado.md.
+ * Permissões (minRole) preservadas item a item — guard de rota é a fonte real (crmPodeVerRota).
  */
 export const CRM_NAV_GROUPS: CrmNavGroup[] = [
   {
@@ -82,80 +86,67 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     ],
   },
   {
-    id: "vendas",
-    label: "Vendas",
+    // §8: Comercial / CRM — funde Vendas + Atendimento. O lado "vender" da plataforma.
+    id: "comercial",
+    label: "Comercial / CRM",
     sectionIcon: Briefcase,
     items: [
-      { href: "/crm/cadastro", label: "Cadastros", icon: User, minRole: "comercial" },
       { href: "/crm/leads", label: "Leads", icon: Users, minRole: "atendente" },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase, minRole: "comercial" },
+      { href: "/crm/cadastro", label: "Cadastros", icon: User, minRole: "comercial" },
+      { href: "/crm/atendimento", label: "Atendimento", icon: MessageSquare, minRole: "atendente" },
+      { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
       { href: "/crm/tarefas", label: "Tarefas", icon: ClipboardList, minRole: "comercial" },
     ],
   },
   {
-    id: "atendimento",
-    label: "Atendimento",
-    sectionIcon: MessageSquare,
+    // §8: Operações / Obras — o lado "executar". Funde Projetos + Obras + Pedidos.
+    // Escopo/Cronograma/Medição/Compras entram no Bloco 6 quando as telas existirem.
+    id: "operacoes",
+    label: "Operações / Obras",
+    sectionIcon: HardHat,
     items: [
-      { href: "/crm/atendimento", label: "Inbox", icon: MessageSquare, minRole: "atendente" },
-      { href: "/crm/canais", label: "Canais", icon: MessageCircle, minRole: "atendente" },
-      { href: "/crm/canais-entrada", label: "Canais de entrada", icon: Radio, minRole: "gestor" },
-      { href: "/crm/distribuicao", label: "Distribuição", icon: Route, minRole: "gestor" },
+      { href: "/crm/projetos", label: "Projetos", icon: LayoutTemplate, minRole: "comercial" },
+      { href: "/crm/obras", label: "Obras", icon: HardHat, minRole: "comercial" },
+      { href: "/crm/imoveis", label: "Imóveis", icon: Home, minRole: "comercial" },
+      { href: "/crm/pedidos", label: "Pedidos", icon: Truck, minRole: "comercial" },
     ],
   },
   {
-    // Rede de captação/execução (mestre §4.1): parceiros (imobiliária/corretor),
-    // fornecedores (PJ por área) e especialistas (mão de obra). Fornecedores/Especialistas
-    // entram quando as telas existirem (formato em memória membros-cadastro-formato).
-    id: "rede",
-    label: "Rede",
+    // §8: Fornecedores — motor da rede / governança do Hub. Hoje: cadastro da rede +
+    // distribuição de leads. Performance/Ranking/SLA/Homologação entram no Bloco 4.
+    id: "fornecedores",
+    label: "Fornecedores",
     sectionIcon: Handshake,
     items: [
       { href: "/crm/parceiros", label: "Parceiros", icon: Handshake, minRole: "comercial" },
       { href: "/crm/fornecedores", label: "Fornecedores", icon: Truck, minRole: "comercial" },
       { href: "/crm/especialistas", label: "Especialistas", icon: HardHat, minRole: "comercial" },
-    ],
-  },
-  {
-    id: "produtos",
-    label: "Produtos",
-    sectionIcon: Package,
-    items: [{ href: "/crm/imoveis", label: "Imóveis", icon: Home, minRole: "comercial" }],
-  },
-  {
-    id: "projetos",
-    label: "Projetos",
-    sectionIcon: Package,
-    items: [{ href: "/crm/projetos", label: "Projetos", icon: LayoutTemplate, minRole: "comercial" }],
-  },
-  {
-    id: "obras",
-    label: "Obras",
-    sectionIcon: HardHat,
-    items: [
-      { href: "/crm/obras", label: "Obras", icon: HardHat, minRole: "comercial" },
-      { href: "/crm/pedidos", label: "Pedidos", icon: Truck, minRole: "comercial" },
+      { href: "/crm/distribuicao", label: "Distribuição de leads", icon: Route, minRole: "gestor" },
     ],
   },
   {
     id: "financeiro",
     label: "Financeiro",
-    sectionIcon: ClipboardList,
+    sectionIcon: Wallet,
     items: [
-      { href: "/crm/financeiro", label: "Visão financeira", icon: Wallet, minRole: "financeiro" },
-      { href: "/crm/financeiro/pagar", label: "Contas a pagar", icon: ClipboardList, minRole: "financeiro" },
       { href: "/crm/financeiro/receber", label: "Contas a receber", icon: LineChart, minRole: "financeiro" },
+      { href: "/crm/financeiro/pagar", label: "Contas a pagar", icon: ClipboardList, minRole: "financeiro" },
+      { href: "/crm/financeiro", label: "Visão financeira", icon: Wallet, minRole: "financeiro" },
     ],
   },
   {
     id: "marketing",
     label: "Marketing",
     sectionIcon: Radio,
-    items: [{ href: "/crm/trafego", label: "Campanhas", icon: Radio, minRole: "gestor" }],
+    items: [
+      { href: "/crm/trafego", label: "Campanhas", icon: Radio, minRole: "gestor" },
+      { href: "/crm/canais-entrada", label: "Canais de entrada", icon: Radio, minRole: "gestor" },
+    ],
   },
   {
     id: "ia",
-    label: "IA & Automação",
+    label: "IA e Agentes",
     sectionIcon: Sparkles,
     items: [
       {
@@ -177,8 +168,9 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     ],
   },
   {
-    id: "sistema",
-    label: "Sistema",
+    // §8: Administração (ex-"Sistema").
+    id: "administracao",
+    label: "Administração",
     sectionIcon: Settings,
     items: [
       { href: "/crm/configuracoes", label: "Configurações", icon: Settings, minRole: "gestor" },
