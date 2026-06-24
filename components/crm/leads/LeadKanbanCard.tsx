@@ -12,6 +12,7 @@ import {
   mercadosExtrasLead,
   resolverMercadoLead,
 } from "@/lib/crm/mercado-visual";
+import { frescorLead } from "@/lib/crm/sla-frescor";
 
 const ORIGENS_LABEL: Record<string, string> = {
   whatsapp: "WhatsApp",
@@ -77,10 +78,8 @@ function tempo(iso: string) {
 }
 
 function borderUrgency(iso: string): string {
-  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 5) return "#22C55E";
-  if (m < 15) return "#EAB308";
-  return "#EF4444";
+  // Frescor do lead (primitivo testável compartilhado). Visual idêntico ao anterior.
+  return frescorLead(iso)?.cor ?? "#EF4444";
 }
 
 function truncar(s: string, n: number) {

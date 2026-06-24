@@ -28,6 +28,7 @@ export type NegocioKanbanCardData = {
   valor_fechado: number | null;
   data_previsao_fechamento: string | null;
   criado_em: string | null;
+  proxima_acao?: string | null;
 };
 
 function moeda(v: number | null) {
@@ -199,6 +200,35 @@ export function NegocioKanbanCard({
             },
           ]}
         />
+
+        {negocio.proxima_acao?.trim() ? (
+          <div
+            style={{
+              marginTop: 8,
+              borderRadius: 10,
+              border: "1px solid rgba(56, 74, 102, 0.38)",
+              background: "rgba(9, 14, 22, 0.58)",
+              padding: "7px 9px",
+            }}
+            title={negocio.proxima_acao}
+          >
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: 10, fontWeight: 600 }}>Próxima ação</p>
+            <p
+              style={{
+                margin: "3px 0 0",
+                color: "#c8d4e6",
+                fontSize: 11,
+                lineHeight: 1.35,
+                display: "-webkit-box",
+                overflow: "hidden",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+              }}
+            >
+              {negocio.proxima_acao.replace(/\s+/g, " ").trim()}
+            </p>
+          </div>
+        ) : null}
       </AgenteSideoverEntityCard>
     </div>
   );

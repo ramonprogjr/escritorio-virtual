@@ -25,6 +25,7 @@ type Negocio = {
   valor_fechado: number | null;
   data_previsao_fechamento: string | null;
   criado_em: string | null;
+  proxima_acao?: string | null;
 };
 
 type PipelineUi = {
