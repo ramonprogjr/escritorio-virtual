@@ -56,6 +56,20 @@ describe("regressão: papéis legítimos não foram trancados", () => {
   });
 });
 
+describe("Rede: Parceiros + Fornecedores + Especialistas", () => {
+  it("comercial+ veem os 3 itens da Rede", () => {
+    for (const r of ["comercial", "gestor", "owner"]) {
+      const h = hrefs(r);
+      expect(h).toContain("/crm/parceiros");
+      expect(h).toContain("/crm/fornecedores");
+      expect(h).toContain("/crm/especialistas");
+    }
+  });
+  it("atendente não vê a Rede (minRole comercial)", () => {
+    expect(hrefs("atendente")).not.toContain("/crm/fornecedores");
+  });
+});
+
 describe('P0: "Progresso sistema" fora do menu do produto', () => {
   it("nenhum papel vê /crm/progresso-sistema no menu", () => {
     for (const r of ["owner", "gestor", "comercial", "financeiro", "atendente"]) {

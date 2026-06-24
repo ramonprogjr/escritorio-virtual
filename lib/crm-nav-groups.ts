@@ -109,6 +109,8 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     sectionIcon: Handshake,
     items: [
       { href: "/crm/parceiros", label: "Parceiros", icon: Handshake, minRole: "comercial" },
+      { href: "/crm/fornecedores", label: "Fornecedores", icon: Truck, minRole: "comercial" },
+      { href: "/crm/especialistas", label: "Especialistas", icon: HardHat, minRole: "comercial" },
     ],
   },
   {
