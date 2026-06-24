@@ -30,7 +30,7 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 - [ ] **/redefinir-senha** aceita sessão ativa comum (usuário logado troca senha sem reautenticar — padrão Supabase). Ao criar "trocar senha **dentro do app**", exigir a **senha atual** antes.
 
 ## 🔒 Segurança multi-tenant — ALTA prioridade (🔒 Wendel)
-- [ ] **RLS de `hub_pipelines` / `hub_pipeline_estagios` está aberto (anon, sem tenant-RLS)** — achado da mesa redonda (diretor + security). Em single-tenant local não vaza, mas **multi-tenant real exige a migração RLS (Bloco 4)**. **Bloqueia** a UI de configuração de etapas em produção. Fazer com o Wendel presente. *(o risco já existe no schema desde a migração `20260620180000`; não foi introduzido agora.)*
+- [ ] **RLS `hub_pipeline_estagios` não é tenant-aware** — ⚠️ DIAGNÓSTICO CORRIGIDO (auditado via MCP 24/jun): o "anon-open" era **falso**. RLS está **LIGADO** nas duas tabelas, **sem policy anon** (anon já bloqueado); `hub_pipelines` já é **tenant-scoped**. O **único gap**: policies de `hub_pipeline_estagios` para `authenticated` usam `qual = true` (cross-tenant). **Migração pronta para revisão:** `docs/sql/20260624-rls-pipeline-estagios-tenant-PROPOSTA.sql` (escopo via pipeline-pai; aditiva/reversível; **não afeta a API/Kanban** pois `crmDb()` é service role). **Aplicar só com OK do Wendel** (RLS = trava). Depois disso, a UI de config de etapas (B3 Passos 3–5) fica liberada.
 - [ ] **Backfill `pipeline_id`** em leads/negócios antigos (migração aditiva) — agrupar com o trabalho de RLS de pipelines.
 
 ## 🗺 Cronograma (próximos blocos)
