@@ -77,6 +77,11 @@ Componentes-base sobre o design system (`SmartField`, `ConfidenceBadge`, `QuickA
 **Realidade no código (auditado 24/jun) — grande parte JÁ EXISTE:** em `components/crm/cadastro/` já há `CadastroWizard`, `CadastroFichaTabs`, **`CadastroFichaRelacionados`** (fichas correlacionadas), **`CadastroVinculosPessoaEmpresa`** (vínculo PF↔PJ), sideovers premium, lista/filtros/colunas; e `ImovelFormDrawer`, `NegocioFormDrawer`, `PessoaFormModal`, `EmpresaFormDrawer`. → **O net-new do B2 é só a camada de input "Click/Talk-and-Go":** `SmartField` (chip+voz+texto), `ConfidenceBadge`, `QuickAdd` (FAB). Resto é polimento sobre o que existe.
 - **Gating:** o valor pleno do SmartField/ConfidenceBadge vem com (a) a decisão de UX **faixas vs valor exato** e (b) a **voz** (on-device vs serviço — custo/privacidade, decisão do Wendel); o pré-preenchimento por IA com confiança é Bloco 8. Até lá, Click-and-Go (chips/faixas) carrega.
 
+**Progresso (24/jun) — U2 net-new entregue (local):**
+- ✅ **QuickAdd (FAB)** global e role-aware (`components/crm/CrmQuickAdd.tsx`): "+" flutuante cria Lead/Negócio/Pessoa/Empresa por deep-link nos criadores existentes (`?novo=1` em leads/negócios, `?novo=pf|pj` em cadastro). Não duplica formulário.
+- ✅ **Primitivos** `ConfidenceBadge` + `SmartField` (+ `smartfield-faixas.ts` puro, testado): chips/faixa/texto, microfone como STUB. **Reutilizáveis, ainda NÃO integrados** em formulários críticos (evitar risco) — prontos para plugar.
+- ⏸ **Pendente (gated, decisão do Wendel):** integrar SmartField nos forms (após decidir **faixas vs valor exato**) e ligar a **voz** (on-device vs serviço — custo/privacidade). Integração em forms críticos deve ser feita com o Wendel presente.
+
 ### Bloco 3 — CRM do Fornecedor (U3)
 Pipelines/Kanban editáveis por tenant; inbox omnichannel unificado com respostas sugeridas; cartões com selo de SLA.
 
