@@ -228,6 +228,19 @@ export default function CadastroPage() {
     }
   }, [searchParams, router]);
 
+  // Deep-link do QuickAdd (FAB): /crm/cadastro?novo=pf|pj abre o wizard no tipo certo.
+  useEffect(() => {
+    const novo = searchParams.get("novo");
+    if (novo === "pf" || novo === "pj") {
+      setTipoWizard(novo === "pj" ? "PJ" : "PF");
+      setWizardOpen(true);
+      const p = new URLSearchParams(searchParams.toString());
+      p.delete("novo");
+      const q = p.toString();
+      router.replace(q ? `/crm/cadastro?${q}` : "/crm/cadastro");
+    }
+  }, [searchParams, router]);
+
   function setRegisto(id: RegistoId) {
     const p = new URLSearchParams(searchParams.toString());
     p.delete("tab");

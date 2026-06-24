@@ -192,6 +192,17 @@ export default function NegociosPage() {
     else if (isMobile) setView("lista");
   }, [searchParams, isMobile]);
 
+  // Deep-link do QuickAdd (FAB): /crm/negocios?novo=1 abre o criador.
+  useEffect(() => {
+    if (searchParams.get("novo") === "1") {
+      setDrawerAberto(true);
+      const p = new URLSearchParams(searchParams.toString());
+      p.delete("novo");
+      const q = p.toString();
+      router.replace(q ? `/crm/negocios?${q}` : "/crm/negocios");
+    }
+  }, [searchParams, router]);
+
   useEffect(() => {
     void carregarLista(0, false);
   }, [carregarLista]);
