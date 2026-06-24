@@ -292,6 +292,7 @@ export function EmpresaFormDrawer({ open, onClose, onSaved }: Props) {
             opcoes={MERCADOS_PREFIXO_OPTIONS}
             value={form.prefixo_mercado}
             onChange={(v) => campo("prefixo_mercado", v)}
+            disabled={loading}
           />
 
           <SmartField
@@ -300,6 +301,7 @@ export function EmpresaFormDrawer({ open, onClose, onSaved }: Props) {
             opcoes={EMPRESA_SEGMENTOS}
             value={form.segmento}
             onChange={(v) => campo("segmento", v)}
+            disabled={loading}
           />
 
           <div>

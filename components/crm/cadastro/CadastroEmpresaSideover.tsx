@@ -6,6 +6,7 @@ import { Building2, Pencil, Trash2 } from "lucide-react";
 import { AgenteSideoverEntityCard, AgenteSideoverInfoGrid } from "@/components/crm/AgenteSideoverCards";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
 import { CrmSideoverFold } from "@/components/crm/CrmSideoverFold";
+import { SmartField } from "@/components/crm/SmartField";
 import {
   CadastroPremiumSideover,
   CadastroSideoverPanel,
@@ -575,34 +576,20 @@ export function CadastroEmpresaSideover({
               onChange={(e) => setForm((f) => ({ ...f, nome_fantasia: e.target.value }))}
             />
           </div>
-          <div>
-            <label style={LABEL}>Mercado</label>
-            <select
-              style={INPUT}
-              value={form.prefixo_mercado || "IMB"}
-              onChange={(e) => setForm((f) => ({ ...f, prefixo_mercado: e.target.value }))}
-            >
-              {MERCADOS_PREFIXO_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={LABEL}>Segmento</label>
-            <select
-              style={INPUT}
-              value={form.segmento || "cliente"}
-              onChange={(e) => setForm((f) => ({ ...f, segmento: e.target.value }))}
-            >
-              {EMPRESA_SEGMENTOS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SmartField
+            label="Mercado"
+            modo="chips"
+            opcoes={MERCADOS_PREFIXO_OPTIONS}
+            value={form.prefixo_mercado || "IMB"}
+            onChange={(v) => setForm((f) => ({ ...f, prefixo_mercado: v }))}
+          />
+          <SmartField
+            label="Segmento"
+            modo="chips"
+            opcoes={EMPRESA_SEGMENTOS}
+            value={form.segmento || "cliente"}
+            onChange={(v) => setForm((f) => ({ ...f, segmento: v }))}
+          />
           <div>
             <label style={LABEL}>Telefone</label>
             <input

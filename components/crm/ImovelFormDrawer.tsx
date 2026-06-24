@@ -149,6 +149,7 @@ export function ImovelFormDrawer({ open, onClose, onSaved, initial }: Props) {
             ]}
             value={tipo}
             onChange={setTipo}
+            disabled={salvando}
           />
         </div>
         <div style={{ marginTop: 12 }}>
@@ -161,6 +162,7 @@ export function ImovelFormDrawer({ open, onClose, onSaved, initial }: Props) {
             ]}
             value={finalidade}
             onChange={setFinalidade}
+            disabled={salvando}
           />
         </div>
         {erro && <p style={{ color: "#ef4444", fontSize: 12, marginTop: 12 }}>{erro}</p>}

@@ -671,6 +671,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                   opcoes={MERCADOS_PREFIXO_OPTIONS}
                   value={form.prefixo_mercado}
                   onChange={(v) => campo("prefixo_mercado", v)}
+                  disabled={loading}
                 />
                 <SmartField
                   label="Etapa inicial"
@@ -678,6 +679,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                   opcoes={NEGOCIO_ETAPAS.map((item) => ({ value: item, label: ETAPA_LABEL[item] || item }))}
                   value={form.etapa}
                   onChange={(v) => campo("etapa", v)}
+                  disabled={loading}
                 />
               </div>
 
