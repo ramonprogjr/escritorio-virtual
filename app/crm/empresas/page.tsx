@@ -45,7 +45,7 @@ export default function EmpresasPage() {
       const res = await fetch("/api/crm/tenants", { headers: await crmApiHeaders() });
       const json = (await res.json()) as { data?: TenantRow[]; error?: string };
       if (!res.ok) {
-        setErro(json.error || "Falha ao carregar empresas");
+        setErro(json.error || "Falha ao carregar escritórios");
         setTenants([]);
       } else {
         setTenants(json.data ?? []);
@@ -73,7 +73,7 @@ export default function EmpresasPage() {
       });
       const json = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setErro(json.error || "Falha ao criar empresa");
+        setErro(json.error || "Falha ao criar escritório");
         return;
       }
       setModal(false);
@@ -97,8 +97,8 @@ export default function EmpresasPage() {
       <div className="mx-auto max-w-2xl px-4 py-8">
         <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-8 text-center">
           <Building2 className="mx-auto mb-4 h-8 w-8 text-[#c9a24a]" />
-          <h1 className="text-lg font-bold text-[#e6edf3]">Empresas</h1>
-          <p className="mt-2 text-sm text-[#8b949e]">Apenas owners podem criar instalações.</p>
+          <h1 className="text-lg font-bold text-[#e6edf3]">Escritórios</h1>
+          <p className="mt-2 text-sm text-[#8b949e]">Apenas owners podem criar escritórios.</p>
         </div>
       </div>
     );
@@ -107,8 +107,8 @@ export default function EmpresasPage() {
   return (
     <div className="flex min-h-full flex-col bg-[#0d1117]">
       <CrmStickyPageHeader
-        title="Empresas"
-        description="Instalações Obra10+ — cada empresa com admins e colaboradores próprios."
+        title="Escritórios"
+        description="Escritórios Obra10+ — cada escritório com seus admins e colaboradores próprios."
         actions={
           <button
             type="button"
@@ -116,7 +116,7 @@ export default function EmpresasPage() {
             className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#c9a24a] px-3 text-xs font-bold text-[#003b26]"
           >
             <Plus className="h-4 w-4" />
-            Nova empresa
+            Novo escritório
           </button>
         }
       />
@@ -129,9 +129,9 @@ export default function EmpresasPage() {
         )}
 
         {loading ? (
-          <p className="text-sm text-[#8b949e]">Carregando empresas…</p>
+          <p className="text-sm text-[#8b949e]">Carregando escritórios…</p>
         ) : tenants.length === 0 ? (
-          <p className="text-sm text-[#8b949e]">Nenhuma empresa. Crie a primeira instalação.</p>
+          <p className="text-sm text-[#8b949e]">Nenhum escritório. Crie o primeiro.</p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-[#30363d]">
             <table className="w-full text-left text-sm">
@@ -167,18 +167,18 @@ export default function EmpresasPage() {
           <button type="button" className="absolute inset-0 bg-black/60" aria-label="Fechar" onClick={() => setModal(false)} />
           <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-[#30363d] bg-[#161b22] p-4 sm:rounded-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-[#e6edf3]">Nova empresa</h2>
+              <h2 className="text-sm font-bold text-[#e6edf3]">Novo escritório</h2>
               <button type="button" onClick={() => setModal(false)} className="rounded-lg bg-[#21262d] p-2">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="mb-3 text-[11px] text-[#6e7681]">
-              Cria a instalação e, opcionalmente, convida o primeiro admin com permissão Gestor.
+              Cria o escritório e, opcionalmente, convida o primeiro admin com permissão Gestor.
             </p>
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
-                  Nome da empresa *
+                  Nome do escritório *
                 </label>
                 <input
                   value={form.nome_exibicao}
@@ -219,7 +219,7 @@ export default function EmpresasPage() {
               onClick={() => void criarEmpresa()}
               className="mt-4 w-full min-h-11 rounded-lg bg-[#c9a24a] text-sm font-bold text-[#003b26] disabled:opacity-50"
             >
-              {salvando ? "A criar…" : "Criar empresa"}
+              {salvando ? "A criar…" : "Criar escritório"}
             </button>
           </div>
         </div>

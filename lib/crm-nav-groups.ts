@@ -180,10 +180,10 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       // menu (tela solta de setup do tenant); rota segue acessível por URL (owner).
       { href: "/crm/contatos", label: "Contatos de notificação", icon: Bell, minRole: "owner" },
       { href: "/crm/usuarios", label: "Usuários & Permissões", icon: UserCog, minRole: "gestor" },
-      // ⚠️ "Empresas" aqui = admin multi-tenant (/api/crm/tenants), i.e. ESCRITÓRIOS/tenants,
-      // NÃO o cadastro de empresa-cliente (hub_empresas). A unificação Cadastros PF/PJ é o
-      // cadastro CRM — ver Bloco 1.5. Renomear este p/ "Escritórios" está em avaliação.
-      { href: "/crm/empresas", label: "Empresas", icon: Building2, minRole: "owner" },
+      // "Escritórios" = admin multi-tenant (/api/crm/tenants): cada escritório/instalação
+      // Obra10+ com seus admins. NÃO confundir com o cadastro de empresa-cliente PJ
+      // (hub_empresas), que vive em Cadastros (unificado PF/PJ — Bloco 1.5/2).
+      { href: "/crm/empresas", label: "Escritórios", icon: Building2, minRole: "owner" },
     ],
   },
 ];
