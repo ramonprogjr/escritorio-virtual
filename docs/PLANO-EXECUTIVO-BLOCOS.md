@@ -87,10 +87,12 @@ Camada de negócio sobre a base. **O Hub libera tudo.** Três frentes:
 - Créditos/tokens: **IA tokens**, **mensagens WhatsApp**, (futuro) armazenamento de evidências, assinaturas.
 - Dados (aditivo): `hub_planos`, `hub_tenant_modulos` (tenant+modulo+ativo+plano+validade → **disclosure por plano** no menu + **guard de rota** por módulo), `hub_tenant_creditos` (saldo+ledger). **Amarrar tenant ↔ cadastro PJ** (escritório = empresa-cadastro).
 
-**2. Comissão marketplace** (decisão: **opção b**):
-- O Hub fica com **% sobre o negócio ganho originado de lead do Hub**. Exige **cadeia de atribuição**: lead Mestre → distribuição → negócio → ganho (origem rastreável; lead não-Hub não gera comissão).
-- Dados: `hub_comissoes` (negocio_id, lead_mestre_id, tenant, base_cálculo, %, valor, competência, status) → vira **conta a receber do Hub** (Financeiro do Hub).
-- **[Decisões em aberto]** % fixo ou por mercado/plano; base = valor do negócio ou do contrato de obra; cobra no **ganho** ou conforme **medição/recebimento**.
+**2. Comissionamento multi-fonte com RATEIO (split)** — o coração da monetização transacional:
+- **Fontes de receita** (todas passam pelo mesmo motor): SaaS (assinatura) · comissão de **venda de imóvel/serviço/produto** · **aluguel de equipamentos** (marketplace % *e* locação própria) · **treinamentos** (venda direta + comissão de indicação).
+- **Rateio:** 1 transação → 1 **evento de comissão** → **N beneficiários**, cada um identificado pelo **código único** do cadastro (é PARA ISSO que o código tipo-CPF existe: rastreabilidade + divisão correta). Cada linha tem **papel** (Hub/indicador/vendedor/executor/parceiro), **% fixo ou variável**, e **direção** (Hub **recebe** = conta a receber; **repasse** = conta a pagar).
+- **Percentuais em camadas, sempre editáveis (owner define):** *prefixado* por **tipo × mercado × produto** → *override por acordo* **negócio a negócio / membro a membro** ("muda de acordo para acordo"). Defaults sugeridos por mercado (validar): IMB 1–3% (ou 15–25% da corretagem) · SRV 10–20% · Produto 5–15% · Obra/ENG/ARQ 3–8%.
+- **Base = valor do negócio; fatura no GANHO** (decidido). Vale p/ imóvel/produto/serviço; obra usa o valor do negócio.
+- Dados (aditivo, generaliza o antigo `hub_comissoes`): `hub_receita_regras` (defaults por tipo×mercado×produto, fixo/variável) · `hub_comissao_eventos` (transação: tipo, base, origem/lead_mestre) · `hub_comissao_rateio` (N linhas: código do beneficiário, papel, %, fixo/variável, direção, valor, status — **editável por evento**, seedado do default). Tudo `tenant_id`+RLS; Hub vê tudo, cada parte vê o seu.
 
 **3. Funil + KPIs + SLA (em 2 níveis)** — "esteira de venda" da rede:
 - **Funil do escritório (tenant):** Lead → Qualificado → Negócio → Proposta → Ganho/Perdido; conversão por etapa, ticket médio, taxa de ganho, motivo de perda. *(vive no CRM do fornecedor — B3)*
