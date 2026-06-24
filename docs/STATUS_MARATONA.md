@@ -20,7 +20,7 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - [~] **B — Verdade (QA logado)** — blocker da service role **RESOLVIDO**; falta verificação de console no browser (Playwright reconectando)
 - [ ] C — Drift & fronteira
 - [ ] D — Segurança · diagnóstico (advisors)
-- [~] **E — Segurança · RLS `hub_*`** — LOTE CRÍTICO aplicado e provado (leads, pessoas, contas_receber, contas_pagar); ~36 tabelas hub_* abertas ainda restam (próximo lote)
+- [x] **E — Segurança · RLS `hub_*`** — FECHADO (lote 1 crítico + lote 2): **`anon_or_public_open = 0` em TODAS as hub_***. Provado no banco + QA logado. Refinamento tenant é melhoria futura (não-bloqueante).
 - [ ] F — Segurança · funções/prova
 - [ ] G — Espinha dorsal (migrations PDF aditivas)
 - [ ] H — Anthropic · base
@@ -136,3 +136,9 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
   - `set role`: anon **0** em negocios/parceiros/mensagens/conversas/atividades/mercados; authenticated lê real (**atividades 214, mensagens 15, conversas 5, parceiros 2, mercados 8**).
 - Rollback: **[bloco-e-rls-lote2-ROLLBACK.sql](sql/bloco-e-rls-lote2-ROLLBACK.sql)** (recria as 40 permissivas; remove as `*_auth_*`). Nenhum dado apagado.
 - **Bloco E essencialmente fechado:** todas as hub_* sem leitura/escrita anônima. Refinamento futuro: adicionar `tenant_id` + escopar as tabelas hoje authenticated-only que são por-lead/negócio (mensagens, conversas, oportunidades, memorias_lead, propostas, parceiros…). `_chk23` OK. Deploy não tocado.
+
+### 2026-06-23 — Pós-E: corrigido bug pré-existente `encaminhamentos/pendentes` (drift de schema)
+- **Causa-raiz:** a tabela VIVA `hub_encaminhamentos` (22 colunas, criada de fonte rica) **não tinha `encaminhado_para`**, mas a migration `20260523170000_obra10_runtime_essencial.sql:176` define a coluna (`CREATE TABLE IF NOT EXISTS` não a adicionou pois a tabela já existia). **4 arquivos** usam a coluna: rota `pendentes` (SELECT → 500), `sugerir-encaminhamento-auto.ts` (INSERT → quebrava distribuição-auto), `notificar-parceiro-lead.ts` (UPDATE → quebrava envio ao parceiro).
+- **Fix (aditivo, reversível):** `alter table public.hub_encaminhamentos add column if not exists encaminhado_para text` (migration `fix_hub_encaminhamentos_add_encaminhado_para`). Repara os 3 caminhos de código de uma vez; alinha prod à migration do repo.
+- **Provado logado (Playwright):** endpoint `/api/crm/encaminhamentos/pendentes` **200 `{"data":[]}`** (era 500); `/crm/leads` agora **0 erros de console** (antes 5). Tabela vazia → `[]` correto.
+- ⚠️ Drift residual a observar: a 2ª query da rota lê `hub_leads_crm.nome/telefone` — verificar se essas colunas existem em leads (lead tem `pessoa_id`; nome/telefone ficam em `hub_pessoas`). Não causa 500 (erro ignorado; só roda se houver encaminhamentos). Deploy não tocado.
