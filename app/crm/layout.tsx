@@ -22,6 +22,7 @@ import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
 import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
 import { CrmShellProvider } from "@/components/crm/CrmShellContext";
 import { CrmSidebarToggleButton } from "@/components/crm/CrmSidebarToggleButton";
+import { CrmCommandPalette } from "@/components/crm/CrmCommandPalette";
 import { CRM_CHROME_SOLID } from "@/lib/crm-shell-theme";
 
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
@@ -811,6 +812,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
         </div>
+        <CrmCommandPalette groups={navGroups} />
       </CrmShellProvider>
     </CrmHeaderProvider>
     </CrmTenantProvider>
