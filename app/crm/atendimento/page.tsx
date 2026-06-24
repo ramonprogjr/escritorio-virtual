@@ -865,8 +865,9 @@ function AtendimentoContent() {
                 function labelText(tipo: Tipo, msg: Mensagem) {
                   if (tipo === "lead") return leadSel?.nome?.split(" ")[0] ?? "Lead";
                   if (tipo === "ia") {
-                    const slug = msg.agente_id || "sdr";
-                    return `Mari · IA`;
+                    const slug = msg.agente_id || "ia";
+                    const nome = slug.charAt(0).toUpperCase() + slug.slice(1, 24);
+                    return `${nome} · IA`;
                   }
                   if (tipo === "voce") return `Você · ${meuNome?.split(" ")[0] ?? ""}`.trimEnd().replace(/·\s*$/, "");
                   const h = msg.agente_id || "Humano";
@@ -1011,6 +1012,25 @@ function AtendimentoContent() {
                   </button>
                 </div>
               )}
+              {podeEscrever ? (
+                <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
+                  {[
+                    "Olá! Tudo bem? Como posso ajudar?",
+                    "Pode me passar mais detalhes, por favor?",
+                    "Vou verificar e já te retorno.",
+                    "Obrigado pelo contato!",
+                  ].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTexto((p) => (p.trim() ? `${p.trimEnd()} ${t}` : t))}
+                      className={`shrink-0 rounded-full border ${C.border} bg-black/20 px-3 py-1 text-[11px] text-zinc-300 transition-colors hover:border-[#c9a24a]/50 hover:text-[#e0b86a]`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               <div className="flex gap-2 items-stretch">
                 <textarea
                   value={texto}
