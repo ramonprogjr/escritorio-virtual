@@ -22,9 +22,9 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 ## 🎨 Plano UI/UX (auditoria + diretor, 24/jun) — 4 ondas seguras-autônomas
 Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditivo, gates tsc+vitest+_chk23, sem push/RLS):
 - [x] **Onda A** — #1 cabeçalho contextual no `CadastroSideoverPanel` (some "Visão do cadastro" do config; **verificado no browser**) + #7 PT-BR + ocultar slug técnico. ✅
-- [x] **Onda B (visual)** ✅ — #2 tabela-lista de Leads tokenizada (`--obra-*`, score dourado); #5 quick-actions com ícones Lucide. **Sub-item pendente:** dica de **Ctrl+K** na sidebar (`app/crm/layout.tsx`) — menor, fácil.
+- [x] **Onda B (visual)** ✅ — #2 tabela-lista de Leads tokenizada (`--obra-*`, score dourado); #5 quick-actions com ícones Lucide; **dica de Ctrl+K na sidebar** ✅ (botão "Buscar… Ctrl K" abre a paleta).
 - [x] **Onda C (sinais acionáveis)** ✅ — #4 selo de **SLA textual** no card de lead (rótulo+cor, via `sla-frescor`); #3 **dashboard reordenado por urgência** (Ação agora→Alertas→Leads parados no topo; % no rodapé) + "+ Parceiro" tokenizado. (Card de negócio sem SLA em minutos — semântica de dias = B5.)
-- [~] **Onda D (interação)** — #8 ✅ respostas rápidas (templates) no Inbox + label IA dinâmico. **#6 PENDENTE (deferido por segurança):** trocar `alert()`/`window.confirm()` por `CrmConfirmDialog`/strip dark. Abordagem pronta: em `app/crm/cadastro/page.tsx` (`excluirRegistro` l.449, `excluirSelecionados` l.496) dividir cada função em *requester* (seta estado `confirmExclusao={titulo,mensagem,onConfirmar}`) + *executor* (corpo atual) e renderizar `CrmConfirmDialog danger`; em `app/crm/leads/page.tsx` (`alert()` l.367/388) trocar por strip dark de erro (estado efêmero). Fluxo destrutivo → fazer com calma/revisão.
+- [x] **Onda D (interação)** ✅ — #8 respostas rápidas (templates) no Inbox + label IA dinâmico; **#6 FEITO:** `window.confirm()` das exclusões do cadastro viraram `CrmConfirmDialog` (requester+executor); `alert()` do leads virou strip dark efêmero. Sem mais `alert/confirm` nativos no CRM.
 - **Travas fora do Top 8:** cards de distribuição/SLA-fornecedor/ranking no dashboard (motor+RLS), converter conversa→negócio, respostas por IA, disclosure de menu por plano.
 
 ## 🎨 UX / produto (decisão futura — 🧑 + 🤖)
@@ -33,7 +33,7 @@ Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditi
 - [ ] **ConfidenceBadge.onCorrigir** não ligado — depende da IA pré-preencher (Bloco 8).
 - [ ] **Voz (Talk-and-Go)** — "no fim" do roadmap (decidir on-device vs serviço, custo/privacidade).
 - [ ] **Mapear `error.message` do Supabase** para mensagens PT amigáveis no login (UX).
-- [ ] **🆕 Verificar paleta da LISTA de Negócios** (`app/crm/negocios/page.tsx`) — a auditoria suspeitou que repete o drift `gray-*`/`blue-*` da lista de Leads (já tokenizada na Onda B). Conferir e tokenizar se preciso. (🤖 seguro)
+- [x] **Verificar paleta da LISTA de Negócios** ✅ — confirmado o drift e **tokenizado** (`app/crm/negocios/page.tsx`), igual à de Leads.
 - [ ] **🆕 Migrar criação de Cadastro (wizard PF/PJ) para SmartField** — hoje a criação ainda é formulário tradicional; é o item *grande* do Click-and-Go nos cadastros (auditoria UX). Esforço **G** → fatiar. (🤖 seguro; campos de valor dependem da decisão faixas vs exato)
 
 ## 🔐 Segurança (consideração — 🤖 quando o fluxo existir)
