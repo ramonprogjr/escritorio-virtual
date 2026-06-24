@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 import { EmptyState } from "@/components/crm/EmptyState";
+import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { CadastroFiltrosBar } from "@/components/crm/cadastro/CadastroFiltrosBar";
 import { CadastroListaTable } from "@/components/crm/cadastro/CadastroListaTable";
 import { ColunasMenu } from "@/components/crm/cadastro/ColunasMenu";
@@ -129,6 +130,11 @@ export default function CadastroPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [conviteWizardOpen, setConviteWizardOpen] = useState(false);
   const [tipoWizard, setTipoWizard] = useState<"PF" | "PJ">("PF");
+  const [confirmExclusao, setConfirmExclusao] = useState<{
+    titulo: string;
+    mensagem: string;
+    onConfirmar: () => void;
+  } | null>(null);
 
   const [contactoId, setContactoId] = useState<string | null>(null);
   const [contactoMode, setContactoMode] = useState<SideoverMode>(null);
@@ -440,16 +446,21 @@ export default function CadastroPage() {
     });
   }
 
-  async function excluirRegistro(
+  // Exclusão (fluxo destrutivo): requester abre o CrmConfirmDialog; executor faz a exclusão.
+  function excluirRegistro(
     id: string,
     tipo: "pessoa" | "empresa",
     label: string
   ) {
     const tipoLabel = tipo === "empresa" ? "empresa" : "cadastro";
-    if (!window.confirm(`Excluir ${tipoLabel} «${label}»? Esta ação não pode ser desfeita.`)) {
-      return;
-    }
+    setConfirmExclusao({
+      titulo: `Excluir ${tipoLabel}`,
+      mensagem: `Excluir ${tipoLabel} «${label}»? Esta ação não pode ser desfeita.`,
+      onConfirmar: () => void executarExclusaoRegistro(id, tipo),
+    });
+  }
 
+  async function executarExclusaoRegistro(id: string, tipo: "pessoa" | "empresa") {
     setErroMassa("");
     try {
       const path =
@@ -489,12 +500,18 @@ export default function CadastroPage() {
     }
   }
 
-  async function excluirSelecionados() {
+  function excluirSelecionados() {
     const ids = [...selecionados];
     if (ids.length === 0) return;
     const label = filtroRegisto === "empresas" ? "empresa(s)" : "cadastro(s)";
-    if (!window.confirm(`Excluir ${ids.length} ${label}? Esta ação não pode ser desfeita.`)) return;
+    setConfirmExclusao({
+      titulo: "Excluir selecionados",
+      mensagem: `Excluir ${ids.length} ${label}? Esta ação não pode ser desfeita.`,
+      onConfirmar: () => void executarExclusaoSelecionados(ids),
+    });
+  }
 
+  async function executarExclusaoSelecionados(ids: string[]) {
     setExcluindoMassa(true);
     setErroMassa("");
     try {
@@ -862,6 +879,21 @@ export default function CadastroPage() {
         open={conviteWizardOpen}
         onClose={() => setConviteWizardOpen(false)}
       />
+
+      <CrmConfirmDialog
+        open={!!confirmExclusao}
+        title={confirmExclusao?.titulo ?? ""}
+        danger
+        confirmLabel="Excluir"
+        onCancel={() => setConfirmExclusao(null)}
+        onConfirm={() => {
+          const acao = confirmExclusao?.onConfirmar;
+          setConfirmExclusao(null);
+          acao?.();
+        }}
+      >
+        {confirmExclusao?.mensagem}
+      </CrmConfirmDialog>
     </div>
   );
 }

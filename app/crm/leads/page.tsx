@@ -191,6 +191,7 @@ export default function LeadsPage() {
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [leadRapidoOpen, setLeadRapidoOpen] = useState(false);
   const [pipelineConfigOpen, setPipelineConfigOpen] = useState(false);
+  const [acaoErro, setAcaoErro] = useState<string | null>(null);
   const [pipelines, setPipelines] = useState<PipelineUi[]>([]);
   const [pipelineId, setPipelineId] = useState<string | null>(null);
   const [estagiosKanban, setEstagiosKanban] = useState<EstagioUi[]>(ESTAGIOS_FALLBACK);
@@ -356,6 +357,11 @@ export default function LeadsPage() {
     setMemorias((m || []) as Memoria[]);
   }
 
+  function mostrarErroAcao(msg: string) {
+    setAcaoErro(msg);
+    window.setTimeout(() => setAcaoErro((a) => (a === msg ? null : a)), 5000);
+  }
+
   async function moverEstagio(leadId: string, novoEstagio: string, extra?: Record<string, unknown>) {
     const leadAtual = leads.find((l) => l.id === leadId);
     const res = await patchLeadCrm(leadId, {
@@ -364,7 +370,7 @@ export default function LeadsPage() {
       ...extra,
     });
     if (!res.ok) {
-      alert(res.error);
+      mostrarErroAcao(res.error || "Não foi possível mover o lead.");
       return false;
     }
     const data = res.data as { estagio?: string; estagio_funil?: string };
@@ -385,7 +391,7 @@ export default function LeadsPage() {
     const json = await res.json().catch(() => ({}));
     setConvertendoNegocio(false);
     if (!res.ok) {
-      alert(typeof json?.error === "string" ? json.error : "Não foi possível criar o negócio.");
+      mostrarErroAcao(typeof json?.error === "string" ? json.error : "Não foi possível criar o negócio.");
       return;
     }
     const negocioId = json?.data?.id as string | undefined;
@@ -1052,6 +1058,15 @@ export default function LeadsPage() {
           }}
         />
       )}
+
+      {acaoErro ? (
+        <div
+          role="alert"
+          className="fixed left-1/2 top-4 z-[150] max-w-[90vw] -translate-x-1/2 rounded-xl border border-[#f8514966] bg-[#1a0a0a] px-4 py-2.5 text-sm text-[#ff7b72] shadow-xl"
+        >
+          {acaoErro}
+        </div>
+      ) : null}
 
       <PipelineConfigSideover
         open={pipelineConfigOpen}
