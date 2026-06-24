@@ -161,6 +161,11 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       },
     ],
   },
+  // RESERVADO — grupo "Comunidade" (ponte Membros, Bloco 7): hierarquia-alvo no menu
+  // principal é Comunidade > Homologação > Onboarding. Essas telas vêm do sistema
+  // Membros (separado) e ainda NÃO existem aqui — por isso não há itens (evita 404 /
+  // "menu morto"). Entram quando importadas. O /crm/onboarding-tenant abaixo é uma
+  // tela SOLTA de setup do tenant (admin), NÃO o onboarding do membro.
   {
     // §8: Administração (ex-"Sistema").
     id: "administracao",

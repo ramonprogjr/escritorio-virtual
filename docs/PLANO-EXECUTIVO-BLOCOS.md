@@ -74,6 +74,8 @@ Wizard de obra (5 passos, click/talk); Escopo/EAP (prev×exec×saldo, aditivos);
 ### Bloco 7 — Ponte Membros
 Gate de elegibilidade + migração idempotente de membro→fornecedor (sem duplicar). Depende do contrato de integração (em aberto).
 
+**Menu (decidido com o Wendel):** o grupo **Comunidade** entra no menu principal com a hierarquia **Comunidade > Homologação > Onboarding**. Essas telas **vêm do sistema Membros** (separado) — o Wendel vai importá-las; não se constroem aqui do zero. Por isso o grupo está **reservado (sem itens)** no menu até a importação (evita 404 / "menu morto"). ⚠️ Não confundir com `/crm/onboarding-tenant`, que é uma **tela solta de setup do tenant** (admin) e fica em Administração.
+
 ### Bloco 8 — IA-first (U6) `[FUTURO]`
 Ativar Anthropic/Bloco H (depende de chave + GO de custo): IA operacional + conversacional + relatórios generativos; Talk-and-Go pleno. **Não ligar antes do manual estar bom.**
 
