@@ -62,11 +62,25 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setMsg(null);
+    // Autofill-safe: o preenchimento automático do navegador nem sempre dispara o onChange
+    // do React, deixando o state vazio -> login falha ("credenciais inválidas") mesmo com os
+    // campos preenchidos. Lemos o valor REAL dos inputs no DOM (inclui autofill) como fonte.
+    const emailEl = document.getElementById("login-email") as HTMLInputElement | null;
+    const passEl = document.getElementById("login-password") as HTMLInputElement | null;
+    const emailVal = (emailEl?.value || email).trim();
+    const passVal = passEl?.value || password;
+    if (emailVal !== email) setEmail(emailVal);
+    if (passVal !== password) setPassword(passVal);
+    if (!emailVal || !passVal) {
+      setLoading(false);
+      setMsg("Informe e-mail e senha.");
+      return;
+    }
     let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"];
     try {
       const result = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+        email: emailVal,
+        password: passVal,
       });
       if (result.error) {
         setLoading(false);
