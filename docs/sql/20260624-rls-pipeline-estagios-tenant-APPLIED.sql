@@ -1,5 +1,7 @@
 -- ============================================================================
--- PROPOSTA (NÃO APLICADA) — Tenant-aware RLS em hub_pipeline_estagios
+-- APLICADA em 2026-06-24 (autorização explícita do Wendel) — migração Supabase
+-- `rls_pipeline_estagios_tenant_aware`. Policies confirmadas tenant-aware via MCP.
+-- Tenant-aware RLS em hub_pipeline_estagios
 -- ----------------------------------------------------------------------------
 -- Contexto (auditado 2026-06-24 via MCP):
 --   • RLS já está LIGADO em hub_pipelines e hub_pipeline_estagios.
