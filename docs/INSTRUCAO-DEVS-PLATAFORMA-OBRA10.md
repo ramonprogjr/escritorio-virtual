@@ -267,6 +267,26 @@ Integrações **API-first**: arquitetura prevista desde o passo 2; ligações re
 - **Schema aplicado** (aditivo/reversível): `docs/sql/*-APPLIED.sql`.
 - **Design system:** dark verde+dourado tokenizado (`globals.css`, `--obra-*`/`--brand-*`). Manter.
 
+### 14.1 Aproveitar o que já funciona — **preservar · melhorar · construir**
+> **Princípio:** o que já funciona, a gente **mantém e melhora** — **não reescreve**. Reescrever quebra comportamento estável e desperdiça base pronta. Só se constrói do zero o que não existe.
+
+| Já funciona — **MANTER** | Como **MELHORAR** (incremental) |
+|--------------------------|---------------------------------|
+| CRM Kanban / pipelines | tornar pipelines **customizáveis por tenant** |
+| Cadastros Pessoa/Empresa/Negócio | **SmartField** + fichas Pipedrive correlacionadas + entidade **Imóvel** |
+| Ficha do negócio (próxima-ação, nota, vínculo pessoa) | **replicar esse padrão** nas demais entidades |
+| Códigos atômicos (PS2026001…) | manter; **estender** p/ obra/medição/compra |
+| Roteamento de leads (`resolverDestinoLead`) | evoluir p/ **motor de score** (§6) |
+| Canais de entrada (`hub_canais_entrada`) | ligar **webhooks reais** (Meta/Google) |
+| RBAC 5 níveis | **estender** papéis de obra + separação Hub×Fornecedor |
+| Multi-tenant / RLS | manter rigor; **adicionar** a regra de visibilidade (§5) |
+| Atendimento WhatsApp (fila/worker/IA) | **unificar inbox** + respostas sugeridas |
+| Camada de agentes (provider-agnóstica) | manter **dormente**; ligar Anthropic no futuro (Bloco H) |
+| Botão "Gerar obra/projeto" (Bloco G) | **conectar ao Wizard de obra** |
+| Design system Obra10+ | manter; criar componentes novos **sobre** ele |
+
+**Regra para o time:** antes de criar algo, checar se já existe equivalente — **estender > recriar**. Toda mudança é **aditiva** e **não quebra comportamento existente** (validar com `tsc` + testes + `_chk23`).
+
 ---
 
 ## 15. Decisões em aberto (resolver com o Wendel)
