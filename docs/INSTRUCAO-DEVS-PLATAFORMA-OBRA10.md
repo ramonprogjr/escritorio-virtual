@@ -85,19 +85,21 @@ O **Imóvel é entidade de 1ª classe** e ponto de costura da jornada. Modelo re
 
 ---
 
-## 5. Modelo de propriedade do Lead (Hub × Fornecedor) — **crítico**
+## 5. Visibilidade do Lead — Hub vê TUDO · Fornecedor vê só o seu — **crítico**
 
-Regra jurídica/comercial. Todo lead carrega **`proprietario`** (`hub` | `fornecedor`) e **`origem`**.
+**Regra confirmada pelo Wendel (controle TOTAL do Hub):**
+- **Hub vê TODOS os leads** da rede inteira — qualquer fornecedor, qualquer origem, qualquer estado. Governança e controle totais.
+- **Fornecedor vê SOMENTE os leads dele** — os que o Hub **direcionou** a ele (mais os que ele mesmo cadastrar). **Nunca** vê a carteira do Hub nem lead de outro fornecedor.
 
-| Tipo | Proprietário | Hub enxerga? | Fornecedor enxerga? |
-|------|-------------|--------------|---------------------|
-| Lead do Hub (distribuído) | Hub | **Sim** (governa) | Sim, como **Vinculado** |
-| Lead próprio do fornecedor (cadastro/importação/campanha própria/indicação) | Fornecedor | **Não, por padrão** (conforme plano/regra comercial) | Sim |
-| Lead Vinculado | Hub | Sim | Sim (compartilhado, **não duplicado**) |
+| Tipo de lead | Hub enxerga? | Fornecedor enxerga? |
+|--------------|:------------:|:-------------------:|
+| Captado pelo Hub, ainda não distribuído | **Sim** | Não |
+| Direcionado a ESTE fornecedor (Vinculado) | **Sim** | **Sim** (só o seu) |
+| Direcionado a OUTRO fornecedor | **Sim** | Não |
+| Cadastrado pelo próprio fornecedor | **Sim** (controle total) | Sim |
 
-- **Visibilidade por plano:** a regra "Hub vê lead próprio do fornecedor?" é **configurável por plano/contrato**. Default = **não vê**.
-- **Nunca duplicar o dado** do Hub: compartilhar com vínculo (Mestre↔Vinculado), histórico sincronizado, redistribuível.
-- **[A CONSTRUIR]** campos `proprietario`/`origem`/`visivel_hub` + políticas RLS finas (fornecedor vê só o seu; Hub vê o que o plano permite).
+- **Nunca duplicar o dado:** lead do Hub é compartilhado com **vínculo** (Mestre↔Vinculado), histórico sincronizado, redistribuível.
+- **[A CONSTRUIR]** RLS: o papel **fornecedor** é filtrado por `fornecedor_id = seu tenant`; o papel **Hub/governança bypassa** o filtro e vê tudo. Campos `proprietario`/`origem` no lead. O **Dashboard do Hub** (ver UI/UX) materializa esse controle total.
 
 ---
 
