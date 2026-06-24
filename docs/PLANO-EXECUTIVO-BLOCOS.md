@@ -30,6 +30,7 @@
 | **3** | **CRM do Fornecedor (U3)** | pipelines/Kanban **customizáveis por tenant**; inbox unificado + respostas sugeridas; cartão com SLA | B2 | não | médio |
 | **4** | **Visibilidade & Governança Hub** | regra de visibilidade RLS (`fornecedor_id`; Hub bypassa, §5 spec); **Dashboard do Hub** (cards acionáveis); base da camada Fornecedores | B3 | não | **alto** (RLS) |
 | **5** | **Motor de Distribuição (U4)** | score multi-critério; modos auto/semi/manual; SLA + redistribuição; Lead Mestre×Vinculado; fila + `RecommendationCard` | B4 | não | alto |
+| **5.5** | **Monetização da rede** | **Licenciamento/Entitlements** (módulo · plano · créditos/tokens; Hub libera) + **Comissão marketplace** (b: % sobre ganho originado de lead do Hub) + **funil 2 níveis · KPIs · SLA** | B4, B5 | não | alto |
 | **6** | **Gestão de Obra (U5)** | Wizard 5 passos (click/talk); EAP/escopo prev×exec×saldo; cronograma+Curva S; medição+gates; `EvidenceCapture`; Compras¹ | B2 (Bloco G existe) | não | alto |
 | **7** | **Ponte Membros** | gate de elegibilidade + migração idempotente Membros→fornecedor | contrato² | não | médio |
 | **8 — [FUTURO]** | **IA-first (U6)** | ativar Anthropic/Bloco H; operacional + conversacional; relatórios generativos; Talk-and-Go pleno | chave + GO custo | **sim** | — |
@@ -76,6 +77,28 @@ Regra de visibilidade (spec §5): fornecedor vê só o seu (`fornecedor_id`); Hu
 
 ### Bloco 5 — Motor de Distribuição (U4)
 Score multi-critério; modos automático/semiautomático/manual; SLA com redistribuição; modelo Lead Mestre×Vinculado; fila com `RecommendationCard` (top-3 fornecedores).
+
+### Bloco 5.5 — Monetização da rede (licenciamento + comissão + performance)
+Camada de negócio sobre a base. **O Hub libera tudo.** Três frentes:
+
+**1. Licenciamento / Entitlements** (confirmado, catálogo fechado):
+- 3 eixos: **por módulo** (liga/desliga) · **por plano/pacote** (bundles) · **por créditos/tokens** (consumo).
+- Módulos cobráveis: CRM · Atendimento (WhatsApp) · Projetos · Obras · Serviços · Compras · Financeiro · Marketing · IA/Copiloto · Integrações (+ Produtos, futuro). Base (não cobrada): Cadastros+códigos, Dashboard, Usuários/RBAC, Administração.
+- Créditos/tokens: **IA tokens**, **mensagens WhatsApp**, (futuro) armazenamento de evidências, assinaturas.
+- Dados (aditivo): `hub_planos`, `hub_tenant_modulos` (tenant+modulo+ativo+plano+validade → **disclosure por plano** no menu + **guard de rota** por módulo), `hub_tenant_creditos` (saldo+ledger). **Amarrar tenant ↔ cadastro PJ** (escritório = empresa-cadastro).
+
+**2. Comissão marketplace** (decisão: **opção b**):
+- O Hub fica com **% sobre o negócio ganho originado de lead do Hub**. Exige **cadeia de atribuição**: lead Mestre → distribuição → negócio → ganho (origem rastreável; lead não-Hub não gera comissão).
+- Dados: `hub_comissoes` (negocio_id, lead_mestre_id, tenant, base_cálculo, %, valor, competência, status) → vira **conta a receber do Hub** (Financeiro do Hub).
+- **[Decisões em aberto]** % fixo ou por mercado/plano; base = valor do negócio ou do contrato de obra; cobra no **ganho** ou conforme **medição/recebimento**.
+
+**3. Funil + KPIs + SLA (em 2 níveis)** — "esteira de venda" da rede:
+- **Funil do escritório (tenant):** Lead → Qualificado → Negócio → Proposta → Ganho/Perdido; conversão por etapa, ticket médio, taxa de ganho, motivo de perda. *(vive no CRM do fornecedor — B3)*
+- **Funil do Hub (rede):** Captado → Distribuído → 1º contato → Negócio → Ganho, por mercado/escritório/canal; onde trava, ranking, leads ociosos. *(Governança — B4, cards do dashboard §5)*
+- **KPIs** (mesmas fontes, agregação dupla): tempo de 1º contato, % no SLA, conversão, ticket médio, receita, **comissão gerada**, leads sem resposta, redistribuições.
+- **SLA (engine — B5):** relógio por lead distribuído; marcos configuráveis (1º contato 15min · status 24h · proposta 48h); estado ok/atenção/estourado; estouro → alerta + volta à fila + perde score + redistribui.
+
+> Faseamento: licenciamento e comissão **manuais** primeiro (Hub liga módulo e lança comissão na mão), automação (billing, cálculo automático) depois. KPIs/SLA nascem dos dados que B3–B5 já produzem.
 
 ### Bloco 6 — Gestão de Obra (U5)
 Wizard de obra (5 passos, click/talk); Escopo/EAP (prev×exec×saldo, aditivos); Cronograma+Curva S; Avanço & Medição com gates e `EvidenceCapture`. Conecta ao botão "Gerar obra" (Bloco G) já existente. **Compras pendente de detalhamento.**
