@@ -115,5 +115,15 @@ Sair de *"renderiza e quase funciona"* → **"confiável + espinha dorsal viva +
 - **PROVA força-bruta (set role no banco vivo):** baseline anon via key pública lia **138 leads + 5 pessoas** (PII — viola "contato nunca exposto"). Pós-fix: **anon = 0/0/0/0** nas 4 tabelas; **authenticated = 138 leads + 5 pessoas** (app intacta). Cliente browser lê como **authenticated** (bridge hidrata sessão Supabase) → telas logadas continuam funcionando.
 - **Hardening pós-advisor:** helper virou **SECURITY INVOKER** (corpo constante não precisa DEFINER) + `revoke execute` de anon/public. Advisor de segurança não lista mais as 4 tabelas em `rls_policy_always_true`.
 - **AINDA ABERTO (próximo lote E):** ~36 tabelas hub_* com o mesmo padrão (inclui `hub_negocios`, `hub_oportunidades`, `hub_parceiros`, `hub_mensagens`, `hub_conversas`, `hub_atividades`, `hub_memorias_lead`, `hub_notas`, `hub_propostas`, `hub_servicos`, `hub_pipelines`, `hub_pipeline_estagios`, `hub_negocio_vinculos`…). Cada uma exige verificar coluna de tenant (várias não têm) antes de escopar.
-- **PENDENTE (não-bloqueante):** QA visual logado (Playwright reconectou) — abrir `/crm` logado e confirmar leads/financeiro renderizando + console limpo. Requer login (senha do usuário). DDL **só no Supabase**; **deploy do app não tocado** (gated até pedido do usuário).
 - `_chk23` OK. Nenhum dado apagado.
+
+### 2026-06-23 — Bloco E: QA visual LOGADO (Playwright) — RLS não quebrou a app ✅
+- **Provado logado ao vivo** (login `nice.engemp@gmail.com`, Playwright):
+  - **Dashboard** `/crm`: dados reais (120 aguardando, funil 85 / R$ 6.5M, Receita potencial R$ 8.6M, nomes reais) — **0 erros de console**. (vem de APIs server/service-role.)
+  - **Kanban de leads** `/crm/leads`: **138 leads renderizados** (header "Pipeline global · 138 leads", colunas Novos/Qualificando/…, nomes Lucas/Ramon/Wendel). Este é o teste decisivo: usa **leitura client-side** de `hub_leads_crm` (anon-key + sessão) → passa pela policy `authenticated` nova. **Confirma que o fix de RLS NÃO quebrou as telas logadas.**
+  - **Financeiro** `/crm/financeiro` (cobre `contas_receber/pagar`): renderiza limpo, R$ 0 (tabelas vazias, correto), **0 erros**.
+  - Screenshot: `qa/E-leads-kanban-pos-rls.png`.
+- **2 erros de console observados — AMBOS PRÉ-EXISTENTES, não do Bloco E:**
+  - `GET /api/crm/encaminhamentos/pendentes` **500** consistente → **`column hub_encaminhamentos.encaminhado_para does not exist`**. **Bug de drift schema↔código** na rota [app/api/crm/encaminhamentos/pendentes/route.ts:30](../app/api/crm/encaminhamentos/pendentes/route.ts) — seleciona coluna inexistente (a tabela tem `profissional_id`/`destinatario_pessoa_id`/`responsavel_envio`, não `encaminhado_para`). `hub_encaminhamentos` **não foi tocada** pelo Bloco E (service-role ignora RLS). Tabela vazia → feature dormente. **Fix separado recomendado** (1 linha no SELECT; decidir coluna-alvo).
+  - `GET /api/crm/me/context` **401** (1x, corrida do cookie de sessão na 1ª pintura — bridge posta o cookie async). Pré-existente ("token inválido" já notado).
+- **Conclusão:** lote crítico do Bloco E **fechado e verificado logado**. App íntegra.
