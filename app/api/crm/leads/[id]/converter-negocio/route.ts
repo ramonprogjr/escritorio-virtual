@@ -9,17 +9,20 @@ import {
 } from "@/lib/crm/negocio-vinculos";
 import { MERCADOS_NEGOCIO } from "@/lib/crm/pipelines";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: NextRequest, { params }: Params) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
   const { id: lead_id } = await params;
   const supabase = crmDb();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   const { data: lead, error: leadErr } = await supabase
     .from("hub_leads_crm")

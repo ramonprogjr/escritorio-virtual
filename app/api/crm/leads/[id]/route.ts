@@ -3,7 +3,7 @@ import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { buildLeadEstagioPatch } from "@/lib/crm/estagio-map";
 import { validarMudancaEstagioLead } from "@/lib/crm/lead-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -53,6 +53,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) {
     return NextResponse.json({ error: configErr }, { status: 503 });
@@ -67,7 +70,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   const supabase = crmDb();
-  const tenantId = tenantIdFromRequest(request.headers);
+  const tenantId = g.ctx.tenantId;
 
   const { data: atual, error: fetchErr } = await supabase
     .from("hub_leads_crm")

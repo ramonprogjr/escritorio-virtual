@@ -1,6 +1,7 @@
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import {
   crmNivelFromRole,
+  crmNivelAtLeast,
   isCrmGestorRole,
   isCrmOwnerRole,
   crmPodeAtribuirRole,
@@ -189,6 +190,28 @@ export async function requireCrmFinanceiro(
       return n === "owner" || n === "gestor" || n === "financeiro";
     },
     "Sem permissão para o módulo financeiro."
+  );
+}
+
+/** Comercial, Gestor ou Owner — funil de vendas, cadastros e negócios. */
+export async function requireCrmComercial(
+  request: Request
+): Promise<{ ctx: CrmCallerContext } | { error: NextResponse }> {
+  return requireCallerWith(
+    request,
+    role => crmNivelAtLeast(role, "comercial"),
+    "Sem permissão para esta ação comercial."
+  );
+}
+
+/** Qualquer sessão CRM ativa (atendente ou acima) — ações operacionais básicas. */
+export async function requireCrmSessao(
+  request: Request
+): Promise<{ ctx: CrmCallerContext } | { error: NextResponse }> {
+  return requireCallerWith(
+    request,
+    role => crmNivelAtLeast(role, "atendente"),
+    "Sessão CRM necessária para esta ação."
   );
 }
 
