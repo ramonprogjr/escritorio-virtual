@@ -19,6 +19,13 @@ Sem isso, o "Esqueci minha senha" **não envia e-mail** de verdade:
 - [x] **Validação visual via browser (24/jun):** login OK (senha A12345679), menu §8 renderiza, **QuickAdd FAB** visível, deep-link `?novo=1` abre o criador, **chips do lead confirmados** (Tipo de interesse + campo dinâmico viraram chips; Cidade segue texto). Login mostra "Esqueci minha senha".
 - [ ] **Spot-check restante (opcional):** negócio/empresa/imóvel usam o MESMO `SmartField` (alta confiança), mas validar em **mobile** e o fluxo **/redefinir-senha** (depende de SMTP configurado) quando der.
 
+## 🧭 Análise-mestra encomendada (24/jun, revisar amanhã) — CEO/mesa redonda
+O Wendel pediu (papel de **CEO/conselheiro honesto + mesa redonda por especialista**):
+- **Auditar TODAS as telas** (botões/funções ruins, desnecessários, mal usados) com lente **IA-first/conversacional + Click-and-Go + usabilidade**, uma mesa redonda por tela.
+- **Mapear cada métrica → FUNCIONALIDADE necessária** (ex.: follow-up → configurar tipos/prazos; reunião → função de agendar; registros → log/escrever nos cards de pessoa/empresa/negócio) — **sem deixar impossível de usar pelo excesso**.
+- **Repassar todos os docs, entender tudo, atualizar cronograma/execução** e dizer **onde estamos** sem perder foco/constância.
+- Entregáveis (gerados na análise): `docs/AUDITORIA-TELAS-UIUX.md`, `docs/METRICAS-FUNCIONALIDADES.md`, cronograma atualizado, e um parecer **CEO** (onde estamos + foco + o que NÃO fazer agora). *(análise em workflow rodando; consolidar nos docs ao concluir.)*
+
 ## 🎨 Plano UI/UX (auditoria + diretor, 24/jun) — 4 ondas seguras-autônomas
 Auditoria de UX (mesa redonda) gerou Top 8; diretor sequenciou em 4 ondas (aditivo, gates tsc+vitest+_chk23, sem push/RLS):
 - [x] **Onda A** — #1 cabeçalho contextual no `CadastroSideoverPanel` (some "Visão do cadastro" do config; **verificado no browser**) + #7 PT-BR + ocultar slug técnico. ✅
