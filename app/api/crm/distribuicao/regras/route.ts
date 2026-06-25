@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 /** Regras de roteamento automático de leads (configuráveis). */
 const SELECT =
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
   const destino_valor = String(body.destino_valor || "").trim();
   if (!destino_valor) return NextResponse.json({ error: "Destino obrigatório" }, { status: 400 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const norm = (v: unknown) => {
     const s = String(v ?? "").trim();
     return s ? s : null;
