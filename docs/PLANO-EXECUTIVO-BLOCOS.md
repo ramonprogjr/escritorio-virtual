@@ -1,5 +1,7 @@
 # Plano Executivo em Blocos — Plataforma Obra10+
 
+> 📑 **Índice de todos os documentos: [INDICE.md](INDICE.md)** (ponto de entrada único).
+
 > **O que é.** O roteiro de execução da plataforma, organizado em **blocos sequenciais**. Cada bloco é um incremento **seguro, fechável e que melhora o que já existe** — sem big-bang, sem reescrita. Consolida os dois eixos de planejamento já aprovados:
 > - **Backend/arquitetura:** Fases 0–6 da [`INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md`](INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md) §10.
 > - **Interface (UI/UX):** Ondas U1–U6 da [`UIUX-AUDITORIA-E-PLANO.md`](UIUX-AUDITORIA-E-PLANO.md) §8.
