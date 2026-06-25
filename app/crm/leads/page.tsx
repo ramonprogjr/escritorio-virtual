@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Phone, Share2, Briefcase, StickyNote, XCircle, Ban } from "lucide-react";
+import { Phone, Share2, Briefcase, StickyNote, XCircle, Ban, Bot, User } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
@@ -12,6 +12,7 @@ import { estagioParaColunaKanban } from "@/lib/crm/estagio-map";
 import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { ESTAGIOS_FALLBACK_UI } from "@/lib/crm/pipeline-defaults";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
+import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { LeadEncaminharModal } from "@/components/crm/leads/LeadEncaminharModal";
 import { EncaminhamentosPendentesPanel } from "@/components/crm/leads/EncaminhamentosPendentesPanel";
 
@@ -56,6 +57,7 @@ type Lead = {
   humano_responsavel: string | null;
   proxima_acao: string | null;
   data_proxima_acao: string | null;
+  interesse_principal?: string | null;
   motivo_perda: string | null;
   tags: string[];
   criado_em: string;
@@ -162,6 +164,15 @@ function isPipelineGlobal(pipe: PipelineUi | null): boolean {
   );
 }
 
+/** Máximo de cards por faixa na Caixa antes de "ver todos". */
+const LIMITE_CAIXA = 12;
+
+/** Lê a metadata do lead como objeto seguro. */
+function leadMetaObj(lead: Lead): Record<string, unknown> {
+  const m = lead.metadata;
+  return m && typeof m === "object" && !Array.isArray(m) ? (m as Record<string, unknown>) : {};
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LeadsPage() {
@@ -173,6 +184,7 @@ export default function LeadsPage() {
   const isMobile = narrow !== false;
   const [leads, setLeads] = useState<Lead[]>([]);
   const [view, setView] = useState<"kanban" | "lista" | "caixa">("caixa");
+  const [verTodos, setVerTodos] = useState<Record<string, boolean>>({});
   const [busca, setBusca] = useState("");
   const [filtroEstagio, setFiltroEstagio] = useState("");
   const [detalhe, setDetalhe] = useState<Lead | null>(null);
@@ -677,7 +689,11 @@ export default function LeadsPage() {
               { key: "agora", label: "Agora", sub: "esfriando — resgate já", cor: "#EF4444", leads: caixaLanes.agora },
               { key: "hoje", label: "Hoje", sub: "no ritmo", cor: "#EAB308", leads: caixaLanes.hoje },
               { key: "aguardando", label: "Aguardando", sub: "com outro responsável", cor: "#6B7280", leads: caixaLanes.aguardando },
-            ] as const).map((lane) => (
+            ] as const).map((lane) => {
+              const verMais = verTodos[lane.key] === true;
+              const visiveis = verMais ? lane.leads : lane.leads.slice(0, LIMITE_CAIXA);
+              const restantes = lane.leads.length - visiveis.length;
+              return (
               <section key={lane.key}>
                 <div className="mb-2 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full" style={{ background: lane.cor }} aria-hidden />
@@ -691,9 +707,20 @@ export default function LeadsPage() {
                   <p className="px-1 pb-1 text-xs text-[#484f58]">Nada aqui — bom sinal.</p>
                 ) : (
                   <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                    {lane.leads.map((lead) => {
+                    {visiveis.map((lead) => {
                       const est = estagiosKanban.find((e) => e.id === estagioParaColunaKanban(lead.estagio));
                       const tel = (lead.telefone || "").replace(/\D/g, "");
+                      const meta = leadMetaObj(lead);
+                      const mercadoPref =
+                        (typeof meta.mercado_principal === "string" && meta.mercado_principal) ||
+                        (Array.isArray(meta.mercados) && typeof meta.mercados[0] === "string"
+                          ? (meta.mercados[0] as string)
+                          : "");
+                      const mercadoLabel = mercadoPref ? labelMercadoPrefixo(mercadoPref) || mercadoPref : null;
+                      const cidade =
+                        (typeof meta.cidade === "string" && meta.cidade) || lead.pessoa_cidade || "";
+                      const parceiroNome =
+                        typeof meta.parceiro_nome === "string" && meta.parceiro_nome ? meta.parceiro_nome : "";
                       return (
                         <div
                           key={lead.id}
@@ -719,13 +746,36 @@ export default function LeadsPage() {
                                   {ORIGENS_LABEL[lead.origem] || lead.origem}
                                 </span>
                               )}
+                              {mercadoLabel && (
+                                <span className="rounded-full bg-[#c9a24a]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#c9a24a]">
+                                  {mercadoLabel}
+                                </span>
+                              )}
                               <span className="text-[11px] text-[#8b949e]">{tempo(lead.atualizado_em)} parado</span>
                               {lead.valor_estimado > 0 && (
                                 <span className="text-[11px] font-bold text-[#22C55E]">{moeda(lead.valor_estimado)}</span>
                               )}
                             </div>
-                            {lead.ultima_mensagem_fila && (
-                              <p className="mt-1.5 line-clamp-2 text-xs italic text-[#8b949e]">“{lead.ultima_mensagem_fila}”</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
+                              {lead.humano_responsavel ? (
+                                <span className="inline-flex items-center gap-1 font-semibold text-[#22C55E]">
+                                  <User size={11} strokeWidth={2.5} aria-hidden /> {lead.humano_responsavel}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-sky-300">
+                                  <Bot size={11} strokeWidth={2.5} aria-hidden /> IA
+                                  {lead.agente_responsavel ? ` · ${lead.agente_responsavel}` : ""}
+                                </span>
+                              )}
+                              {cidade && <span className="text-[#8b949e]">{cidade}</span>}
+                              {parceiroNome && (
+                                <span className="inline-flex items-center gap-1 text-[#fcd34d]">→ {parceiroNome}</span>
+                              )}
+                            </div>
+                            {(lead.interesse_principal || lead.ultima_mensagem_fila) && (
+                              <p className="mt-1.5 line-clamp-2 text-xs text-[#8b949e]">
+                                {lead.interesse_principal || `“${lead.ultima_mensagem_fila}”`}
+                              </p>
                             )}
                           </button>
                           <div className="mt-2.5 flex gap-1.5">
@@ -758,10 +808,28 @@ export default function LeadsPage() {
                         </div>
                       );
                     })}
+                    {restantes > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setVerTodos((v) => ({ ...v, [lane.key]: true }))}
+                        className="cursor-pointer rounded-xl border border-dashed border-[#30363d] py-2.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 sm:col-span-2 lg:col-span-3"
+                      >
+                        +{restantes} pendentes — ver todos
+                      </button>
+                    ) : verMais && lane.leads.length > LIMITE_CAIXA ? (
+                      <button
+                        type="button"
+                        onClick={() => setVerTodos((v) => ({ ...v, [lane.key]: false }))}
+                        className="cursor-pointer rounded-xl border border-dashed border-[#30363d] py-2.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3] sm:col-span-2 lg:col-span-3"
+                      >
+                        ver menos
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </section>
-            ))}
+              );
+            })}
             {caixaLanes.agora.length === 0 && caixaLanes.hoje.length === 0 && caixaLanes.aguardando.length === 0 && (
               <p className="py-12 text-center text-sm text-[#8b949e]">Nenhum lead ativo nesta caixa.</p>
             )}
