@@ -172,7 +172,7 @@ export default function LeadsPage() {
   const narrow = useNarrowViewport();
   const isMobile = narrow !== false;
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [view, setView] = useState<"kanban" | "lista">("kanban");
+  const [view, setView] = useState<"kanban" | "lista" | "caixa">("caixa");
   const [busca, setBusca] = useState("");
   const [filtroEstagio, setFiltroEstagio] = useState("");
   const [detalhe, setDetalhe] = useState<Lead | null>(null);
@@ -305,8 +305,8 @@ export default function LeadsPage() {
     const est = searchParams.get("estagio");
     const v = searchParams.get("view");
     if (est) setFiltroEstagio(est);
-    if (v === "kanban" || v === "lista") setView(v);
-    else if (isMobile) setView("lista");
+    if (v === "kanban" || v === "lista" || v === "caixa") setView(v);
+    else if (isMobile) setView("caixa");
     if (searchParams.get("novo") === "1") {
       setLeadRapidoOpen(true);
       const p = new URLSearchParams(searchParams.toString());
@@ -448,6 +448,27 @@ export default function LeadsPage() {
     return true;
   });
 
+  // Caixa de Oportunidades — faixas de urgência (o que precisa de mim agora)
+  const caixaLanes = useMemo(() => {
+    const exclui = new Set(["ganho", "perdido", "spam_invalido", "convertido_negocio"]);
+    const agora: Lead[] = [];
+    const hojeLeads: Lead[] = [];
+    const aguardando: Lead[] = [];
+    for (const l of filtrados) {
+      if (exclui.has(l.estagio)) continue;
+      if (l.estagio === "encaminhado") {
+        aguardando.push(l);
+        continue;
+      }
+      const idade = Date.now() - new Date(l.atualizado_em).getTime();
+      if (idade > 86_400_000) agora.push(l);
+      else hojeLeads.push(l);
+    }
+    agora.sort((a, b) => new Date(a.atualizado_em).getTime() - new Date(b.atualizado_em).getTime());
+    hojeLeads.sort((a, b) => new Date(b.atualizado_em).getTime() - new Date(a.atualizado_em).getTime());
+    return { agora, hoje: hojeLeads, aguardando };
+  }, [filtrados]);
+
   const hoje = new Date().toDateString();
   const semResposta = leadsDoPipeline.filter(l => !["ganho", "perdido"].includes(l.estagio) && Date.now() - new Date(l.atualizado_em).getTime() > 86_400_000).length;
   const emRisco = leadsDoPipeline.filter(l => !["ganho", "perdido"].includes(l.estagio) && Date.now() - new Date(l.atualizado_em).getTime() > 3_600_000).reduce((s, l) => s + l.valor_estimado, 0);
@@ -479,6 +500,13 @@ export default function LeadsPage() {
         <>
           {botaoNovoLead}
           <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
+            <button
+              type="button"
+              onClick={() => setView("caixa")}
+              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+            >
+              Caixa
+            </button>
             <button
               type="button"
               onClick={() => setView("kanban")}
@@ -530,6 +558,13 @@ export default function LeadsPage() {
     <>
       {botaoNovoLead}
       <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
+        <button
+          type="button"
+          onClick={() => setView("caixa")}
+          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+        >
+          Caixa
+        </button>
         <button
           type="button"
           onClick={() => setView("kanban")}
@@ -634,7 +669,105 @@ export default function LeadsPage() {
 
       {/* ─── MAIN ─── */}
       <div className="flex-1 overflow-hidden">
-        {view === "kanban" ? (
+        {view === "caixa" ? (
+
+          /* CAIXA DE OPORTUNIDADES — superfície de trabalho acionável */
+          <div className="h-full overflow-y-auto p-4 pb-24 space-y-6">
+            {([
+              { key: "agora", label: "Agora", sub: "esfriando — resgate já", cor: "#EF4444", leads: caixaLanes.agora },
+              { key: "hoje", label: "Hoje", sub: "no ritmo", cor: "#EAB308", leads: caixaLanes.hoje },
+              { key: "aguardando", label: "Aguardando", sub: "com outro responsável", cor: "#6B7280", leads: caixaLanes.aguardando },
+            ] as const).map((lane) => (
+              <section key={lane.key}>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: lane.cor }} aria-hidden />
+                  <h2 className="text-sm font-bold text-[#e6edf3]">{lane.label}</h2>
+                  <span className="text-xs text-[#8b949e]">{lane.sub}</span>
+                  <span className="ml-auto rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: lane.cor + "22", color: lane.cor }}>
+                    {lane.leads.length}
+                  </span>
+                </div>
+                {lane.leads.length === 0 ? (
+                  <p className="px-1 pb-1 text-xs text-[#484f58]">Nada aqui — bom sinal.</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {lane.leads.map((lead) => {
+                      const est = estagiosKanban.find((e) => e.id === estagioParaColunaKanban(lead.estagio));
+                      const tel = (lead.telefone || "").replace(/\D/g, "");
+                      return (
+                        <div
+                          key={lead.id}
+                          className="flex flex-col rounded-xl border border-[#30363d] bg-[#161b22] p-3 transition-colors hover:border-[#484f58]"
+                          style={{ borderLeftWidth: 3, borderLeftColor: borderColor(lead.atualizado_em) }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/crm/leads/${lead.id}`)}
+                            className="cursor-pointer text-left"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="truncate text-sm font-bold text-[#e6edf3]">{lead.nome}</p>
+                              {est && (
+                                <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: est.color + "22", color: est.color }}>
+                                  {est.label}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              {lead.origem && (
+                                <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background: (ORIGENS_COLOR[lead.origem] || "#6B7280") + "25", color: ORIGENS_COLOR[lead.origem] || "#9CA3AF" }}>
+                                  {ORIGENS_LABEL[lead.origem] || lead.origem}
+                                </span>
+                              )}
+                              <span className="text-[11px] text-[#8b949e]">{tempo(lead.atualizado_em)} parado</span>
+                              {lead.valor_estimado > 0 && (
+                                <span className="text-[11px] font-bold text-[#22C55E]">{moeda(lead.valor_estimado)}</span>
+                              )}
+                            </div>
+                            {lead.ultima_mensagem_fila && (
+                              <p className="mt-1.5 line-clamp-2 text-xs italic text-[#8b949e]">“{lead.ultima_mensagem_fila}”</p>
+                            )}
+                          </button>
+                          <div className="mt-2.5 flex gap-1.5">
+                            {tel && (
+                              <a
+                                href={`https://wa.me/55${tel}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-[#25D366]/15 py-1.5 text-xs font-bold text-[#25D366] transition-colors hover:bg-[#25D366]/25"
+                              >
+                                Responder
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => void converterNegocio(lead)}
+                              disabled={convertendoNegocio}
+                              className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-[#30363d] py-1.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 disabled:opacity-40"
+                            >
+                              Negócio
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/crm/leads/${lead.id}`)}
+                              className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#30363d] px-2.5 py-1.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
+                            >
+                              Ficha
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            ))}
+            {caixaLanes.agora.length === 0 && caixaLanes.hoje.length === 0 && caixaLanes.aguardando.length === 0 && (
+              <p className="py-12 text-center text-sm text-[#8b949e]">Nenhum lead ativo nesta caixa.</p>
+            )}
+          </div>
+
+        ) : view === "kanban" ? (
 
           /* KANBAN */
           <div
