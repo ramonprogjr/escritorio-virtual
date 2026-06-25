@@ -4,9 +4,13 @@
 
 ---
 
-## 🔴 Funcional (botão não funciona / atrapalha o uso)
+## ✅ Corrigidos
+- **#1 FAB sobrepunha o botão dos sideovers** → FAB some quando há `[aria-modal]`/`[role=dialog]` aberto (commit `0162aa1`, verificado no navegador).
+- **#2 Parede de toggles de mercado** → trocada por **chips** no `MercadoLeadPicker` (commit `f9f913c`) e reusada no cadastro PF/PJ `CadastroComercialSecao` (commit acima). Toggles de mercado eliminados do sistema.
 
-1. **FAB QuickAdd ("+") sobrepõe o botão de ação dos sideovers** (Criar lead / Guardar alterações) no canto inferior direito → o clique cai no FAB, não no botão. **Confirmado no QA** (`overlapped: true`; o lead só foi criado clicando via JS). **Fix:** esconder/ocultar o FAB enquanto houver sideover/modal aberto (ou elevar o footer do sideover acima do FAB / dar `z-index`/offset). Afeta **todos os sideovers** (CadastroPremiumSideover, LeadRapidoSideover, NegocioFormDrawer, etc.). **Severidade: alta** (bloqueia ação principal).
+## 🔴 Funcional (botão não funciona / atrapalha o uso) — histórico
+
+1. ✅ **FAB QuickAdd ("+") sobrepõe o botão de ação dos sideovers** (Criar lead / Guardar alterações) no canto inferior direito → o clique cai no FAB, não no botão. **Confirmado no QA** (`overlapped: true`; o lead só foi criado clicando via JS). **Fix:** esconder/ocultar o FAB enquanto houver sideover/modal aberto (ou elevar o footer do sideover acima do FAB / dar `z-index`/offset). Afeta **todos os sideovers** (CadastroPremiumSideover, LeadRapidoSideover, NegocioFormDrawer, etc.). **Severidade: alta** (bloqueia ação principal).
 
 ## 🎨 Feio + disfuncional (padrões a substituir no sistema todo)
 
