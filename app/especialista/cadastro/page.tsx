@@ -15,7 +15,7 @@ function FormConvite() {
   const por = sp.get("por") || "";
 
   const [form, setForm] = useState({
-    nome: "", telefone: "", cidade: "", uf: "",
+    nome: "", telefone: "", cpf: "", cidade: "", uf: "",
     especialidades: [] as string[], experiencia: "", tem_equipe: false,
   });
   const [erro, setErro] = useState("");
@@ -73,6 +73,8 @@ function FormConvite() {
           onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
         <input style={input} placeholder="WhatsApp com DDD *" value={form.telefone}
           onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))} />
+        <input style={input} placeholder="CPF" value={form.cpf}
+          onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))} />
         <input style={input} placeholder="Cidade" value={form.cidade}
           onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
         <select style={input} value={form.uf} onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))}>

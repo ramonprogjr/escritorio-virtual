@@ -50,6 +50,17 @@ export async function POST(request: NextRequest) {
   const por = String(body.por || "").trim();
   const convidadoPor = UUID_RE.test(por) ? por : null;
 
+  const cpf = String(body.cpf || "").replace(/\D/g, "") || null;
+  if (cpf) {
+    const { data: dup } = await crmDb()
+      .from("hub_especialistas")
+      .select("id")
+      .eq("cpf", cpf)
+      .maybeSingle();
+    if (dup)
+      return NextResponse.json({ error: "Já existe um cadastro com este CPF." }, { status: 409 });
+  }
+
   const tenantId = defaultTenantId();
   const year = new Date().getFullYear();
   const { count } = await crmDb().from("hub_especialistas").select("*", { count: "exact", head: true });
@@ -59,6 +70,7 @@ export async function POST(request: NextRequest) {
     codigo,
     nome,
     telefone,
+    cpf,
     cidade: body.cidade ? String(body.cidade).trim() : null,
     uf: body.uf ? String(body.uf).trim().toUpperCase() : null,
     especialidades,

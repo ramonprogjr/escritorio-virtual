@@ -44,6 +44,17 @@ export async function POST(request: NextRequest) {
   if (telefone.replace(/\D/g, "").length < 10)
     return NextResponse.json({ error: "Telefone com DDD obrigatório" }, { status: 400 });
 
+  const cpf = String(body.cpf || "").replace(/\D/g, "") || null;
+  if (cpf) {
+    const { data: dup } = await crmDb()
+      .from("hub_especialistas")
+      .select("id, nome")
+      .eq("cpf", cpf)
+      .maybeSingle();
+    if (dup)
+      return NextResponse.json({ error: `Já existe um especialista com este CPF (${dup.nome}).` }, { status: 409 });
+  }
+
   const tenantId = g.ctx.tenantId;
   const year = new Date().getFullYear();
   const { count } = await crmDb().from("hub_especialistas").select("*", { count: "exact", head: true });
@@ -55,6 +66,7 @@ export async function POST(request: NextRequest) {
     codigo,
     nome,
     telefone,
+    cpf,
     email: body.email || null,
     cidade: body.cidade || null,
     uf: body.uf || null,

@@ -33,7 +33,7 @@ export default function EspecialistasPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [linkCopiado, setLinkCopiado] = useState(false);
   const FORM_VAZIO = {
-    nome: "", telefone: "", cidade: "", uf: "", especialidades: [] as string[],
+    nome: "", telefone: "", cpf: "", cidade: "", uf: "", especialidades: [] as string[],
     experiencia: "", tem_equipe: false, tamanho_equipe: "", observacoes: "",
   };
   const [form, setForm] = useState(FORM_VAZIO);
@@ -81,6 +81,7 @@ export default function EspecialistasPage() {
       setForm({
         nome: String(e.nome ?? ""),
         telefone: String(e.telefone ?? ""),
+        cpf: String(e.cpf ?? ""),
         cidade: String(e.cidade ?? ""),
         uf: String(e.uf ?? ""),
         especialidades: Array.isArray(e.especialidades) ? (e.especialidades as string[]) : [],
@@ -118,7 +119,7 @@ export default function EspecialistasPage() {
     try {
       const especialidades = form.especialidades;
       const payload = {
-        nome: form.nome, telefone: form.telefone, cidade: form.cidade, uf: form.uf,
+        nome: form.nome, telefone: form.telefone, cpf: form.cpf, cidade: form.cidade, uf: form.uf,
         especialidades, experiencia: form.experiencia,
         tem_equipe: form.tem_equipe, tamanho_equipe: form.tamanho_equipe || null,
         observacoes: form.observacoes,
@@ -172,6 +173,7 @@ export default function EspecialistasPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <input style={inputStyle} placeholder="Nome completo *" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
             <input style={inputStyle} placeholder="Telefone / WhatsApp (com DDD) *" value={form.telefone} onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))} />
+            <input style={inputStyle} placeholder="CPF (evita duplicado)" value={form.cpf} onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))} />
             <input style={inputStyle} placeholder="Cidade" value={form.cidade} onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
             <select style={inputStyle} value={form.uf} onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))}>
               <option value="">UF</option>
