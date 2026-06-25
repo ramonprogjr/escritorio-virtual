@@ -159,6 +159,13 @@ function metricCard(label: string, value: string, color: string) {
   );
 }
 
+/** Formata o valor estimado (string do input numérico) como R$ pt-BR. */
+function fmtValorBRL(v: string): string {
+  const n = Number(String(v).replace(/\./g, "").replace(",", "."));
+  if (!v.trim() || !Number.isFinite(n) || n <= 0) return "não definido";
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+}
+
 export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultMercado }: Props) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [picker, setPicker] = useState<PickerState>(emptyPicker);
@@ -517,9 +524,9 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                 minWidth: 130,
                 padding: "12px 16px",
                 borderRadius: 10,
-                border: "1px solid #2f81f7",
-                background: "#2f81f720",
-                color: "#9ecbff",
+                border: "1px solid #c9a24a",
+                background: "#c9a24a20",
+                color: "#e0b86a",
                 fontSize: 13,
                 fontWeight: 800,
                 cursor: loading || chatLoading ? "not-allowed" : "pointer",
@@ -641,7 +648,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
             {metricCard("Mercado", resumoMercado, "#e6edf3")}
             {metricCard("Etapa", ETAPA_LABEL[form.etapa] || form.etapa, "#e6edf3")}
-            {metricCard("Valor", form.valor_estimado.trim() || "não definido", "#22c55e")}
+            {metricCard("Valor", fmtValorBRL(form.valor_estimado), "#22c55e")}
             {metricCard("Vínculos", String(totalVinculos), "#c9a24a")}
           </div>
         </CadastroSideoverPanel>
@@ -1027,19 +1034,31 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
 
             <CadastroSideoverPanel>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <p style={{ margin: 0, color: "#e6edf3", fontSize: 13, fontWeight: 800 }}>
-                  Checklist operacional
-                </p>
                 {pendencias.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: 18, color: "#fca5a5", fontSize: 12, lineHeight: 1.6 }}>
-                    {pendencias.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
+                  <details>
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        color: "#8b949e",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      Completar depois (opcional) — {pendencias.length}{" "}
+                      {pendencias.length === 1 ? "item para enriquecer" : "itens para enriquecer"}
+                    </summary>
+                    <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#8b949e", fontSize: 12, lineHeight: 1.6 }}>
+                      {pendencias.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                    <p style={{ margin: "8px 0 0", fontSize: 11, color: "#6e8099" }}>
+                      Nada aqui bloqueia salvar — é só para enriquecer o negócio.
+                    </p>
+                  </details>
                 ) : (
                   <p style={{ margin: 0, color: "#86efac", fontSize: 12, fontWeight: 700 }}>
-                    Draft bem preenchido. Próximo passo: salvar o negócio ou usar a IA opcional para
-                    revisar antes.
+                    Tudo certo para salvar. Se quiser, use a IA opcional para revisar antes.
                   </p>
                 )}
                 <div
@@ -1055,8 +1074,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                   </p>
                   <p style={{ ...HINT, marginTop: 6 }}>
                     Mercado {resumoMercado}, etapa {ETAPA_LABEL[form.etapa] || form.etapa}, valor{" "}
-                    {form.valor_estimado.trim() || "não definido"} e {totalVinculos} vínculo(s)
-                    carregado(s).
+                    {fmtValorBRL(form.valor_estimado)} e {totalVinculos} vínculo(s) carregado(s).
                   </p>
                 </div>
               </div>
