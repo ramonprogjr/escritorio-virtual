@@ -57,11 +57,13 @@ Faixa **cross-cutting** que reveste as telas existentes (B2/B3) com a linguagem 
 | **Negócios (drawer)** | checklist "falso erro" → opcional; **4 selects → combobox de busca** | ✅ `6f40280`, `19dbe9a` |
 | **Leads (tela de trabalho)** ⭐ | **tabela/listão → "Caixa de Oportunidades"** (faixas Agora/Hoje/Aguardando, cards acionáveis, frescor/SLA, resumo IA, barra conversacional) | em curso (fatias) |
 | **Cadastros (tela de trabalho)** | colunas → busca + **Ficha 360** (timeline, vínculos, negócios) | ⏳ próxima |
-| **Relatórios** | tabela atual ruim (estoura, ruído, dados de teste) → **área de relatórios de verdade** (a tabela legítima vive aqui) | ⏳ |
+| **Relatórios / Analytics** | tabela atual ruim → **só higiene mínima agora** (tirar ruído/dados de teste/colunas que estouram). **NÃO redesenhar a fundo** | ⏳ (mínimo) |
 
 **Anatomia do card (padrão da Onda):** nome · canal (rótulo) · frescor/SLA · score · resumo IA (1 linha) · 2–3 ações diretas (Responder/Atender · Qualificar · Virar negócio). Sem ruído (R$ 0,00, "—", dados de teste, valores crus, jargão/nome de tabela).
 
 **Dependências:** "resumo IA" e barra conversacional plena amadurecem com o **Bloco 8 (IA)**; até lá, usar última mensagem/heurística. A **distribuição/visibilidade Hub** segue em B4/B5 (multi-tenant real B3.9).
+
+**End-state de Relatórios/Analytics (decisão do dono, 25/jun):** o futuro é **BI generativo** — a IA **gera o relatório, a tela e os dados sob demanda, em tempo real**, conforme o pedido do cliente em linguagem natural (parte do **Bloco 8**, "relatórios generativos / Talk-and-Go"). Por isso a tela estática de Relatórios **tem dias contados**: agora só **higiene mínima**, nada de redesenho profundo. Toda métrica/evento que alimenta isso está no blueprint [CENTRAL-PERFORMANCE-METRICAS.md](CENTRAL-PERFORMANCE-METRICAS.md) (camada de eventos F4 = fundação).
 
 ---
 
