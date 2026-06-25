@@ -20,6 +20,7 @@
 4. **Travas:** mexer só no projeto `-ramon`; **sem push** sem ordem; **sem secrets** no Git/banco; migrações **aditivas e reversíveis**.
 5. **Aprovação humana** para: exclusão de dados, mudança irreversível, custo financeiro, credenciais, produção.
 6. **Manual-first:** a IA (Bloco 8) só liga depois que o manual estiver bom.
+7. **Telas para o JOB, não tabelas** (mandato CEO de produto, 25/jun — memória `ceo-mandato-produto`): toda tela de trabalho é desenhada para a necessidade do negócio — **cards acionáveis, triagem por urgência, conversa/IA-first, Click-and-Go (≤3 toques)**. **Tabela/planilha vive só em Relatórios** (o dono puxa o dump/CSV quando quer). Cada tela passa por **mesa redonda de UI/UX** (ux-director + ui-ux-pro-max + frontend-design). Revolução **ousada, mas aditiva e validada**: o Code **lidera e propõe** como deve ser; o dono traz mercado/processo/dores. Preserva a **lógica que já está certa** — muda a superfície, não o motor.
 
 ---
 
@@ -41,6 +42,26 @@
 | **8 — [FUTURO]** | **IA-first (U6)** | ativar Anthropic/Bloco H; operacional + conversacional; relatórios generativos; Talk-and-Go pleno | chave + GO custo | **sim** | — |
 
 ¹ Módulo **Compras** ainda não detalhado pelo cliente (spec §15.1). ² Contrato Membros→fornecedor em aberto (spec §15.2).
+
+---
+
+## Onda UX-R — Revolução de telas (transversal, regra de ouro #7)
+
+Faixa **cross-cutting** que reveste as telas existentes (B2/B3) com a linguagem "tela para o JOB, não tabela" — **sem tocar na lógica/dados** (que já estão certos). Roda em paralelo aos blocos, tela a tela, com mesa redonda + ui-ux-pro-max, gates e verificação no navegador. Identidade Obra10+ (dark verde+dourado).
+
+| Tela | De → Para | Status |
+|---|---|---|
+| **Lead "Novo"** | formulário longo → 3 toques (Nome+Telefone; resto em "Mais opções") | ✅ `b95b1d7` |
+| **Cadastro PF/PJ** | selects → chips; Localização colapsável (auto-CNPJ/CEP) | ✅ `b95b1d7` |
+| **Atendimento (inbox)** | já bom (IA-first) → origem com rótulo | ✅ `4af3310` |
+| **Negócios (drawer)** | checklist "falso erro" → opcional; **4 selects → combobox de busca** | ✅ `6f40280`, `19dbe9a` |
+| **Leads (tela de trabalho)** ⭐ | **tabela/listão → "Caixa de Oportunidades"** (faixas Agora/Hoje/Aguardando, cards acionáveis, frescor/SLA, resumo IA, barra conversacional) | em curso (fatias) |
+| **Cadastros (tela de trabalho)** | colunas → busca + **Ficha 360** (timeline, vínculos, negócios) | ⏳ próxima |
+| **Relatórios** | tabela atual ruim (estoura, ruído, dados de teste) → **área de relatórios de verdade** (a tabela legítima vive aqui) | ⏳ |
+
+**Anatomia do card (padrão da Onda):** nome · canal (rótulo) · frescor/SLA · score · resumo IA (1 linha) · 2–3 ações diretas (Responder/Atender · Qualificar · Virar negócio). Sem ruído (R$ 0,00, "—", dados de teste, valores crus, jargão/nome de tabela).
+
+**Dependências:** "resumo IA" e barra conversacional plena amadurecem com o **Bloco 8 (IA)**; até lá, usar última mensagem/heurística. A **distribuição/visibilidade Hub** segue em B4/B5 (multi-tenant real B3.9).
 
 ---
 
