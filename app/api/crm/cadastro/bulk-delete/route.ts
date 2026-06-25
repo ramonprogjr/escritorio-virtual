@@ -4,6 +4,7 @@ import {
   excluirEmpresaCrm,
   excluirPessoaCrm,
 } from "@/lib/crm/excluir-cadastro-crm";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -13,6 +14,9 @@ function db() {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   let body: { tipo?: string; ids?: string[] };
   try {
     body = await request.json();

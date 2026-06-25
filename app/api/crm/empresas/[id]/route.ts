@@ -6,6 +6,7 @@ import {
   registrarAuditoriaCrm,
 } from "@/lib/crm/registrar-auditoria-crm";
 import { isMissingPgColumn } from "@/lib/tenant-default";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
 import { validarCnpjEmpresaDisponivelPatch } from "@/lib/crm/validar-documento-server";
 
@@ -95,6 +96,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireCrmGestor(request);
+  if ("error" in guard) return guard.error;
+
   const err = configError();
   if (err) {
     return NextResponse.json(
@@ -204,6 +208,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireCrmGestor(request);
+  if ("error" in guard) return guard.error;
+
   const err = configError();
   if (err) {
     return NextResponse.json(

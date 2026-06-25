@@ -13,6 +13,7 @@ import {
   registrarAuditoriaCrm,
 } from "@/lib/crm/registrar-auditoria-crm";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import { validarDocumentoDisponivelPatch } from "@/lib/crm/validar-documento-server";
 import type { TipoPessoaCadastro } from "@/lib/crm/pessoa-cadastro";
 
@@ -85,6 +86,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const err = configError();
   if (err) {
     return NextResponse.json(
@@ -217,6 +221,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
     return NextResponse.json(
       { error: "Supabase não configurado no servidor." },

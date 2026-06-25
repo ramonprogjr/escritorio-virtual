@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -12,11 +13,14 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+  const ctx = g.ctx;
+
   const { id } = await params;
   const body = await request.json();
-  const { status, aprovado_por, observacao } = body as {
+  const { status, observacao } = body as {
     status: string;
-    aprovado_por?: string;
     observacao?: string;
   };
 
@@ -33,10 +37,10 @@ export async function PATCH(
   };
 
   if (status === "aprovado") {
-    updates.aprovado_por = aprovado_por || "wendel";
+    updates.aprovado_por = ctx.userId;
     updates.aprovado_em = new Date().toISOString();
   } else if (status === "rejeitado" || status === "ignorado") {
-    updates.rejeitado_por = aprovado_por || "wendel";
+    updates.rejeitado_por = ctx.userId;
     updates.rejeitado_em = new Date().toISOString();
     if (observacao) updates.observacao = observacao;
   }
