@@ -20,6 +20,14 @@ type Especialista = {
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const EXPERIENCIAS = ["Menos de 1 ano", "1 a 3 anos", "3 a 5 anos", "5 a 10 anos", "Mais de 10 anos"];
+// Mão de obra / terceiros (mesma taxonomia do cadastro do sistema Membros).
+const ESPECIALIDADES = [
+  "Empreiteiro", "Pedreiro", "Pintor", "Eletricista", "Encanador / Hidráulica",
+  "Serralheiro", "Vidraceiro", "Gesseiro / Drywall", "Azulejista / Ceramista",
+  "Marceneiro", "Carpinteiro", "Instalador de Ar-condicionado", "Soldador",
+  "Telhadista", "Impermeabilizador", "Marmoraria / Granito", "Pisos e Revestimentos",
+  "Forro / PVC / Drywall", "Jardinagem / Paisagismo", "Limpeza pós-obra", "Ajudante / Servente",
+];
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: 10, borderRadius: 8, border: "1px solid #30363d",
@@ -34,10 +42,19 @@ export default function EspecialistasPage() {
   const [erro, setErro] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const FORM_VAZIO = {
-    nome: "", telefone: "", cidade: "", uf: "", especialidades: "",
+    nome: "", telefone: "", cidade: "", uf: "", especialidades: [] as string[],
     experiencia: "", tem_equipe: false, tamanho_equipe: "", observacoes: "",
   };
   const [form, setForm] = useState(FORM_VAZIO);
+
+  function toggleEspecialidade(esp: string) {
+    setForm((f) => ({
+      ...f,
+      especialidades: f.especialidades.includes(esp)
+        ? f.especialidades.filter((x) => x !== esp)
+        : [...f.especialidades, esp],
+    }));
+  }
 
   function fecharForm() {
     setAberto(false);
@@ -61,7 +78,7 @@ export default function EspecialistasPage() {
         telefone: String(e.telefone ?? ""),
         cidade: String(e.cidade ?? ""),
         uf: String(e.uf ?? ""),
-        especialidades: Array.isArray(e.especialidades) ? (e.especialidades as string[]).join(", ") : "",
+        especialidades: Array.isArray(e.especialidades) ? (e.especialidades as string[]) : [],
         experiencia: String(e.experiencia ?? ""),
         tem_equipe: e.tem_equipe === true,
         tamanho_equipe: e.tamanho_equipe != null ? String(e.tamanho_equipe) : "",
@@ -91,9 +108,10 @@ export default function EspecialistasPage() {
     setErro("");
     if (!form.nome.trim()) { setErro("Nome obrigatório."); return; }
     if (form.telefone.replace(/\D/g, "").length < 10) { setErro("Telefone com DDD obrigatório."); return; }
+    if (form.especialidades.length === 0) { setErro("Escolha ao menos uma especialidade."); return; }
     setSalvando(true);
     try {
-      const especialidades = form.especialidades.split(",").map((s) => s.trim()).filter(Boolean);
+      const especialidades = form.especialidades;
       const payload = {
         nome: form.nome, telefone: form.telefone, cidade: form.cidade, uf: form.uf,
         especialidades, experiencia: form.experiencia,
@@ -146,18 +164,63 @@ export default function EspecialistasPage() {
               <option value="">UF</option>
               {UFS.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
             </select>
-            <input style={{ ...inputStyle, gridColumn: "1 / -1" }} placeholder="Especialidades (separadas por vírgula — 1ª é a principal)" value={form.especialidades} onChange={(e) => setForm((f) => ({ ...f, especialidades: e.target.value }))} />
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontSize: 12, color: "#8b949e", marginBottom: 6 }}>
+                Especialidades * <span style={{ color: "#6e7681" }}>(escolha uma ou mais — a 1ª é a principal)</span>
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {ESPECIALIDADES.map((esp) => {
+                  const ativo = form.especialidades.includes(esp);
+                  return (
+                    <button
+                      key={esp}
+                      type="button"
+                      onClick={() => toggleEspecialidade(esp)}
+                      style={{
+                        padding: "7px 12px", borderRadius: 999,
+                        border: `1px solid ${ativo ? "#c9a24a" : "#30363d"}`,
+                        background: ativo ? "rgba(201,162,74,0.15)" : "#0d1117",
+                        color: ativo ? "#e0b86a" : "#8b949e",
+                        fontSize: 12, fontWeight: ativo ? 700 : 500, cursor: "pointer",
+                      }}
+                    >
+                      {ativo ? "✓ " : "+ "}{esp}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <select style={inputStyle} value={form.experiencia} onChange={(e) => setForm((f) => ({ ...f, experiencia: e.target.value }))}>
               <option value="">Tempo de experiência</option>
               {EXPERIENCIAS.map((x) => <option key={x} value={x}>{x}</option>)}
             </select>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#8b949e", cursor: "pointer" }}>
-                <input type="checkbox" checked={form.tem_equipe} onChange={(e) => setForm((f) => ({ ...f, tem_equipe: e.target.checked }))} />
-                Tem equipe
-              </label>
+            <div style={{ gridColumn: "1 / -1", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", gap: 8, flex: "1 1 280px" }}>
+                {[
+                  { label: "Trabalha sozinho", val: false },
+                  { label: "Tem equipe", val: true },
+                ].map((opt) => {
+                  const ativo = form.tem_equipe === opt.val;
+                  return (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, tem_equipe: opt.val }))}
+                      style={{
+                        flex: 1, padding: "9px 12px", borderRadius: 8,
+                        border: `1px solid ${ativo ? "#c9a24a" : "#30363d"}`,
+                        background: ativo ? "rgba(201,162,74,0.15)" : "#0d1117",
+                        color: ativo ? "#e0b86a" : "#8b949e",
+                        fontSize: 12, fontWeight: 700, cursor: "pointer",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
               {form.tem_equipe && (
-                <input style={{ ...inputStyle, width: 120 }} type="number" placeholder="Nº pessoas" value={form.tamanho_equipe} onChange={(e) => setForm((f) => ({ ...f, tamanho_equipe: e.target.value }))} />
+                <input style={{ ...inputStyle, width: 130 }} type="number" placeholder="Nº pessoas" value={form.tamanho_equipe} onChange={(e) => setForm((f) => ({ ...f, tamanho_equipe: e.target.value }))} />
               )}
             </div>
             <textarea style={{ ...inputStyle, gridColumn: "1 / -1", minHeight: 60 }} placeholder="Observações" value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} />

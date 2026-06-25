@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 /** Rede — Especialistas / mão de obra (sem login; cadastro interno). Formato Membros. */
 const SELECT =
   "id, codigo, nome, telefone, email, cidade, uf, especialidades, especialidade_principal, disponibilidade, experiencia, tem_equipe, tamanho_equipe, verificado, criado_em";
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const verificado = request.nextUrl.searchParams.get("verificado");
 
   let query = crmDb()
@@ -28,6 +31,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -38,7 +44,7 @@ export async function POST(request: NextRequest) {
   if (telefone.replace(/\D/g, "").length < 10)
     return NextResponse.json({ error: "Telefone com DDD obrigatório" }, { status: 400 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const year = new Date().getFullYear();
   const { count } = await crmDb().from("hub_especialistas").select("*", { count: "exact", head: true });
   const codigo = `ESP-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
