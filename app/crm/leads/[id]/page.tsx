@@ -492,6 +492,23 @@ export default function LeadFichaPage() {
           ? formatarDataHora(ultimaFila.criado_em)
           : "—",
     },
+    { label: "Toques", value: String(atividades.length) },
+    {
+      label: "1º contato",
+      value: (() => {
+        if (atividades.length === 0) return "Sem contato";
+        const primeira = atividades[atividades.length - 1];
+        const ini = lead.criado_em ? new Date(lead.criado_em as string).getTime() : null;
+        const fim = primeira?.criado_em ? new Date(primeira.criado_em as string).getTime() : null;
+        if (!ini || !fim || fim < ini) return formatarDataHora((primeira?.criado_em as string) ?? null);
+        const horas = Math.round((fim - ini) / 3600000);
+        return horas < 1
+          ? "< 1h após entrada"
+          : horas < 48
+            ? `${horas}h após entrada`
+            : `${Math.round(horas / 24)}d após entrada`;
+      })(),
+    },
     { label: "Próxima ação", value: (lead.proxima_acao as string) || "—" },
     {
       label: "Valor",
