@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { HardHat, Plus, BadgeCheck } from "lucide-react";
+import { HardHat, Plus, BadgeCheck, Link2, Check } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { ESPECIALIDADES, EXPERIENCIAS, UFS } from "@/lib/crm/especialidades";
 
 type Especialista = {
   id: string;
@@ -18,17 +19,6 @@ type Especialista = {
   verificado: boolean | null;
 };
 
-const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
-const EXPERIENCIAS = ["Menos de 1 ano", "1 a 3 anos", "3 a 5 anos", "5 a 10 anos", "Mais de 10 anos"];
-// Mão de obra / terceiros (mesma taxonomia do cadastro do sistema Membros).
-const ESPECIALIDADES = [
-  "Empreiteiro", "Pedreiro", "Pintor", "Eletricista", "Encanador / Hidráulica",
-  "Serralheiro", "Vidraceiro", "Gesseiro / Drywall", "Azulejista / Ceramista",
-  "Marceneiro", "Carpinteiro", "Instalador de Ar-condicionado", "Soldador",
-  "Telhadista", "Impermeabilizador", "Marmoraria / Granito", "Pisos e Revestimentos",
-  "Forro / PVC / Drywall", "Jardinagem / Paisagismo", "Limpeza pós-obra", "Ajudante / Servente",
-];
-
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: 10, borderRadius: 8, border: "1px solid #30363d",
   background: "#0d1117", color: "#e6edf3", fontSize: 13,
@@ -41,6 +31,7 @@ export default function EspecialistasPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
+  const [linkCopiado, setLinkCopiado] = useState(false);
   const FORM_VAZIO = {
     nome: "", telefone: "", cidade: "", uf: "", especialidades: [] as string[],
     experiencia: "", tem_equipe: false, tamanho_equipe: "", observacoes: "",
@@ -54,6 +45,20 @@ export default function EspecialistasPage() {
         ? f.especialidades.filter((x) => x !== esp)
         : [...f.especialidades, esp],
     }));
+  }
+
+  async function copiarLinkConvite() {
+    setErro("");
+    try {
+      const res = await fetch("/api/crm/especialistas/convite", { headers: internalApiHeaders() });
+      const json = (await res.json().catch(() => ({}))) as { por?: string };
+      const url = `${window.location.origin}/especialista/cadastro${json.por ? `?por=${json.por}` : ""}`;
+      await navigator.clipboard.writeText(url);
+      setLinkCopiado(true);
+      setTimeout(() => setLinkCopiado(false), 2500);
+    } catch {
+      setErro("Não foi possível copiar o link de convite.");
+    }
   }
 
   function fecharForm() {
@@ -139,6 +144,14 @@ export default function EspecialistasPage() {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <HardHat size={22} color="#c9a24a" aria-hidden />
         <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>Especialistas</h1>
+        <button
+          type="button"
+          onClick={() => void copiarLinkConvite()}
+          title="Copiar um link para o especialista se cadastrar sozinho (sem login). Fica rastreado como seu convite."
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: linkCopiado ? "#34d399" : "#8b949e", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+        >
+          {linkCopiado ? <><Check size={14} strokeWidth={2.5} /> Link copiado!</> : <><Link2 size={14} strokeWidth={2.5} /> Convidar (link)</>}
+        </button>
         <button
           type="button"
           onClick={() => {
