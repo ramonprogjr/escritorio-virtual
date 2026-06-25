@@ -4,6 +4,9 @@
 
 ---
 
+## 🧭 Mapa-mestre (comece por aqui)
+- [ANALISE-MESTRA-ESCOPO.md](ANALISE-MESTRA-ESCOPO.md) — **documento vivo** que consolida TUDO (todos os docs + decisões + estado real auditado por mesa redonda): princípios, estado por dimensão, **riscos críticos**, sequência correta (Faixas A–D), nada-a-mais e progresso recalibrado. **A visão única de "quanto falta".**
+
 ## 🎯 Visão & Spec (o "o quê" e o "porquê")
 - [INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md](INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md) — **spec-mestra** da plataforma (Hub + Distribuição + CRM Fornecedor + Obra; domínios A–J; faseamento; travas).
 - [UIUX-AUDITORIA-E-PLANO.md](UIUX-AUDITORIA-E-PLANO.md) — princípio **Click-and-Go / Talk-and-Go**, riscos de usabilidade, componentes-base (SmartField etc.), ondas U1–U6.
