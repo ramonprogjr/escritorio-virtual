@@ -209,6 +209,8 @@ export default function LeadFichaPage() {
   const [memorias, setMemorias] = useState<Record<string, unknown>[]>([]);
   const [aba, setAba] = useState<"atividades" | "memorias" | "propostas" | "dados">("atividades");
   const [memoriasErro, setMemoriasErro] = useState<string | null>(null);
+  const [novaNota, setNovaNota] = useState("");
+  const [salvandoNota, setSalvandoNota] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!id) return;
@@ -374,6 +376,26 @@ export default function LeadFichaPage() {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  async function registrarNota() {
+    const txt = novaNota.trim();
+    if (!txt || salvandoNota) return;
+    setSalvandoNota(true);
+    try {
+      const res = await fetch(`/api/crm/leads/${encodeURIComponent(id)}/nota`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ descricao: txt }),
+      });
+      if (res.ok) {
+        setNovaNota("");
+        await carregar();
+      }
+    } finally {
+      setSalvandoNota(false);
+    }
+  }
 
   const chipsMemoria = useMemo(() => memorias.flatMap(chipsFromMemoriaRow), [memorias]);
 
@@ -605,6 +627,36 @@ export default function LeadFichaPage() {
               className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6"
               style={{ backgroundColor: BG_DEEP }}
             >
+              <div className="mx-auto mb-5 flex max-w-2xl gap-2">
+                <input
+                  value={novaNota}
+                  onChange={(e) => setNovaNota(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void registrarNota();
+                  }}
+                  placeholder="Registrar uma nota…"
+                  className="min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-sm outline-none"
+                  style={{ borderColor: BORDER_SUBTLE, backgroundColor: "rgba(15,22,32,0.95)", color: "#e6edf3" }}
+                />
+                <button
+                  type="button"
+                  disabled={salvandoNota || !novaNota.trim()}
+                  onClick={() => void registrarNota()}
+                  style={{
+                    padding: "9px 16px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: "#c9a24a",
+                    color: "#003b26",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: salvandoNota || !novaNota.trim() ? "default" : "pointer",
+                    opacity: salvandoNota || !novaNota.trim() ? 0.6 : 1,
+                  }}
+                >
+                  {salvandoNota ? "…" : "Adicionar"}
+                </button>
+              </div>
               {atividades.length === 0 ? (
                 <p className="pt-12 text-center text-xs" style={{ color: "#5c6570" }}>
                   Nenhuma atividade registada
