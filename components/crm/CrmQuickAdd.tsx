@@ -31,9 +31,26 @@ const ACTIONS: QuickAction[] = [
 export function CrmQuickAdd({ role }: { role: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const actions = ACTIONS.filter((a) => crmPodeVerRota(role, a.rota));
+
+  // Esconde o FAB quando há um sideover/modal aberto, para não sobrepor o botão de
+  // ação (Criar/Guardar) do painel — evita o clique cair no FAB.
+  useEffect(() => {
+    const check = () =>
+      setModalAberto(Boolean(document.querySelector('[aria-modal="true"], [role="dialog"]')));
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["aria-modal", "role"],
+    });
+    return () => obs.disconnect();
+  }, []);
 
   const go = useCallback(
     (href: string) => {
@@ -60,7 +77,7 @@ export function CrmQuickAdd({ role }: { role: string }) {
     };
   }, [open]);
 
-  if (actions.length === 0) return null;
+  if (actions.length === 0 || modalAberto) return null;
 
   return (
     <div
