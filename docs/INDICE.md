@@ -14,6 +14,7 @@
 ## 🗺 Plano & Execução (o "como" e o "quando")
 - [PLANO-EXECUTIVO-BLOCOS.md](PLANO-EXECUTIVO-BLOCOS.md) — **roteiro ativo** em blocos (B0→B8, +B3.9 Fundação Multi-Tenant, +B5.5 Monetização). Fonte da sequência.
 - [PENDENCIAS.md](PENDENCIAS.md) — **tracker vivo** do que está em aberto, por dono (🧑 Wendel · 🤖 dev · 🔒 trava). Conferir antes de fechar etapas.
+- [FILA-UIUX.md](FILA-UIUX.md) — **fila de correções de UI/UX** (falhas de design + funcionalidade encontradas, ex.: FAB sobrepõe botão, parede de toggles de mercado). Corrigir no sistema todo; verificar clicando.
 
 ## 🧱 Backlog & Referências de produto
 - [BACKLOG-FEATURES.md](BACKLOG-FEATURES.md) — features futuras (ponto de obra georreferenciado, compras totem/iFood com **spread**, voz→materiais, notificações, comunidade feed, diário de obra auto).
