@@ -7,6 +7,7 @@ import {
   validarLeadCadastro,
 } from "@/lib/crm/lead-cadastro";
 import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -120,6 +121,9 @@ async function insertHubLead(
 
 /** Lista enxuta para selects (ex.: formulário de negócio). */
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = supabaseConfigError();
   if (configErr) {
     return NextResponse.json(
@@ -153,6 +157,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = supabaseConfigError();
   if (configErr) {
     return NextResponse.json(
@@ -162,7 +169,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   let body: Record<string, unknown>;
   try {

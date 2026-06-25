@@ -9,6 +9,7 @@ import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { criarVinculosNegocio } from "@/lib/crm/negocio-vinculos";
 import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
 import { defaultTenantId, isMissingPgColumn, isTenantFkError, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -303,6 +304,9 @@ async function criarLeadCompatParaNegocio(
 }
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const busca = searchParams.get("busca") || "";
@@ -340,6 +344,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = supabaseConfigError();
   if (configErr) {
     return NextResponse.json(
@@ -349,7 +356,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   let body: Partial<NegocioCadastroPayload> & {
     pipeline_id?: string | null;

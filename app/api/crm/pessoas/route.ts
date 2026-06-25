@@ -13,6 +13,7 @@ import {
   type PessoaCadastroPayload,
 } from "@/lib/crm/pessoa-cadastro";
 import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -195,6 +196,9 @@ async function listarPessoas(
 }
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const busca = searchParams.get("busca") || "";
@@ -204,7 +208,7 @@ export async function GET(request: NextRequest) {
   const area_atuacao = searchParams.get("area_atuacao") || "";
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(searchParams.get("limit") || "200", 10), 500);
-  const tenant_id = tenantIdFromRequest(request.headers);
+  const tenant_id = g.ctx.tenantId;
 
   const { data, error, count } = await listarPessoas(supabase, {
     busca,
@@ -228,6 +232,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = supabaseConfigError();
   if (configErr) {
     return NextResponse.json(
@@ -236,7 +243,7 @@ export async function POST(request: NextRequest) {
     );
   }
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  const tenantId = g.ctx.tenantId;
 
   let body: Partial<PessoaCadastroPayload>;
   try {
