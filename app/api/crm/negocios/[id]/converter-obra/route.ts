@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { resolverTipoDerivado } from "@/lib/crm/derivar-negocio";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -13,12 +13,15 @@ type Params = { params: Promise<{ id: string }> };
  * derivado para o negócio, retorna o existente (não duplica).
  */
 export async function POST(request: NextRequest, { params }: Params) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
   const { id } = await params;
   const supabase = crmDb();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const override = typeof body.tipo_alvo === "string" ? body.tipo_alvo : "";

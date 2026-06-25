@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -7,6 +8,9 @@ const SELECT = "id, tipo, nome, identificador, origem_slug, ativo, observacao, c
 const EDITAVEIS = ["tipo", "nome", "identificador", "origem_slug", "ativo", "observacao"] as const;
 
 export async function PATCH(request: NextRequest, { params }: Params) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -35,7 +39,10 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   return NextResponse.json({ data });
 }
 
-export async function DELETE(_request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
