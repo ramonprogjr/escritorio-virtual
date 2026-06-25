@@ -7,6 +7,7 @@
 ## ✅ Corrigidos
 - **#1 FAB sobrepunha o botão dos sideovers** → FAB some quando há `[aria-modal]`/`[role=dialog]` aberto (commit `0162aa1`, verificado no navegador).
 - **#2 Parede de toggles de mercado** → trocada por **chips** no `MercadoLeadPicker` (commit `f9f913c`) e reusada no cadastro PF/PJ `CadastroComercialSecao` (commit acima). Toggles de mercado eliminados do sistema.
+- **#3 Botão "Criar negócio" (lead→negócio) QUEBRADO** (alert na conversão) → 3 bugs de schema legado: `mercado_slug` (coluna add), `tipo` NOT NULL (grava via `legacyNegocioTipoFromMercado`), FK `lead_id`→tabela legada `hub_leads` (grava null; vínculo via `hub_vinculos`). Commit `0de49c4`, verificado: cria NGIMB2026004 e aparece em Negócios.
 
 ## 🔴 Funcional (botão não funciona / atrapalha o uso) — histórico
 
