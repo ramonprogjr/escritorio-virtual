@@ -136,6 +136,9 @@ export function CadastroContactoSideover({
     leads: Array<{ id: string; nome: string; estagio?: string | null }>;
     negocios: Array<{ id: string; codigo?: string | null; titulo: string }>;
   } | null>(null);
+  const [registros, setRegistros] = useState<Record<string, unknown>[]>([]);
+  const [novaNota, setNovaNota] = useState("");
+  const [salvandoNota, setSalvandoNota] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!pessoaId) return;
@@ -194,6 +197,40 @@ export function CadastroContactoSideover({
       }
     })();
   }, [open, pessoaId, fichaTab]);
+
+  const carregarRegistros = useCallback(async () => {
+    if (!pessoaId) return;
+    const res = await fetch(`/api/crm/pessoas/${encodeURIComponent(pessoaId)}/nota`, {
+      credentials: "include",
+    });
+    const json = (await res.json().catch(() => ({}))) as { data?: Record<string, unknown>[] };
+    if (res.ok) setRegistros(json.data ?? []);
+  }, [pessoaId]);
+
+  useEffect(() => {
+    if (!open || !pessoaId || fichaTab !== "registros") return;
+    void carregarRegistros();
+  }, [open, pessoaId, fichaTab, carregarRegistros]);
+
+  async function registrarNota() {
+    const txt = novaNota.trim();
+    if (!pessoaId || !txt || salvandoNota) return;
+    setSalvandoNota(true);
+    try {
+      const res = await fetch(`/api/crm/pessoas/${encodeURIComponent(pessoaId)}/nota`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...(await crmApiHeadersWithActor(actor)) },
+        body: JSON.stringify({ descricao: txt }),
+      });
+      if (res.ok) {
+        setNovaNota("");
+        await carregarRegistros();
+      }
+    } finally {
+      setSalvandoNota(false);
+    }
+  }
 
   async function salvar() {
     if (!pessoaId) return;
@@ -595,6 +632,77 @@ export function CadastroContactoSideover({
                     },
                   ]}
                 />
+              </CadastroSideoverPanel>
+            )}
+            {fichaTab === "registros" && (
+              <CadastroSideoverPanel>
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  <input
+                    value={novaNota}
+                    onChange={(e) => setNovaNota(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void registrarNota();
+                    }}
+                    placeholder="Registrar uma nota…"
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      border: "1px solid #30363d",
+                      background: "#0d1117",
+                      color: "#e6edf3",
+                      fontSize: 13,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={salvandoNota || !novaNota.trim()}
+                    onClick={() => void registrarNota()}
+                    style={{
+                      padding: "9px 16px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: "#c9a24a",
+                      color: "#003b26",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: salvandoNota || !novaNota.trim() ? "default" : "pointer",
+                      opacity: salvandoNota || !novaNota.trim() ? 0.6 : 1,
+                    }}
+                  >
+                    {salvandoNota ? "…" : "Adicionar"}
+                  </button>
+                </div>
+                {registros.length === 0 ? (
+                  <p style={{ color: "#8b949e", fontSize: 13, textAlign: "center", padding: "16px 0" }}>
+                    Nenhum registro ainda.
+                  </p>
+                ) : (
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {registros.map((a) => (
+                      <li
+                        key={String(a.id)}
+                        style={{ border: "1px solid #30363d", borderRadius: 10, padding: "10px 12px", background: "#0d1117" }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#8b949e" }}>
+                            {String(a.tipo || "evento").replace(/_/g, " ")}
+                          </span>
+                          <span style={{ fontSize: 10, color: "#6e7681" }}>
+                            {a.criado_em ? formatarData(String(a.criado_em)) : ""}
+                          </span>
+                        </div>
+                        <p style={{ margin: "6px 0 0", fontSize: 13, color: "#e6edf3", lineHeight: 1.5 }}>
+                          {String(a.descricao || "")}
+                        </p>
+                        <p style={{ margin: "6px 0 0", fontSize: 11, color: "#6e7681" }}>
+                          {String(a.feito_por || "—")}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </CadastroSideoverPanel>
             )}
           </CadastroFichaTabs>

@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react";
 
-export type CadastroFichaTabId = "resumo" | "dados" | "vinculos" | "relacionados";
+export type CadastroFichaTabId = "resumo" | "dados" | "vinculos" | "relacionados" | "registros";
 
 const TAB_LABELS: Record<CadastroFichaTabId, string> = {
   resumo: "Resumo",
   dados: "Dados",
   vinculos: "Vínculos",
   relacionados: "Leads e negócios",
+  registros: "Registros",
 };
 
 type Props = {
@@ -18,7 +19,7 @@ type Props = {
 };
 
 export function CadastroFichaTabs({ active, onChange, children }: Props) {
-  const tabs: CadastroFichaTabId[] = ["resumo", "dados", "vinculos", "relacionados"];
+  const tabs: CadastroFichaTabId[] = ["resumo", "dados", "vinculos", "relacionados", "registros"];
 
   return (
     <div>
