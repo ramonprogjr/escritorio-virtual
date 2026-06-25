@@ -18,6 +18,10 @@ import {
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { SmartField } from "@/components/crm/SmartField";
 import {
+  ParticipantePicker,
+  type ParticipanteOpt,
+} from "@/components/crm/ParticipantePicker";
+import {
   labelMercadoPrefixo,
   MERCADOS_PREFIXO_OPTIONS,
   NEGOCIO_ETAPAS,
@@ -300,6 +304,91 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
       ...prev,
       [key]: prev[key].filter((item) => item !== id),
     }));
+  }
+
+  // ── Combobox unificado de participantes ───────────────────────────────────
+  const opcoesParticipantes = useMemo<ParticipanteOpt[]>(() => {
+    const out: ParticipanteOpt[] = [];
+    for (const l of leads) {
+      out.push({
+        uid: `lead:${l.id}`,
+        id: l.id,
+        tipo: "lead",
+        nome: l.nome,
+        sub: l.telefone || undefined,
+        busca: `${l.nome} ${l.telefone ?? ""}`.toLowerCase(),
+      });
+    }
+    for (const p of pessoas) {
+      out.push({
+        uid: `pessoa:${p.id}`,
+        id: p.id,
+        tipo: "pessoa",
+        nome: p.nome,
+        sub: p.codigo || undefined,
+        busca: `${p.nome} ${p.codigo ?? ""}`.toLowerCase(),
+      });
+    }
+    for (const e of empresas) {
+      const nome = e.nome_fantasia || e.razao_social;
+      out.push({
+        uid: `empresa:${e.id}`,
+        id: e.id,
+        tipo: "empresa",
+        nome,
+        sub: e.codigo || undefined,
+        busca: `${nome} ${e.codigo ?? ""}`.toLowerCase(),
+      });
+    }
+    for (const pa of parceiros) {
+      out.push({
+        uid: `parceiro:${pa.id}`,
+        id: pa.id,
+        tipo: "parceiro",
+        nome: pa.nome,
+        sub: pa.codigo || undefined,
+        busca: `${pa.nome} ${pa.codigo ?? ""}`.toLowerCase(),
+      });
+    }
+    return out;
+  }, [leads, pessoas, empresas, parceiros]);
+
+  const selecionadosUids = useMemo(
+    () => [
+      ...form.lead_ids.map((id) => `lead:${id}`),
+      ...form.pessoa_ids.map((id) => `pessoa:${id}`),
+      ...form.empresa_ids.map((id) => `empresa:${id}`),
+      ...form.parceiro_ids.map((id) => `parceiro:${id}`),
+    ],
+    [form.lead_ids, form.pessoa_ids, form.empresa_ids, form.parceiro_ids]
+  );
+
+  function keyDoTipo(
+    tipo: string
+  ): "lead_ids" | "pessoa_ids" | "empresa_ids" | "parceiro_ids" {
+    return tipo === "lead"
+      ? "lead_ids"
+      : tipo === "pessoa"
+        ? "pessoa_ids"
+        : tipo === "empresa"
+          ? "empresa_ids"
+          : "parceiro_ids";
+  }
+
+  function onAddParticipante(opt: ParticipanteOpt) {
+    const key = keyDoTipo(opt.tipo);
+    setForm((prev) =>
+      prev[key].includes(opt.id) ? prev : { ...prev, [key]: [...prev[key], opt.id] }
+    );
+    setErro("");
+  }
+
+  function onRemoveParticipante(uid: string) {
+    const sep = uid.indexOf(":");
+    const tipo = uid.slice(0, sep);
+    const id = uid.slice(sep + 1);
+    const key = keyDoTipo(tipo);
+    setForm((prev) => ({ ...prev, [key]: prev[key].filter((x) => x !== id) }));
   }
 
   function labelLead(id: string) {
@@ -712,295 +801,18 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
 
         {step === "envolvidos" ? (
           <CadastroSideoverPanel>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {carregandoOpts ? (
-                <p style={{ ...HINT, color: "#9ecbff" }}>Carregando listas de envolvidos…</p>
-              ) : null}
-              {catalogoErro ? (
-                <p
-                  style={{
-                    margin: 0,
-                    color: "#fca5a5",
-                    fontSize: 12,
-                    lineHeight: 1.5,
-                    border: "1px solid rgba(239,68,68,0.25)",
-                    background: "rgba(127,29,29,0.18)",
-                    borderRadius: 10,
-                    padding: "10px 12px",
-                  }}
-                >
-                  Algumas listas não carregaram totalmente: {catalogoErro}
-                </p>
-              ) : null}
-              <div>
-                <label style={LABEL}>Leads envolvidos</label>
-                <p style={{ ...HINT, marginBottom: 8 }}>
-                  {carregandoOpts
-                    ? "A carregar leads…"
-                    : leads.length
-                      ? `${leads.length} lead(s) disponível(is) para vincular.`
-                      : "Nenhum lead disponível para vincular."}
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
-                  <select
-                    value={picker.lead_id}
-                    onChange={(e) => campoPicker("lead_id", e.target.value)}
-                    disabled={carregandoOpts}
-                    style={{ ...INPUT, cursor: "pointer" }}
-                  >
-                    <option value="">Selecionar lead</option>
-                    {leads.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nome}
-                        {item.telefone ? ` · ${item.telefone}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!picker.lead_id}
-                    onClick={() => adicionarVinculo("lead_ids", "lead_id")}
-                    style={{
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      border: "1px solid #30363d",
-                      background: picker.lead_id ? "#003b26" : "#161b22",
-                      color: picker.lead_id ? "#c9a24a" : "#6e7681",
-                      fontWeight: 700,
-                      cursor: picker.lead_id ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                {form.lead_ids.length > 0 ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                    {form.lead_ids.map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => removerVinculo("lead_ids", id)}
-                        style={{
-                          borderRadius: 999,
-                          border: "1px solid #2f81f7",
-                          background: "#2f81f722",
-                          color: "#9ecbff",
-                          padding: "6px 10px",
-                          fontSize: 11,
-                          cursor: "pointer",
-                        }}
-                        title="Remover lead"
-                      >
-                        {labelLead(id)} ×
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div>
-                <label style={LABEL}>Pessoas / contactos</label>
-                <p style={{ ...HINT, marginBottom: 8 }}>
-                  {carregandoOpts
-                    ? "A carregar pessoas…"
-                    : pessoas.length
-                      ? `${pessoas.length} pessoa(s) disponível(is) para vincular.`
-                      : "Nenhuma pessoa disponível para vincular."}
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
-                  <select
-                    value={picker.pessoa_id}
-                    onChange={(e) => campoPicker("pessoa_id", e.target.value)}
-                    disabled={carregandoOpts}
-                    style={{ ...INPUT, cursor: "pointer" }}
-                  >
-                    <option value="">Selecionar pessoa</option>
-                    {pessoas.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nome}
-                        {item.codigo ? ` (${item.codigo})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!picker.pessoa_id}
-                    onClick={() => adicionarVinculo("pessoa_ids", "pessoa_id")}
-                    style={{
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      border: "1px solid #30363d",
-                      background: picker.pessoa_id ? "#003b26" : "#161b22",
-                      color: picker.pessoa_id ? "#c9a24a" : "#6e7681",
-                      fontWeight: 700,
-                      cursor: picker.pessoa_id ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                {form.pessoa_ids.length > 0 ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                    {form.pessoa_ids.map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => removerVinculo("pessoa_ids", id)}
-                        style={{
-                          borderRadius: 999,
-                          border: "1px solid #8b5cf6",
-                          background: "#8b5cf622",
-                          color: "#c4b5fd",
-                          padding: "6px 10px",
-                          fontSize: 11,
-                          cursor: "pointer",
-                        }}
-                        title="Remover pessoa"
-                      >
-                        {labelPessoa(id)} ×
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div>
-                <label style={LABEL}>Empresas / fornecedores</label>
-                <p style={{ ...HINT, marginBottom: 8 }}>
-                  {carregandoOpts
-                    ? "A carregar empresas…"
-                    : empresas.length
-                      ? `${empresas.length} empresa(s) disponível(is) para vincular.`
-                      : "Nenhuma empresa disponível para vincular."}
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
-                  <select
-                    value={picker.empresa_id}
-                    onChange={(e) => campoPicker("empresa_id", e.target.value)}
-                    disabled={carregandoOpts}
-                    style={{ ...INPUT, cursor: "pointer" }}
-                  >
-                    <option value="">Selecionar empresa</option>
-                    {empresas.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nome_fantasia || item.razao_social}
-                        {item.codigo ? ` (${item.codigo})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!picker.empresa_id}
-                    onClick={() => adicionarVinculo("empresa_ids", "empresa_id")}
-                    style={{
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      border: "1px solid #30363d",
-                      background: picker.empresa_id ? "#003b26" : "#161b22",
-                      color: picker.empresa_id ? "#c9a24a" : "#6e7681",
-                      fontWeight: 700,
-                      cursor: picker.empresa_id ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                {form.empresa_ids.length > 0 ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                    {form.empresa_ids.map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => removerVinculo("empresa_ids", id)}
-                        style={{
-                          borderRadius: 999,
-                          border: "1px solid #22c55e",
-                          background: "#22c55e22",
-                          color: "#86efac",
-                          padding: "6px 10px",
-                          fontSize: 11,
-                          cursor: "pointer",
-                        }}
-                        title="Remover empresa"
-                      >
-                        {labelEmpresa(id)} ×
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div>
-                <label style={LABEL}>Parceiros / corretores</label>
-                <p style={{ ...HINT, marginBottom: 8 }}>
-                  {carregandoOpts
-                    ? "A carregar parceiros…"
-                    : parceiros.length
-                      ? `${parceiros.length} parceiro(s) disponível(is) para vincular.`
-                      : "Nenhum parceiro disponível para vincular."}
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
-                  <select
-                    value={picker.parceiro_id}
-                    onChange={(e) => campoPicker("parceiro_id", e.target.value)}
-                    disabled={carregandoOpts}
-                    style={{ ...INPUT, cursor: "pointer" }}
-                  >
-                    <option value="">Selecionar parceiro</option>
-                    {parceiros.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nome}
-                        {item.codigo ? ` (${item.codigo})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!picker.parceiro_id}
-                    onClick={() => adicionarVinculo("parceiro_ids", "parceiro_id")}
-                    style={{
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      border: "1px solid #30363d",
-                      background: picker.parceiro_id ? "#003b26" : "#161b22",
-                      color: picker.parceiro_id ? "#c9a24a" : "#6e7681",
-                      fontWeight: 700,
-                      cursor: picker.parceiro_id ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                {form.parceiro_ids.length > 0 ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                    {form.parceiro_ids.map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => removerVinculo("parceiro_ids", id)}
-                        style={{
-                          borderRadius: 999,
-                          border: "1px solid #f59e0b",
-                          background: "#f59e0b22",
-                          color: "#fcd34d",
-                          padding: "6px 10px",
-                          fontSize: 11,
-                          cursor: "pointer",
-                        }}
-                        title="Remover parceiro"
-                      >
-                        {labelParceiro(id)} ×
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <p style={{ ...HINT, color: "#c8d1dc" }}>
-                O primeiro item de cada grupo vira o vínculo principal no negócio. Os demais
-                continuam vinculados e rastreados no negócio.
-              </p>
-            </div>
+            <p style={{ ...HINT, marginBottom: 12 }}>
+              Busque por nome ou telefone e vincule leads, pessoas, empresas ou parceiros —
+              tudo num campo só.
+            </p>
+            <ParticipantePicker
+              opcoes={opcoesParticipantes}
+              selecionados={selecionadosUids}
+              onAdd={onAddParticipante}
+              onRemove={onRemoveParticipante}
+              loading={carregandoOpts}
+              erro={catalogoErro || undefined}
+            />
           </CadastroSideoverPanel>
         ) : null}
 
