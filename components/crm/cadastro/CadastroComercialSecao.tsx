@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { CrmToggleSwitch } from "@/components/crm/CrmToggleSwitch";
+import { SmartField } from "@/components/crm/SmartField";
 import { EMPRESA_SEGMENTOS } from "@/lib/crm/empresa-cadastro";
 import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
 import type { SuperCadastroInput } from "@/lib/crm/super-cadastro-form";
@@ -55,6 +56,19 @@ const INPUT: CSSProperties = {
   fontSize: 14,
   boxSizing: "border-box",
 };
+
+const ORIGEM_LEAD_OPCOES = [
+  { value: "outro", label: "Outro / manual" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "site", label: "Site" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "meta_ads", label: "Meta Ads" },
+  { value: "google_ads", label: "Google Ads" },
+];
+
+const SEGMENTO_OPCOES = EMPRESA_SEGMENTOS.filter(
+  (s) => s.value !== "fornecedor" && s.value !== "parceiro"
+);
 
 const LABEL: CSSProperties = {
   color: OB.texto2,
@@ -207,7 +221,7 @@ export function CadastroComercialSecao({
         labelId="destino-lead"
         titulo="Lead no funil comercial"
         badge="VENDAS"
-        descricao="Campanhas: gera o lead no funil (LED) mesmo com poucos dados. Mercado opcional — usa IMB se nenhum for escolhido."
+        descricao="Cria o contato direto no funil de vendas, mesmo com poucos dados — ideal para campanhas. Mercado opcional (usa Imobiliário se nenhum for escolhido)."
         ativo={criarLead}
         onToggle={(v) => {
           onComercialChange({
@@ -300,7 +314,7 @@ export function CadastroComercialSecao({
                   }}
                 >
                   Área {sigla} do cadastro
-                  {criarLead ? ` — lead visível na gaveta Vendas deste mercado.` : "."}
+                  {criarLead ? ` — o lead aparece em Vendas deste mercado.` : "."}
                 </span>
               </div>
               <div
@@ -336,28 +350,21 @@ export function CadastroComercialSecao({
             marginTop: 4,
           }}
         >
-          <div>
-            <label style={LABEL}>Origem do lead</label>
-            <select
-              style={INPUT}
+          <div style={{ gridColumn: "1 / -1" }}>
+            <SmartField
+              label="Origem do lead"
+              modo="chips"
+              opcoes={ORIGEM_LEAD_OPCOES}
               value={comercial.lead_origem || "outro"}
-              onChange={(e) => {
-                const lead_origem = e.target
-                  .value as SuperCadastroInput["comercial"]["lead_origem"];
+              onChange={(v) => {
+                const lead_origem = v as SuperCadastroInput["comercial"]["lead_origem"];
                 onComercialChange({
                   lead_origem,
                   indicado_por:
                     lead_origem === "indicacao" ? comercial.indicado_por ?? "" : null,
                 });
               }}
-            >
-              <option value="outro">Outro / manual</option>
-              <option value="indicacao">Indicação</option>
-              <option value="site">Site</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="meta_ads">Meta Ads</option>
-              <option value="google_ads">Google Ads</option>
-            </select>
+            />
           </div>
           {comercial.lead_origem === "indicacao" && (
             <div style={{ gridColumn: "1 / -1" }}>
@@ -372,36 +379,29 @@ export function CadastroComercialSecao({
                 autoComplete="name"
               />
               <p style={{ margin: "6px 0 0", fontSize: 11, color: OB.texto2, lineHeight: 1.4 }}>
-                Gravado nos extras do cadastro e no lead do funil.
+                Salvo no histórico de indicação do contato.
               </p>
             </div>
           )}
           {tipo === "PJ" && (
-            <div>
-              <label style={LABEL}>Segmento empresa</label>
-              <select
-                style={INPUT}
+            <div style={{ gridColumn: "1 / -1" }}>
+              <SmartField
+                label="Segmento empresa"
+                modo="chips"
+                opcoes={SEGMENTO_OPCOES}
                 value={comercial.segmento || "cliente"}
-                onChange={(e) =>
+                onChange={(v) =>
                   onComercialChange({
-                    segmento: e.target.value as SuperCadastroInput["comercial"]["segmento"],
+                    segmento: v as SuperCadastroInput["comercial"]["segmento"],
                   })
                 }
-              >
-                {EMPRESA_SEGMENTOS.filter(
-                  (s) => s.value !== "fornecedor" && s.value !== "parceiro"
-                ).map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           )}
         </div>
       ) : (
         <p style={{ margin: 0, fontSize: 12, color: OB.texto2, lineHeight: 1.45 }}>
-          Sem lead no funil — só o registo em cadastro será criado (área/mercado acima continua a ser gravada).
+          Sem lead no funil — cria apenas o cadastro (a área/mercado acima continua salva).
         </p>
       )}
 

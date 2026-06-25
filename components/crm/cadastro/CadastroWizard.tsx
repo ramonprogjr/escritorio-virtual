@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Building2, User, X } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, User, X } from "lucide-react";
+import { SmartField } from "@/components/crm/SmartField";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
 import {
@@ -77,11 +78,46 @@ function WizardSection({
   title,
   description,
   children,
+  collapsible = false,
+  open = true,
+  onToggle,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
+  collapsible?: boolean;
+  open?: boolean;
+  onToggle?: () => void;
 }) {
+  const header = (
+    <div
+      style={{
+        padding: "12px 14px",
+        borderBottom: open ? `1px solid ${OB.borda}` : "none",
+        background: "rgba(6, 10, 16, 0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 10,
+        textAlign: "left",
+      }}
+    >
+      <div>
+        <h4 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: OB.texto }}>{title}</h4>
+        {description ? (
+          <p style={{ margin: "6px 0 0", fontSize: 11, color: OB.texto2, lineHeight: 1.45 }}>
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {collapsible ? (
+        <span style={{ color: OB.texto2, flexShrink: 0 }} aria-hidden>
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </span>
+      ) : null}
+    </div>
+  );
+
   return (
     <section
       style={{
@@ -91,21 +127,21 @@ function WizardSection({
         background: OB.surface,
       }}
     >
-      <div
-        style={{
-          padding: "12px 14px",
-          borderBottom: `1px solid ${OB.borda}`,
-          background: "rgba(6, 10, 16, 0.45)",
-        }}
-      >
-        <h4 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: OB.texto }}>{title}</h4>
-        {description ? (
-          <p style={{ margin: "6px 0 0", fontSize: 11, color: OB.texto2, lineHeight: 1.45 }}>
-            {description}
-          </p>
-        ) : null}
-      </div>
-      <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          style={{ all: "unset", display: "block", width: "100%", cursor: "pointer", boxSizing: "border-box" }}
+        >
+          {header}
+        </button>
+      ) : (
+        header
+      )}
+      {open ? (
+        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
+      ) : null}
     </section>
   );
 }
@@ -121,6 +157,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
   const docVerifyGenRef = useRef(0);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [verLocal, setVerLocal] = useState(false);
   const [opencnpjSnapshot, setOpencnpjSnapshot] = useState<Record<string, unknown> | null>(null);
   const [situacaoCnpj, setSituacaoCnpj] = useState<string | null>(null);
   const cnpjConsultadoRef = useRef<string | null>(null);
@@ -133,6 +170,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
     setForm(emptySuperCadastroForm(tipoInicial));
     setErro("");
     setSalvando(false);
+    setVerLocal(false);
     setOpencnpjSnapshot(null);
     setSituacaoCnpj(null);
     cnpjConsultadoRef.current = null;
@@ -204,6 +242,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
       cnpjConsultadoRef.current = digits;
       setOpencnpjSnapshot(d.snapshot as Record<string, unknown>);
       setSituacaoCnpj(d.situacao_cadastral);
+      if (d.logradouro || d.cep || d.cidade) setVerLocal(true);
       setForm((f) => ({
         ...f,
         nome: d.razao_social || f.nome,
@@ -333,6 +372,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
         return;
       }
       const { endereco } = end;
+      setVerLocal(true);
       patch({
         cep: formatarCepMascara(cep),
         logradouro: endereco.logradouro || form.logradouro,
@@ -706,23 +746,16 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                         onChange={(e) => patch({ nome_fantasia: e.target.value })}
                       />
                     </div>
-                    <div>
-                      <label style={LABEL}>Mercado principal (opcional)</label>
-                      <select
-                        style={INPUT}
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <SmartField
+                        label="Mercado principal (opcional)"
+                        modo="chips"
+                        opcoes={MERCADOS_PREFIXO_OPTIONS}
                         value={form.prefixo_mercado || "IMB"}
-                        onChange={(e) =>
-                          patch({
-                            prefixo_mercado: e.target.value as SuperCadastroInput["prefixo_mercado"],
-                          })
+                        onChange={(v) =>
+                          patch({ prefixo_mercado: v as SuperCadastroInput["prefixo_mercado"] })
                         }
-                      >
-                        {MERCADOS_PREFIXO_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
                   </div>
                 </div>
@@ -826,7 +859,14 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
 
             <WizardSection
               title="Localização"
-              description="Opcional — preencha quando o contacto informar (campanhas costumam trazer só nome ou telefone)."
+              description={
+                verLocal
+                  ? "Endereço — preenchido pelo CNPJ/CEP quando disponível."
+                  : "Opcional — toque para abrir. Preenche sozinho ao buscar o CNPJ ou o CEP."
+              }
+              collapsible
+              open={verLocal}
+              onToggle={() => setVerLocal((v) => !v)}
             >
               <div
                 style={{

@@ -6,6 +6,7 @@ import { Eye, Pencil, Trash2, User } from "lucide-react";
 import { AgenteSideoverEntityCard, AgenteSideoverInfoGrid } from "@/components/crm/AgenteSideoverCards";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
 import { CrmSideoverFold } from "@/components/crm/CrmSideoverFold";
+import { SmartField } from "@/components/crm/SmartField";
 import {
   CadastroPremiumSideover,
   CadastroSideoverPanel,
@@ -628,19 +629,13 @@ export function CadastroContactoSideover({
             />
           </div>
           <div>
-            <label style={LABEL}>Área de atuação</label>
-            <select
-              style={INPUT}
+            <SmartField
+              label="Área de atuação"
+              modo="chips"
+              opcoes={[{ value: "", label: "Não informado" }, ...AREA_ATUACAO_SELECT_OPTIONS]}
               value={form.area_atuacao || ""}
-              onChange={(e) => setForm((f) => ({ ...f, area_atuacao: e.target.value }))}
-            >
-              <option value="">—</option>
-              {AREA_ATUACAO_SELECT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((f) => ({ ...f, area_atuacao: v }))}
+            />
           </div>
           <div>
             <label style={LABEL}>CEP</label>

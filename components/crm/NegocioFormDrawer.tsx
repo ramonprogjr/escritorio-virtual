@@ -991,7 +991,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
 
               <p style={{ ...HINT, color: "#c8d1dc" }}>
                 O primeiro item de cada grupo vira o vínculo principal no negócio. Os demais
-                continuam rastreados em `hub_negocio_vinculos`.
+                continuam vinculados e rastreados no negócio.
               </p>
             </div>
           </CadastroSideoverPanel>

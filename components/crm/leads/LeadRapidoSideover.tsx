@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Building2, UserPlus } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 import { CadastroPremiumSideover } from "@/components/crm/cadastro/CadastroPremiumSideover";
 import { MercadoLeadPicker } from "@/components/crm/leads/MercadoLeadPicker";
 import { SmartField } from "@/components/crm/SmartField";
@@ -63,12 +63,14 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
   const [form, setForm] = useState(formInicial);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const [detalhes, setDetalhes] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setForm(formInicial);
     setErro("");
     setSalvando(false);
+    setDetalhes(false);
   }, [open]);
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
@@ -186,63 +188,11 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
     >
       <div className="flex flex-col gap-5">
         <p className="text-xs leading-relaxed text-[#8b949e]">
-          Mesma matriz do cadastro: mercado(s), contacto e origem. O lead entra em{" "}
-          <strong className="text-[#e6edf3]">Novos</strong> e gera vínculo PES pelo telefone.
+          Só <strong className="text-[#e6edf3]">nome e telefone</strong> já criam o lead. O resto é
+          opcional — dá pra completar depois, no card.
         </p>
 
-        <section>
-          <SmartField
-            label="Tipo de interesse"
-            required
-            modo="chips"
-            opcoes={TIPOS_INTERESSE_LEAD.map((t) => ({ value: t.id, label: t.label }))}
-            value={form.tipo_interesse}
-            onChange={(v) => {
-              const id = v as TipoInteresseLeadId;
-              set("tipo_interesse", id);
-              set("extras", {});
-              set("mercados", [prefixoMercadoFromTipoInteresse(id)]);
-            }}
-            disabled={salvando}
-          />
-        </section>
-
-        <section>
-          <p className={`${secaoCls} mb-3`}>Dados do interesse</p>
-          <div className="flex flex-col gap-3">
-            {(CAMPOS_POR_TIPO[form.tipo_interesse] ?? []).map((campo) =>
-              campo.type === "select" && campo.options ? (
-                <SmartField
-                  key={campo.key}
-                  label={campo.label}
-                  required={campo.obrigatorio}
-                  modo="chips"
-                  opcoes={campo.options}
-                  value={form.extras[campo.key] ?? ""}
-                  onChange={(v) =>
-                    setForm((p) => ({ ...p, extras: { ...p.extras, [campo.key]: v } }))
-                  }
-                  disabled={salvando}
-                />
-              ) : (
-                <div key={campo.key}>
-                  <label className={labelCls}>
-                    {campo.label}
-                    {campo.obrigatorio ? " *" : ""}
-                  </label>
-                  <input
-                    className={inputCls}
-                    value={form.extras[campo.key] ?? ""}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, extras: { ...p.extras, [campo.key]: e.target.value } }))
-                    }
-                  />
-                </div>
-              )
-            )}
-          </div>
-        </section>
-
+        {/* ESSENCIAL — o mínimo pra criar (2 campos) */}
         <section>
           <p className={`${secaoCls} mb-3 flex items-center gap-2`}>
             <Building2 size={14} aria-hidden />
@@ -262,86 +212,164 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
                 autoFocus
               />
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className={labelCls} htmlFor="lead-rapido-tel">
-                  Telefone *
-                </label>
-                <input
-                  id="lead-rapido-tel"
-                  value={form.telefone}
-                  onChange={(e) => set("telefone", e.target.value)}
-                  className={inputCls}
-                  placeholder="(00) 00000-0000"
-                  inputMode="tel"
-                />
-              </div>
-              <div>
-                <label className={labelCls} htmlFor="lead-rapido-email">
-                  E-mail
-                </label>
-                <input
-                  id="lead-rapido-email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => set("email", e.target.value)}
-                  className={inputCls}
-                  placeholder="opcional"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <p className={`${secaoCls} mb-3`}>Mercado do lead *</p>
-          <MercadoLeadPicker
-            mercados={form.mercados}
-            onToggle={toggleMercado}
-            disabled={salvando}
-          />
-        </section>
-
-        <section>
-          <p className={`${secaoCls} mb-3`}>Comercial</p>
-          <div className="flex flex-col gap-3">
-            <SmartField
-              label="Origem"
-              modo="chips"
-              opcoes={ORIGEM_OPCOES}
-              value={form.origem}
-              onChange={(v) => set("origem", v)}
-              disabled={salvando}
-            />
             <div>
-              <label className={labelCls} htmlFor="lead-rapido-valor">
-                Valor estimado (R$)
+              <label className={labelCls} htmlFor="lead-rapido-tel">
+                Telefone *
               </label>
               <input
-                id="lead-rapido-valor"
-                value={form.valor_estimado}
-                onChange={(e) => set("valor_estimado", e.target.value)}
+                id="lead-rapido-tel"
+                value={form.telefone}
+                onChange={(e) => set("telefone", e.target.value)}
                 className={inputCls}
-                placeholder="0"
-                inputMode="decimal"
+                placeholder="(00) 00000-0000"
+                inputMode="tel"
               />
             </div>
-            {form.origem === "indicacao" && (
-              <div>
-                <label className={labelCls} htmlFor="lead-rapido-indicacao">
-                  Quem indicou? *
-                </label>
-                <input
-                  id="lead-rapido-indicacao"
-                  value={form.indicado_por}
-                  onChange={(e) => set("indicado_por", e.target.value)}
-                  className={inputCls}
-                  placeholder="Nome de quem indicou"
-                />
-              </div>
-            )}
           </div>
         </section>
+
+        {/* Tudo que não é essencial fica escondido por padrão (3 toques) */}
+        <button
+          type="button"
+          onClick={() => setDetalhes((v) => !v)}
+          aria-expanded={detalhes}
+          className="flex items-center gap-2 self-start rounded-lg border border-[#30363d] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#c9a24a] hover:text-[#e6edf3]"
+        >
+          {detalhes ? (
+            <>
+              <ChevronUp size={14} aria-hidden /> Menos opções
+            </>
+          ) : (
+            <>
+              <ChevronDown size={14} aria-hidden /> Mais opções — tipo, mercado, origem, valor
+            </>
+          )}
+        </button>
+
+        {detalhes && (
+          <div className="flex flex-col gap-5 border-t border-[#21262d] pt-5">
+            <section>
+              <SmartField
+                label="Tipo de interesse"
+                modo="chips"
+                opcoes={TIPOS_INTERESSE_LEAD.map((t) => ({ value: t.id, label: t.label }))}
+                value={form.tipo_interesse}
+                onChange={(v) => {
+                  const id = v as TipoInteresseLeadId;
+                  set("tipo_interesse", id);
+                  set("extras", {});
+                  set("mercados", [prefixoMercadoFromTipoInteresse(id)]);
+                }}
+                disabled={salvando}
+              />
+            </section>
+
+            {(CAMPOS_POR_TIPO[form.tipo_interesse] ?? []).length > 0 && (
+              <section>
+                <p className={`${secaoCls} mb-3`}>Dados do interesse</p>
+                <div className="flex flex-col gap-3">
+                  {(CAMPOS_POR_TIPO[form.tipo_interesse] ?? []).map((campo) =>
+                    campo.type === "select" && campo.options ? (
+                      <SmartField
+                        key={campo.key}
+                        label={campo.label}
+                        required={campo.obrigatorio}
+                        modo="chips"
+                        opcoes={campo.options}
+                        value={form.extras[campo.key] ?? ""}
+                        onChange={(v) =>
+                          setForm((p) => ({ ...p, extras: { ...p.extras, [campo.key]: v } }))
+                        }
+                        disabled={salvando}
+                      />
+                    ) : (
+                      <div key={campo.key}>
+                        <label className={labelCls}>
+                          {campo.label}
+                          {campo.obrigatorio ? " *" : ""}
+                        </label>
+                        <input
+                          className={inputCls}
+                          value={form.extras[campo.key] ?? ""}
+                          onChange={(e) =>
+                            setForm((p) => ({
+                              ...p,
+                              extras: { ...p.extras, [campo.key]: e.target.value },
+                            }))
+                          }
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
+            )}
+
+            <section>
+              <p className={`${secaoCls} mb-3`}>Mercado do lead</p>
+              <MercadoLeadPicker
+                mercados={form.mercados}
+                onToggle={toggleMercado}
+                disabled={salvando}
+              />
+            </section>
+
+            <section>
+              <label className={labelCls} htmlFor="lead-rapido-email">
+                E-mail
+              </label>
+              <input
+                id="lead-rapido-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                className={inputCls}
+                placeholder="opcional"
+              />
+            </section>
+
+            <section>
+              <p className={`${secaoCls} mb-3`}>Comercial</p>
+              <div className="flex flex-col gap-3">
+                <SmartField
+                  label="Origem"
+                  modo="chips"
+                  opcoes={ORIGEM_OPCOES}
+                  value={form.origem}
+                  onChange={(v) => set("origem", v)}
+                  disabled={salvando}
+                />
+                <div>
+                  <label className={labelCls} htmlFor="lead-rapido-valor">
+                    Valor estimado (R$)
+                  </label>
+                  <input
+                    id="lead-rapido-valor"
+                    value={form.valor_estimado}
+                    onChange={(e) => set("valor_estimado", e.target.value)}
+                    className={inputCls}
+                    placeholder="0"
+                    inputMode="decimal"
+                  />
+                </div>
+                {form.origem === "indicacao" && (
+                  <div>
+                    <label className={labelCls} htmlFor="lead-rapido-indicacao">
+                      Quem indicou? *
+                    </label>
+                    <input
+                      id="lead-rapido-indicacao"
+                      value={form.indicado_por}
+                      onChange={(e) => set("indicado_por", e.target.value)}
+                      className={inputCls}
+                      placeholder="Nome de quem indicou"
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
 
         {erro && (
           <p className="rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 px-3 py-2 text-xs text-[#fca5a5]">
