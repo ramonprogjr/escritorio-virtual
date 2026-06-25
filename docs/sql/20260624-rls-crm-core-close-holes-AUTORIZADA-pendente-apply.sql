@@ -1,8 +1,10 @@
 -- ============================================================================
 -- Migração: rls_crm_core_close_holes  (Bloco 4 — fatia segura)
--- STATUS: AUTORIZADA, APPLY PENDENTE — Supabase MCP caiu por erro de socket (rede) ao
--- aplicar (24/jun). Idempotente: reaplicar quando o MCP voltar OU colar no SQL Editor do
--- Supabase; depois verificar policies. Mesa redonda arquitetura+segurança (architect-review).
+-- STATUS: ✅ APLICADA em 25/jun/2026 (autorização explícita do dono). Verificado:
+-- 3 policies em hub_negocios/hub_empresas/hub_pessoas_empresas/hub_proximas_acoes.
+-- ⚠️ EXCEÇÃO: o bloco do `hub_leads` (legado) NÃO foi aplicado — essa tabela NÃO tem
+-- coluna tenant_id. Como o cliente lê `hub_leads_crm` (que já tem policy) e NÃO `hub_leads`,
+-- deixá-la em deny-all é mais seguro (nada vaza). Reavaliar se algum dia o cliente precisar dela.
 -- ----------------------------------------------------------------------------
 -- Objetivo: fechar buracos de RLS em tabelas CRM que têm RLS LIGADO mas ZERO
 -- policies (deny-all p/ authenticated) + completar hub_negocios (faltavam
