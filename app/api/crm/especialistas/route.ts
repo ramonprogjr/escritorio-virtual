@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     tamanho_equipe: body.tamanho_equipe ? Number(body.tamanho_equipe) : null,
     observacoes: body.observacoes || null,
     origem: "cadastro",
+    cadastrado_por: g.ctx.userId,
     tenant_id: tenantId,
   };
 
