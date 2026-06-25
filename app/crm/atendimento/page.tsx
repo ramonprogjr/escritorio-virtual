@@ -64,6 +64,11 @@ const STATUS_LABEL: Record<string, string> = {
   atendimento: "Em Atendimento", negociando: "Negociando",
   fechamento: "Fechamento", ganho: "Ganho", perdido: "Perdido",
 };
+const ORIGEM_LABEL: Record<string, string> = {
+  whatsapp: "WhatsApp", instagram: "Instagram", meta_ads: "Meta Ads",
+  google_ads: "Google Ads", linkedin: "LinkedIn", site: "Site",
+  formulario: "Formulário", indicacao: "Indicação", outro: "Outro",
+};
 
 /** MANIFEST: verde #003b26, dourado #c9a24a, fundo #0d1117 */
 const C = {
@@ -684,7 +689,7 @@ function AtendimentoContent() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-600 text-[10px] uppercase tracking-wide truncate mr-2">
-                    {lead.origem}
+                    {ORIGEM_LABEL[lead.origem] || lead.origem}
                     {lead.ultimo_contato ? ` · ${rel(lead.ultimo_contato)}` : ""}
                   </span>
                   {badge && (
