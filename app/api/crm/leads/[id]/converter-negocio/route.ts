@@ -10,6 +10,7 @@ import {
 import { MERCADOS_NEGOCIO } from "@/lib/crm/pipelines";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
+import { legacyNegocioTipoFromMercado } from "@/lib/crm/negocio-tipo";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -106,9 +107,13 @@ export async function POST(request: NextRequest, { params }: Params) {
   const row = {
     codigo,
     titulo,
+    tipo: legacyNegocioTipoFromMercado(prefixo_mercado),
     prefixo_mercado,
     mercado_slug: mercadoSlug,
-    lead_id,
+    // hub_negocios.lead_id tem FK para a tabela legada hub_leads; o lead moderno vive em
+    // hub_leads_crm. Deixamos null aqui — o vínculo lead↔negócio é gravado via hub_vinculos
+    // (criarVinculosNegocioFromLead, abaixo), que usa o lead_id real.
+    lead_id: null,
     pessoa_id: lead.pessoa_id,
     empresa_id: empresaId,
     valor_estimado: lead.valor_estimado ?? 0,

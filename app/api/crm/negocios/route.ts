@@ -10,6 +10,7 @@ import { criarVinculosNegocio } from "@/lib/crm/negocio-vinculos";
 import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
 import { defaultTenantId, isMissingPgColumn, isTenantFkError, tenantIdFromRequest } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { legacyNegocioTipoFromMercado } from "@/lib/crm/negocio-tipo";
 
 function db() {
   return createClient(
@@ -47,19 +48,6 @@ type EntidadeCodigo = {
   id: string;
   codigo: string | null;
 };
-
-function legacyNegocioTipoFromMercado(prefixo: string): string {
-  switch (String(prefixo || "").trim().toUpperCase()) {
-    case "IMB":
-      return "mercado_imobiliario";
-    case "RFM":
-      return "reforma";
-    case "FOR":
-      return "fornecedor_homologacao";
-    default:
-      return "produto_servico";
-  }
-}
 
 function isLegacyLeadRequiredError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
