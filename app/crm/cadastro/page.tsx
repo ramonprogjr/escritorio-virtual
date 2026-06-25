@@ -390,6 +390,25 @@ export default function CadastroPage() {
         >
           + Convidar
         </button>
+        <a
+          href="/crm/especialistas"
+          title="Cadastrar mão de obra / especialistas (sem acesso ao sistema)"
+          style={{
+            background: "transparent",
+            color: "#8b949e",
+            border: "1px solid #30363d",
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          Mão de obra
+        </a>
         <button
           type="button"
           onClick={() => {
