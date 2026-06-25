@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CrmToggleSwitch } from "@/components/crm/CrmToggleSwitch";
 import { SmartField } from "@/components/crm/SmartField";
+import { MercadoLeadPicker } from "@/components/crm/leads/MercadoLeadPicker";
 import { EMPRESA_SEGMENTOS } from "@/lib/crm/empresa-cadastro";
 import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
 import type { SuperCadastroInput } from "@/lib/crm/super-cadastro-form";
@@ -251,95 +252,8 @@ export function CadastroComercialSecao({
       <SubtituloSecao icon={Building2}>Mercado / área de interesse</SubtituloSecao>
       <p style={{ margin: "0 0 8px", fontSize: 12, color: OB.texto2, lineHeight: 1.45 }}>
         Opcional — fica gravado no cadastro mesmo sem lead no funil.
-        {criarLead
-          ? " Com o funil activo, define também o pipeline do lead (IMB por defeito se nenhum for escolhido)."
-          : ""}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {MERCADOS_PREFIXO_OPTIONS.map((m) => {
-          const sigla = m.value;
-          const ativo = mercados.includes(sigla);
-          const Icon = MERCADO_ICON[sigla] ?? Building2;
-          const labelId = `mercado-${sigla}`;
-          return (
-            <div
-              key={sigla}
-              style={{
-                ...ROW_BASE,
-                borderColor: ativo ? "rgba(56, 139, 253, 0.35)" : OB.borda,
-                background: ativo ? "rgba(56, 139, 253, 0.06)" : "#161b22",
-              }}
-            >
-              <div
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 10,
-                  background: ativo ? "rgba(56, 139, 253, 0.18)" : "#21262d",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  color: ativo ? "#79c0ff" : OB.texto2,
-                  marginTop: 2,
-                }}
-              >
-                <Icon size={21} strokeWidth={2} aria-hidden />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-                  <span id={labelId} style={{ color: OB.texto, fontSize: 13, fontWeight: 700 }}>
-                    {m.label}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 800,
-                      color: "#79c0ff",
-                      border: "1px solid rgba(121, 192, 255, 0.35)",
-                      borderRadius: 4,
-                      padding: "2px 6px",
-                    }}
-                  >
-                    {sigla}
-                  </span>
-                </div>
-                <span
-                  style={{
-                    display: "block",
-                    color: OB.texto2,
-                    fontSize: 12,
-                    lineHeight: 1.45,
-                    marginTop: 4,
-                  }}
-                >
-                  Área {sigla} do cadastro
-                  {criarLead ? ` — o lead aparece em Vendas deste mercado.` : "."}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: 4,
-                  flexShrink: 0,
-                  paddingTop: 4,
-                }}
-              >
-                <span style={{ fontSize: 10, fontWeight: 700, color: ativo ? "#3fb950" : "#6e7781" }}>
-                  {ativo ? "ACTIVO" : "INACTIVO"}
-                </span>
-                <CrmToggleSwitch
-                  checked={ativo}
-                  onCheckedChange={(v) => onMercadoToggle(sigla, v)}
-                  labelledBy={labelId}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <MercadoLeadPicker mercados={mercados} onToggle={onMercadoToggle} />
 
       {criarLead ? (
         <div
