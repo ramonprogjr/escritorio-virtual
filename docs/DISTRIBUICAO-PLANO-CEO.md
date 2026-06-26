@@ -37,4 +37,8 @@
 - **FATIA 3** — Gate financeiro (`status_financeiro` + FK conta→fornecedor + guard no aprovar + liberação ao pagar).
 - **FATIA 4** — Painel do Hub (funil do membro lido de `hub_eventos`) + **IAH** (índice de aderência).
 - **FATIA 5** — Agente auditor IA (`jobs_internos` via wizard + tool `hub_auditar_sla` + estende `ml.ts`) + **notificações robustas** multi-canal.
+- **FATIA — Esteira de Entrega automática** (requisito 25/jun) — ao FECHAR o negócio (etapa→ganho), gerar a entrega AUTOMATICAMENTE na área do fornecedor: obra/projeto/**serviço/marcenaria/marmoraria/vidraçaria**/etc. Base: `converter-obra` + `resolverTipoDerivado`. Estende o mapa de tipos (todos os segmentos → tabela própria, ex. `hub_servicos`) + dispara no fechamento (gatilho) + atribui ao `distribuido_para_fornecedor_id` + Hub gere tudo. Casa com renomear-nav (Engenharia>Construção+Reforma; Arquitetura>Projetos).
 - **FATIA 6 (grande, depois)** — Multi-tenant real (`users.tenant_id` + `current_user_tenant_id()` dinâmico + RLS lote 2) + login do membro.
+
+## Status
+- ✅ **FATIA 1 ENTREGUE** (commit `be01697`, verificada no navegador): painel "Quem deve receber este lead?" com 5 fornecedores rankeados + Encaminhar. 4 bugs de schema legado corrigidos (tenant_id, status_check, prefixo_mercado, envio best-effort).
