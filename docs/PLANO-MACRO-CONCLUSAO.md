@@ -14,14 +14,14 @@
 - **F2b** cascata de rejeição — recusar → oferta ao próximo elegível (pula bloqueados). *(c54632a)*
 
 ## C) Restante combinado — A CONCLUIR (com caminho)
-1. **C.1 — Auditor da rede** — *(a)* **métricas/KPIs de `hub_eventos` ✅ FEITO** (painel Auditoria + alertas); *(b)* **agente IA autônomo + cobrança + SLA — TODO** (agente `jobs_internos` reusando `lib/ia/ml.ts` "propõe-não-altera"; precisa de `ts_oferta`/`ts_resposta` em `hub_eventos` p/ SLA real).
-2. **Notificações robustas** — *(a)* **sino no header do Hub ✅ FEITO** (deriva `hub_eventos`, badge de não-lidas + painel Click-and-Go + marcar lidas; `/api/crm/notificacoes` + `NotificacoesSino`); *(b)* **per-fornecedor + canais (WhatsApp/email/push) + preferências — TODO**.
-3. **F6 — Multi-tenant real** (pesado) — `users.tenant_id` + `current_user_tenant_id()` dinâmico + RLS lote 2 (~36 tabelas) → login próprio do membro. **Pré-req do isolamento real; faseado (valor antes da fundação).**
+1. **C.1 — Auditor da rede** — *(a)* **métricas/KPIs ✅ FEITO**; *(b)* **cobrança + aderência (IAH) ✅ FEITO** (scorecards por fornecedor c/ aderência colorida + status + ações **Liberar/Cobrar**; evento `fornecedor_cobrado` flui pro sino — `/api/crm/distribuicao/cobrar` + metricas enriquecido; verificado no banco); *(c)* **agente IA AUTÔNOMO (cron `jobs_internos`) + SLA real (`ts_oferta`/`ts_resposta`) — TODO**.
+2. **Notificações robustas** — *(a)* **sino no header do Hub ✅ FEITO** + cobrança/gate fluem pro sino; *(b)* **per-fornecedor + canais (WhatsApp/email/push) + preferências — BLOQUEADO em infra:** in-app per-fornecedor precisa do **login do membro (multi-tenant, item 3)**; WhatsApp precisa **UAZAPI configurado** (no-op neste ambiente); email/push precisam infra própria. **TRAVA (credenciais/serviço externo) — não stubar canal falso.**
+3. **F6 — Multi-tenant real** (pesado, RISCO) — `users.tenant_id` + `current_user_tenant_id()` dinâmico + RLS lote 2 (~36 tabelas). **NÃO executado autonomamente (flip de RLS pode quebrar o app sem supervisão = TRAVA).** Plano de rollout supervisionado seguro: (i) `ALTER TABLE public.users ADD COLUMN tenant_id uuid` (aditivo, nullable) + backfill p/ tenant default; (ii) trocar `current_user_tenant_id()` p/ ler de `users.tenant_id` com fallback ao default; (iii) ligar RLS por tabela em LOTES pequenos, testando login + leitura a cada lote (rollback por lote); (iv) só então o membro loga e vê só o CRM dele. Fazer COM o dono, verificando clicando a cada lote.
 4. **Segurança long-tail** — filtro `.eq(tenant)` no financeiro (deferido B3.9), GETs, rotas internas (`requireInternalApiKey`), Crítico 4 (comissão imutável/auditada).
 
 ## D) Momento oportuno (atribuído, cronograma absoluto)
-- **Vínculos N:N pessoa↔empresa↔negócio** nos 3 cadastros (base: `hub_negocio_vinculos`; gap: pessoa↔empresa N:N + UI bidirecional). [[vinculos-nn-pessoa-empresa-negocio]]
-- **Renomear navegação** — Operações; Arquitetura(>Projetos); Engenharia(>Construção+Reforma). [[navegacao-renomear-operacoes-arquitetura-engenharia]]
+- ✅ **Vínculos N:N pessoa↔empresa↔negócio** — JÁ implementado (`hub_pessoas_empresas` + `hub_negocio_vinculos` + aba Vínculos nos cadastros) e agora **securizado** (4 rotas com guard + tenant). [[vinculos-nn-pessoa-empresa-negocio]]
+- ✅ **Renomear navegação** — FEITO: Operações / Arquitetura / Engenharia (sub-itens aninhados quando as telas existirem). [[navegacao-renomear-operacoes-arquitetura-engenharia]]
 - **Relatórios/Analytics → BI generativo** (IA gera relatório/tela on-demand, Bloco 8).
 
 ## E) Visão maior (pós-CRM, registrada)
@@ -35,4 +35,4 @@ Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: l�
 - **Resta (atenção, não-bloqueante):** liberação também no painel de métricas (já existe no painel do lead); C.1b agente IA (ver C.1).
 
 ---
-**Status macro:** A, B, **C.1a (métricas)**, **auditoria (F) corrigida e verificada clicando** (C1/C2 provado: esteira gerou OBR-2026-0004 + log na timeline) e **C.2a (sino de notificações)** concluídos. Próximo: C.2b (canais/per-fornecedor) ou C.1b (agente IA). Barômetro: núcleo ~96% · segurança ~83% · visão completa ~77%.
+**Status macro:** A, B, **auditoria (F) corrigida e verificada**, **C.1a+C.1b (auditor + cobrança/aderência)**, **C.2a (sino)**, **nav renomeada**, **vínculos N:N securizados** concluídos. **Bloqueado em TRAVA (infra/risco, exige dono):** C.2b canais ao membro (multi-tenant + UAZAPI/email) · C.1c agente IA autônomo+SLA · multi-tenant real (flip RLS supervisionado). Barômetro: núcleo ~97% · segurança ~85% · visão completa ~80%.
