@@ -78,7 +78,41 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const fornecedores = [...porForn.values()].sort((a, b) => b.recebidos - a.recebidos).slice(0, 8);
+  const base = [...porForn.values()].sort((a, b) => b.recebidos - a.recebidos).slice(0, 8);
+
+  // Enriquecimento C.1b: junta status financeiro do fornecedor + computa aderência (IAH)
+  // e a cobrança sugerida. Aderência alta = mais leads (flywheel de mérito).
+  const ids = base.map((f) => f.fornecedor_id);
+  const parceirosById = new Map<string, { nome: string | null; status_financeiro: string }>();
+  if (ids.length) {
+    const { data: ps } = await crmDb()
+      .from("hub_parceiros")
+      .select("id, nome, status_financeiro")
+      .in("id", ids);
+    for (const p of ps ?? []) {
+      parceirosById.set(p.id as string, {
+        nome: (p.nome as string) ?? null,
+        status_financeiro: (p.status_financeiro as string) ?? "em_dia",
+      });
+    }
+  }
+  const fornecedores = base.map((f) => {
+    const p = parceirosById.get(f.fornecedor_id);
+    const status = p?.status_financeiro ?? "em_dia";
+    const aderencia = Math.max(
+      0,
+      Math.min(
+        100,
+        50 + f.recebidos * 8 - f.recusados * 15 - f.bloqueios * 20 -
+          (status === "bloqueado" ? 25 : status === "pendente" ? 10 : 0)
+      )
+    );
+    let cobranca: string | null = null;
+    if (status === "bloqueado") cobranca = "Pendência financeira — bloqueado para receber leads";
+    else if (status === "pendente") cobranca = "Pendência financeira em aberto";
+    else if (f.recusados >= 2 && f.recusados >= f.recebidos) cobranca = "Alta taxa de recusa — avaliar aderência";
+    return { ...f, nome: p?.nome ?? f.nome, status_financeiro: status, aderencia, cobranca };
+  });
 
   // Alertas do auditor (regras simples sobre os KPIs).
   const alertas: string[] = [];

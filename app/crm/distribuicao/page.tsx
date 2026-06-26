@@ -37,7 +37,16 @@ type Metricas = {
     liberacoes: number;
     sem_proximo: number;
   };
-  fornecedores: Array<{ fornecedor_id: string; nome: string | null; recebidos: number; recusados: number; bloqueios: number }>;
+  fornecedores: Array<{
+    fornecedor_id: string;
+    nome: string | null;
+    recebidos: number;
+    recusados: number;
+    bloqueios: number;
+    status_financeiro: string;
+    aderencia: number;
+    cobranca: string | null;
+  }>;
   alertas: string[];
 };
 
@@ -64,6 +73,9 @@ function descreverEvento(e: EventoRede): string {
   if (e.event_type === "lead_sem_proximo") {
     return "Sem próximo fornecedor elegível — lead voltou à fila";
   }
+  if (e.event_type === "fornecedor_cobrado") {
+    return `Cobrança enviada a ${p.parceiro_nome ?? "fornecedor"}${p.motivo ? ` · ${p.motivo}` : ""}`;
+  }
   return e.event_type.replace(/_/g, " ");
 }
 
@@ -78,6 +90,7 @@ export default function DistribuicaoPage() {
   const [lista, setLista] = useState<Regra[]>([]);
   const [eventos, setEventos] = useState<EventoRede[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
+  const [acaoForn, setAcaoForn] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -149,6 +162,38 @@ export default function DistribuicaoPage() {
     void carregar();
   }
 
+  async function liberarFornecedor(fornecedorId: string) {
+    setAcaoForn(fornecedorId);
+    try {
+      await fetch(`/api/crm/parceiros/${encodeURIComponent(fornecedorId)}/liberar`, {
+        method: "POST",
+        headers: internalApiHeaders(),
+      });
+      await carregar();
+    } finally {
+      setAcaoForn(null);
+    }
+  }
+
+  async function cobrarFornecedor(fornecedorId: string, motivo: string | null) {
+    setAcaoForn(fornecedorId);
+    try {
+      await fetch("/api/crm/distribuicao/cobrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ fornecedor_id: fornecedorId, motivo: motivo ?? undefined }),
+      });
+      await carregar();
+    } finally {
+      setAcaoForn(null);
+    }
+  }
+
+  const botaoAcao = (cor: string): React.CSSProperties => ({
+    padding: "4px 10px", borderRadius: 6, border: `1px solid ${cor}55`,
+    background: `${cor}18`, color: cor, fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+  });
+
   return (
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
       {/* Auditoria da rede — KPIs do hub_eventos (C.1, base da cobrança IA) */}
@@ -179,6 +224,54 @@ export default function DistribuicaoPage() {
                 </li>
               ))}
             </ul>
+          )}
+          {metricas.fornecedores.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid #21262d", paddingTop: 14 }}>
+              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "#8b949e", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Desempenho por fornecedor{" "}
+                <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>· aderência decide quem recebe mais leads</span>
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {metricas.fornecedores.map((f) => {
+                  const corA = f.aderencia >= 60 ? "#3fb950" : f.aderencia >= 35 ? "#e3b341" : "#f85149";
+                  const stLabel = f.status_financeiro === "bloqueado" ? "bloqueado" : f.status_financeiro === "pendente" ? "pendente" : "em dia";
+                  const stCor = f.status_financeiro === "bloqueado" ? "#f85149" : f.status_financeiro === "pendente" ? "#e3b341" : "#3fb950";
+                  return (
+                    <div key={f.fornecedor_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: "1px solid #21262d", background: "#0b0f14" }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#e6edf3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {f.nome ?? "Fornecedor"}
+                          <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: stCor }}>● {stLabel}</span>
+                        </p>
+                        <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8b949e" }}>
+                          {f.recebidos} recebidos · {f.recusados} recusas{f.bloqueios ? ` · ${f.bloqueios} bloqueios` : ""}
+                        </p>
+                        {f.cobranca && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#e3b341" }}>⚠ {f.cobranca}</p>}
+                      </div>
+                      <div style={{ width: 88, textAlign: "right" }}>
+                        <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: corA, lineHeight: 1 }}>{f.aderencia}</p>
+                        <div style={{ height: 4, borderRadius: 2, background: "#21262d", overflow: "hidden", marginTop: 3 }}>
+                          <div style={{ width: `${f.aderencia}%`, height: "100%", background: corA }} />
+                        </div>
+                        <p style={{ margin: "2px 0 0", fontSize: 9, color: "#6e7681", textTransform: "uppercase" }}>aderência</p>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 70 }}>
+                        {f.status_financeiro === "bloqueado" && (
+                          <button type="button" onClick={() => liberarFornecedor(f.fornecedor_id)} disabled={acaoForn === f.fornecedor_id} style={botaoAcao("#3fb950")}>
+                            {acaoForn === f.fornecedor_id ? "..." : "Liberar"}
+                          </button>
+                        )}
+                        {f.cobranca && (
+                          <button type="button" onClick={() => cobrarFornecedor(f.fornecedor_id, f.cobranca)} disabled={acaoForn === f.fornecedor_id} style={botaoAcao("#c9a24a")}>
+                            {acaoForn === f.fornecedor_id ? "..." : "Cobrar"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}

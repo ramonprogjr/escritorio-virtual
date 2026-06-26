@@ -32,6 +32,7 @@ const RELEVANTES = new Set([
   "gate_pendencia_bloqueio",
   "gate_liberado",
   "entrega_gerada",
+  "fornecedor_cobrado",
 ]);
 
 function hrefDoEvento(e: EventoRow): string {
@@ -59,6 +60,8 @@ function mapear(e: EventoRow): Notificacao {
       return { ...base, href: "/crm/distribuicao", tipo: "sucesso", titulo: "Fornecedor liberado", descricao: `${nome} liberado pelo Hub`, acionavel: false };
     case "entrega_gerada":
       return { ...base, tipo: "sucesso", titulo: "Entrega gerada", descricao: `${p.codigo ?? "Entrega"} · ${p.tipo ?? "obra"}`, acionavel: false };
+    case "fornecedor_cobrado":
+      return { ...base, href: "/crm/distribuicao", tipo: "alerta", titulo: "Cobrança enviada", descricao: `${nome}: ${p.motivo ?? "pendência / KPI"}`, acionavel: false };
     default:
       return { ...base, tipo: "info", titulo: e.event_type.replace(/_/g, " "), descricao: "", acionavel: false };
   }
