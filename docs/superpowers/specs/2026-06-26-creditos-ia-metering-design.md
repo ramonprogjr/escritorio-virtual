@@ -47,6 +47,12 @@ Ações caras mostram **faixa estimada** antes ("Gerar cronograma ~ 15–40 cré
 ### 3.3 Forecast (a "previsão de gastos" que o dono pediu)
 Do ledger: distribuição de tokens por **tipo de ação** × volume projetado → créditos esperados/semana/mês. Alimenta um painel "Previsão de consumo de IA" por escritório e global (Central de Performance).
 
+### 3.4 Níveis de modelo (Mistral × Claude) — IA robusta como opção premium
+O metering é **provider-agnostic**: a tabela `hub_ia_precos` precifica qualquer modelo (mistral-*, claude-*). Claude é mais caro (Opus 4.8 US$5/25 vs Mistral ~US$2/6) → uma ação no Claude **debita mais créditos automaticamente** (markup absorve). Roteamento por tipo de tarefa já é suportado: `hub_agente_identidade` tem `modelo_padrao` / `modelo_critico` / `modelo_alto_valor`.
+- **Simples** (resumo, resposta) → Mistral/Haiku (barato).
+- **Pesada** (ler projetos→cronograma, contrato, planejamento financeiro) → Claude Sonnet/Opus (robusto).
+- **Produto:** níveis vendáveis — "Turbo (Claude Opus)" consome mais créditos, "Econômico (Mistral)" menos; o usuário escolhe. Ligar Claude = configurar `ANTHROPIC_API_KEY` + apontar modelo (já roteado em `lib/ia/llm-completion.ts`), sem reescrita.
+
 ---
 
 ## 4. Arquitetura
@@ -90,14 +96,17 @@ Da memória [[monetizacao-licenciamento-rede]]: assinatura SaaS + comissionament
 
 ---
 
-## 5. Fases (shippable e seguro — aditivo a cada passo)
+## 5. Modelo de negócio TRAVADO: crédito PRÉ-PAGO
 
-- **Fase 1 — METERING/LEDGER em modo sombra (zero risco, maior valor):** instrumentar o chokepoint; gravar `hub_ia_consumo` com custo em BRL + tabela de preços + config. **Sem bloqueio, sem cobrança.** Já entrega o **forecast** que o dono quer, sem tocar no fluxo do usuário.
-- **Fase 2 — CARTEIRA + SALDO + limites suaves:** materializar saldo, avisos de saldo baixo, estimativas na UI. Bloqueio ainda suave/desligável.
-- **Fase 3 — PRÉ-PAGO + HARD-CAP + TOP-UP:** bloquear em saldo 0; comprar créditos (**precisa gateway — TRAVA**). Pacotes de crédito.
-- **Fase 4 — Assinatura concede créditos + modo pós-pago + painel de previsão** na Central de Performance.
+**O produto é pré-pago, ponto.** O escritório compra créditos antes; a IA consome; saldo 0 → **bloqueia novas ações de IA** até recarregar. Hard-cap é a regra, não opção. Pós-pago existe só como **exceção rara de admin** (owner liga manualmente p/ um tenant específico), nunca default.
 
-A Fase 1 é a recomendação de partida: dá os dados de previsão com risco nulo.
+### Fases (são passos de CONSTRUÇÃO, não modelos de cobrança — o modelo é sempre pré-pago)
+- **Fase 1 — Medição + tabela de preços + carteira/ledger:** instrumentar o chokepoint; gravar `hub_ia_consumo` (custo R$) e movimentos da carteira; preços já saem da **tabela de referência** (Mistral/Claude), então não dependemos de período de calibração. *(Modo sombra = janela curta e interna só p/ afinar o markup com dado real; NÃO é "IA de graça" — é o setup técnico antes de ligar o bloqueio.)*
+- **Fase 2 — Saldo + UI:** widget de carteira, saldo, aviso de saldo baixo, chip de custo estimado nas ações.
+- **Fase 3 — HARD-CAP + TOP-UP (pré-pago completo):** bloqueia em saldo 0 com CTA "Comprar créditos"; compra de pacotes (**precisa gateway de pagamento — TRAVA: aprovação do dono**).
+- **Fase 4 — Assinatura concede créditos/mês + painel de previsão** na Central de Performance. *(Pós-pago opcional por tenant entra aqui, como exceção admin.)*
+
+Partida: Fase 1 já com preços da tabela de referência → caminho direto e seguro até o pré-pago da Fase 3.
 
 ---
 
@@ -115,7 +124,7 @@ A Fase 1 é a recomendação de partida: dá os dados de previsão com risco nul
 - **D2 — Partida:** Fase 1 em **modo sombra** (medir sem cobrar) antes de qualquer billing.
 - **D3 — Bloqueio:** pré-pago com hard-cap **antes** da ação; nunca no meio; aviso de saldo baixo.
 - **D4 — Markup:** começa configurável (ex. 6×) e calibra com dados reais da Fase 1.
-- **D5 — Provider:** segue Mistral-first; metering já precifica Claude p/ quando ligar.
+- **D5 — Provider/modelos:** provider-agnostic. Mistral-first hoje; **Claude pode ser ligado a qualquer momento** (chave + modelo) como nível premium. Roteia por tarefa (`hub_agente_identidade.modelo_*`): simples→Mistral/Haiku, pesada→Claude Sonnet/Opus. Custo maior do Claude é repassado automático em créditos.
 
 ---
 
