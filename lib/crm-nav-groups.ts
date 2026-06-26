@@ -96,11 +96,14 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     // §8: Operações / Obras — o lado "executar". Funde Projetos + Obras + Pedidos.
     // Escopo/Cronograma/Medição/Compras entram no Bloco 6 quando as telas existirem.
     id: "operacoes",
-    label: "Operações / Obras",
+    label: "Operações",
     sectionIcon: HardHat,
     items: [
-      { href: "/crm/projetos", label: "Projetos", icon: LayoutTemplate, minRole: "comercial" },
-      { href: "/crm/obras", label: "Obras", icon: HardHat, minRole: "comercial" },
+      // Renomeado a pedido do dono (Jun/2026): Projetos→Arquitetura, Obras→Engenharia.
+      // Sub-itens futuros (Arquitetura>Projetos; Engenharia>Construção+Reforma) entram quando
+      // as telas separadas existirem — evita "menu morto". Ver [[navegacao-renomear-...]].
+      { href: "/crm/projetos", label: "Arquitetura", icon: LayoutTemplate, minRole: "comercial" },
+      { href: "/crm/obras", label: "Engenharia", icon: HardHat, minRole: "comercial" },
       { href: "/crm/imoveis", label: "Imóveis", icon: Home, minRole: "comercial" },
       { href: "/crm/pedidos", label: "Pedidos", icon: Truck, minRole: "comercial" },
     ],
