@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Route, Plus, Trash2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Plus, Trash2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { useCrmHeaderSlotConfig } from "@/hooks/useCrmHeaderSlotConfig";
 
 type Regra = {
   id: string;
@@ -57,6 +59,13 @@ export default function DistribuicaoPage() {
   const [erro, setErro] = useState("");
   const [form, setForm] = useState({
     origem: "", mercado: "", uf: "", destino_tipo: "agente", destino_valor: "", prioridade: "100",
+  });
+
+  const pathname = usePathname();
+  useCrmHeaderSlotConfig({
+    path: pathname,
+    title: "Distribuição de leads",
+    subtitle: "Quem recebe cada lead — atividade da rede e regras de roteamento",
   });
 
   const carregar = useCallback(async () => {
@@ -115,15 +124,6 @@ export default function DistribuicaoPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-        <Route size={22} color="#c9a24a" aria-hidden />
-        <h1 style={{ margin: 0, fontSize: 22 }}>Direcionamento de leads</h1>
-      </div>
-      <p style={{ margin: "0 0 16px", color: "#8b949e", fontSize: 13 }}>
-        Regras automáticas: o lead que casa com a 1ª regra ativa (por prioridade) é direcionado ao destino.
-        Sem regra que case, vale a heurística padrão. <strong style={{ color: "#c9a24a" }}>qualquer</strong> = campo em branco.
-      </p>
-
       {/* Atividade da rede — gestão completa do Hub (lê hub_eventos) */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
         <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
@@ -157,9 +157,13 @@ export default function DistribuicaoPage() {
         )}
       </div>
 
-      {/* Form de nova regra */}
+      {/* Regras de roteamento (config avançada) */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #c9a24a44", background: "#003b2622" }}>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>Nova regra</p>
+        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>Regras de roteamento automático</p>
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#8b949e", lineHeight: 1.5 }}>
+          O lead que casa com a 1ª regra ativa (por prioridade) vai direto ao destino. Sem regra, vale a heurística padrão.
+          Deixe um campo em <strong style={{ color: "#c9a24a" }}>branco (qualquer)</strong> para não filtrar por ele.
+        </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8, alignItems: "center" }}>
           <select style={inputStyle} value={form.origem} onChange={(e) => setForm((f) => ({ ...f, origem: e.target.value }))}>
             {ORIGENS.map((o) => <option key={o} value={o}>{o || "origem: qualquer"}</option>)}
@@ -173,7 +177,7 @@ export default function DistribuicaoPage() {
             <option value="atendente">→ Atendente</option>
             <option value="parceiro">→ Parceiro</option>
           </select>
-          <input style={inputStyle} placeholder="destino (slug/id)" value={form.destino_valor} onChange={(e) => setForm((f) => ({ ...f, destino_valor: e.target.value }))} />
+          <input style={inputStyle} placeholder={form.destino_tipo === "parceiro" ? "id do parceiro" : "nome do agente/atendente"} value={form.destino_valor} onChange={(e) => setForm((f) => ({ ...f, destino_valor: e.target.value }))} />
           <input style={inputStyle} type="number" placeholder="prioridade" value={form.prioridade} onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value }))} />
         </div>
         {erro && <p style={{ color: "#f85149", fontSize: 12, margin: "10px 0 0" }}>{erro}</p>}
