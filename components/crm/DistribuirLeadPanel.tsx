@@ -35,11 +35,14 @@ export function DistribuirLeadPanel({
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [enviadoNome, setEnviadoNome] = useState<string | null>(null);
+  const [recoloc, setRecoloc] = useState<string | null>(null);
+  const [recolocando, setRecolocando] = useState(false);
 
   async function abrir() {
     setAberto(true);
     setErro("");
     setEnviadoNome(null);
+    setRecoloc(null);
     setCandidatos([]);
     setEncId(null);
     setCarregando(true);
@@ -112,6 +115,32 @@ export function DistribuirLeadPanel({
     }
   }
 
+  async function recusarEOfertarProximo() {
+    if (!encId || recolocando) return;
+    setRecolocando(true);
+    try {
+      const res = await fetch(`/api/crm/encaminhamentos/${encodeURIComponent(encId)}/recusar`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        proximo?: { nome?: string } | null;
+      };
+      if (res.ok && json.ok) {
+        setRecoloc(
+          json.proximo?.nome
+            ? `Recolocado para ${json.proximo.nome}.`
+            : "Sem próximo elegível — lead voltou à fila."
+        );
+        onDone?.();
+      }
+    } finally {
+      setRecolocando(false);
+    }
+  }
+
   return (
     <>
       <button
@@ -180,10 +209,25 @@ export function DistribuirLeadPanel({
                 <p style={{ margin: "6px 0 0", color: "#8b949e", fontSize: 13 }}>
                   O fornecedor foi notificado. Você acompanha o avanço no painel do Hub.
                 </p>
-                <button type="button" onClick={() => setAberto(false)}
-                  style={{ marginTop: 16, padding: "9px 18px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                  Fechar
-                </button>
+                {recoloc ? (
+                  <p style={{ margin: "12px 0 0", fontSize: 13, color: "#e0b86a", fontWeight: 600 }}>{recoloc}</p>
+                ) : null}
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
+                  {!recoloc && (
+                    <button
+                      type="button"
+                      disabled={recolocando}
+                      onClick={() => void recusarEOfertarProximo()}
+                      style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontWeight: 700, fontSize: 12, cursor: recolocando ? "default" : "pointer" }}
+                    >
+                      {recolocando ? "Recolocando…" : "Fornecedor recusou? → oferecer ao próximo"}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setAberto(false)}
+                    style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    Fechar
+                  </button>
+                </div>
               </div>
             ) : candidatos.length === 0 ? (
               <p style={{ color: "#f0883e", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
