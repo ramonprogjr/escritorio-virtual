@@ -91,6 +91,8 @@ export default function DistribuicaoPage() {
   const [eventos, setEventos] = useState<EventoRede[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [acaoForn, setAcaoForn] = useState<string | null>(null);
+  const [auditorMsg, setAuditorMsg] = useState<string | null>(null);
+  const [auditorRodando, setAuditorRodando] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -189,6 +191,31 @@ export default function DistribuicaoPage() {
     }
   }
 
+  async function rodarAuditor() {
+    setAuditorRodando(true);
+    setAuditorMsg(null);
+    try {
+      const res = await fetch("/api/crm/distribuicao/auditor", {
+        method: "POST",
+        headers: internalApiHeaders(),
+      });
+      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; cobrancas?: unknown[]; avaliados?: number };
+      if (res.ok && j.ok) {
+        const n = j.cobrancas?.length ?? 0;
+        setAuditorMsg(
+          n > 0
+            ? `${n} cobrança(s) emitida(s) automaticamente.`
+            : `Rede auditada — nada a cobrar agora (${j.avaliados ?? 0} fornecedores).`
+        );
+        await carregar();
+      } else {
+        setAuditorMsg("Falha ao rodar o auditor.");
+      }
+    } finally {
+      setAuditorRodando(false);
+    }
+  }
+
   const botaoAcao = (cor: string): React.CSSProperties => ({
     padding: "4px 10px", borderRadius: 6, border: `1px solid ${cor}55`,
     background: `${cor}18`, color: cor, fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
@@ -199,9 +226,22 @@ export default function DistribuicaoPage() {
       {/* Auditoria da rede — KPIs do hub_eventos (C.1, base da cobrança IA) */}
       {metricas && (
         <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
-          <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
-            Auditoria da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· KPIs em tempo real</span>
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 12px", gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
+              Auditoria da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· KPIs em tempo real</span>
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {auditorMsg && <span style={{ fontSize: 11, color: "#3fb950" }}>{auditorMsg}</span>}
+              <button
+                type="button"
+                onClick={rodarAuditor}
+                disabled={auditorRodando}
+                style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #c9a24a55", background: "#c9a24a18", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                {auditorRodando ? "Auditando…" : "Rodar auditor agora"}
+              </button>
+            </div>
+          </div>
           <div style={{ display: "flex", gap: 22, flexWrap: "wrap", marginBottom: metricas.alertas.length ? 14 : 0 }}>
             {[
               { n: metricas.geral.distribuidos, l: "distribuídos" },
