@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, MouseEvent } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, ArrowLeftRight } from "lucide-react";
 import {
   AgenteSideoverEntityCard,
   AgenteSideoverInfoGrid,
@@ -57,6 +57,7 @@ type Props = {
   draggable?: boolean;
   onOpen: () => void;
   onEdit?: () => void;
+  onMove?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
 };
@@ -85,6 +86,7 @@ export function NegocioKanbanCard({
   draggable,
   onOpen,
   onEdit,
+  onMove,
   onDragStart,
   onDragEnd,
 }: Props) {
@@ -140,19 +142,35 @@ export function NegocioKanbanCard({
                 {tempo(negocio.criado_em)}
               </span>
             </div>
-            {onEdit ? (
-              <button
-                type="button"
-                title="Editar"
-                onClick={(e) => {
-                  stop(e);
-                  onEdit();
-                }}
-                style={actionBtn}
-              >
-                <Pencil size={14} strokeWidth={2.2} color="#c9a24a" />
-              </button>
-            ) : null}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {onMove ? (
+                <button
+                  type="button"
+                  title="Mover etapa"
+                  aria-label="Mover etapa"
+                  onClick={(e) => {
+                    stop(e);
+                    onMove();
+                  }}
+                  style={actionBtn}
+                >
+                  <ArrowLeftRight size={14} strokeWidth={2.2} color="#c9a24a" />
+                </button>
+              ) : null}
+              {onEdit ? (
+                <button
+                  type="button"
+                  title="Editar"
+                  onClick={(e) => {
+                    stop(e);
+                    onEdit();
+                  }}
+                  style={actionBtn}
+                >
+                  <Pencil size={14} strokeWidth={2.2} color="#c9a24a" />
+                </button>
+              ) : null}
+            </div>
           </div>
         }
       >

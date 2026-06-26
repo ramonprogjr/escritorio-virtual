@@ -8,6 +8,7 @@ import { NegocioFormDrawer } from "@/components/crm/NegocioFormDrawer";
 import { PipelineConfigSideover } from "@/components/crm/leads/PipelineConfigSideover";
 import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
 import { NegocioKanbanCard } from "@/components/crm/negocios/NegocioKanbanCard";
+import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { ESTAGIOS_FALLBACK_UI } from "@/lib/crm/pipeline-defaults";
 
@@ -106,6 +107,7 @@ export default function NegociosPage() {
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const [moverAlvo, setMoverAlvo] = useState<Negocio | null>(null);
   const [total, setTotal] = useState(0);
   const [busca, setBusca] = useState("");
   const [etapa, setEtapa] = useState("");
@@ -217,12 +219,14 @@ export default function NegociosPage() {
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      alert(typeof json?.error === "string" ? json.error : "Não foi possível mover o negócio.");
+      toast.error(typeof json?.error === "string" ? json.error : "Não foi possível mover o negócio.");
       return;
     }
     setNegocios((prev) =>
       prev.map((n) => (n.id === negocioId ? { ...n, etapa: novaEtapa } : n))
     );
+    const destino = etapasKanban.find((e) => e.id === novaEtapa);
+    toast.success(`Movido para ${destino?.label ?? novaEtapa}`);
   }
 
   const qualificadosCount = negocios.filter((n) => n.etapa === "qualificado").length;
@@ -391,6 +395,67 @@ export default function NegociosPage() {
         }}
       />
 
+      {moverAlvo ? (
+        <div className="fixed inset-0 z-[130] flex items-end justify-center sm:items-center md:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            aria-label="Fechar"
+            onClick={() => setMoverAlvo(null)}
+          />
+          <div className="relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-[#30363d] bg-[#161b22] p-4 sm:rounded-2xl">
+            <div className="mb-1 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h2 className="truncate text-sm font-bold text-[#e6edf3]">Mover etapa</h2>
+                <p className="truncate text-xs text-[#8b949e]">{moverAlvo.titulo}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMoverAlvo(null)}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#21262d] text-[#8b949e]"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-3 space-y-1.5">
+              {etapasKanban.map((est) => {
+                const atual = est.id === moverAlvo.etapa;
+                return (
+                  <button
+                    key={est.id}
+                    type="button"
+                    disabled={atual}
+                    onClick={() => {
+                      const alvo = moverAlvo;
+                      setMoverAlvo(null);
+                      void moverEtapa(alvo.id, est.id);
+                    }}
+                    className="flex w-full min-h-12 items-center gap-3 rounded-xl border px-3 text-left text-sm font-semibold transition-colors disabled:opacity-50"
+                    style={{
+                      borderColor: atual ? est.color : "#30363d",
+                      background: atual ? est.color + "1A" : "#0d1117",
+                      color: atual ? est.color : "#e6edf3",
+                      cursor: atual ? "default" : "pointer",
+                    }}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                      style={{ background: est.color }}
+                      aria-hidden
+                    />
+                    <span className="min-w-0 flex-1 truncate">{est.label}</span>
+                    {atual ? (
+                      <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide">Atual</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {pipelineTabs}
 
       {isMobile && (
@@ -507,6 +572,7 @@ export default function NegociosPage() {
                         }}
                         onOpen={() => router.push(`/crm/negocios/${negocio.id}`)}
                         onEdit={() => router.push(`/crm/negocios/${negocio.id}`)}
+                        onMove={isMobile ? () => setMoverAlvo(negocio) : undefined}
                       />
                     ))}
                     {col.length === 0 ? (
