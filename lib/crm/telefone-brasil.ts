@@ -92,6 +92,16 @@ function soDigitos(raw: string): string {
   return raw.replace(/\D/g, "");
 }
 
+/** Máscara de DIGITAÇÃO (live) no padrão (XX) XXXXX-XXXX — mesmo estilo de formatarCpfMascara. */
+export function formatarTelefoneMascara(valor: string): string {
+  const d = soDigitos(String(valor ?? "")).slice(0, 11);
+  if (d.length === 0) return "";
+  if (d.length <= 2) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
 function formatarParteLocal(num: string): string {
   if (num.length === 9) return `${num.slice(0, 5)}-${num.slice(5)}`;
   if (num.length === 8) return `${num.slice(0, 4)}-${num.slice(4)}`;

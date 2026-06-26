@@ -9,6 +9,7 @@ import {
   formatarCpfMascara,
 } from "@/lib/crm/documento-brasil";
 import { formatarCepMascara } from "@/lib/crm/viacep";
+import { formatarTelefoneMascara } from "@/lib/crm/telefone-brasil";
 import { toast } from "@/components/crm/toast";
 import {
   CadastroFichaTabs,
@@ -256,7 +257,9 @@ export default function PessoaDetalhePage() {
                 />
                 <input
                   value={pessoa.telefone ?? ""}
-                  onChange={(e) => setPessoa((p) => (p ? { ...p, telefone: e.target.value } : p))}
+                  onChange={(e) =>
+                    setPessoa((p) => (p ? { ...p, telefone: formatarTelefoneMascara(e.target.value) } : p))
+                  }
                   placeholder="Telefone"
                   style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }}
                 />

@@ -14,6 +14,7 @@ import {
 } from "@/components/crm/cadastro/CadastroPremiumSideover";
 import { crmApiHeadersWithActor } from "@/lib/internal-api-headers-client";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
+import { formatarTelefoneMascara } from "@/lib/crm/telefone-brasil";
 import {
   formatarCnpjMascara,
   formatarCpfMascara,
@@ -724,7 +725,7 @@ export function CadastroContactoSideover({
             <input
               style={INPUT}
               value={form.telefone || ""}
-              onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, telefone: formatarTelefoneMascara(e.target.value) }))}
             />
           </div>
           <div>
