@@ -3,6 +3,7 @@ import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
+import { derivarEntregaDoNegocio, type DerivarEntregaResult } from "@/lib/crm/derivar-entrega";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -151,5 +152,19 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     });
   }
 
-  return NextResponse.json({ data });
+  // Esteira de entrega: ao FECHAR o negócio (etapa→ganho), gera a entrega (obra/projeto)
+  // automaticamente, na área certa. Best-effort — não falha o PATCH se a derivação tiver problema.
+  let entrega: DerivarEntregaResult | null = null;
+  if (String(data.etapa) === "ganho" && etapaAnterior !== "ganho") {
+    try {
+      entrega = await derivarEntregaDoNegocio(supabase, id, {
+        tenant_id: tenantId,
+        origem: "automatica",
+      });
+    } catch (e) {
+      console.warn("[esteira] derivar entrega ao fechar falhou (segue):", e);
+    }
+  }
+
+  return NextResponse.json({ data, entrega });
 }
