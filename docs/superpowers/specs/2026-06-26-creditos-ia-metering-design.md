@@ -37,8 +37,9 @@ custo_brl_real      = custo_usd_real × fx_usd_brl × markup
 custo_usd_real      = (tokens_in × preço_in + tokens_out × preço_out) / 1e6   [preços do modelo usado]
 ```
 
-- `valor_credito_brl` (ex.: 1 crédito = R$ 0,10) — define a granularidade.
-- `markup` (ex.: 5×–10×) — cobre infra, FX, variação de modelo e margem. **Editável sem deploy** (tabela de config).
+- `valor_credito_brl` = **R$ 0,10** (decidido pelo dono) — define a granularidade.
+- `markup` = **10×** (decidido pelo dono; calibra com dados reais depois) — cobre infra, FX, variação de modelo e margem. **Editável sem deploy** (tabela de config).
+- `fx_usd_brl` — câmbio USD→BRL (config; default conservador, ex. 6,00).
 - Mistral barato + markup → margem saudável; se ligar Claude, o mesmo markup absorve a diferença.
 
 ### 3.2 Estimativa antes de rodar (previsibilidade)
@@ -123,7 +124,7 @@ Partida: Fase 1 já com preços da tabela de referência → caminho direto e se
 - **D1 — Unidade:** crédito abstrato mapeado a BRL (recomendado) — não mostrar tokens crus ao usuário.
 - **D2 — Partida:** Fase 1 em **modo sombra** (medir sem cobrar) antes de qualquer billing.
 - **D3 — Bloqueio:** pré-pago com hard-cap **antes** da ação; nunca no meio; aviso de saldo baixo.
-- **D4 — Markup:** começa configurável (ex. 6×) e calibra com dados reais da Fase 1.
+- **D4 — Markup & crédito (decidido):** 1 crédito = **R$ 0,10**; markup inicial **10×** (configurável; calibra com dados reais da Fase 1).
 - **D5 — Provider/modelos:** provider-agnostic. Mistral-first hoje; **Claude pode ser ligado a qualquer momento** (chave + modelo) como nível premium. Roteia por tarefa (`hub_agente_identidade.modelo_*`): simples→Mistral/Haiku, pesada→Claude Sonnet/Opus. Custo maior do Claude é repassado automático em créditos.
 
 ---
