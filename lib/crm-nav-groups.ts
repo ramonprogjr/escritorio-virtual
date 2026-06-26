@@ -154,6 +154,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       },
       { href: "/crm/ciclos", label: "Automações", icon: Zap, minRole: "gestor" },
       { href: "/crm/ferramentas", label: "Ferramentas", icon: Wrench, minRole: "gestor" },
+      { href: "/crm/creditos", label: "Carteira de Tijolos", icon: Wallet, minRole: "gestor" },
       // Integrações vive aqui (API-first liga IA/automações a sistemas externos), não em Admin.
       { href: "/crm/integracoes", label: "Integrações", icon: Plug, minRole: "owner" },
       {
