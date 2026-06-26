@@ -18,6 +18,7 @@ export default function EmpresasPage() {
   const [erro, setErro] = useState("");
   const [modal, setModal] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [acaoId, setAcaoId] = useState<string | null>(null);
   const [form, setForm] = useState({
     nome_exibicao: "",
     admin_email: "",
@@ -92,6 +93,32 @@ export default function EmpresasPage() {
     }
   }
 
+  async function alternarAtivo(t: TenantRow) {
+    const desativando = t.ativo !== false;
+    if (desativando && !window.confirm(`Marcar o escritório "${t.nome_exibicao}" como inativo?`)) {
+      return;
+    }
+    setAcaoId(t.id);
+    try {
+      const res = await fetch(`/api/crm/tenants/${encodeURIComponent(t.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(await crmApiHeaders()) },
+        body: JSON.stringify({ ativo: !desativando }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error || "Não foi possível atualizar o escritório");
+        return;
+      }
+      toast.success(desativando ? "Escritório desativado" : "Escritório ativado");
+      setTenants((prev) => prev.map((x) => (x.id === t.id ? { ...x, ativo: !desativando } : x)));
+    } catch {
+      toast.error("Erro de rede");
+    } finally {
+      setAcaoId(null);
+    }
+  }
+
   if (!myRole && loading) {
     return (
       <div className="flex min-h-full items-center justify-center bg-[#0d1117] text-sm text-[#8b949e]">
@@ -148,6 +175,7 @@ export default function EmpresasPage() {
                   <th className="px-3 py-2">Nome</th>
                   <th className="px-3 py-2">Slug</th>
                   <th className="px-3 py-2">Estado</th>
+                  <th className="px-3 py-2 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#21262d]">
@@ -161,6 +189,21 @@ export default function EmpresasPage() {
                       ) : (
                         <span className="text-[#3fb950]">Ativa</span>
                       )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <button
+                        type="button"
+                        disabled={acaoId === t.id}
+                        onClick={() => void alternarAtivo(t)}
+                        className="inline-flex min-h-8 items-center rounded-lg border px-2.5 text-xs font-bold transition-colors disabled:opacity-50"
+                        style={
+                          t.ativo === false
+                            ? { borderColor: "#2ea04366", color: "#3fb950", background: "#0d1a13" }
+                            : { borderColor: "#f8514966", color: "#ff7b72", background: "#1a0a0a" }
+                        }
+                      >
+                        {acaoId === t.id ? "…" : t.ativo === false ? "Ativar" : "Desativar"}
+                      </button>
                     </td>
                   </tr>
                 ))}
