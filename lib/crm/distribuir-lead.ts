@@ -10,6 +10,7 @@ export type CandidatoParceiro = {
   estado: string | null;
   score: number;
   motivo: string;
+  status_financeiro: string;
 };
 
 export type MatchingInput = {
@@ -88,7 +89,7 @@ export async function listarCandidatosParceiro(
   let query = supabase
     .from("hub_parceiros")
     .select(
-      "id, nome, telefone, mercado, especialidade, cidade, estado, status, recebe_leads, total_leads_recebidos"
+      "id, nome, telefone, mercado, especialidade, cidade, estado, status, recebe_leads, total_leads_recebidos, status_financeiro"
     )
     .eq("recebe_leads", true);
 
@@ -124,6 +125,7 @@ export async function listarCandidatosParceiro(
       estado: row.estado,
       score,
       motivo,
+      status_financeiro: String((row as { status_financeiro?: string | null }).status_financeiro ?? "em_dia"),
     });
   }
 

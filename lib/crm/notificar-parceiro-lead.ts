@@ -50,12 +50,31 @@ export async function enviarLeadAoParceiro(
 
   const { data: parceiro } = await supabase
     .from("hub_parceiros")
-    .select("id, nome, telefone, codigo, total_leads_recebidos")
+    .select("id, nome, telefone, codigo, total_leads_recebidos, status_financeiro")
     .eq("id", parceiroId)
     .maybeSingle();
 
   if (!parceiro?.telefone) {
     return { ok: false, error: "Parceiro sem telefone cadastrado." };
+  }
+
+  // GATE financeiro: fornecedor bloqueado por pendência não recebe novos leads.
+  // Sinaliza o Hub (evento) — o admin pode liberar manualmente ou ao sanar a pendência.
+  if (String((parceiro as { status_financeiro?: string }).status_financeiro ?? "em_dia") === "bloqueado") {
+    await registrarEvento(supabase, {
+      event_type: "gate_pendencia_bloqueio",
+      entity_type: "encaminhamento",
+      entity_id: encaminhamentoId,
+      fornecedor_id: parceiroId,
+      lead_id: (enc.lead_id as string) ?? null,
+      ator: "sistema",
+      payload: { parceiro_nome: parceiro.nome },
+      tenant_id: (enc.tenant_id as string) ?? null,
+    });
+    return {
+      ok: false,
+      error: `${parceiro.nome} está bloqueado por pendência financeira. Sane ou libere antes de encaminhar.`,
+    };
   }
 
   const leadId = enc.lead_id as string;

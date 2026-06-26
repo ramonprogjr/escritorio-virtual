@@ -13,6 +13,7 @@ type Candidato = {
   mercado?: string | null;
   cidade?: string | null;
   estado?: string | null;
+  status_financeiro?: string | null;
 };
 
 /**
@@ -223,6 +224,28 @@ export function DistribuirLeadPanel({
                         <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "#7d8a99", lineHeight: 1.4 }}>
                           {c.motivo}
                         </p>
+                      )}
+                      {c.status_financeiro && c.status_financeiro !== "em_dia" && (
+                        <span
+                          style={{
+                            display: "inline-block",
+                            marginTop: 5,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "2px 7px",
+                            borderRadius: 999,
+                            color: c.status_financeiro === "bloqueado" ? "#f85149" : "#e3b341",
+                            background:
+                              c.status_financeiro === "bloqueado" ? "rgba(248,81,73,0.12)" : "rgba(227,179,65,0.12)",
+                            border: `1px solid ${
+                              c.status_financeiro === "bloqueado" ? "rgba(248,81,73,0.35)" : "rgba(227,179,65,0.35)"
+                            }`,
+                          }}
+                        >
+                          {c.status_financeiro === "bloqueado"
+                            ? "⛔ Bloqueado · pendência financeira"
+                            : "⚠ Pendência financeira"}
+                        </span>
                       )}
                     </div>
                     <button
