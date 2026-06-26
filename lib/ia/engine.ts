@@ -10,6 +10,7 @@ import { FLUXO_IMOBILIARIO, FLUXO_ARQUITETURA, MARI_CONFIG, identificarMercado, 
 import { construirPrompt } from "./prompt-builder";
 import { completarChatPreferindoMistral } from "./llm-completion";
 import { completarChatComFerramentasMistral } from "./llm-completion-tools";
+import { registrarConsumoIA } from "./metering";
 import { resolveInferenceModelId, isMistralFamilyModelId } from "./hub-model-defaults";
 import {
   ferramentasMistralListaParaAgente,
@@ -357,6 +358,18 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
         : [];
     const custo = calcularCusto(modeloLog, tokensEntrada, tokensSaida);
     const latencia = Date.now() - inicio;
+
+    // Metering (Fase 1, sombra): registra consumo em Tijolos sem bloquear o fluxo.
+    void registrarConsumoIA({
+      tenantId: ctx.tenantId ?? defaultTenantId(),
+      usuarioId: ctx.pessoaId ?? null,
+      origem: "chat_atendimento",
+      modelo: modeloLog,
+      tokensEntrada,
+      tokensSaida,
+      refTipo: "lead",
+      refId: ctx.leadId ?? null,
+    });
 
     // ETAPA 8: Registra log (mesmo shape do webhook WhatsApp / CRM)
     const { data: logData } = await db
