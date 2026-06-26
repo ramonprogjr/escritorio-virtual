@@ -99,6 +99,10 @@ export default function DistribuicaoPage() {
   const [form, setForm] = useState({
     origem: "", mercado: "", uf: "", destino_tipo: "agente", destino_valor: "", prioridade: "100",
   });
+  const [destinos, setDestinos] = useState<{
+    agentes: { value: string; label: string }[];
+    parceiros: { value: string; label: string }[];
+  }>({ agentes: [], parceiros: [] });
 
   const pathname = usePathname();
   useCrmHeaderSlotConfig({
@@ -128,9 +132,26 @@ export default function DistribuicaoPage() {
 
   useEffect(() => { void carregar(); }, [carregar]);
 
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/crm/distribuicao/destinos", { headers: internalApiHeaders() });
+        const json = (await res.json().catch(() => ({}))) as {
+          agentes?: { value: string; label: string }[];
+          parceiros?: { value: string; label: string }[];
+        };
+        if (res.ok) {
+          setDestinos({ agentes: json.agentes ?? [], parceiros: json.parceiros ?? [] });
+        }
+      } catch {
+        /* lista vazia: o select fica sem opções, mas não quebra */
+      }
+    })();
+  }, []);
+
   async function adicionar() {
     setErro("");
-    if (!form.destino_valor.trim()) { setErro("Informe o destino (slug do agente/atendente ou id do parceiro)."); return; }
+    if (!form.destino_valor.trim()) { setErro("Escolha o destino (agente/atendente ou parceiro)."); return; }
     setSalvando(true);
     try {
       const res = await fetch("/api/crm/distribuicao/regras", {
@@ -364,12 +385,30 @@ export default function DistribuicaoPage() {
             {MERCADOS.map((m) => <option key={m} value={m}>{m || "mercado: qualquer"}</option>)}
           </select>
           <input style={inputStyle} placeholder="UF (qualquer)" value={form.uf} onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))} />
-          <select style={inputStyle} value={form.destino_tipo} onChange={(e) => setForm((f) => ({ ...f, destino_tipo: e.target.value }))}>
+          <select style={inputStyle} value={form.destino_tipo} onChange={(e) => setForm((f) => ({ ...f, destino_tipo: e.target.value, destino_valor: "" }))}>
             <option value="agente">→ Agente IA</option>
             <option value="atendente">→ Atendente</option>
             <option value="parceiro">→ Parceiro</option>
           </select>
-          <input style={inputStyle} placeholder={form.destino_tipo === "parceiro" ? "id do parceiro" : "nome do agente/atendente"} value={form.destino_valor} onChange={(e) => setForm((f) => ({ ...f, destino_valor: e.target.value }))} />
+          {(() => {
+            const opcoes = form.destino_tipo === "parceiro" ? destinos.parceiros : destinos.agentes;
+            return (
+              <select
+                style={inputStyle}
+                value={form.destino_valor}
+                onChange={(e) => setForm((f) => ({ ...f, destino_valor: e.target.value }))}
+              >
+                <option value="">
+                  {opcoes.length === 0
+                    ? form.destino_tipo === "parceiro" ? "nenhum parceiro" : "nenhum agente"
+                    : form.destino_tipo === "parceiro" ? "escolha o parceiro" : "escolha o agente/atendente"}
+                </option>
+                {opcoes.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            );
+          })()}
           <input style={inputStyle} type="number" placeholder="prioridade" value={form.prioridade} onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value }))} />
         </div>
         {erro && <p style={{ color: "#f85149", fontSize: 12, margin: "10px 0 0" }}>{erro}</p>}
