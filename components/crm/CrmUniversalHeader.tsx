@@ -7,6 +7,7 @@ import { defaultCrmHeaderForPath } from "@/lib/crm-header-defaults";
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { CrmRastreioBusca } from "@/components/crm/CrmRastreioBusca";
+import { NotificacoesSino } from "@/components/crm/NotificacoesSino";
 
 export function CrmUniversalHeader() {
   const pathname = usePathname() || "";
@@ -33,6 +34,7 @@ export function CrmUniversalHeader() {
     <>
       {tenantBadge}
       <CrmRastreioBusca />
+      <NotificacoesSino />
       {scoped?.actions ?? null}
     </>
   );
