@@ -35,4 +35,26 @@ Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: l�
 - **Resta (atenção, não-bloqueante):** liberação também no painel de métricas (já existe no painel do lead); C.1b agente IA (ver C.1).
 
 ---
-**Status macro:** A, B, **auditoria (F) corrigida e verificada**, **C.1a+C.1b (auditor + cobrança/aderência)**, **C.2a (sino)**, **nav renomeada**, **vínculos N:N securizados** concluídos. **Multi-tenant real: FUNDAÇÃO FLIPADA E VERIFICADA** (supervisionado, 26/jun) — a maior trava caiu. **Resta (aditivo/infra, exige dono):** onboarding de membro (criar tenant+user) · C.2b canais ao membro (UAZAPI/email) · C.1c agente IA autônomo+SLA · faxina das 26 policies always-true. Barômetro: núcleo ~97% · **segurança ~88%** · visão completa ~84%.
+**Status macro:** A, B, **auditoria (F) corrigida e verificada**, **C.1a+C.1b+C.1c (auditor + cobrança/aderência + agente autônomo)**, **C.2a (sino)**, **nav renomeada**, **vínculos N:N securizados**, **multi-tenant real (fundação flipada + isolamento provado + tenant-scoping no app)** concluídos. Barômetro: núcleo ~97% · segurança ~93% · visão completa ~85%.
+
+---
+
+## 🤝 HANDOFF — ESTADO PARA A PRÓXIMA SESSÃO (26/jun ~18h)
+
+**Pra retomar rápido:** ler este doc + `docs/AUDITORIA-47-TELAS.md`.
+
+**✅ NO AR (produção, verificado):** Render `https://escritorio-virtual-1.onrender.com` — build novo confirmado (rota de export blindada retorna 401). Deploy = push em `feature/escritorio-visual` (produção, repo `ramonprogjr/escritorio-virtual`) → Render auto-deploya. Login do app: `nice.engemp@gmail.com`. *(Cold start ~30-60s no plano starter.)* **Próximo deploy combinado: domingo.**
+
+**✅ Auditoria de 47 telas RODADA** (workflow multi-agente; média 6.8/10; 36 reais, 8 parciais, 3 stubs). Relatório: `docs/AUDITORIA-47-TELAS.md`. **P0 100% corrigido e live:**
+- Segurança (8 rotas blindadas guard+tenant): negocios/[id]/nota, especialistas/[id], atendimento/mensagens, pedidos, imoveis/[id], parceiros/[id]/modulo, relatorios/export (CSV).
+- Fachada: botão Ligar (leads), loading infinito (empresas), aba Registros morta (cadastro removida).
+- UX: Perdido com seletor de motivo + confirmação (chip e botão).
+
+**📋 FILA P1/P2 (pro deploy de domingo, na `wendel/dev`) — nada perdido:**
+- P1: seletor na distribuição (hoje digita slug cru; falta endpoint de lista limpo) · toasts nas escritas silenciosas (pessoas/[id], empresas/[id], etc.) · ações por linha no /crm/empresas · mover etapa no mobile (negócios).
+- P2: **sweep de tokenização** (dezenas de telas com paleta GitHub-dark → tokens verde+dourado — inconsistência visual nº1) · máscaras CPF/telefone · render otimista no atendimento · **mojibake no AgenteNovoWizard** (~38 chars quebrados) · trafego filtro fachada.
+- Debug visual mobile + desktop tela a tela.
+
+**⏸️ DEFERIDO (aguarda DADOS do dono):** Gestão de **Obra/Engenharia/Arquitetura** (módulo de execução — obras 5.5, obra/[id] 3.5, projetos 5.5). Só esse fica pra depois; resto = "CEO aprova, prossiga".
+
+**Regras vivas:** aditivo · gate `tsc + vitest(183) + _chk23` · verificável clicando · mesa redonda · sem secrets na memória · push só autorizado (foi p/ este deploy).
