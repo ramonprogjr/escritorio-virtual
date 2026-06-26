@@ -31,4 +31,4 @@
 Quando C.1–C.2 fecharem, rodar **auditor de consistência** (revisão multi-agente): schema↔código (drift de colunas/constraints), rotas sem guard, eventos emitidos vs lidos, gates, e aderência ao combinado aqui. Pedido explícito do dono ("passa o auditor pra checar a consistência").
 
 ---
-**Status macro:** A e B concluídos e verificados. Foco atual: **C.1 (auditor IA) → C.2 (notificações)**, depois **auditor de consistência (F)**. Barômetro: núcleo ~95% · segurança ~80% · visão completa ~73%.
+**Status macro:** A, B e **C.1 (Auditoria da rede — KPIs)** concluídos e verificados. **Auditor de consistência (F) RODANDO** (drift schema↔código, guards, eventos↔KPI, aderência). Próximo: corrigir críticos do auditor → C.2 (notificações). Barômetro: núcleo ~95% · segurança ~80% · visão completa ~74%.
