@@ -6,7 +6,7 @@ import {
   prepararRowHubLeadInsert,
   validarLeadCadastro,
 } from "@/lib/crm/lead-cadastro";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
@@ -141,6 +141,7 @@ export async function GET(request: NextRequest) {
     .from("hub_leads_crm")
     .select("id, nome, telefone, estagio, valor_estimado, criado_em")
     .not("estagio", "in", "(ganho,perdido)")
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("criado_em", { ascending: false })
     .limit(limit);
 

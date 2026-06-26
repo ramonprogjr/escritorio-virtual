@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 /** Feed de eventos da rede (hub_eventos) para o painel de gestão do Hub. Read-only. */
 export async function GET(request: NextRequest) {
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await crmDb()
     .from("hub_eventos")
     .select("id, event_type, entity_type, fornecedor_id, lead_id, negocio_id, ator, payload, ts")
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("ts", { ascending: false })
     .limit(limite);
 

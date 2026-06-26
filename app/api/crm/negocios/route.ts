@@ -8,7 +8,7 @@ import {
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { criarVinculosNegocio } from "@/lib/crm/negocio-vinculos";
 import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
-import { defaultTenantId, isMissingPgColumn, isTenantFkError, tenantIdFromRequest } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, isTenantFkError, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { legacyNegocioTipoFromMercado } from "@/lib/crm/negocio-tipo";
 
@@ -311,6 +311,7 @@ export async function GET(request: NextRequest) {
       "id, codigo, titulo, prefixo_mercado, status, etapa, valor_estimado, valor_fechado, data_previsao_fechamento, pipeline_id, criado_em",
       { count: "exact" }
     )
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("criado_em", { ascending: false })
     .range(offset, offset + limit - 1);
 

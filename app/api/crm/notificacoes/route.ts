@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 type EventoRow = {
   id: string;
@@ -79,6 +80,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await crmDb()
     .from("hub_eventos")
     .select("id, event_type, entity_type, entity_id, lead_id, negocio_id, payload, ts")
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("ts", { ascending: false })
     .limit(40);
 
