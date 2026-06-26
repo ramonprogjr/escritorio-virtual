@@ -16,6 +16,26 @@ type Regra = {
   rotulo: string | null;
 };
 
+type EventoRede = {
+  id: string;
+  event_type: string;
+  entity_type: string | null;
+  ator: string | null;
+  payload: Record<string, unknown> | null;
+  ts: string;
+};
+
+function descreverEvento(e: EventoRede): string {
+  const p = e.payload ?? {};
+  if (e.event_type === "lead_distribuido") {
+    return `Lead distribuído para ${p.parceiro_nome ?? "fornecedor"}${p.score != null ? ` · aderência ${p.score}` : ""}`;
+  }
+  if (e.event_type === "entrega_gerada") {
+    return `Entrega ${p.codigo ?? ""} gerada · ${p.tipo ?? "obra"}${p.origem === "automatica" ? " (automática ao fechar)" : ""}`;
+  }
+  return e.event_type.replace(/_/g, " ");
+}
+
 const ORIGENS = ["", "whatsapp", "meta", "google", "indicacao", "manual", "super_cadastro"];
 const MERCADOS = ["", "IMB", "ARQ", "ENG", "SRV", "RFM", "MRC", "PRO", "FOR"];
 const inputStyle: React.CSSProperties = {
@@ -25,6 +45,7 @@ const label = (s: string | null) => (s && s.trim() ? s : "qualquer");
 
 export default function DistribuicaoPage() {
   const [lista, setLista] = useState<Regra[]>([]);
+  const [eventos, setEventos] = useState<EventoRede[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -35,9 +56,14 @@ export default function DistribuicaoPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/crm/distribuicao/regras", { headers: internalApiHeaders() });
-      const json = (await res.json().catch(() => ({}))) as { data?: Regra[] };
-      if (res.ok) setLista(json.data ?? []);
+      const [resRegras, resEv] = await Promise.all([
+        fetch("/api/crm/distribuicao/regras", { headers: internalApiHeaders() }),
+        fetch("/api/crm/eventos?limite=20", { headers: internalApiHeaders() }),
+      ]);
+      const json = (await resRegras.json().catch(() => ({}))) as { data?: Regra[] };
+      if (resRegras.ok) setLista(json.data ?? []);
+      const jEv = (await resEv.json().catch(() => ({}))) as { data?: EventoRede[] };
+      if (resEv.ok) setEventos(jEv.data ?? []);
     } finally {
       setCarregando(false);
     }
@@ -91,6 +117,34 @@ export default function DistribuicaoPage() {
         Regras automáticas: o lead que casa com a 1ª regra ativa (por prioridade) é direcionado ao destino.
         Sem regra que case, vale a heurística padrão. <strong style={{ color: "#c9a24a" }}>qualquer</strong> = campo em branco.
       </p>
+
+      {/* Atividade da rede — gestão completa do Hub (lê hub_eventos) */}
+      <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
+        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
+          Atividade da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· controle total do Hub</span>
+        </p>
+        {eventos.length === 0 ? (
+          <p style={{ margin: 0, color: "#8b949e", fontSize: 13 }}>
+            Sem eventos ainda. Distribua um lead ou feche um negócio para ver a rede em movimento.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+            {eventos.map((e) => (
+              <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    width: 8, height: 8, borderRadius: 999, flexShrink: 0,
+                    background: e.event_type === "lead_distribuido" ? "#c9a24a" : "#34d399",
+                  }}
+                />
+                <span style={{ flex: 1, color: "#e6edf3" }}>{descreverEvento(e)}</span>
+                <span style={{ fontSize: 11, color: "#6e7681", flexShrink: 0 }}>{e.ator ?? ""}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Form de nova regra */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #c9a24a44", background: "#003b2622" }}>
