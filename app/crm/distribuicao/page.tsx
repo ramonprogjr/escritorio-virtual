@@ -33,6 +33,12 @@ function descreverEvento(e: EventoRede): string {
   if (e.event_type === "entrega_gerada") {
     return `Entrega ${p.codigo ?? ""} gerada · ${p.tipo ?? "obra"}${p.origem === "automatica" ? " (automática ao fechar)" : ""}`;
   }
+  if (e.event_type === "gate_pendencia_bloqueio") {
+    return `Bloqueado por pendência financeira: ${p.parceiro_nome ?? "fornecedor"} não recebeu o lead`;
+  }
+  if (e.event_type === "gate_liberado") {
+    return `Fornecedor liberado pelo Hub: ${p.parceiro_nome ?? "fornecedor"}`;
+  }
   return e.event_type.replace(/_/g, " ");
 }
 
@@ -135,7 +141,12 @@ export default function DistribuicaoPage() {
                   aria-hidden
                   style={{
                     width: 8, height: 8, borderRadius: 999, flexShrink: 0,
-                    background: e.event_type === "lead_distribuido" ? "#c9a24a" : "#34d399",
+                    background:
+                      e.event_type === "gate_pendencia_bloqueio"
+                        ? "#f85149"
+                        : e.event_type === "lead_distribuido"
+                          ? "#c9a24a"
+                          : "#34d399",
                   }}
                 />
                 <span style={{ flex: 1, color: "#e6edf3" }}>{descreverEvento(e)}</span>
