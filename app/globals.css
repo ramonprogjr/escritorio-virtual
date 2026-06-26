@@ -63,10 +63,12 @@ html, body {
   --obra-borda: #30363d;
   --obra-borda-2: #21262d;
   /* Barras de rolagem — alinhadas ao sideover / DecisionPanel (global) */
-  --obra-scrollbar-size: 3px;
-  --obra-scrollbar-thumb: rgba(255, 255, 255, 0.22);
-  --obra-scrollbar-thumb-hover: rgba(255, 255, 255, 0.38);
-  --obra-scrollbar-track: transparent;
+  /* Scrollbar visível: o usuário precisa PERCEBER que a tela rola.
+     Antes era 3px transparente — conteúdo abaixo da dobra passava despercebido. */
+  --obra-scrollbar-size: 10px;
+  --obra-scrollbar-thumb: rgba(201, 162, 74, 0.45);
+  --obra-scrollbar-thumb-hover: rgba(201, 162, 74, 0.75);
+  --obra-scrollbar-track: rgba(255, 255, 255, 0.05);
 }
 
 body {
@@ -123,9 +125,13 @@ body {
 *::-webkit-scrollbar-thumb {
   background: var(--obra-scrollbar-thumb);
   border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 36px;
 }
 *::-webkit-scrollbar-thumb:hover {
   background: var(--obra-scrollbar-thumb-hover);
+  background-clip: padding-box;
 }
 
 .panel-scroll {
