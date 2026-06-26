@@ -15,6 +15,10 @@
 # Supabase: aplicar migrações (incl. 20260605120000_ensure_hub_leads_crm_tenant.sql) antes do go-live.
 # WhatsApp: após deploy, abrir agente → QR/pareamento (sincroniza webhook para NEXT_PUBLIC_APP_URL/api/whatsapp/webhook).
 #
+# Processamento de jobs WhatsApp: feito pelo próprio web service via webhook trigger
+# (GET /api/cron/process-whatsapp-jobs). O Background Worker foi removido — o webhook
+# se auto-aciona a cada mensagem recebida sem necessidade de serviço separado.
+#
 # --- Cron Job (`dispatch-ciclos-cron`) ---
 # Minimal Docker image (`curl`) runs `scripts/render-dispatch-ciclos.sh` every schedule tick (UTC).
 # Inherits CRON_SECRET + NEXT_PUBLIC_APP_URL from the web service via `fromService`.
@@ -56,52 +60,6 @@ services:
         value: x-webhook-secret
       - key: DEFAULT_TENANT_ID
         value: "00000000-0000-4000-8000-000000000001"
-      - key: WORKER_POLL_MS
-        value: "2000"
-      - key: WORKER_BATCH_SIZE
-        value: "10"
-      - key: WORKER_CONCURRENCY
-        value: "1"
-      - key: WHATSAPP_JOB_PROCESSOR
-        value: worker_only
-      - key: MISTRAL_CHAT_TIMEOUT_MS
-        value: "30000"
-      - key: MISTRAL_CHAT_RETRIES
-        value: "1"
-
-  - type: worker
-    name: whatsapp-job-worker
-    runtime: node
-    plan: starter
-    buildCommand: npm install
-    startCommand: npm run worker:whatsapp
-    envVars:
-      - key: NODE_VERSION
-        value: "20"
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: DEFAULT_TENANT_ID
-        value: "00000000-0000-4000-8000-000000000001"
-      - key: MISTRAL_API_KEY
-        sync: false
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: UAZAPI_BASE_URL
-        sync: false
-      - key: UAZAPI_INSTANCE_TOKEN
-        sync: false
-      - key: WORKER_POLL_MS
-        value: "2000"
-      - key: WORKER_BATCH_SIZE
-        value: "10"
-      - key: WORKER_CONCURRENCY
-        value: "1"
       - key: MISTRAL_CHAT_TIMEOUT_MS
         value: "30000"
       - key: MISTRAL_CHAT_RETRIES
