@@ -28,8 +28,8 @@ Precisamos de: **(a)** medir o consumo real por ação/escritório, **(b)** prec
 
 ## 3. Modelo conceitual
 
-### 3.1 Unidade vendida = "Crédito Obra10+" (abstrato)
-Usuário **não** pensa em tokens. Vê **créditos** e saldo. Internamente:
+### 3.1 Unidade vendida = moeda da marca (abstrata) — base de cálculo OCULTA
+Decisão do dono: a moeda chama **Tijolos 🧱** (ex.: "Você tem 1.250 Tijolos · esta ação custou 11 Tijolos"). O usuário vê **só o saldo em Tijolos** — **nunca em R$ e nunca em tokens**. Isso esconde a base de cálculo (markup × câmbio × preço-do-modelo). O `custo_brl`/`custo_usd` existem **só no backend** (contabilidade do dono/owner); telas de usuário comum mostram apenas Tijolos. O nome é **reconfigurável** (`hub_ia_config.nome_moeda`, default `Tijolos`) — o código usa "crédito" como termo abstrato interno; o rótulo de tela vem da config. Qualquer ação de IA gasta Tijolos — atendimento, relatório, contrato, cronograma, **pedido de material** (operário/fornecedor na obra), dashboard etc. (campo `origem`). Internamente:
 
 ```
 créditos_debitados = ceil( custo_brl_real / valor_credito_brl )
@@ -89,6 +89,13 @@ Regra de ouro: **nunca bloquear no meio** de uma ação. A verificação é **an
   - `GET/PUT /api/crm/ia/config` — owner-only (markup, fx, valor do crédito, modo).
 - UI: widget de carteira no header/config; chip "custo estimado" nas ações de IA; toast/aviso de saldo baixo; bloqueio amigável com CTA "Comprar créditos" quando prepago e saldo 0.
 
+### 4.5 Super-admin — Configuração de negócios / precificação (requisito do dono)
+Painel **owner/super-admin** (`/crm/configuracoes` → "Precificação & IA") que edita TUDO sem deploy, lendo/gravando `hub_ia_precos` + `hub_ia_config`:
+- **Por modelo** (`hub_ia_precos`): preço input/output (USD/1M), fator de cache, ativo. Liga/desliga modelos (ex.: habilitar Claude Opus como Turbo).
+- **Global e por escritório** (`hub_ia_config`): `markup`, `fx_usd_brl`, `valor_credito_brl` (preço do Tijolo), `nome_moeda`, `modo` (prepago/pospago), `alerta_saldo_baixo`. Override por `tenant_id` (um escritório pode ter markup/condições próprios).
+- **Visão de margem (só dono):** por ação/escritório, mostra custo real (R$) vs Tijolos cobrados vs margem — a única tela onde o R$ aparece.
+Rota: `GET/PUT /api/crm/ia/config` (owner-only) + `GET/PUT /api/crm/ia/precos`. (UI completa = Fase 2/4; a tabela e os defaults nascem na Fase 1.)
+
 ### 4.4 Relação com a monetização existente (3 pernas)
 Da memória [[monetizacao-licenciamento-rede]]: assinatura SaaS + comissionamento transacional. Esta spec adiciona a **3ª perna**:
 1. **Assinatura SaaS** (mensal + por usuário + plano/módulo) — pode **conceder X créditos/mês** (movimento tipo `assinatura`).
@@ -121,7 +128,7 @@ Partida: Fase 1 já com preços da tabela de referência → caminho direto e se
 ---
 
 ## 7. Decisões padrão (CEO aprovou; veto bem-vindo)
-- **D1 — Unidade:** crédito abstrato mapeado a BRL (recomendado) — não mostrar tokens crus ao usuário.
+- **D1 — Unidade (decidido):** moeda **Tijolos 🧱** (reconfigurável via `nome_moeda`); usuário nunca vê R$ nem tokens; base de cálculo oculta.
 - **D2 — Partida:** Fase 1 em **modo sombra** (medir sem cobrar) antes de qualquer billing.
 - **D3 — Bloqueio:** pré-pago com hard-cap **antes** da ação; nunca no meio; aviso de saldo baixo.
 - **D4 — Markup & crédito (decidido):** 1 crédito = **R$ 0,10**; markup inicial **10×** (configurável; calibra com dados reais da Fase 1).

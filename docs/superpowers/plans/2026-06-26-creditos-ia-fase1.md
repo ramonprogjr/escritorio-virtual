@@ -176,6 +176,7 @@ create table if not exists public.hub_ia_config (
   markup numeric not null default 10,
   fx_usd_brl numeric not null default 6,
   valor_credito_brl numeric not null default 0.10,
+  nome_moeda text not null default 'Tijolos',
   modo text not null default 'prepago' check (modo in ('prepago','pospago')),
   alerta_saldo_baixo integer not null default 50,
   criado_em timestamptz not null default now()
