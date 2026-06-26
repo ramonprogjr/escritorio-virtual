@@ -6,7 +6,7 @@ import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
-import { tipoAlvoPorMercado } from "@/lib/crm/derivar-negocio";
+import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import type { RastreioCadeia } from "@/lib/crm/resolver-rastreio-codigo";
 
@@ -388,9 +388,9 @@ export default function NegocioDetalhePage() {
 
       {(negocio.status === "fechado_ganho" || negocio.etapa === "ganho") &&
         (() => {
-          const alvo = tipoAlvoPorMercado(negocio.prefixo_mercado);
-          const outro = alvo === "projeto" ? "obra" : "projeto";
-          const labelAlvo = alvo === "projeto" ? "projeto" : "obra";
+          const entrega = resolverEntrega(negocio.prefixo_mercado);
+          const labelAlvo = entrega.label.toLowerCase();
+          const outro = entrega.tipo === "obra" ? "projeto" : "obra";
           return (
             <div
               style={{
