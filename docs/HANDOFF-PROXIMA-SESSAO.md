@@ -79,8 +79,10 @@ O sistema está **maduro e demonstrável**. Nesta sessão (uma maratona) saíram
 Todos com gate `tsc + vitest(183)` e verificados clicando (Playwright). Próximo foco: **P2**.
 
 ### P2 — Design/polish
-- **Sweep de tokenização** — dezenas de telas com paleta GitHub-dark (`#0d1117`/azul) em vez dos tokens verde+dourado. **É a inconsistência visual nº1.**
-- Máscaras CPF/telefone · render otimista no atendimento (tela 9.0) · **mojibake no `AgenteNovoWizard`** (~38 chars quebrados) · `/crm/trafego` filtro de período é fachada (backend ignora o param).
+- ✅ **Scrollbar invisível CORRIGIDA** (`3f64337`) — era 3px transparente; o dono não via que as telas rolavam (relato: "itens que não se veem, sem barra, só com zoom out"). Agora 10px dourada visível. Auditoria de scroll em 5+ telas: **zero clippers**, arquitetura OK. *(memória: [[scrollbar-visivel-decisao]])*
+- ✅ **`/crm/trafego` filtro de período** (`4d6f4ce`) — era fachada (backend fixava 7d); agora respeita 7d/14d/30d.
+- ⚠️ **Sweep de tokenização — REAVALIADO:** os hex "GitHub-dark" (`#0d1117`/`#161b22`/`#30363d`) **já são os valores dos tokens** `--obra-dark*` (sem diferença visual) e os azuis (`#3b82f6`) são **semânticos** (status de pipeline, info, venda×locação). Um find-replace cego quebraria o código de cores por zero ganho. **Não é a inconsistência nº1** (essa era a scrollbar). Tratar caso a caso só onde houver azul como CTA/ativo off-brand de verdade.
+- Resta: máscaras CPF/telefone (CPF/CNPJ/CEP já existem; falta telefone) · render otimista no atendimento (tela 9.0). *(mojibake do AgenteNovoWizard já estava OK — 0 ocorrências.)*
 
 ### Debug
 - Visual **mobile + desktop**, tela por tela.
