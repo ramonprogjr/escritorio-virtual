@@ -41,8 +41,13 @@ Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: l�
 - **P1 da fila COMPLETO (4/4):** toasts em escritas silenciosas (`91cb799`) · mover etapa no mobile (`6c9695d`) · ações por linha em Escritórios + `PATCH /api/crm/tenants/[id]` (`687e653`) · seletor de destino na distribuição + `/api/crm/distribuicao/destinos` (`0052edd`).
 - **Scrollbar invisível CORRIGIDA** (`3f64337`) — era a real inconsistência visual nº1 (não a tokenização: os cinzas já = tokens, azuis são semânticos). Auditoria de mobile: `docs/AUDITORIA-MOBILE-2026-06-26.md` (veredito: mobile sólido; 0 clippers; 2 tabelas largas, ambas roláveis).
 - **`/crm/trafego` filtro de período** deixou de ser fachada (`4d6f4ce`).
-- **💳 Tijolos — Fase 1 do metering de IA ENTREGUE + migração aplicada:** moeda "Tijolos" (R$0,10, markup 10×, pré-pago, Claude como Turbo); `lib/ia/metering-calc.ts` + `lib/ia/metering.ts` + medição sombra no motor + `GET /api/crm/ia/creditos`; 4 tabelas `hub_ia_*` (RLS, advisors limpos). Spec `docs/superpowers/specs/2026-06-26-creditos-ia-metering-design.md` · plano `docs/superpowers/plans/2026-06-26-creditos-ia-fase1.md`. **Próximo:** Tijolos Fase 2 (carteira/UI) → 3 (hard-cap+gateway) → 4 (super-admin precificação + previsão).
-- **Barômetro atualizado:** núcleo ~98% · segurança ~93% · visão completa ~86%.
+- **💳 Tijolos — metering de IA (Fases 1, 2 e 4 ENTREGUES + migração aplicada):**
+  - **Fase 1 (motor):** moeda "Tijolos" (R$0,10, markup 10×, pré-pago, Claude=Turbo); `lib/ia/metering-calc.ts` + `lib/ia/metering.ts` + medição sombra no motor + `GET /api/crm/ia/creditos`; 4 tabelas `hub_ia_*` (RLS, advisors limpos).
+  - **Fase 2 (carteira):** `/crm/creditos` — saldo + extrato em Tijolos (nunca R$), no menu IA (gestor+).
+  - **Fase 4 (super-admin):** `/crm/precificacao` (owner) + rotas `GET/PUT /api/crm/ia/config` e `/precos` — edita moeda/valor/markup/câmbio/modo + preços por modelo + **visão de margem** (R$). Tudo verificado clicando.
+  - Spec `docs/superpowers/specs/2026-06-26-creditos-ia-metering-design.md` · plano `docs/superpowers/plans/2026-06-26-creditos-ia-fase1.md`. **Resta:** Fase 3 (hard-cap + comprar Tijolos — TRAVA: gateway de pagamento) + painel de previsão.
+- **P2:** máscara de telefone BR ligada (pessoas/[id] + sideover de contato).
+- **Barômetro atualizado:** núcleo ~98% · segurança ~93% · visão completa ~88%.
 
 ---
 
