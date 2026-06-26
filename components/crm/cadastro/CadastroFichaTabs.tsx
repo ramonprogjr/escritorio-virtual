@@ -19,7 +19,9 @@ type Props = {
 };
 
 export function CadastroFichaTabs({ active, onChange, children }: Props) {
-  const tabs: CadastroFichaTabId[] = ["resumo", "dados", "vinculos", "relacionados", "registros"];
+  // "registros" removido do array: a aba estava morta (página não renderiza o painel).
+  // Reintroduzir quando houver o componente de timeline de registros (P1).
+  const tabs: CadastroFichaTabId[] = ["resumo", "dados", "vinculos", "relacionados"];
 
   return (
     <div>

@@ -28,7 +28,12 @@ export default function EmpresasPage() {
 
   useEffect(() => {
     void supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
+      if (!user) {
+        // Sessão ausente/expirada: não deixa a tela em "Carregando…" eterno.
+        setMyRole("");
+        setLoading(false);
+        return;
+      }
       const row = await supabase.from("users").select("role").eq("auth_id", user.id).maybeSingle();
       setMyRole(row.data?.role != null ? String(row.data.role) : "");
     });

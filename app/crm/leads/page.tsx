@@ -1052,7 +1052,7 @@ export default function LeadsPage() {
             {/* Quick actions */}
             <div className="flex gap-2 px-5 py-3 border-b border-[#30363d] flex-shrink-0 overflow-x-auto">
               {[
-                { label: "Ligar", Icon: Phone, action: () => {} },
+                { label: "Ligar", Icon: Phone, action: () => { if (detalhe?.telefone) window.open(`tel:${detalhe.telefone}`); } },
                 { label: "Encaminhar", Icon: Share2, action: () => setEncaminharLead(detalhe) },
                 { label: "Negócio", Icon: Briefcase, action: () => void converterNegocio(detalhe) },
                 { label: "Nota", Icon: StickyNote, action: () => setTabDetalhe("notas") },
