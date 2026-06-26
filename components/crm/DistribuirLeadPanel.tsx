@@ -95,6 +95,23 @@ export function DistribuirLeadPanel({
     }
   }
 
+  async function liberar(c: Candidato) {
+    try {
+      const res = await fetch(`/api/crm/parceiros/${encodeURIComponent(c.parceiro_id)}/liberar`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+      });
+      if (res.ok) {
+        setCandidatos((prev) =>
+          prev.map((x) => (x.parceiro_id === c.parceiro_id ? { ...x, status_financeiro: "em_dia" } : x))
+        );
+      }
+    } catch {
+      /* silencioso — o badge permanece se falhar */
+    }
+  }
+
   return (
     <>
       <button
@@ -226,26 +243,43 @@ export function DistribuirLeadPanel({
                         </p>
                       )}
                       {c.status_financeiro && c.status_financeiro !== "em_dia" && (
-                        <span
-                          style={{
-                            display: "inline-block",
-                            marginTop: 5,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            padding: "2px 7px",
-                            borderRadius: 999,
-                            color: c.status_financeiro === "bloqueado" ? "#f85149" : "#e3b341",
-                            background:
-                              c.status_financeiro === "bloqueado" ? "rgba(248,81,73,0.12)" : "rgba(227,179,65,0.12)",
-                            border: `1px solid ${
-                              c.status_financeiro === "bloqueado" ? "rgba(248,81,73,0.35)" : "rgba(227,179,65,0.35)"
-                            }`,
-                          }}
-                        >
-                          {c.status_financeiro === "bloqueado"
-                            ? "⛔ Bloqueado · pendência financeira"
-                            : "⚠ Pendência financeira"}
-                        </span>
+                        <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              padding: "2px 7px",
+                              borderRadius: 999,
+                              color: c.status_financeiro === "bloqueado" ? "#f85149" : "#e3b341",
+                              background:
+                                c.status_financeiro === "bloqueado" ? "rgba(248,81,73,0.12)" : "rgba(227,179,65,0.12)",
+                              border: `1px solid ${
+                                c.status_financeiro === "bloqueado" ? "rgba(248,81,73,0.35)" : "rgba(227,179,65,0.35)"
+                              }`,
+                            }}
+                          >
+                            {c.status_financeiro === "bloqueado"
+                              ? "⛔ Bloqueado · pendência financeira"
+                              : "⚠ Pendência financeira"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void liberar(c)}
+                            title="Liberar este fornecedor (Hub regulariza a pendência)"
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              padding: "2px 9px",
+                              borderRadius: 999,
+                              border: "1px solid #30363d",
+                              background: "transparent",
+                              color: "#8b949e",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Liberar
+                          </button>
+                        </div>
                       )}
                     </div>
                     <button
