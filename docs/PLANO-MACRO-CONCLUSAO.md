@@ -14,7 +14,7 @@
 - **F2b** cascata de rejeição — recusar → oferta ao próximo elegível (pula bloqueados). *(c54632a)*
 
 ## C) Restante combinado — A CONCLUIR (com caminho)
-1. **F5 — Agente auditor IA + cobrança** — agente `jobs_internos` (reusa wizard + `lib/ia/ml.ts` "propõe-não-altera") que lê `hub_eventos`, calcula KPI/SLA por fornecedor, gera alerta/cobrança. → *próximo a construir.*
+1. **C.1 — Auditor da rede** — *(a)* **métricas/KPIs de `hub_eventos` ✅ FEITO** (painel Auditoria + alertas); *(b)* **agente IA autônomo + cobrança + SLA — TODO** (agente `jobs_internos` reusando `lib/ia/ml.ts` "propõe-não-altera"; precisa de `ts_oferta`/`ts_resposta` em `hub_eventos` p/ SLA real).
 2. **Notificações robustas** — per-membro multi-canal (in-app + WhatsApp + email/push) p/ novos leads, pendências, SLA, IAH. Semente: `hub_alertas` + cards.
 3. **F6 — Multi-tenant real** (pesado) — `users.tenant_id` + `current_user_tenant_id()` dinâmico + RLS lote 2 (~36 tabelas) → login próprio do membro. **Pré-req do isolamento real; faseado (valor antes da fundação).**
 4. **Segurança long-tail** — filtro `.eq(tenant)` no financeiro (deferido B3.9), GETs, rotas internas (`requireInternalApiKey`), Crítico 4 (comissão imutável/auditada).
@@ -27,8 +27,12 @@
 ## E) Visão maior (pós-CRM, registrada)
 - **Totem/iFood de materiais** (pedir conversacional → comprar → entregar, com SPREAD). · Migração **Membro elegível → fornecedor**. · Monetização (assinatura SaaS + comissionamento transacional com split por código único).
 
-## F) Checagem de consistência (auditor) — AO FIM DESTA PARTE
-Quando C.1–C.2 fecharem, rodar **auditor de consistência** (revisão multi-agente): schema↔código (drift de colunas/constraints), rotas sem guard, eventos emitidos vs lidos, gates, e aderência ao combinado aqui. Pedido explícito do dono ("passa o auditor pra checar a consistência").
+## F) Checagem de consistência (auditor) — ✅ RODADO E CORRIGIDO (commit 9865cbd)
+Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: lógica madura (31 OK), mas **5 críticos + 7 atenção**. **Os 5 críticos + 4 atenção corrigidos:**
+- **C1/C2 (DRIFT):** `tipo='derivacao'`/`feito_por='sistema'` violavam CHECK de `hub_atividades` → o log da esteira quebrava **silencioso** ao fechar negócio. → `status_change`/`ia`.
+- **C3/C4/C5 (multi-tenant):** GET de negócio sem guard + aprovar/recusar sem checar tenant por ID → vazamento cross-tenant. → guard + checagem null-safe.
+- **Atenção:** feed cobre recusado/recolocado/sem_proximo; métrica conta sem_proximo; payload do gate enriquecido.
+- **Resta (atenção, não-bloqueante):** liberação também no painel de métricas (já existe no painel do lead); C.1b agente IA (ver C.1).
 
 ---
-**Status macro:** A, B e **C.1 (Auditoria da rede — KPIs)** concluídos e verificados. **Auditor de consistência (F) RODANDO** (drift schema↔código, guards, eventos↔KPI, aderência). Próximo: corrigir críticos do auditor → C.2 (notificações). Barômetro: núcleo ~95% · segurança ~80% · visão completa ~74%.
+**Status macro:** A, B, **C.1a (métricas)** e **auditoria de consistência (F) corrigida** concluídos (segurança subiu: 3 vazamentos cross-tenant fechados + 1 bug silencioso da esteira). Verificação no navegador pendente só de **re-login** (sessão expirou; app saudável — era page stale, não bug). Próximo (sem login): C.1b agente IA / C.2 notificações. Barômetro: núcleo ~95% · segurança ~83% · visão completa ~75%.
