@@ -72,14 +72,17 @@ export async function derivarEntregaDoNegocio(
 
   if (insErr) return { ok: false, error: insErr.message, status: 500 };
 
-  const sufixoOrigem = opts?.origem === "automatica" ? " (automático ao fechar)" : "";
+  const ehAuto = opts?.origem === "automatica";
+  const sufixoOrigem = ehAuto ? " (automático ao fechar)" : "";
+  // hub_atividades.tipo e feito_por_tipo têm CHECK constraint: usar valores permitidos
+  // (status_change / ia|humano) — senão o insert do log quebra silenciosamente.
   await supabase.from("hub_atividades").insert({
     negocio_id: negocioId,
     lead_id: negocio.lead_id ?? null,
-    tipo: "derivacao",
+    tipo: "status_change",
     descricao: `Negócio ganho → ${label} ${criado.codigo}${sufixoOrigem}`,
-    feito_por: opts?.origem === "automatica" ? "sistema" : "humano",
-    feito_por_tipo: "humano",
+    feito_por: ehAuto ? "ia" : "humano",
+    feito_por_tipo: ehAuto ? "ia" : "humano",
     tenant_id: tenantId,
   });
 

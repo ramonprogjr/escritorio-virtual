@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const eventos = (data ?? []) as EventoRow[];
-  const geral = { distribuidos: 0, recusados: 0, recolocados: 0, entregas: 0, bloqueios: 0, liberacoes: 0 };
+  const geral = { distribuidos: 0, recusados: 0, recolocados: 0, entregas: 0, bloqueios: 0, liberacoes: 0, sem_proximo: 0 };
   const porForn = new Map<string, FornecedorMetricas>();
 
   const get = (id: string, nome: string | null): FornecedorMetricas => {
@@ -72,6 +72,9 @@ export async function GET(request: NextRequest) {
       case "gate_liberado":
         geral.liberacoes++;
         break;
+      case "lead_sem_proximo":
+        geral.sem_proximo++;
+        break;
     }
   }
 
@@ -80,6 +83,7 @@ export async function GET(request: NextRequest) {
   // Alertas do auditor (regras simples sobre os KPIs).
   const alertas: string[] = [];
   if (geral.bloqueios > 0) alertas.push(`${geral.bloqueios} tentativa(s) de envio barradas por pendência financeira.`);
+  if (geral.sem_proximo > 0) alertas.push(`${geral.sem_proximo} lead(s) sem fornecedor elegível — avaliar cobertura da rede.`);
   for (const f of fornecedores) {
     if (f.recusados >= 2 && f.recusados >= f.recebidos) {
       alertas.push(`${f.nome ?? "Fornecedor"} recusou ${f.recusados} lead(s) — avaliar aderência.`);

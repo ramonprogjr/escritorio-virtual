@@ -68,7 +68,11 @@ export async function enviarLeadAoParceiro(
       fornecedor_id: parceiroId,
       lead_id: (enc.lead_id as string) ?? null,
       ator: "sistema",
-      payload: { parceiro_nome: parceiro.nome },
+      payload: {
+        parceiro_nome: parceiro.nome,
+        segmento: (enc.segmento as string) ?? null,
+        parceiro_codigo: (parceiro as { codigo?: string }).codigo ?? null,
+      },
       tenant_id: (enc.tenant_id as string) ?? null,
     });
     return {

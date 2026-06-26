@@ -35,6 +35,7 @@ type Metricas = {
     entregas: number;
     bloqueios: number;
     liberacoes: number;
+    sem_proximo: number;
   };
   fornecedores: Array<{ fornecedor_id: string; nome: string | null; recebidos: number; recusados: number; bloqueios: number }>;
   alertas: string[];
@@ -53,6 +54,15 @@ function descreverEvento(e: EventoRede): string {
   }
   if (e.event_type === "gate_liberado") {
     return `Fornecedor liberado pelo Hub: ${p.parceiro_nome ?? "fornecedor"}`;
+  }
+  if (e.event_type === "lead_recusado") {
+    return `Fornecedor recusou${p.parceiro_nome ? `: ${p.parceiro_nome}` : ""} — oferecendo ao próximo`;
+  }
+  if (e.event_type === "lead_recolocado") {
+    return `Lead recolocado para ${p.parceiro_nome ?? "próximo fornecedor"}`;
+  }
+  if (e.event_type === "lead_sem_proximo") {
+    return "Sem próximo fornecedor elegível — lead voltou à fila";
   }
   return e.event_type.replace(/_/g, " ");
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
+import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { derivarEntregaDoNegocio, type DerivarEntregaResult } from "@/lib/crm/derivar-entrega";
 
 type Params = { params: Promise<{ id: string }> };
@@ -10,7 +10,10 @@ type Params = { params: Promise<{ id: string }> };
 const NEGOCIO_SELECT =
   "id, codigo, titulo, descricao, tipo, prefixo_mercado, lead_id, pessoa_id, empresa_id, pipeline_id, valor_estimado, valor_fechado, percentual_comissao, status, etapa, motivo_perda, proxima_acao, data_previsao_fechamento, data_fechamento, tenant_id, criado_em, atualizado_em";
 
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -20,6 +23,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
   const { data: negocio, error } = await supabase.from("hub_negocios").select(NEGOCIO_SELECT).eq("id", id).maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!negocio) return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
+  if (negocio.tenant_id && negocio.tenant_id !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
+  }
 
   const [{ data: atividades }, { data: lead }, { data: pessoa }, { data: propostas }] = await Promise.all([
     supabase.from("hub_atividades").select("*").eq("negocio_id", id).order("criado_em", { ascending: false }).limit(50),

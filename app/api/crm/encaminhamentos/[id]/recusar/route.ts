@@ -35,6 +35,9 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!enc) return NextResponse.json({ error: "Encaminhamento não encontrado." }, { status: 404 });
+  if (enc.tenant_id && enc.tenant_id !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Encaminhamento não encontrado." }, { status: 404 });
+  }
 
   let criterio: Record<string, unknown> = {};
   try {

@@ -15,10 +15,23 @@ export async function POST(request: NextRequest, { params }: Params) {
   if ("error" in g) return g.error;
 
   const { encaminhamentoId } = await params;
+  const supabase = crmDb();
+
+  // Isolamento de tenant: o encaminhamento precisa pertencer ao tenant do chamador.
+  const { data: enc } = await supabase
+    .from("hub_encaminhamentos")
+    .select("tenant_id")
+    .eq("id", encaminhamentoId)
+    .maybeSingle();
+  if (!enc) return NextResponse.json({ error: "Encaminhamento não encontrado." }, { status: 404 });
+  if (enc.tenant_id && enc.tenant_id !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Encaminhamento não encontrado." }, { status: 404 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as { parceiro_id?: string };
   const parceiroId = typeof body.parceiro_id === "string" ? body.parceiro_id.trim() : undefined;
 
-  const result = await aprovarEEnviarEncaminhamento(crmDb(), encaminhamentoId, {
+  const result = await aprovarEEnviarEncaminhamento(supabase, encaminhamentoId, {
     parceiro_id: parceiroId || undefined,
   });
 
