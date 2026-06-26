@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { sugerirEncaminhamentoAutomatico } from "@/lib/crm/sugerir-encaminhamento-auto";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -11,6 +11,9 @@ function db() {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   let body: { lead_id?: string };
   try {
     body = await request.json();
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "lead_id obrigatório" }, { status: 400 });
   }
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const result = await sugerirEncaminhamentoAutomatico(db(), leadId, { tenant_id: tenantId });
 
   if (!result.ok) {

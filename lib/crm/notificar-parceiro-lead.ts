@@ -49,7 +49,7 @@ export async function enviarLeadAoParceiro(
 
   const { data: parceiro } = await supabase
     .from("hub_parceiros")
-    .select("id, nome, telefone, codigo, total_leads_recebidos, prefixo_mercado")
+    .select("id, nome, telefone, codigo, total_leads_recebidos")
     .eq("id", parceiroId)
     .maybeSingle();
 
@@ -92,9 +92,16 @@ export async function enviarLeadAoParceiro(
   if (process.env.WHATSAPP_DRY_RUN === "1") {
     console.info("[distribuicao] DRY RUN parceiro:", parceiro.telefone, texto.slice(0, 80));
   } else {
-    const send = await uazapiSendText(String(parceiro.telefone), texto, opts?.instanceToken);
-    if (!send.ok) {
-      return { ok: false, error: send.error || "Falha ao enviar WhatsApp ao parceiro." };
+    // Notificação é best-effort: a ATRIBUIÇÃO do lead ao fornecedor é a fonte da verdade e
+    // não pode falhar porque o canal (WhatsApp/UAZAPI) está indisponível. Loga e segue —
+    // a re-notificação pode ser feita depois.
+    try {
+      const send = await uazapiSendText(String(parceiro.telefone), texto, opts?.instanceToken);
+      if (!send.ok) {
+        console.warn("[distribuicao] WhatsApp ao parceiro falhou (segue com a atribuição):", send.error);
+      }
+    } catch (e) {
+      console.warn("[distribuicao] WhatsApp ao parceiro lançou (segue com a atribuição):", e);
     }
   }
 
@@ -118,7 +125,7 @@ export async function enviarLeadAoParceiro(
     })
     .eq("id", leadId);
 
-  const prefixoMercado = String(parceiro.prefixo_mercado ?? leadMeta.mercado_principal ?? "IMB").toUpperCase();
+  const prefixoMercado = String(leadMeta.mercado_principal ?? "IMB").toUpperCase();
   const papel =
     prefixoMercado === "ARQ" || prefixoMercado === "PRO"
       ? ("arquiteto" as const)

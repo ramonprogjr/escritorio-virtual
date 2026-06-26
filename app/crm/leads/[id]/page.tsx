@@ -9,6 +9,7 @@ import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { FUNIL_LEAD_ETAPAS } from "@/lib/crm/pipelines";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
 import { LeadPropostasPanel } from "@/components/crm/LeadPropostasPanel";
+import { DistribuirLeadPanel } from "@/components/crm/DistribuirLeadPanel";
 import {
   codigoParticipante,
   emailExibicao,
@@ -570,6 +571,7 @@ export default function LeadFichaPage() {
           </div>
         </div>
         <div className="flex flex-shrink-0 gap-2">
+          <DistribuirLeadPanel leadId={id} onDone={() => void carregar()} />
           <button
             type="button"
             onClick={() => void criarNegocio()}
