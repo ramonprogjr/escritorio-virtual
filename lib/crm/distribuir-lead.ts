@@ -35,6 +35,7 @@ function scoreParceiro(
     estado: string | null;
     total_leads_recebidos: number | null;
     status: string | null;
+    status_financeiro?: string | null;
   },
   input: MatchingInput
 ): { score: number; motivo: string } {
@@ -77,6 +78,16 @@ function scoreParceiro(
     motivos.push("homologado");
   }
 
+  // Flywheel IAH (dimensão financeira): pendência rebaixa o ranking → incentivo a ficar em dia.
+  const fin = (p.status_financeiro ?? "em_dia").toLowerCase();
+  if (fin === "bloqueado") {
+    score -= 40;
+    motivos.push("bloqueado −40");
+  } else if (fin === "pendente") {
+    score -= 15;
+    motivos.push("pendência −15");
+  }
+
   return { score, motivo: motivos.join(" · ") || "score base" };
 }
 
@@ -110,6 +121,7 @@ export async function listarCandidatosParceiro(
         estado: row.estado,
         total_leads_recebidos: row.total_leads_recebidos,
         status: row.status,
+        status_financeiro: (row as { status_financeiro?: string | null }).status_financeiro,
       },
       input
     );
