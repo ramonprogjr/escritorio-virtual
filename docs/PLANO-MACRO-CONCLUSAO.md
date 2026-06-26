@@ -51,8 +51,8 @@ Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: l�
 - UX: Perdido com seletor de motivo + confirmação (chip e botão).
 
 **📋 FILA P1/P2 (pro deploy de domingo, na `wendel/dev`) — nada perdido:**
-- P1: seletor na distribuição (hoje digita slug cru; falta endpoint de lista limpo) · toasts nas escritas silenciosas (pessoas/[id], empresas/[id], etc.) · ações por linha no /crm/empresas · mover etapa no mobile (negócios).
-- P2: **sweep de tokenização** (dezenas de telas com paleta GitHub-dark → tokens verde+dourado — inconsistência visual nº1) · máscaras CPF/telefone · render otimista no atendimento · **mojibake no AgenteNovoWizard** (~38 chars quebrados) · trafego filtro fachada.
+- ✅ **P1 COMPLETO (26/jun, sessão 2):** toasts nas escritas silenciosas (`91cb799`) · mover etapa no mobile via bottom-sheet Click-and-Go (`6c9695d`) · ações por linha em Escritórios (ativar/desativar tenant + endpoint PATCH, `687e653`) · seletor de destino na distribuição (fim do slug cru + endpoint `/destinos`, `0052edd`). Todos com gate (tsc + 183/183) e verificados clicando.
+- P2 (resta): **sweep de tokenização** (dezenas de telas com paleta GitHub-dark → tokens verde+dourado — inconsistência visual nº1) · máscaras CPF/telefone · render otimista no atendimento · `/crm/trafego` filtro de período fachada (backend ignora). *(mojibake no AgenteNovoWizard já estava corrigido — 0 ocorrências.)*
 - Debug visual mobile + desktop tela a tela.
 
 **⏸️ DEFERIDO (aguarda DADOS do dono):** Gestão de **Obra/Engenharia/Arquitetura** (módulo de execução — obras 5.5, obra/[id] 3.5, projetos 5.5). Só esse fica pra depois; resto = "CEO aprova, prossiga".

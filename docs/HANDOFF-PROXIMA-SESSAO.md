@@ -70,11 +70,13 @@ O sistema está **maduro e demonstrável**. Nesta sessão (uma maratona) saíram
 
 ## 5. O QUE FALTA (fila — nada perdido)
 
-### P1 — UX (pro deploy de DOMINGO, construir na `wendel/dev`)
-- **Seletor na distribuição** (regras de roteamento hoje pedem digitar slug/ID cru — falta um endpoint de lista limpo de agentes/parceiros).
-- **Toasts** nas escritas silenciosas (pessoas/[id], empresas/[id], negocios/[id] engolem erro).
-- **Ações por linha** no `/crm/empresas` (é a admin de Escritórios/tenants — hoje tabela read-only).
-- **Mover etapa no mobile** (negócios — hoje só drag-and-drop).
+### P1 — UX ✅ COMPLETO (sessão 2 de 26/jun, na `wendel/dev`)
+- ✅ **Toasts** nas escritas silenciosas — store global + `<ToastViewport/>` no root; ligado em pessoas/[id], empresas/[id], empresas (criar), negocios/[id]. *(`91cb799`)*
+- ✅ **Mover etapa no mobile** (negócios) — botão "Mover etapa" no card abre bottom-sheet de etapas (Click-and-Go); `alert()`→toast. *(`6c9695d`)*
+- ✅ **Ações por linha** no `/crm/empresas` — Ativar/Desativar tenant (owner-only) + novo `PATCH /api/crm/tenants/[id]`. *(`687e653`)*
+- ✅ **Seletor na distribuição** — fim do slug/ID cru; novo `GET /api/crm/distribuicao/destinos` popula agentes (slug) e parceiros (id). *(`0052edd`)*
+
+Todos com gate `tsc + vitest(183)` e verificados clicando (Playwright). Próximo foco: **P2**.
 
 ### P2 — Design/polish
 - **Sweep de tokenização** — dezenas de telas com paleta GitHub-dark (`#0d1117`/azul) em vez dos tokens verde+dourado. **É a inconsistência visual nº1.**
