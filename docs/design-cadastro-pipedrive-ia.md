@@ -73,9 +73,22 @@ camada de "analytics agent" pronta agora; Claude pluga quando a chave existir.)*
   Toda a camada IA é desenhada **provider-agnóstica**: pronta agora (heurística/Mistral), e o
   **Claude pluga** quando a chave existir — é o que destrava o analytics generativo e o conversacional.
 
-## Sequência sugerida & travas
-F1 → F2 → F3 → F4, cada fase com migração aditiva + prova logada + commit local (sem deploy).
-Começo recomendado: **F1 item 1 (vínculo flexível) + F2 ficha do Negócio** = maior impacto visível.
-IA-first entra desde a F1 como heurística (sem custo), e ganha LLM no Bloco H.
+## Abordagem escolhida (GO 2026-06-24) + sequência otimizada
+**Decisão:** construir a **arquitetura IA-first provider-agnóstica agora** (heurística/Mistral),
+e o **Claude pluga no Bloco H** (chave + custo) sem refatorar.
 
-> Nada aqui foi codado. Aguardando GO para iniciar (sugiro F1+F2).
+**Otimização-chave — uma camada de IA única:** interface `assistirIA({ intent, contexto, dados })`
+provider-agnóstica que serve os 4 usos com a mesma plumbing — (a) sugestão no cadastro
+(dedup/vínculo), (b) próxima-ação/resumo do negócio, (c) **analytics generativo**, (d) conversa.
+Hoje resolve por heurística; troca o "motor" para Claude no Bloco H. Evita 4 implementações.
+
+**Reuso (já pronto):** códigos tipo-CPF, pipeline-por-mercado, `hub_atividades`, `⌘K` (estender).
+
+**Ordem de execução:**
+1. **F1.1 — vínculo flexível** do negócio (pessoa **e/ou** empresa; relaxar `pessoa_id NOT NULL`). Rápido, destrava criação.
+2. **F2 — ficha do Negócio correlacionada** (pessoa + empresa + timeline + próxima-ação navegáveis). Maior impacto.
+3. **IA hooks (heurística)** desde a F1: dedup por telefone/CPF/CNPJ, sugestão de vínculo.
+4. **F1.3 — itens/escopo** (serviços) quando a ficha pedir.
+5. **Camada conversacional + analytics generativo:** stubs provider-agnósticos agora; **ativam no Bloco H** (Claude).
+
+Cada passo: migração aditiva + prova logada + commit local (sem deploy).
