@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { estagioParaColunaKanban } from "@/lib/crm/estagio-map";
 import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
-import { FUNIL_LEAD_ETAPAS } from "@/lib/crm/pipelines";
+import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
 import { LeadPropostasPanel } from "@/components/crm/LeadPropostasPanel";
 import { DistribuirLeadPanel } from "@/components/crm/DistribuirLeadPanel";
@@ -210,6 +210,8 @@ export default function LeadFichaPage() {
   const [memorias, setMemorias] = useState<Record<string, unknown>[]>([]);
   const [aba, setAba] = useState<"atividades" | "memorias" | "propostas" | "dados">("atividades");
   const [memoriasErro, setMemoriasErro] = useState<string | null>(null);
+  const [perdaAberta, setPerdaAberta] = useState(false);
+  const [motivoPerda, setMotivoPerda] = useState("");
   const [novaNota, setNovaNota] = useState("");
   const [salvandoNota, setSalvandoNota] = useState(false);
 
@@ -428,6 +430,12 @@ export default function LeadFichaPage() {
     carregar();
   }
 
+  async function confirmarPerda() {
+    if (!motivoPerda) return;
+    setPerdaAberta(false);
+    await moverEstagio("perdido", { motivo_perda: motivoPerda });
+  }
+
   if (!lead) {
     return (
       <div
@@ -596,6 +604,39 @@ export default function LeadFichaPage() {
         </div>
       </header>
 
+      {perdaAberta && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setPerdaAberta(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, borderRadius: 14, border: "1px solid #30363d", background: "#0d1117", padding: 20 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "#e6edf3" }}>Marcar lead como perdido</p>
+            <p style={{ margin: "0 0 14px", fontSize: 12, color: "#8b949e" }}>Escolha o motivo — alimenta os KPIs de perda.</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+              {MOTIVOS_PERDA.map((m) => {
+                const sel = motivoPerda === m;
+                return (
+                  <button key={m} type="button" onClick={() => setMotivoPerda(m)}
+                    style={{ padding: "6px 11px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: sel ? "1px solid #c9a24a" : "1px solid #30363d", background: sel ? "#c9a24a22" : "transparent", color: sel ? "#c9a24a" : "#8b949e" }}>
+                    {MOTIVOS_PERDA_LABEL[m] ?? m}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button type="button" onClick={() => setPerdaAberta(false)} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancelar
+              </button>
+              <button type="button" onClick={() => void confirmarPerda()} disabled={!motivoPerda} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: motivoPerda ? "#da3633" : "#30363d", color: "#fff", fontSize: 13, fontWeight: 700, cursor: motivoPerda ? "pointer" : "not-allowed" }}>
+                Confirmar perda
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         className="flex flex-shrink-0 gap-1 overflow-x-auto border-b px-3 py-2 md:px-4"
         style={{ borderColor: BORDER_SUBTLE, backgroundColor: "rgba(5, 8, 14, 0.92)" }}
@@ -604,7 +645,10 @@ export default function LeadFichaPage() {
           <button
             key={e.slug}
             type="button"
-            onClick={() => void moverEstagio(e.slug)}
+            onClick={() => {
+              if (e.slug === "perdido") { setMotivoPerda(""); setPerdaAberta(true); }
+              else void moverEstagio(e.slug);
+            }}
             className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors md:text-xs ${
               estagio === e.slug ? "font-semibold" : "text-gray-500 hover:bg-white/[0.05] hover:text-gray-300"
             }`}
@@ -973,7 +1017,7 @@ export default function LeadFichaPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => moverEstagio("perdido")}
+                      onClick={() => { setMotivoPerda(""); setPerdaAberta(true); }}
                       className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 border-r px-2 text-xs font-medium text-gray-200 transition-colors hover:bg-white/[0.06] sm:flex-initial sm:px-3"
                       style={{
                         borderColor: BORDER_SUBTLE,
