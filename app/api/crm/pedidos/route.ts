@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 const SELECT =
   "id, codigo, obra_id, descricao, status, valor_estimado, solicitado_por, criado_em, atualizado_em";
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const obraId = request.nextUrl.searchParams.get("obra_id");
 
   let query = crmDb()
@@ -27,6 +30,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -34,7 +40,7 @@ export async function POST(request: NextRequest) {
   const descricao = String(body.descricao || "").trim();
   if (!descricao) return NextResponse.json({ error: "Descrição obrigatória" }, { status: 400 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const { count } = await crmDb()
     .from("hub_pedidos_material")
     .select("*", { count: "exact", head: true });

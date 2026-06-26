@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { carregarRelatorio, type RelatorioEntidade } from "@/lib/crm/relatorios-data";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmFinanceiro, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function csvEscape(v: unknown): string {
   const s = v == null ? "" : String(v);
@@ -33,9 +33,6 @@ function filenameFor(entidade: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const configErr = crmConfigError();
-  if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
-
   const entidade = request.nextUrl.searchParams.get("entidade") || "leads";
   const format = request.nextUrl.searchParams.get("format") || "csv";
 
@@ -49,7 +46,17 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  // Guard com role: exportar dados financeiros exige perfil financeiro; demais, sessão CRM.
+  // Tenant SEMPRE do contexto (o header x-tenant-id é forjável).
+  const ehFinanceiro =
+    entidade === "financeiro" || entidade === "contas_pagar" || entidade === "contas_receber";
+  const g = ehFinanceiro ? await requireCrmFinanceiro(request) : await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
+  const configErr = crmConfigError();
+  if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
+
+  const tenantId = g.ctx.tenantId;
   const supabase = crmDb();
 
   try {

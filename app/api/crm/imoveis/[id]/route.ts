@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -15,6 +16,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const { id } = await params;
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });

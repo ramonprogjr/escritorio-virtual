@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -9,6 +10,8 @@ function db() {
 }
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
   try {
     const leadId = request.nextUrl.searchParams.get("leadId")?.trim();
     if (!leadId) {
@@ -16,6 +19,16 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = db();
+
+    // Isolamento de tenant: o lead precisa pertencer ao tenant do chamador (null-safe).
+    const { data: leadDono } = await supabase
+      .from("hub_leads_crm")
+      .select("tenant_id")
+      .eq("id", leadId)
+      .maybeSingle();
+    if (leadDono?.tenant_id && leadDono.tenant_id !== g.ctx.tenantId) {
+      return NextResponse.json({ error: "Lead não encontrado", mensagens: [] }, { status: 404 });
+    }
 
     // Busca nas quatro tabelas em paralelo
     const [filaRes, hubRes, jobsRes, ativRes] = await Promise.all([

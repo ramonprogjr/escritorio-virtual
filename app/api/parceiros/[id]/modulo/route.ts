@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -12,6 +13,9 @@ export async function POST(
   request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { id: parceiroId } = await ctx.params;
   const supabase = db();
 
