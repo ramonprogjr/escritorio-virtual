@@ -27,6 +27,19 @@ type EventoRede = {
   ts: string;
 };
 
+type Metricas = {
+  geral: {
+    distribuidos: number;
+    recusados: number;
+    recolocados: number;
+    entregas: number;
+    bloqueios: number;
+    liberacoes: number;
+  };
+  fornecedores: Array<{ fornecedor_id: string; nome: string | null; recebidos: number; recusados: number; bloqueios: number }>;
+  alertas: string[];
+};
+
 function descreverEvento(e: EventoRede): string {
   const p = e.payload ?? {};
   if (e.event_type === "lead_distribuido") {
@@ -54,6 +67,7 @@ const label = (s: string | null) => (s && s.trim() ? s : "qualquer");
 export default function DistribuicaoPage() {
   const [lista, setLista] = useState<Regra[]>([]);
   const [eventos, setEventos] = useState<EventoRede[]>([]);
+  const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -71,14 +85,17 @@ export default function DistribuicaoPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const [resRegras, resEv] = await Promise.all([
+      const [resRegras, resEv, resMet] = await Promise.all([
         fetch("/api/crm/distribuicao/regras", { headers: internalApiHeaders() }),
         fetch("/api/crm/eventos?limite=20", { headers: internalApiHeaders() }),
+        fetch("/api/crm/distribuicao/metricas", { headers: internalApiHeaders() }),
       ]);
       const json = (await resRegras.json().catch(() => ({}))) as { data?: Regra[] };
       if (resRegras.ok) setLista(json.data ?? []);
       const jEv = (await resEv.json().catch(() => ({}))) as { data?: EventoRede[] };
       if (resEv.ok) setEventos(jEv.data ?? []);
+      const jMet = (await resMet.json().catch(() => ({}))) as Metricas | { error: string };
+      if (resMet.ok && "geral" in jMet) setMetricas(jMet);
     } finally {
       setCarregando(false);
     }
@@ -124,6 +141,38 @@ export default function DistribuicaoPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
+      {/* Auditoria da rede — KPIs do hub_eventos (C.1, base da cobrança IA) */}
+      {metricas && (
+        <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
+          <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
+            Auditoria da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· KPIs em tempo real</span>
+          </p>
+          <div style={{ display: "flex", gap: 22, flexWrap: "wrap", marginBottom: metricas.alertas.length ? 14 : 0 }}>
+            {[
+              { n: metricas.geral.distribuidos, l: "distribuídos" },
+              { n: metricas.geral.entregas, l: "entregas" },
+              { n: metricas.geral.recusados, l: "recusas" },
+              { n: metricas.geral.recolocados, l: "recolocados" },
+              { n: metricas.geral.bloqueios, l: "bloqueios", red: true },
+            ].map((s) => (
+              <div key={s.l} style={{ minWidth: 70 }}>
+                <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.red && s.n > 0 ? "#f85149" : "#e6edf3" }}>{s.n}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "#8b949e" }}>{s.l}</p>
+              </div>
+            ))}
+          </div>
+          {metricas.alertas.length > 0 && (
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+              {metricas.alertas.map((a, i) => (
+                <li key={i} style={{ fontSize: 12, color: "#e3b341", display: "flex", gap: 6 }}>
+                  <span aria-hidden>⚠</span> {a}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {/* Atividade da rede — gestão completa do Hub (lê hub_eventos) */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
         <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
