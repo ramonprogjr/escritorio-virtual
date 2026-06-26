@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
 
-let _supabase: ReturnType<typeof createClient> | undefined;
-function supabase() {
+let _supabase: SupabaseClient | undefined;
+function supabase(): SupabaseClient {
   return (_supabase ??= createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
