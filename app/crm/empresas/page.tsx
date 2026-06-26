@@ -7,6 +7,7 @@ import { CrmPermissaoSelect } from "@/components/crm/CrmPermissaoSelect";
 import { crmApiHeaders } from "@/lib/internal-api-headers-client";
 import { isCrmOwnerRole } from "@/lib/crm/crm-permissoes";
 import { supabase } from "@/lib/supabase/client";
+import { toast } from "@/components/crm/toast";
 import type { TenantRow } from "@/app/api/crm/tenants/route";
 import type { CrmNivel } from "@/lib/crm/crm-permissoes";
 
@@ -79,10 +80,12 @@ export default function EmpresasPage() {
       const json = (await res.json()) as { error?: string };
       if (!res.ok) {
         setErro(json.error || "Falha ao criar escritório");
+        toast.error(json.error || "Falha ao criar escritório");
         return;
       }
       setModal(false);
       setForm({ nome_exibicao: "", admin_email: "", admin_name: "", admin_role: "gestor" });
+      toast.success("Escritório criado");
       await carregar();
     } finally {
       setSalvando(false);

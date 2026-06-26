@@ -9,6 +9,7 @@ import {
   formatarCpfMascara,
 } from "@/lib/crm/documento-brasil";
 import { formatarCepMascara } from "@/lib/crm/viacep";
+import { toast } from "@/components/crm/toast";
 import {
   CadastroFichaTabs,
   type CadastroFichaTabId,
@@ -157,7 +158,11 @@ export default function PessoaDetalhePage() {
     setSalvando(false);
     if (res.ok) {
       setEditando(false);
+      toast.success("Contato salvo");
       void carregar();
+    } else {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(json.error || "Não foi possível salvar o contato");
     }
   }
 

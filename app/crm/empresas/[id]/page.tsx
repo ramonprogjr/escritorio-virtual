@@ -7,6 +7,7 @@ import { labelEmpresaSegmento } from "@/lib/crm/empresa-cadastro";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { formatarCnpjMascara } from "@/lib/crm/documento-brasil";
 import { formatarCepMascara } from "@/lib/crm/viacep";
+import { toast } from "@/components/crm/toast";
 import {
   CadastroFichaTabs,
   type CadastroFichaTabId,
@@ -130,11 +131,14 @@ export default function EmpresaDetalhePage() {
       };
       if (!res.ok) {
         setErro(json.error || "Não foi possível atualizar o acesso.");
+        toast.error(json.error || "Não foi possível atualizar o acesso.");
         return;
       }
       setEmpresa(json.data ?? null);
+      toast.success(novo ? "Acesso habilitado" : "Acesso desabilitado");
     } catch {
       setErro("Erro de rede ao atualizar acesso.");
+      toast.error("Erro de rede ao atualizar acesso.");
     } finally {
       setSalvandoAcesso(false);
     }
@@ -158,7 +162,11 @@ export default function EmpresaDetalhePage() {
     setSalvandoEdicao(false);
     if (res.ok) {
       setEditando(false);
+      toast.success("Empresa salva");
       void carregar();
+    } else {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(json.error || "Não foi possível salvar a empresa");
     }
   }
 

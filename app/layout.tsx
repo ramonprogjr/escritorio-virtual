@@ -8,6 +8,10 @@ const MobileDetector = dynamic(() => import("@/components/mobile/MobileDetector"
 
 const IOSInstallBanner = dynamic(() => import("@/components/IOSInstallBanner"));
 
+const ToastViewport = dynamic(() =>
+  import("@/components/crm/toast").then((m) => m.ToastViewport),
+);
+
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -77,6 +81,7 @@ export default function RootLayout({
       <body className={`${poppins.className} min-h-full flex flex-col`}>
         <MobileDetector>{children}</MobileDetector>
         <IOSInstallBanner />
+        <ToastViewport />
       </body>
     </html>
   );

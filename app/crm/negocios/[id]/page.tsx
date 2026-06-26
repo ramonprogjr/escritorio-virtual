@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
+import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
@@ -134,7 +135,11 @@ export default function NegocioDetalhePage() {
     setSalvando(false);
     if (res.ok) {
       setEditando(false);
+      toast.success("Negócio salvo");
       void carregar();
+    } else {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(json.error || "Não foi possível salvar o negócio");
     }
   }
 
@@ -177,7 +182,11 @@ export default function NegocioDetalhePage() {
       });
       if (res.ok) {
         setNovaNota("");
+        toast.success("Nota registrada");
         void carregar();
+      } else {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(json.error || "Não foi possível registrar a nota");
       }
     } finally {
       setSalvandoNota(false);
@@ -212,6 +221,10 @@ export default function NegocioDetalhePage() {
       setPickerAberto(false);
       setBuscaPessoa("");
       setResultadosPessoa([]);
+      toast.success(pessoa ? "Contato vinculado" : "Contato removido");
+    } else {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(json.error || "Não foi possível vincular o contato");
     }
   }
 
@@ -229,7 +242,12 @@ export default function NegocioDetalhePage() {
         status: perdido ? "perdido" : undefined,
       }),
     });
-    if (res.ok) void carregar();
+    if (res.ok) {
+      void carregar();
+    } else {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(json.error || "Não foi possível mover a etapa");
+    }
   }
 
   async function confirmarMotivoPerda() {
