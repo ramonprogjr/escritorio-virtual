@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
-import { resolverTipoDerivado, type TipoDerivado } from "@/lib/crm/derivar-negocio";
+import { resolverEntrega, type TipoDerivado } from "@/lib/crm/derivar-negocio";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 export type EntregaDerivada = {
@@ -41,8 +41,8 @@ export async function derivarEntregaDoNegocio(
     return { ok: false, error: "Apenas negócios ganhos geram obra/projeto.", status: 409 };
   }
 
-  const alvo = resolverTipoDerivado(negocio.prefixo_mercado as string, opts?.override);
-  const tabela = alvo === "projeto" ? "hub_projetos" : "hub_obras";
+  const entrega = resolverEntrega(negocio.prefixo_mercado as string, opts?.override);
+  const { tipo: alvo, tabela, prefixoCodigo, statusInicial, label } = entrega;
 
   // Idempotência: já existe entrega para este negócio?
   const { data: existente } = await supabase
@@ -60,13 +60,9 @@ export async function derivarEntregaDoNegocio(
   const titulo = String(negocio.titulo || `Negócio ${negocio.codigo ?? negocioId}`).slice(0, 200);
   const year = new Date().getFullYear();
   const { count } = await supabase.from(tabela).select("*", { count: "exact", head: true });
-  const prefixoCodigo = alvo === "projeto" ? "PRJ" : "OBR";
   const codigo = `${prefixoCodigo}-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
 
-  const row =
-    alvo === "projeto"
-      ? { codigo, titulo, status: "briefing", negocio_id: negocioId, tenant_id: tenantId }
-      : { codigo, titulo, status: "planejamento", negocio_id: negocioId, tenant_id: tenantId };
+  const row = { codigo, titulo, status: statusInicial, negocio_id: negocioId, tenant_id: tenantId };
 
   const { data: criado, error: insErr } = await supabase
     .from(tabela)
@@ -81,7 +77,7 @@ export async function derivarEntregaDoNegocio(
     negocio_id: negocioId,
     lead_id: negocio.lead_id ?? null,
     tipo: "derivacao",
-    descricao: `Negócio ganho → ${alvo === "projeto" ? "Projeto" : "Obra"} ${criado.codigo}${sufixoOrigem}`,
+    descricao: `Negócio ganho → ${label} ${criado.codigo}${sufixoOrigem}`,
     feito_por: opts?.origem === "automatica" ? "sistema" : "humano",
     feito_por_tipo: "humano",
     tenant_id: tenantId,
@@ -90,7 +86,7 @@ export async function derivarEntregaDoNegocio(
   await registrarLogCrm(supabase, {
     entidade: "negocio",
     entidade_id: negocioId,
-    acao: alvo === "projeto" ? "derivou_projeto" : "derivou_obra",
+    acao: `derivou_${alvo}`,
     valor_anterior: null,
     valor_novo: String(criado.codigo),
     motivo: null,
