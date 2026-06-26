@@ -15,7 +15,7 @@
 
 ## C) Restante combinado — A CONCLUIR (com caminho)
 1. **C.1 — Auditor da rede** — *(a)* **métricas/KPIs de `hub_eventos` ✅ FEITO** (painel Auditoria + alertas); *(b)* **agente IA autônomo + cobrança + SLA — TODO** (agente `jobs_internos` reusando `lib/ia/ml.ts` "propõe-não-altera"; precisa de `ts_oferta`/`ts_resposta` em `hub_eventos` p/ SLA real).
-2. **Notificações robustas** — per-membro multi-canal (in-app + WhatsApp + email/push) p/ novos leads, pendências, SLA, IAH. Semente: `hub_alertas` + cards.
+2. **Notificações robustas** — *(a)* **sino no header do Hub ✅ FEITO** (deriva `hub_eventos`, badge de não-lidas + painel Click-and-Go + marcar lidas; `/api/crm/notificacoes` + `NotificacoesSino`); *(b)* **per-fornecedor + canais (WhatsApp/email/push) + preferências — TODO**.
 3. **F6 — Multi-tenant real** (pesado) — `users.tenant_id` + `current_user_tenant_id()` dinâmico + RLS lote 2 (~36 tabelas) → login próprio do membro. **Pré-req do isolamento real; faseado (valor antes da fundação).**
 4. **Segurança long-tail** — filtro `.eq(tenant)` no financeiro (deferido B3.9), GETs, rotas internas (`requireInternalApiKey`), Crítico 4 (comissão imutável/auditada).
 
@@ -35,4 +35,4 @@ Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: l�
 - **Resta (atenção, não-bloqueante):** liberação também no painel de métricas (já existe no painel do lead); C.1b agente IA (ver C.1).
 
 ---
-**Status macro:** A, B, **C.1a (métricas)** e **auditoria de consistência (F) corrigida** concluídos (segurança subiu: 3 vazamentos cross-tenant fechados + 1 bug silencioso da esteira). Verificação no navegador pendente só de **re-login** (sessão expirou; app saudável — era page stale, não bug). Próximo (sem login): C.1b agente IA / C.2 notificações. Barômetro: núcleo ~95% · segurança ~83% · visão completa ~75%.
+**Status macro:** A, B, **C.1a (métricas)**, **auditoria (F) corrigida e verificada clicando** (C1/C2 provado: esteira gerou OBR-2026-0004 + log na timeline) e **C.2a (sino de notificações)** concluídos. Próximo: C.2b (canais/per-fornecedor) ou C.1b (agente IA). Barômetro: núcleo ~96% · segurança ~83% · visão completa ~77%.
