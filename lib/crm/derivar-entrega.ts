@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { resolverTipoDerivado, type TipoDerivado } from "@/lib/crm/derivar-negocio";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 export type EntregaDerivada = {
   id: string;
@@ -93,6 +94,17 @@ export async function derivarEntregaDoNegocio(
     valor_anterior: null,
     valor_novo: String(criado.codigo),
     motivo: null,
+    tenant_id: tenantId,
+  });
+
+  await registrarEvento(supabase, {
+    event_type: "entrega_gerada",
+    entity_type: alvo,
+    entity_id: criado.id,
+    negocio_id: negocioId,
+    lead_id: (negocio.lead_id as string) ?? null,
+    ator: opts?.origem === "automatica" ? "sistema" : "humano",
+    payload: { tipo: alvo, codigo: criado.codigo, origem: opts?.origem ?? "manual" },
     tenant_id: tenantId,
   });
 

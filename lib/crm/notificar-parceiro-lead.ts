@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { persistirParceiroNoLead } from "@/lib/crm/lead-parceiro-metadata";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { uazapiSendText } from "@/lib/whatsapp/uazapi-send";
 import { defaultTenantId } from "@/lib/tenant-default";
 
@@ -145,6 +146,17 @@ export async function enviarLeadAoParceiro(
     .from("hub_parceiros")
     .update({ total_leads_recebidos: total, atualizado_em: now })
     .eq("id", parceiroId);
+
+  await registrarEvento(supabase, {
+    event_type: "lead_distribuido",
+    entity_type: "encaminhamento",
+    entity_id: encaminhamentoId,
+    fornecedor_id: parceiroId,
+    lead_id: leadId,
+    ator: "humano",
+    payload: { parceiro_nome: parceiro.nome, score: criterio.score ?? null },
+    tenant_id: (enc.tenant_id as string) ?? null,
+  });
 
   return { ok: true, telefone: String(parceiro.telefone) };
 }
