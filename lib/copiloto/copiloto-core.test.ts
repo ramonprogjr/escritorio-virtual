@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   COPILOTO_FERRAMENTAS_LEITURA,
+  COPILOTO_FERRAMENTAS_ESCRITA_FASE3,
   assinarConfirmacao,
   validarConfirmacao,
   nivelDaFerramenta,
+  ferramentaExecutavel,
   dentroDoRateLimit,
   extrairJsonObjeto,
 } from "./copiloto-core";
@@ -25,6 +27,34 @@ describe("copiloto-core — gate de nível de acesso", () => {
     expect(nivelDaFerramenta("hub_lead_resumo")).toBe("leitura");
     expect(nivelDaFerramenta("hub_atualizar_lead")).toBe("escrita");
     expect(nivelDaFerramenta("inexistente")).toBeNull();
+  });
+});
+
+describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
+  it("allowlist de escrita tem exatamente as 2 ferramentas previstas", () => {
+    expect(COPILOTO_FERRAMENTAS_ESCRITA_FASE3).toEqual([
+      "hub_registar_nota_lead",
+      "hub_atualizar_lead",
+    ]);
+  });
+
+  it("leitura é executável", () => {
+    expect(ferramentaExecutavel("hub_lead_resumo")).toBe(true);
+    expect(ferramentaExecutavel("hub_metricas_escritorio")).toBe(true);
+  });
+
+  it("escrita na allowlist é executável", () => {
+    expect(ferramentaExecutavel("hub_atualizar_lead")).toBe(true);
+    expect(ferramentaExecutavel("hub_registar_nota_lead")).toBe(true);
+  });
+
+  it("escrita FORA da allowlist NÃO é executável", () => {
+    expect(ferramentaExecutavel("hub_crm_criar_cadastro")).toBe(false);
+    expect(ferramentaExecutavel("hub_whatsapp_menu")).toBe(false);
+  });
+
+  it("ferramenta inexistente NÃO é executável", () => {
+    expect(ferramentaExecutavel("inexistente")).toBe(false);
   });
 });
 

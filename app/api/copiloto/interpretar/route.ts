@@ -3,6 +3,7 @@ import { completarChatPreferindoMistral } from "@/lib/ia/llm-completion";
 import { registrarConsumoIA, saldoCreditos } from "@/lib/ia/metering";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 import {
+  COPILOTO_FERRAMENTAS_ESCRITA_FASE3,
   assinarConfirmacao,
   construirPromptCopiloto,
   dentroDoRateLimit,
@@ -42,10 +43,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Roteamento crítico: se o comando soa a ESCRITA, pedimos um modelo mais robusto
+  // (claude-haiku) para classificar com mais cuidado. A lib degrada limpo p/ Mistral
+  // se ANTHROPIC_API_KEY estiver ausente — nenhuma trava depende disso.
+  const pareceEscrita =
+    /\b(anota|anotar|nota|registr|atualiz|muda|mudar|altera|alterar|marca|marcar|defin|definir|coloca|colocar|estágio|estagio|score|valor|próxima|proxima|tarefa|agenda|tag)\b/i.test(
+      texto
+    );
+  const modeloFromDb = pareceEscrita ? "claude-haiku" : "mistral";
+
   const r = await completarChatPreferindoMistral({
     systemPrompt: construirPromptCopiloto({ rota, temLead }),
     mensagens: [{ role: "user", content: texto }],
-    modeloFromDb: "mistral",
+    modeloFromDb,
     maxTokens: 500,
   });
   if (!r.ok) return NextResponse.json({ error: `IA indisponível: ${r.erro}` }, { status: 502 });
@@ -70,26 +80,35 @@ export async function POST(request: NextRequest) {
   const descricao = typeof obj.descricao_humana === "string" ? obj.descricao_humana : "";
   const confianca = typeof obj.confianca === "number" ? obj.confianca : null;
 
-  // Fase 1: só leitura. Qualquer outra intenção volta como "não entendi / em breve".
-  if (acao !== "ler" || nivelDaFerramenta(ferramenta) !== "leitura") {
+  const ehLeitura = acao === "ler" && nivelDaFerramenta(ferramenta) === "leitura";
+  const ehEscritaPermitida =
+    acao === "escrever" &&
+    nivelDaFerramenta(ferramenta) === "escrita" &&
+    (COPILOTO_FERRAMENTAS_ESCRITA_FASE3 as string[]).includes(ferramenta);
+
+  // Tudo que não for leitura OU escrita-allowlist volta como "não entendi / em breve".
+  // (Escrita fora da allowlist — ex. hub_crm_criar_cadastro — cai aqui e é recusada.)
+  if (!ehLeitura && !ehEscritaPermitida) {
     return NextResponse.json({
       acao: "nao_entendi",
       descricao:
         descricao ||
-        "Por enquanto consigo buscar e mostrar informações. Ações que alteram dados por voz chegam em breve.",
+        "Por enquanto consigo buscar informações, anotar e atualizar o lead. Outras ações por voz chegam em breve.",
     });
   }
 
   const ts = Date.now();
   const confirmacaoId = assinarConfirmacao(ferramenta, params, ts);
 
+  // Escrita NÃO é executada aqui (igual a leitura, este endpoint só PROPÕE).
+  // O cliente, ao ver nivelAcesso="escrita", vai para o fluxo de confirmação humana.
   return NextResponse.json({
-    acao: "ler",
+    acao: ehLeitura ? "ler" : "escrever",
     ferramenta,
     params,
     descricao,
     confianca,
-    nivelAcesso: "leitura",
+    nivelAcesso: ehLeitura ? "leitura" : "escrita",
     confirmacaoId,
     ts,
     modelo: r.modeloLog,

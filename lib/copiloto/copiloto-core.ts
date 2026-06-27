@@ -29,29 +29,68 @@ export function nivelDaFerramenta(tool: string): HubFerramentaNivelAcesso | null
   return (HUB_FERRAMENTA_ACESSO as Record<string, HubFerramentaNivelAcesso>)[tool] ?? null;
 }
 
-/** Descrição compacta das ferramentas de leitura para o prompt de classificação. */
-const FERRAMENTAS_DOC = `Ferramentas disponíveis (TODAS de leitura — nunca alteram dados):
+/**
+ * Allowlist de ESCRITA liberada na Fase 3 (estrita — qualquer outra escrita continua bloqueada).
+ * NÃO inclui hub_crm_criar_cadastro, hub_whatsapp_menu nem ferramentas de relatório:
+ * criar cadastro / disparar WhatsApp são irreversíveis-para-fora e ficam para fases futuras.
+ */
+export const COPILOTO_FERRAMENTAS_ESCRITA_FASE3: HubAgenteFerramentaId[] = [
+  "hub_registar_nota_lead",
+  "hub_atualizar_lead",
+];
+
+/**
+ * Uma ferramenta é executável pelo copiloto se for de LEITURA (auto-exec) OU
+ * se estiver na allowlist de escrita da Fase 3 (só após confirmação humana).
+ * Gate por construção: o que não passa por aqui é 403 no /executar.
+ */
+export function ferramentaExecutavel(tool: string): boolean {
+  if (nivelDaFerramenta(tool) === "leitura") return true;
+  return (COPILOTO_FERRAMENTAS_ESCRITA_FASE3 as string[]).includes(tool);
+}
+
+/** Descrição compacta das ferramentas de LEITURA (auto-executam, nunca alteram dados). */
+const FERRAMENTAS_LEITURA_DOC = `Ferramentas de LEITURA (acao="ler" — nunca alteram dados, respondem na hora):
 - hub_lead_resumo: resumo do lead atual no CRM (estágio, contato, responsáveis). Params: {} (usa o lead da tela).
 - hub_lead_memorias: memórias/notas automáticas guardadas sobre o lead atual. Params: {}.
 - hub_lead_lookup_por_telefone: busca a ficha de um lead pelo telefone. Params: { "telefone": "<só dígitos>" }.
 - hub_metricas_escritorio: métricas gerais do escritório (leads, conversões). Params: {}.`;
 
+/**
+ * Ferramentas de ESCRITA liberadas na Fase 3. Params reais (lidos do executor).
+ * Para ESCRITA o copiloto SÓ propõe — quem confirma é o dono, com um clique.
+ */
+const FERRAMENTAS_ESCRITA_DOC = `Ferramentas de ESCRITA (acao="escrever" — ALTERAM dados; exigem que o dono confirme depois):
+- hub_registar_nota_lead: adiciona uma NOTA na linha do tempo do lead atual. Params: { "texto": "<a nota, em pt-BR>" }.
+- hub_atualizar_lead: atualiza campos do lead ATUAL. Envie só os campos a mudar. Params possíveis:
+    { "estagio": "novo|em_atendimento|aguardando_resposta|qualificando|encaminhado|qualificado|proposta|negociando|fechamento",
+      "score": 0..100, "valor_estimado": <número>, "nome": "<texto>", "email": "<texto>",
+      "interesse_principal": "<texto>", "proxima_acao": "<texto>", "data_proxima_acao": "<ISO ou data>",
+      "tags_adicionar": ["tag"] }.
+    NÃO mude estágio para "ganho", "perdido", "convertido_negocio" nem "spam_invalido" (isso é decisão humana no CRM).`;
+
 export function construirPromptCopiloto(ctx: { rota: string; temLead: boolean }): string {
-  return `És o Copiloto de voz do Obra10+ (CRM de arquitetura/obra/imobiliário, Brasil). O dono fala um comando e tu classificas a INTENÇÃO numa ferramenta de LEITURA. NÃO executas nada — só propões.
+  return `És o Copiloto de voz do Obra10+ (CRM de arquitetura/obra/imobiliário, Brasil). O dono fala um comando e tu classificas a INTENÇÃO numa ferramenta. NÃO executas nada — só propões. TODA escrita só acontece depois de o dono CONFIRMAR.
 
-${FERRAMENTAS_DOC}
+${FERRAMENTAS_LEITURA_DOC}
 
-Contexto atual: rota="${ctx.rota}"${ctx.temLead ? " (há um lead aberto nesta tela — use {} para operar sobre ele)" : " (sem lead aberto)"}.
+${FERRAMENTAS_ESCRITA_DOC}
+
+Contexto atual: rota="${ctx.rota}"${ctx.temLead ? " (há um lead aberto nesta tela — use {} ou opere sobre ele)" : " (sem lead aberto — escrita sobre lead não é possível sem lead aberto)"}.
 
 Devolve APENAS um objeto JSON (sem markdown), com:
 {
- "acao": "ler" | "nao_entendi",
+ "acao": "ler" | "escrever" | "nao_entendi",
  "ferramenta": "<uma das ferramentas acima, ou vazio se nao_entendi>",
  "params": { ... },
- "descricao_humana": "frase curta em pt-BR do que vais responder",
+ "descricao_humana": "frase curta em pt-BR; se for escrever, descreve CLARAMENTE o que vai mudar (ex.: 'Vou marcar o lead como qualificado e anotar que ele pediu orçamento')",
  "confianca": 0.0..1.0
 }
-Se o pedido envolver ALTERAR/criar/salvar algo, responde acao="nao_entendi" e descricao_humana explicando que escrita por voz ainda não está disponível. Se não houver lead aberto e a ferramenta precisar de um, peça o telefone via hub_lead_lookup_por_telefone.`;
+Regras:
+- LEITURA → acao="ler".
+- ESCRITA (registar nota OU atualizar lead) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
+- Escrita sobre lead exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.
+- Qualquer outra ação (criar cadastro, enviar WhatsApp, apagar) → acao="nao_entendi" dizendo que ainda não está disponível por voz.`;
 }
 
 // ── Confirmação stateless (HMAC) ─────────────────────────────────────────────

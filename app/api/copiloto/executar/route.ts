@@ -3,14 +3,19 @@ import { executarFerramentaHub } from "@/lib/hub/executar-ferramenta-ia";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 import {
   COPILOTO_AGENTE_SLUG,
+  ferramentaExecutavel,
   nivelDaFerramenta,
   validarConfirmacao,
 } from "@/lib/copiloto/copiloto-core";
 
 /**
  * POST { ferramenta, params, confirmacaoId, ts, contexto:{ leadId? } }
- * Executa a ferramenta proposta — SOMENTE após validar o HMAC e SOMENTE ferramentas de leitura
- * (gate por construção; escrita só na Fase 3). tenantId vem da sessão, nunca do body.
+ * Executa a ferramenta proposta — SOMENTE após validar o HMAC e SOMENTE ferramentas executáveis
+ * pelo copiloto (leitura OU allowlist de escrita Fase 3). tenantId vem da sessão, nunca do body.
+ *
+ * Segurança da escrita: este endpoint só roda quando o cliente o chama APÓS o dono CONFIRMAR
+ * (o fluxo de leitura auto-executa; o de escrita exige clique). A allowlist + HMAC + TTL garantem
+ * que não há execução de escrita não-proposta ou adulterada.
  */
 export async function POST(request: NextRequest) {
   const auth = await autenticarCopiloto();
@@ -47,16 +52,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 403 });
   }
 
-  // 2) Trava de construção: nesta fase só LEITURA é executável.
-  if (nivelDaFerramenta(ferramenta) !== "leitura") {
+  // 2) Trava de construção: só LEITURA ou as ferramentas de escrita da allowlist Fase 3.
+  //    Qualquer outra ferramenta (ex. hub_crm_criar_cadastro, hub_whatsapp_menu) → 403.
+  if (!ferramentaExecutavel(ferramenta)) {
     return NextResponse.json(
-      { error: "Esta ação altera dados — disponível em breve, com confirmação." },
+      { error: "Esta ação não está disponível pelo copiloto." },
       { status: 403 }
     );
   }
 
+  const ehEscrita = nivelDaFerramenta(ferramenta) === "escrita";
+
   const leadId =
     typeof body.contexto?.leadId === "string" ? body.contexto.leadId.trim() : "";
+
+  // Escrita sobre lead exige um lead aberto (as tools de escrita operam sobre ctx.leadId).
+  if (ehEscrita && !leadId) {
+    return NextResponse.json(
+      { error: "Abra um lead para registrar nota ou atualizar." },
+      { status: 400 }
+    );
+  }
 
   let resultadoStr: string;
   try {
@@ -64,6 +80,10 @@ export async function POST(request: NextRequest) {
       leadId,
       agenteSlug: COPILOTO_AGENTE_SLUG,
       tenantId: auth.tenantId,
+      // As tools de escrita exigem modoOperacao="canal_whatsapp" por construção interna.
+      // O copiloto é o DONO autenticado confirmando manualmente — gate equivalente/superior ao
+      // do atendimento automático — então liberamos esse modo apenas para a escrita allowlist.
+      ...(ehEscrita ? { modoOperacao: "canal_whatsapp" } : {}),
     });
   } catch (e) {
     return NextResponse.json(

@@ -2,8 +2,34 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Mic, Square, X, Loader2, Sparkles } from "lucide-react";
+import { Mic, Square, X, Loader2, Sparkles, Check, ChevronDown, AlertTriangle } from "lucide-react";
 import { useCopilotoVoz } from "@/hooks/useCopilotoVoz";
+
+/** Rótulos amigáveis para os params mostrados nos chips de confirmação. */
+const ROTULO_PARAM: Record<string, string> = {
+  texto: "Nota",
+  estagio: "Estágio",
+  score: "Score",
+  valor_estimado: "Valor estimado",
+  nome: "Nome",
+  email: "E-mail",
+  interesse_principal: "Interesse",
+  proxima_acao: "Próxima ação",
+  data_proxima_acao: "Data",
+  tags_adicionar: "Tags",
+};
+
+function rotuloFerramenta(t: string): string {
+  if (t === "hub_registar_nota_lead") return "Adicionar nota ao lead";
+  if (t === "hub_atualizar_lead") return "Atualizar o lead";
+  return t;
+}
+
+function valorChip(v: unknown): string {
+  if (Array.isArray(v)) return v.join(", ");
+  if (typeof v === "string") return v;
+  return String(v ?? "");
+}
 
 const FAB = 60;
 const POS_KEY = "copiloto-fab-pos";
@@ -16,8 +42,20 @@ function leadIdDaRota(pathname: string): string | undefined {
 /** Copiloto de Voz Global — FAB verde arrastável + painel de escuta/transcrição/resposta. */
 export function CopilotoVoz() {
   const pathname = usePathname() || "/crm";
-  const { estado, transcricaoLive, resultado, mensagem, modeloUsado, toggle, cancelar } =
-    useCopilotoVoz({ contexto: { rota: pathname, leadId: leadIdDaRota(pathname) } });
+  const {
+    estado,
+    transcricaoLive,
+    resultado,
+    mensagem,
+    modeloUsado,
+    acaoPendente,
+    toggle,
+    cancelar,
+    confirmarAcao,
+    cancelarAcao,
+  } = useCopilotoVoz({ contexto: { rota: pathname, leadId: leadIdDaRota(pathname) } });
+
+  const [verJson, setVerJson] = useState(false);
 
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragInfo = useRef<{ startX: number; startY: number; ox: number; oy: number; moved: boolean } | null>(null);
@@ -100,6 +138,7 @@ export function CopilotoVoz() {
 
   const ouvindo = estado === "listening";
   const processando = estado === "processing";
+  const confirmando = estado === "confirming";
   const aberto = estado !== "idle";
 
   return (
@@ -143,7 +182,15 @@ export function CopilotoVoz() {
               }}
             />
             <strong style={{ color: "#e6edf3", fontSize: 13, flex: 1 }}>
-              {ouvindo ? "Ouvindo…" : processando ? "Processando…" : estado === "erro" ? "Ops" : "Copiloto"}
+              {ouvindo
+                ? "Ouvindo…"
+                : processando
+                  ? "Processando…"
+                  : confirmando
+                    ? "Confirme para eu fazer"
+                    : estado === "erro"
+                      ? "Ops"
+                      : "Copiloto"}
             </strong>
             {modeloUsado && (
               <span style={{
@@ -183,6 +230,161 @@ export function CopilotoVoz() {
             }}>
               {typeof resultado === "string" ? resultado : JSON.stringify(resultado, null, 2)}
             </pre>
+          )}
+
+          {/* Zona 4 — confirmação de ESCRITA (dourado). Nada executa sem clicar Confirmar. */}
+          {confirmando && acaoPendente && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                background: "#1a1405",
+                border: "1px solid #c9a24a",
+                borderRadius: 14,
+                padding: 14,
+                boxShadow: "0 0 0 3px #c9a24a18",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertTriangle size={16} color="#f0c869" />
+                <strong style={{ color: "#f0c869", fontSize: 12.5, letterSpacing: 0.2 }}>
+                  Vou fazer: {rotuloFerramenta(acaoPendente.ferramenta)}
+                </strong>
+              </div>
+
+              {acaoPendente.descricao && (
+                <p style={{ margin: 0, color: "#f3e6c4", fontSize: 13.5, lineHeight: 1.5 }}>
+                  {acaoPendente.descricao}
+                </p>
+              )}
+
+              {/* Chips dos campos que vão mudar */}
+              {Object.keys(acaoPendente.params).length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {Object.entries(acaoPendente.params).map(([k, v]) => (
+                    <span
+                      key={k}
+                      style={{
+                        display: "inline-flex",
+                        gap: 5,
+                        alignItems: "baseline",
+                        maxWidth: "100%",
+                        padding: "4px 9px",
+                        borderRadius: 999,
+                        background: "#241b06",
+                        border: "1px solid #5c4a1d",
+                        color: "#e8d49a",
+                        fontSize: 11.5,
+                      }}
+                    >
+                      <span style={{ color: "#c9a24a", fontWeight: 700 }}>
+                        {ROTULO_PARAM[k] ?? k}:
+                      </span>
+                      <span
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: 220,
+                        }}
+                        title={valorChip(v)}
+                      >
+                        {valorChip(v)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Detalhes (JSON exato) — colapsável */}
+              <button
+                type="button"
+                onClick={() => setVerJson((s) => !s)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  alignSelf: "flex-start",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#b89a52",
+                  fontSize: 11.5,
+                  padding: 0,
+                }}
+                aria-expanded={verJson}
+              >
+                <ChevronDown
+                  size={13}
+                  style={{ transform: verJson ? "rotate(180deg)" : "none", transition: "transform .15s" }}
+                />
+                Ver detalhes (JSON)
+              </button>
+              {verJson && (
+                <pre
+                  style={{
+                    margin: 0,
+                    maxHeight: 160,
+                    overflow: "auto",
+                    background: "#0f0c03",
+                    border: "1px solid #5c4a1d",
+                    borderRadius: 10,
+                    padding: 10,
+                    color: "#e8d49a",
+                    fontSize: 11,
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {JSON.stringify(acaoPendente.params, null, 2)}
+                </pre>
+              )}
+
+              {/* Botões grandes: Confirmar (verde/dourado) + Cancelar (vermelho) */}
+              <div style={{ display: "flex", gap: 10, marginTop: 2 }}>
+                <button
+                  onClick={confirmarAcao}
+                  style={{
+                    flex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 7,
+                    padding: "13px 0",
+                    borderRadius: 12,
+                    border: "1px solid #c9a24a",
+                    background: "linear-gradient(180deg, #1d5c3c, #003b26)",
+                    color: "#f0c869",
+                    fontWeight: 800,
+                    fontSize: 14,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Check size={17} /> Confirmar
+                </button>
+                <button
+                  onClick={cancelarAcao}
+                  style={{
+                    flex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 7,
+                    padding: "13px 0",
+                    borderRadius: 12,
+                    border: "1px solid #5c1d1d",
+                    background: "#2a0f0f",
+                    color: "#f3a0a0",
+                    fontWeight: 800,
+                    fontSize: 14,
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={17} /> Cancelar
+                </button>
+              </div>
+            </div>
           )}
 
           {estado === "done" || estado === "erro" ? (
