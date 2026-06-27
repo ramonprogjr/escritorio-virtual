@@ -121,6 +121,20 @@ function parsearValores(texto: string): number[] {
   });
 }
 
+/**
+ * A personalidade está REALMENTE no formato dos 5 eixos deste editor?
+ * Só é verdadeiro quando TODAS as 5 linhas casam com uma frase real de cada eixo.
+ * Personalidade vinda do wizard (modelo comportamentos×condutas, 2 frases) ou qualquer
+ * texto custom NÃO casa — e por isso não pode ser sobrescrita silenciosamente para neutro.
+ */
+function personalidadeNoFormatoEixos(texto: string): boolean {
+  const linhas = (texto || "").split("\n").filter((l) => l.trim() && !l.startsWith("#"));
+  if (linhas.length !== EIXOS.length) return false;
+  return EIXOS.every((eixo, i) =>
+    eixo.frases.some((f) => linhas[i]?.trim() === f.trim())
+  );
+}
+
 type Agente = {
   agente_slug: string;
   nome: string;
@@ -190,6 +204,13 @@ export default function AgentePage() {
   const [nome, setNome] = useState("");
   const [mercados, setMercados] = useState<string[]>([]);
   const [valores, setValores] = useState<number[]>([3, 3, 3, 3, 3]);
+  // BUG 1 — preservação de dados: a personalidade do wizard NÃO está no formato dos 5
+  // eixos. Guardamos o texto original e só regeneramos a partir dos sliders se o dono
+  // REALMENTE mexer num eixo (personalidadeEditada). Assim, abrir+salvar sem tocar nos
+  // eixos mantém a personalidade rica do wizard (não vira neutro [3,3,3,3,3]).
+  const [personalidadeOriginal, setPersonalidadeOriginal] = useState("");
+  const [personalidadeFormatoEixos, setPersonalidadeFormatoEixos] = useState(true);
+  const [personalidadeEditada, setPersonalidadeEditada] = useState(false);
   const [horarioInicio, setHorarioInicio] = useState("08:00");
   const [horarioFim, setHorarioFim] = useState("22:00");
   const [diasSemana, setDiasSemana] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
@@ -243,7 +264,16 @@ export default function AgentePage() {
             .map((m: string) => m.trim())
             .filter(Boolean)
         );
-        setValores(parsearValores(data.personalidade || ""));
+        {
+          const txtPers = data.personalidade || "";
+          const casaEixos = personalidadeNoFormatoEixos(txtPers);
+          setPersonalidadeOriginal(txtPers);
+          setPersonalidadeFormatoEixos(casaEixos);
+          setPersonalidadeEditada(false);
+          // Os sliders refletem os eixos quando casam; quando não casam, parsearValores
+          // devolve neutro só para a UI (NÃO é salvo a menos que o dono mexa num eixo).
+          setValores(parsearValores(txtPers));
+        }
         setHorarioInicio(data.horario_inicio || "08:00");
         setHorarioFim(data.horario_fim || "22:00");
         setDiasSemana(data.dias_semana || [0, 1, 2, 3, 4, 5, 6]);
@@ -369,6 +399,8 @@ export default function AgentePage() {
   }
 
   function setValor(i: number, v: number) {
+    // O dono mexeu num eixo → a partir de agora a personalidade vem dos sliders.
+    setPersonalidadeEditada(true);
     setValores((prev) => {
       const n = [...prev];
       n[i] = v;
@@ -404,6 +436,13 @@ export default function AgentePage() {
     if (!agente) return;
     setSalvando(true);
     setErro("");
+    // BUG 1 — só regenera a personalidade a partir dos sliders se ela JÁ estava no
+    // formato dos eixos OU se o dono mexeu num eixo. Caso contrário (personalidade
+    // custom/do wizard, intocada), PRESERVA o texto original — nunca sobrescreve para neutro.
+    const personalidadeParaSalvar =
+      personalidadeFormatoEixos || personalidadeEditada
+        ? gerarPersonalidade(valores)
+        : personalidadeOriginal;
     try {
       const res = await fetch(`/api/hub/agentes/${slug}`, {
         method: "PATCH",
@@ -411,7 +450,7 @@ export default function AgentePage() {
         body: JSON.stringify({
           nome,
           prefixo_mercado: mercados.join(","),
-          personalidade: gerarPersonalidade(valores),
+          personalidade: personalidadeParaSalvar,
           horario_inicio: horarioInicio,
           horario_fim: horarioFim,
           dias_semana: diasSemana,
@@ -1065,6 +1104,35 @@ export default function AgentePage() {
             <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 14 }}>
               Personalidade
             </label>
+            {!personalidadeFormatoEixos && !personalidadeEditada && (
+              <div
+                style={{
+                  background: "#c9a24a11",
+                  border: "1px solid #c9a24a33",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  marginBottom: 14,
+                }}
+              >
+                <p style={{ color: "#c9a24a", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                  Personalidade definida na criação — preservada como está. Mexa num eixo abaixo
+                  só se quiser substituí-la pelos sliders.
+                </p>
+                {personalidadeOriginal.trim() && (
+                  <p
+                    style={{
+                      color: "#8b949e",
+                      fontSize: 11,
+                      margin: "8px 0 0",
+                      lineHeight: 1.5,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {personalidadeOriginal.replace(/^#.*$/gm, "").trim()}
+                  </p>
+                )}
+              </div>
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
               {EIXOS.map((eixo, i) => (
                 <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>

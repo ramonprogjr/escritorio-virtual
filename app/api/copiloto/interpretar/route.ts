@@ -4,6 +4,7 @@ import { registrarConsumoIA, saldoCreditos } from "@/lib/ia/metering";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 import {
   COPILOTO_FERRAMENTAS_ESCRITA_FASE3,
+  CopilotoSegredoAusenteError,
   assinarConfirmacao,
   construirPromptCopiloto,
   dentroDoRateLimit,
@@ -34,7 +35,9 @@ export async function POST(request: NextRequest) {
   if (texto.length < 2) return NextResponse.json({ error: "Diga um comando." }, { status: 400 });
 
   const rota = typeof body.contexto?.rota === "string" ? body.contexto.rota : "/crm";
-  const temLead = typeof body.contexto?.leadId === "string" && body.contexto.leadId.trim().length > 0;
+  const leadIdCtx =
+    typeof body.contexto?.leadId === "string" ? body.contexto.leadId.trim() : "";
+  const temLead = leadIdCtx.length > 0;
 
   if ((await saldoCreditos(auth.tenantId)) < 0) {
     return NextResponse.json(
@@ -98,7 +101,16 @@ export async function POST(request: NextRequest) {
   }
 
   const ts = Date.now();
-  const confirmacaoId = assinarConfirmacao(ferramenta, params, ts);
+  let confirmacaoId: string;
+  try {
+    // O leadId do contexto entra na assinatura: amarra a proposta ao lead falado.
+    confirmacaoId = assinarConfirmacao(ferramenta, params, ts, leadIdCtx);
+  } catch (e) {
+    if (e instanceof CopilotoSegredoAusenteError) {
+      return NextResponse.json({ error: e.message }, { status: 503 });
+    }
+    throw e;
+  }
 
   // Escrita NÃO é executada aqui (igual a leitura, este endpoint só PROPÕE).
   // O cliente, ao ver nivelAcesso="escrita", vai para o fluxo de confirmação humana.

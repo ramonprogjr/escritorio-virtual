@@ -94,16 +94,48 @@ Regras:
 }
 
 // ── Confirmação stateless (HMAC) ─────────────────────────────────────────────
-function segredo(): string {
-  return process.env.COPILOTO_HMAC_SECRET?.trim() || "copiloto-dev-secret-trocar-em-prod";
+
+/** Erro tipado: segredo HMAC ausente em produção (fail-closed). */
+export class CopilotoSegredoAusenteError extends Error {
+  constructor() {
+    super("copiloto indisponível: segredo não configurado");
+    this.name = "CopilotoSegredoAusenteError";
+  }
 }
 
+const SEGREDO_DEV_FALLBACK = "copiloto-dev-secret-trocar-em-prod";
+
+/**
+ * Segredo do HMAC. Fail-closed: em produção, COPILOTO_HMAC_SECRET é OBRIGATÓRIO —
+ * sem ele, lança CopilotoSegredoAusenteError (assinar/validar viram 503 no endpoint).
+ * Em dev/test mantém o fallback com aviso, para não travar o desenvolvimento.
+ */
+function segredo(): string {
+  const env = process.env.COPILOTO_HMAC_SECRET?.trim();
+  if (env) return env;
+  if (process.env.NODE_ENV === "production") {
+    throw new CopilotoSegredoAusenteError();
+  }
+  console.warn(
+    "[copiloto] COPILOTO_HMAC_SECRET ausente — usando segredo de DEV. Configure em produção."
+  );
+  return SEGREDO_DEV_FALLBACK;
+}
+
+/**
+ * Assina a proposta. O `leadId` (contexto no momento do /interpretar) entra DENTRO da
+ * assinatura: se o dono navegar para outro lead e confirmar, o leadId do /executar não
+ * casa e a proposta é recusada — a escrita nunca cai no lead errado.
+ * `leadId` vazio (leitura sem lead) é normalizado para "".
+ */
 export function assinarConfirmacao(
   ferramenta: string,
   params: Record<string, unknown>,
-  ts: number
+  ts: number,
+  leadId = ""
 ): string {
-  const payload = `${ferramenta}|${JSON.stringify(params)}|${ts}`;
+  const lead = (leadId || "").trim();
+  const payload = `${ferramenta}|${JSON.stringify(params)}|${lead}|${ts}`;
   return createHmac("sha256", segredo()).update(payload).digest("hex");
 }
 
@@ -113,12 +145,13 @@ export function validarConfirmacao(
   confirmacaoId: string,
   ferramenta: string,
   params: Record<string, unknown>,
-  ts: number
+  ts: number,
+  leadId = ""
 ): { ok: true } | { ok: false; erro: string } {
   if (!Number.isFinite(ts) || Date.now() - ts > TTL_CONFIRMACAO_MS) {
     return { ok: false, erro: "confirmacao_expirada" };
   }
-  const esperado = assinarConfirmacao(ferramenta, params, ts);
+  const esperado = assinarConfirmacao(ferramenta, params, ts, leadId);
   const a = Buffer.from(confirmacaoId || "", "utf8");
   const b = Buffer.from(esperado, "utf8");
   if (a.length !== b.length || !timingSafeEqual(a, b)) {

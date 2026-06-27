@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   COPILOTO_FERRAMENTAS_LEITURA,
   COPILOTO_FERRAMENTAS_ESCRITA_FASE3,
+  CopilotoSegredoAusenteError,
   assinarConfirmacao,
   validarConfirmacao,
   nivelDaFerramenta,
@@ -95,12 +96,81 @@ describe("copiloto-core — confirmação HMAC", () => {
   });
 });
 
+describe("copiloto-core — leadId dentro da assinatura (BUG 2)", () => {
+  const tool = "hub_atualizar_lead";
+  const params = { estagio: "qualificado" };
+
+  it("assina e valida com o MESMO leadId", () => {
+    const ts = Date.now();
+    const id = assinarConfirmacao(tool, params, ts, "lead-A");
+    expect(validarConfirmacao(id, tool, params, ts, "lead-A").ok).toBe(true);
+  });
+
+  it("REJEITA quando o leadId muda entre assinar e validar (navegou de lead)", () => {
+    const ts = Date.now();
+    const id = assinarConfirmacao(tool, params, ts, "lead-A");
+    const r = validarConfirmacao(id, tool, params, ts, "lead-B");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.erro).toBe("confirmacao_invalida");
+  });
+
+  it("uma proposta SEM lead não casa com validação COM lead (e vice-versa)", () => {
+    const ts = Date.now();
+    const idSemLead = assinarConfirmacao(tool, params, ts);
+    expect(validarConfirmacao(idSemLead, tool, params, ts, "lead-A").ok).toBe(false);
+
+    const idComLead = assinarConfirmacao(tool, params, ts, "lead-A");
+    expect(validarConfirmacao(idComLead, tool, params, ts).ok).toBe(false);
+  });
+
+  it("compatível: leitura sem lead (leadId vazio) continua assinando/validando", () => {
+    const ts = Date.now();
+    const id = assinarConfirmacao("hub_lead_resumo", {}, ts);
+    expect(validarConfirmacao(id, "hub_lead_resumo", {}, ts).ok).toBe(true);
+    // leadId "" explícito é equivalente ao default
+    expect(validarConfirmacao(id, "hub_lead_resumo", {}, ts, "").ok).toBe(true);
+  });
+});
+
 describe("copiloto-core — rate limit", () => {
   it("bloqueia após o teto na janela", () => {
     const tenant = "tenant-rate-test-unico";
     let permitidos = 0;
     for (let i = 0; i < 40; i++) if (dentroDoRateLimit(tenant)) permitidos++;
     expect(permitidos).toBe(30);
+  });
+});
+
+describe("copiloto-core — segredo HMAC fail-closed (BUG 3)", () => {
+  const envSecret = process.env.COPILOTO_HMAC_SECRET;
+  const envNodeEnv = process.env.NODE_ENV;
+  afterEach(() => {
+    if (envSecret === undefined) delete process.env.COPILOTO_HMAC_SECRET;
+    else process.env.COPILOTO_HMAC_SECRET = envSecret;
+    process.env.NODE_ENV = envNodeEnv;
+  });
+
+  it("em produção SEM segredo → lança CopilotoSegredoAusenteError", () => {
+    delete process.env.COPILOTO_HMAC_SECRET;
+    process.env.NODE_ENV = "production";
+    expect(() => assinarConfirmacao("hub_lead_resumo", {}, Date.now())).toThrow(
+      CopilotoSegredoAusenteError
+    );
+  });
+
+  it("em produção COM segredo → funciona normalmente", () => {
+    process.env.COPILOTO_HMAC_SECRET = "segredo-de-prod-forte";
+    process.env.NODE_ENV = "production";
+    const ts = Date.now();
+    const id = assinarConfirmacao("hub_lead_resumo", {}, ts);
+    expect(typeof id).toBe("string");
+    expect(validarConfirmacao(id, "hub_lead_resumo", {}, ts).ok).toBe(true);
+  });
+
+  it("em dev SEM segredo → usa fallback (não lança)", () => {
+    delete process.env.COPILOTO_HMAC_SECRET;
+    process.env.NODE_ENV = "development";
+    expect(() => assinarConfirmacao("hub_lead_resumo", {}, Date.now())).not.toThrow();
   });
 });
 

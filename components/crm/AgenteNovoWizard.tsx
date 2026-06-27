@@ -2783,7 +2783,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 ) : null}
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
-                  TIPO DE EXECU—!ÒO DO CICLO PADRÒO
+                  TIPO DE EXECUÇÃO DO CICLO PADRÃO
                 </p>
                 <p
                   style={{
@@ -2887,7 +2887,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                   Icon: Zap,
                                   titulo: "Automático contínuo",
                                   texto:
-                                    "Motor interno em ciclo contínuo. —atil para supervisão e rotinas sem horário fixo.",
+                                    "Motor interno em ciclo contínuo. Útil para supervisão e rotinas sem horário fixo.",
                                 },
                                 {
                                   id: "agenda" as const,
@@ -2978,7 +2978,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           <option value={15}>15 minutos</option>
                           <option value={60}>1 hora</option>
                           <option value={360}>6 horas</option>
-                          <option value={1440}>—0— 1 vez por dia</option>
+                          <option value={1440}>1 vez por dia</option>
                         </select>
                       </div>
                     ) : null}
@@ -3261,7 +3261,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   }}
                 >
                   <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 6px" }}>
-                    PLAYBOOK P—aBLICO
+                    PLAYBOOK PÚBLICO
                   </p>
                   <a
                     href={playbookPublicUrl}

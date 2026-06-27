@@ -3,6 +3,7 @@ import { executarFerramentaHub } from "@/lib/hub/executar-ferramenta-ia";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 import {
   COPILOTO_AGENTE_SLUG,
+  CopilotoSegredoAusenteError,
   ferramentaExecutavel,
   nivelDaFerramenta,
   validarConfirmacao,
@@ -42,8 +43,21 @@ export async function POST(request: NextRequest) {
   const confirmacaoId = typeof body.confirmacaoId === "string" ? body.confirmacaoId : "";
   const ts = typeof body.ts === "number" ? body.ts : NaN;
 
-  // 1) Integridade: a proposta tem de ter sido assinada por nós e estar no prazo.
-  const v = validarConfirmacao(confirmacaoId, ferramenta, params, ts);
+  const leadId =
+    typeof body.contexto?.leadId === "string" ? body.contexto.leadId.trim() : "";
+
+  // 1) Integridade: a proposta tem de ter sido assinada por nós, estar no prazo E
+  //    ter sido feita para ESTE lead. O leadId entra na assinatura — se o dono falou
+  //    num lead, navegou para outro e confirmou, o leadId do body não casa → recusa.
+  let v: ReturnType<typeof validarConfirmacao>;
+  try {
+    v = validarConfirmacao(confirmacaoId, ferramenta, params, ts, leadId);
+  } catch (e) {
+    if (e instanceof CopilotoSegredoAusenteError) {
+      return NextResponse.json({ error: e.message }, { status: 503 });
+    }
+    throw e;
+  }
   if (!v.ok) {
     const msg =
       v.erro === "confirmacao_expirada"
@@ -62,9 +76,6 @@ export async function POST(request: NextRequest) {
   }
 
   const ehEscrita = nivelDaFerramenta(ferramenta) === "escrita";
-
-  const leadId =
-    typeof body.contexto?.leadId === "string" ? body.contexto.leadId.trim() : "";
 
   // Escrita sobre lead exige um lead aberto (as tools de escrita operam sobre ctx.leadId).
   if (ehEscrita && !leadId) {

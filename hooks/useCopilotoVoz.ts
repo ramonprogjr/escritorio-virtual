@@ -189,6 +189,23 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     [executarProposta]
   );
 
+  // Integridade de contexto: se a rota/lead mudar enquanto há uma ESCRITA pendente,
+  // a proposta foi assinada para o lead ANTERIOR — descarta e avisa, em vez de arriscar
+  // executar a alteração no lead errado (o servidor também recusaria, pois o leadId
+  // está dentro da assinatura HMAC; aqui é a guarda de UX no cliente).
+  const contextoKey = `${opts.contexto.rota}|${opts.contexto.leadId ?? ""}`;
+  const contextoKeyRef = useRef(contextoKey);
+  useEffect(() => {
+    if (contextoKeyRef.current === contextoKey) return;
+    contextoKeyRef.current = contextoKey;
+    setAcaoPendente((p) => {
+      if (!p) return p;
+      setMensagem("O contexto mudou — repita o comando.");
+      setEstado("done");
+      return null;
+    });
+  }, [contextoKey]);
+
   // Confirma a escrita pendente — único caminho que executa uma alteração.
   const confirmarAcao = useCallback(async () => {
     const p = acaoPendente;

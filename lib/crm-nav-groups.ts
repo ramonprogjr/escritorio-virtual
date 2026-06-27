@@ -162,7 +162,6 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
         href: "/crm/agentes-reais",
         label: "Copiloto",
         icon: Sparkles,
-        navBadge: "Em breve",
         minRole: "gestor",
       },
     ],
