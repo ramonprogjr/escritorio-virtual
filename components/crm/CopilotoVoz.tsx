@@ -5,6 +5,13 @@ import { usePathname } from "next/navigation";
 import { Mic, Square, X, Loader2, Sparkles, Check, ChevronDown, AlertTriangle } from "lucide-react";
 import { useCopilotoVoz } from "@/hooks/useCopilotoVoz";
 
+const HINT_KEY = "copiloto-hint-visto";
+const HINT_EXEMPLOS = [
+  "resumo deste lead",
+  "métricas do escritório",
+  "adicionar nota ao lead",
+];
+
 /** Rótulos amigáveis para os params mostrados nos chips de confirmação. */
 const ROTULO_PARAM: Record<string, string> = {
   texto: "Nota",
@@ -39,6 +46,181 @@ function leadIdDaRota(pathname: string): string | undefined {
   return m ? decodeURIComponent(m[1]) : undefined;
 }
 
+// Campos que merecem label legível no resultado humanizado
+const ROTULO_RESULTADO: Record<string, string> = {
+  id: "ID",
+  nome: "Nome",
+  email: "E-mail",
+  telefone: "Telefone",
+  estagio: "Estágio",
+  score: "Score",
+  valor_estimado: "Valor estimado",
+  interesse_principal: "Interesse",
+  proxima_acao: "Próxima ação",
+  data_proxima_acao: "Data",
+  origem: "Origem",
+  status: "Status",
+  texto: "Nota",
+  created_at: "Criado em",
+  updated_at: "Atualizado em",
+  tags: "Tags",
+};
+
+// Campos a ocultar na visão resumida (técnicos / redundantes)
+const CAMPOS_OCULTOS = new Set(["tenant_id", "owner_id", "lead_id", "empresa_id", "pessoa_id"]);
+
+// Formata um valor individual de forma legível
+function formatarValor(chave: string, valor: unknown): string {
+  if (valor === null || valor === undefined || valor === "") return "—";
+  if (Array.isArray(valor)) return valor.join(", ") || "—";
+  if (typeof valor === "boolean") return valor ? "Sim" : "Não";
+  if (typeof valor === "string") {
+    // Tenta formatar datas ISO
+    if (/^\d{4}-\d{2}-\d{2}(T|$)/.test(valor)) {
+      try {
+        return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(valor));
+      } catch { /* ignore */ }
+    }
+    return valor;
+  }
+  if (typeof valor === "number") {
+    if (chave.includes("valor") || chave.includes("preco") || chave.includes("price")) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
+    }
+    return String(valor);
+  }
+  if (typeof valor === "object") return JSON.stringify(valor);
+  return String(valor);
+}
+
+// Detecta se um resultado é "escrita bem-sucedida" (tem action_taken/operacao/sucesso)
+function detectarEscrita(resultado: unknown): { foi: boolean; descricao: string } {
+  if (!resultado || typeof resultado !== "object" || Array.isArray(resultado)) {
+    return { foi: false, descricao: "" };
+  }
+  const r = resultado as Record<string, unknown>;
+  if (r.action_taken || r.operacao || r.sucesso === true || r.ok === true) {
+    const desc =
+      typeof r.mensagem === "string" ? r.mensagem :
+      typeof r.action_taken === "string" ? r.action_taken :
+      typeof r.operacao === "string" ? r.operacao : "";
+    return { foi: true, descricao: desc };
+  }
+  return { foi: false, descricao: "" };
+}
+
+interface ResultadoHumanizadoProps {
+  resultado: unknown;
+  verJson: boolean;
+  onToggleJson: () => void;
+  escrita: boolean;
+  mensagem: string;
+}
+
+function ResultadoHumanizado({ resultado, verJson, onToggleJson, mensagem }: ResultadoHumanizadoProps) {
+  const escritaDetectada = detectarEscrita(resultado);
+
+  // Resultado de ESCRITA bem-sucedida: mostra "Feito" grande
+  if (escritaDetectada.foi) {
+    return (
+      <div style={{
+        background: "#0a1f14", border: "1px solid #2f9e4a", borderRadius: 12,
+        padding: "16px 14px", display: "flex", flexDirection: "column", gap: 6, alignItems: "center",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%", background: "#1a4a28",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <Check size={18} color="#3fb950" />
+          </div>
+          <strong style={{ color: "#3fb950", fontSize: 15 }}>Feito</strong>
+        </div>
+        {(escritaDetectada.descricao || mensagem) && (
+          <p style={{ margin: 0, color: "#9fd3bf", fontSize: 12.5, textAlign: "center", lineHeight: 1.4 }}>
+            {escritaDetectada.descricao || mensagem}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Resultado de LEITURA: tenta renderizar campos legíveis
+  if (resultado && typeof resultado === "object" && !Array.isArray(resultado)) {
+    const obj = resultado as Record<string, unknown>;
+    const entradas = Object.entries(obj).filter(([k]) => !CAMPOS_OCULTOS.has(k));
+    const visiveis = entradas.filter(([k]) => ROTULO_RESULTADO[k] !== undefined);
+    const extras = entradas.filter(([k]) => ROTULO_RESULTADO[k] === undefined);
+    const linhas = [...visiveis, ...extras].slice(0, 12); // no máximo 12 linhas
+
+    return (
+      <div style={{
+        background: "#0a140f", border: "1px solid #1d3a2c", borderRadius: 12,
+        overflow: "hidden",
+      }}>
+        {linhas.map(([k, v], i) => (
+          <div
+            key={k}
+            style={{
+              display: "flex", gap: 8, alignItems: "flex-start",
+              padding: "7px 12px",
+              borderBottom: i < linhas.length - 1 ? "1px solid #122218" : "none",
+              background: i % 2 === 0 ? "transparent" : "#0c1a10",
+            }}
+          >
+            <span style={{ color: "#c9a24a", fontSize: 11.5, fontWeight: 700, flexShrink: 0, minWidth: 100 }}>
+              {ROTULO_RESULTADO[k] ?? k}
+            </span>
+            <span style={{ color: "#cdd9d2", fontSize: 12, lineHeight: 1.4, wordBreak: "break-word" }}>
+              {formatarValor(k, v)}
+            </span>
+          </div>
+        ))}
+        {/* Ver detalhes colapsável */}
+        <div style={{ padding: "6px 12px", borderTop: "1px solid #1d3a2c" }}>
+          <button
+            type="button"
+            onClick={onToggleJson}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              background: "none", border: "none", cursor: "pointer",
+              color: "#6e9e8a", fontSize: 11, padding: 0,
+            }}
+            aria-expanded={verJson}
+          >
+            <ChevronDown size={12} style={{ transform: verJson ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+            {verJson ? "Ocultar JSON" : "Ver JSON completo"}
+          </button>
+          {verJson && (
+            <pre style={{
+              margin: "8px 0 2px", maxHeight: 160, overflow: "auto",
+              background: "#050d07", border: "1px solid #1d3a2c", borderRadius: 8,
+              padding: 10, color: "#9fd3bf", fontSize: 11, lineHeight: 1.5, whiteSpace: "pre-wrap",
+            }}>
+              {JSON.stringify(resultado, null, 2)}
+            </pre>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback: string simples ou array — mostra formatado minimamente
+  return (
+    <div style={{
+      background: "#0a140f", border: "1px solid #1d3a2c", borderRadius: 10,
+      padding: 12,
+    }}>
+      <pre style={{
+        margin: 0, maxHeight: 180, overflow: "auto",
+        color: "#9fd3bf", fontSize: 11.5, lineHeight: 1.5, whiteSpace: "pre-wrap",
+      }}>
+        {typeof resultado === "string" ? resultado : JSON.stringify(resultado, null, 2)}
+      </pre>
+    </div>
+  );
+}
+
 /** Copiloto de Voz Global — FAB verde arrastável + painel de escuta/transcrição/resposta. */
 export function CopilotoVoz() {
   const pathname = usePathname() || "/crm";
@@ -57,6 +239,11 @@ export function CopilotoVoz() {
   } = useCopilotoVoz({ contexto: { rota: pathname, leadId: leadIdDaRota(pathname) } });
 
   const [verJson, setVerJson] = useState(false);
+  const [verResultadoJson, setVerResultadoJson] = useState(false);
+
+  // Hint de descoberta do FAB
+  const [mostrarHint, setMostrarHint] = useState(false);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragInfo = useRef<{ startX: number; startY: number; ox: number; oy: number; moved: boolean } | null>(null);
@@ -84,6 +271,20 @@ export function CopilotoVoz() {
     });
   }, []);
 
+  // Hint: mostra balão após 4s em idle se nunca foi visto antes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (estado !== "idle") {
+      setMostrarHint(false);
+      if (hintTimerRef.current) { clearTimeout(hintTimerRef.current); hintTimerRef.current = null; }
+      return;
+    }
+    const jaViu = localStorage.getItem(HINT_KEY);
+    if (jaViu) return;
+    hintTimerRef.current = setTimeout(() => setMostrarHint(true), 4000);
+    return () => { if (hintTimerRef.current) clearTimeout(hintTimerRef.current); };
+  }, [estado]);
+
   function clamp(x: number, y: number) {
     if (typeof window === "undefined") return { x, y };
     return {
@@ -108,6 +309,11 @@ export function CopilotoVoz() {
     setPos(clamp(d.ox + dx, d.oy + dy));
   }, []);
 
+  const dispensarHint = useCallback(() => {
+    setMostrarHint(false);
+    try { localStorage.setItem(HINT_KEY, "1"); } catch { /* ignore */ }
+  }, []);
+
   const onPointerUp = useCallback((e: React.PointerEvent) => {
     const d = dragInfo.current;
     dragInfo.current = null;
@@ -118,6 +324,7 @@ export function CopilotoVoz() {
       /* ignore */
     }
     if (!d.moved) {
+      dispensarHint();
       aoTocarFab();
       return;
     }
@@ -133,7 +340,7 @@ export function CopilotoVoz() {
       }
       return next;
     });
-  }, [aoTocarFab]);
+  }, [aoTocarFab, dispensarHint]);
 
   if (!pos) return null;
 
@@ -153,7 +360,7 @@ export function CopilotoVoz() {
         />
       )}
 
-      {/* Painel */}
+      {/* Painel — animação de entrada via keyframe copilotoSlideIn */}
       {aberto && (
         <div
           role="dialog"
@@ -179,6 +386,7 @@ export function CopilotoVoz() {
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             boxShadow: "0 -12px 40px rgba(0,0,0,0.5)",
+            animation: "copilotoSlideIn 220ms cubic-bezier(0.33,1,0.68,1) both",
           }}
         >
           {/* Zona 1 — status */}
@@ -241,14 +449,14 @@ export function CopilotoVoz() {
               {mensagem}
             </p>
           )}
-          {resultado != null && (
-            <pre style={{
-              margin: 0, maxHeight: 180, overflow: "auto",
-              background: "#0a140f", border: "1px solid #1d3a2c", borderRadius: 10,
-              padding: 12, color: "#9fd3bf", fontSize: 11.5, lineHeight: 1.5, whiteSpace: "pre-wrap",
-            }}>
-              {typeof resultado === "string" ? resultado : JSON.stringify(resultado, null, 2)}
-            </pre>
+          {resultado != null && estado === "done" && (
+            <ResultadoHumanizado
+              resultado={resultado}
+              verJson={verResultadoJson}
+              onToggleJson={() => setVerResultadoJson((s) => !s)}
+              escrita={!!mensagem && estado === "done" && !acaoPendente}
+              mensagem={mensagem}
+            />
           )}
 
           {/* Zona 4 — confirmação de ESCRITA (dourado). Nada executa sem clicar Confirmar. */}
@@ -276,6 +484,20 @@ export function CopilotoVoz() {
                 <p style={{ margin: 0, color: "#f3e6c4", fontSize: 13.5, lineHeight: 1.5 }}>
                   {acaoPendente.descricao}
                 </p>
+              )}
+
+              {/* Aviso de confiança baixa */}
+              {typeof acaoPendente.confianca === "number" && acaoPendente.confianca < 0.7 && (
+                <div style={{
+                  display: "flex", alignItems: "flex-start", gap: 8,
+                  background: "#2a1a00", border: "1px solid #b87a1a", borderRadius: 10,
+                  padding: "8px 11px",
+                }}>
+                  <AlertTriangle size={15} color="#f0a030" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ color: "#f0c869", fontSize: 12.5, lineHeight: 1.45 }}>
+                    Não tenho certeza de que entendi — confira os dados antes de confirmar.
+                  </span>
+                </div>
               )}
 
               {/* Chips dos campos que vão mudar */}
@@ -421,6 +643,65 @@ export function CopilotoVoz() {
         </div>
       )}
 
+      {/* Hint de descoberta — balão acima do FAB */}
+      {mostrarHint && pos && (
+        <div
+          role="tooltip"
+          style={{
+            position: "fixed",
+            zIndex: 95,
+            left: Math.max(8, pos.x + FAB / 2 - 140),
+            top: pos.y - 110,
+            width: 280,
+            background: "rgba(10,20,15,0.97)",
+            border: "1px solid #2f9e8f",
+            borderRadius: 14,
+            padding: "12px 14px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            animation: "copilotoFadeIn 200ms ease-out both",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
+            <span style={{ color: "#2f9e8f", fontWeight: 700, fontSize: 11.5, letterSpacing: 0.3, textTransform: "uppercase" }}>
+              Tente dizer...
+            </span>
+            <button
+              type="button"
+              aria-label="Fechar dica"
+              onClick={dispensarHint}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#6e9e8a", padding: 0, lineHeight: 1, flexShrink: 0 }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+          {HINT_EXEMPLOS.map((ex) => (
+            <div
+              key={ex}
+              style={{
+                padding: "5px 0",
+                borderBottom: "1px solid #1d3a2c",
+                color: "#cdd9d2",
+                fontSize: 12.5,
+                lineHeight: 1.4,
+              }}
+            >
+              &ldquo;{ex}&rdquo;
+            </div>
+          ))}
+          {/* seta apontando pro FAB */}
+          <div style={{
+            position: "absolute",
+            bottom: -7,
+            left: Math.min(260, Math.max(14, pos.x + FAB / 2 - Math.max(8, pos.x + FAB / 2 - 140) - 7)),
+            width: 14, height: 14,
+            background: "rgba(10,20,15,0.97)",
+            border: "1px solid #2f9e8f",
+            borderTop: "none", borderLeft: "none",
+            transform: "rotate(45deg)",
+          }} />
+        </div>
+      )}
+
       {/* FAB */}
       <button
         type="button"
@@ -461,6 +742,8 @@ export function CopilotoVoz() {
       <style>{`
         @keyframes copilotoPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
         @keyframes copilotoFabPulse { 0%,100%{box-shadow:0 6px 20px rgba(0,0,0,.45)} 50%{box-shadow:0 6px 20px rgba(0,0,0,.45),0 0 0 7px #c9a24a14} }
+        @keyframes copilotoSlideIn { from{transform:translateX(-50%) translateY(100%);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+        @keyframes copilotoFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
     </>
   );

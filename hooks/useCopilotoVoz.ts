@@ -32,6 +32,8 @@ export type AcaoPendente = {
   descricao: string;
   confirmacaoId: string;
   ts: number;
+  /** Confiança da IA (0..1) devolvida pelo /interpretar. undefined = não disponível. */
+  confianca?: number;
 };
 
 function getSpeechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
@@ -149,12 +151,14 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
               di.params && typeof di.params === "object" && !Array.isArray(di.params)
                 ? (di.params as Record<string, unknown>)
                 : {};
+            const confianca = typeof di.confianca === "number" ? di.confianca : undefined;
             setAcaoPendente({
               ferramenta: di.ferramenta,
               params,
               descricao: descricao || "Confirmar esta alteração?",
               confirmacaoId: di.confirmacaoId,
               ts: di.ts,
+              confianca,
             });
             setMensagem("");
             setEstado("confirming");
