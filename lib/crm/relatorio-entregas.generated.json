@@ -1,7 +1,52 @@
 {
-  "geradoEm": "2026-06-27T19:52:41.548Z",
+  "geradoEm": "2026-06-27T20:06:46.995Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "7da02d29ff9432eee2f6c4f741f5251f784889d6",
+      "hashCurto": "7da02d2",
+      "mensagem": "polish(consistência): rótulos de mercado legíveis no editor + 'UAZAPI'→'WhatsApp' em texto visível",
+      "mensagemRaw": "polish(consistência): rótulos de mercado legíveis no editor + 'UAZAPI'→'WhatsApp' em texto visível",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T20:06:16.000Z",
+      "hora": "17:06",
+      "arquivos": [
+        "app/crm/agentes/[slug]/page.tsx",
+        "lib/crm-header-defaults.ts",
+        "lib/hub/agente-ferramentas-registry.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1,
+        "lib/hub": 1
+      }
+    },
+    {
+      "hash": "1391c726ccb6d9921d602466cc52d9f420176d76",
+      "hashCurto": "1391c72",
+      "mensagem": "declara COPILOTO_HMAC_SECRET + WHATSAPP_PROVIDER no render.yaml",
+      "mensagemRaw": "chore(deploy): declara COPILOTO_HMAC_SECRET + WHATSAPP_PROVIDER no render.yaml",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:58:54.000Z",
+      "hora": "16:58",
+      "arquivos": [
+        "render.yaml"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "7f9110251e891a0bc3bca559531a644a406075bc",
+      "hashCurto": "7f91102",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:53:26.000Z",
+      "hora": "16:53",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "5c2e137c7c10041334989cdb48dca799817f96a1",
       "hashCurto": "5c2e137",
