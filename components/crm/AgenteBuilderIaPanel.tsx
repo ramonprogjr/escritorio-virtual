@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Sparkles, Loader2, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Sparkles, Loader2, ChevronDown, ChevronUp, FileText, Mic, Square } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 /**
@@ -59,11 +59,20 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
   const [erro, setErro] = useState("");
   const [avisos, setAvisos] = useState<string[]>([]);
   const [sucesso, setSucesso] = useState(false);
+  const [gravando, setGravando] = useState(false);
+  const [segGravacao, setSegGravacao] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const audioFileRef = useRef<HTMLInputElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const podeGerar = descricao.trim().length >= 12 && !gerando;
 
-  async function executarGeracao(extra?: { documento?: { base64: string; mimeType: string; nomeArquivo: string } }) {
+  async function executarGeracao(extra?: {
+    documento?: { base64: string; mimeType: string; nomeArquivo: string };
+    audio?: { base64: string; mimeType: string; nomeArquivo: string };
+  }) {
     setGerando(true);
     setErro("");
     setAvisos([]);
@@ -107,6 +116,62 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
       });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao ler o documento.");
+    }
+  }
+
+  async function enviarAudio(file: Blob, nome: string) {
+    if (gerando) return;
+    try {
+      const dataUrl = await lerArquivoBase64(file as File);
+      await executarGeracao({
+        audio: { base64: dataUrl, mimeType: file.type || "", nomeArquivo: nome },
+      });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao ler o áudio.");
+    }
+  }
+
+  function pararTimer() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  async function alternarGravacao() {
+    if (gravando) {
+      recorderRef.current?.stop();
+      return;
+    }
+    if (gerando) return;
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setErro("Seu navegador não suporta gravação de áudio. Envie um arquivo de áudio.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = () => {
+        pararTimer();
+        setGravando(false);
+        stream.getTracks().forEach((t) => t.stop());
+        const tipo = rec.mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type: tipo });
+        const ext = tipo.includes("ogg") ? "ogg" : tipo.includes("mp4") ? "mp4" : "webm";
+        if (blob.size > 0) void enviarAudio(blob, `gravacao-instrucao.${ext}`);
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setErro("");
+      setGravando(true);
+      setSegGravacao(0);
+      timerRef.current = setInterval(() => setSegGravacao((s) => s + 1), 1000);
+    } catch {
+      setErro("Não consegui acessar o microfone. Verifique a permissão do navegador.");
     }
   }
 
@@ -186,7 +251,7 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              disabled={gerando}
+              disabled={gerando || gravando}
               title="Gerar a partir de um PDF, DOCX ou TXT do seu manual de atendimento"
               style={{
                 display: "inline-flex",
@@ -199,10 +264,64 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
                 border: "1px dashed #c9a24a",
                 background: "#0a140f",
                 color: "#e3b341",
-                cursor: gerando ? "default" : "pointer",
+                cursor: gerando || gravando ? "default" : "pointer",
               }}
             >
               <FileText size={12} /> Enviar PDF/DOCX
+            </button>
+
+            <input
+              ref={audioFileRef}
+              type="file"
+              accept="audio/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void enviarAudio(f, f.name);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => void alternarGravacao()}
+              disabled={gerando}
+              title="Gravar suas instruções por voz — a IA transcreve e monta o playbook"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "5px 10px",
+                borderRadius: 999,
+                border: gravando ? "1px solid #f85149" : "1px dashed #c9a24a",
+                background: gravando ? "#f8514918" : "#0a140f",
+                color: gravando ? "#f85149" : "#e3b341",
+                cursor: gerando ? "default" : "pointer",
+              }}
+            >
+              {gravando ? <Square size={11} /> : <Mic size={12} />}
+              {gravando
+                ? `Parar ${String(Math.floor(segGravacao / 60))}:${String(segGravacao % 60).padStart(2, "0")}`
+                : "Gravar áudio"}
+            </button>
+            <button
+              type="button"
+              onClick={() => audioFileRef.current?.click()}
+              disabled={gerando || gravando}
+              title="Enviar um arquivo de áudio com instruções"
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                padding: "5px 10px",
+                borderRadius: 999,
+                border: "1px solid #2f6f4f",
+                background: "#0a140f",
+                color: "#9fd3bf",
+                cursor: gerando || gravando ? "default" : "pointer",
+              }}
+            >
+              Enviar áudio
             </button>
           </div>
 

@@ -13,24 +13,16 @@ type MistralTranscriptionJson = {
   transcription?: string;
 };
 
-/** Transcreve áudio a partir de URL pública (ex.: link UAZAPI após download). */
-export async function mistralTranscreverAudioUrl(
-  fileUrl: string
+/** Envia um Blob de áudio para a API de transcrição da Mistral (voxtral). */
+async function transcreverBlobMistral(
+  blob: Blob,
+  fileName: string
 ): Promise<{ ok: true; texto: string } | { ok: false; erro: string }> {
   const key = process.env.MISTRAL_API_KEY?.trim();
   if (!key) return { ok: false, erro: "mistral_api_key_ausente" };
 
-  let blob: Blob;
-  try {
-    const res = await fetch(fileUrl, { signal: AbortSignal.timeout(45_000) });
-    if (!res.ok) return { ok: false, erro: `fetch_audio_http_${res.status}` };
-    blob = await res.blob();
-  } catch (e) {
-    return { ok: false, erro: e instanceof Error ? e.message : "fetch_audio_falhou" };
-  }
-
   const form = new FormData();
-  form.append("file", blob, "whatsapp-audio.mp3");
+  form.append("file", blob, fileName);
   form.append("model", modeloTranscricaoMistral());
   form.append("language", "pt");
 
@@ -70,4 +62,38 @@ export async function mistralTranscreverAudioUrl(
   } catch (e) {
     return { ok: false, erro: e instanceof Error ? e.message : "mistral_transcribe_falhou" };
   }
+}
+
+/** Transcreve áudio a partir de URL pública (ex.: link UAZAPI após download). */
+export async function mistralTranscreverAudioUrl(
+  fileUrl: string
+): Promise<{ ok: true; texto: string } | { ok: false; erro: string }> {
+  const key = process.env.MISTRAL_API_KEY?.trim();
+  if (!key) return { ok: false, erro: "mistral_api_key_ausente" };
+
+  let blob: Blob;
+  try {
+    const res = await fetch(fileUrl, { signal: AbortSignal.timeout(45_000) });
+    if (!res.ok) return { ok: false, erro: `fetch_audio_http_${res.status}` };
+    blob = await res.blob();
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : "fetch_audio_falhou" };
+  }
+
+  return transcreverBlobMistral(blob, "whatsapp-audio.mp3");
+}
+
+/**
+ * Transcreve áudio a partir dos BYTES (sem precisar de URL pública).
+ * Usado pelo Agent Builder: o dono envia/grava o áudio no browser e a IA transcreve
+ * direto — sem subir ao Storage, sem URL pública, sem SSRF.
+ */
+export async function mistralTranscreverAudioBuffer(
+  buffer: Buffer,
+  fileName = "audio-instrucao.webm",
+  mimeType?: string
+): Promise<{ ok: true; texto: string } | { ok: false; erro: string }> {
+  if (!buffer || buffer.byteLength === 0) return { ok: false, erro: "audio_vazio" };
+  const blob = new Blob([new Uint8Array(buffer)], mimeType ? { type: mimeType } : undefined);
+  return transcreverBlobMistral(blob, fileName);
 }
