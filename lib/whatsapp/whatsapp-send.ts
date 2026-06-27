@@ -1,4 +1,4 @@
-import { uazapiSendText } from "@/lib/whatsapp/uazapi-send";
+import { getWhatsappProvider } from "@/lib/whatsapp/whatsapp-provider";
 
 export type WhatsappSendTextResult =
   | { ok: true; status: number; body?: unknown; provider: "uazapi" }
@@ -32,7 +32,7 @@ export async function whatsappSendText(
           "WhatsApp não configurado: defina UAZAPI_BASE_URL e token da instância (agente ligado à UAZAPI ou UAZAPI_INSTANCE_TOKEN)",
       };
     }
-    const r = await uazapiSendText(numero, text, opts?.instanceToken ?? undefined);
+    const r = await getWhatsappProvider().sendText(numero, text, opts?.instanceToken ?? undefined);
     if (r.ok) return { ok: true, status: r.status, body: r.body, provider: "uazapi" };
     return { ok: false, status: r.status, body: r.body, error: r.error, provider: "uazapi" };
   }
