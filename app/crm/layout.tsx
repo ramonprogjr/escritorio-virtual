@@ -28,6 +28,10 @@ import { CRM_CHROME_SOLID } from "@/lib/crm-shell-theme";
 
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
+import dynamic from "next/dynamic";
+
+// Copiloto de voz: usa SpeechRecognition/window — só no cliente (ssr:false).
+const CopilotoVoz = dynamic(() => import("@/components/crm/CopilotoVoz"), { ssr: false });
 
 const SIDEBAR_STORAGE_KEY = "crm-sidebar-expanded";
 
@@ -215,6 +219,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             >
               {children}
             </div>
+            <CopilotoVoz />
           </CrmShellProvider>
         </CrmHeaderProvider>
         </CrmTenantProvider>
@@ -904,6 +909,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </div>
         <CrmCommandPalette groups={navGroups} />
         <CrmQuickAdd role={userRole} />
+        <CopilotoVoz />
       </CrmShellProvider>
     </CrmHeaderProvider>
     </CrmTenantProvider>
