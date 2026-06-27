@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-27T17:49:48.572Z",
+  "geradoEm": "2026-06-27T17:54:51.686Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "e13322c7db57ba86c047da81df27a05f8cb78ec6",
+      "hashCurto": "e13322c",
+      "mensagem": "variante 'ai' do editor em dourado da marca (era roxo)",
+      "mensagemRaw": "style(agentes): variante 'ai' do editor em dourado da marca (era roxo)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:54:25.000Z",
+      "hora": "14:54",
+      "arquivos": [
+        "app/crm/agentes/[slug]/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "4d997c721a0338c57f0d5361ce2b56bdbd50e276",
+      "hashCurto": "4d997c7",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:52:28.000Z",
+      "hora": "14:52",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "9ef786418b31068f76ef1415e9e44dc8ae9278e3",
       "hashCurto": "9ef7864",
