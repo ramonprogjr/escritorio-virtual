@@ -1,7 +1,35 @@
 {
-  "geradoEm": "2026-06-27T19:36:47.048Z",
+  "geradoEm": "2026-06-27T19:46:09.492Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "53cf7e41d085f9a579fc2a59882f27df6d3e9498",
+      "hashCurto": "53cf7e4",
+      "mensagem": "corrige 'não fecha' + 'não escuta' (feedback do dono)",
+      "mensagemRaw": "fix(copiloto): corrige 'não fecha' + 'não escuta' (feedback do dono)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:46:02.000Z",
+      "hora": "16:46",
+      "arquivos": [
+        "components/crm/CopilotoVoz.tsx",
+        "hooks/useCopilotoVoz.ts"
+      ],
+      "areas": {
+        "components/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "3888e40b59819fe46267e591e902adcedd2a225b",
+      "hashCurto": "3888e40",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:38:53.000Z",
+      "hora": "16:38",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "9f0fa4dda84080a44e920a7eaa3d2302a2d14b2b",
       "hashCurto": "9f0fa4d",
