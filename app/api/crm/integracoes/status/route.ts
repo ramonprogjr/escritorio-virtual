@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
   const integracoes: IntegracaoStatus[] = [
     {
       id: "whatsapp",
-      nome: "WhatsApp (UAZAPI)",
+      nome: "WhatsApp",
       descricao: "Canais e inbox de atendimento",
       status:
         uazapiUrl && uazapiToken ? "conectado" : uazapiUrl || uazapiToken ? "erro" : "nao_configurado",
       href: "/crm/canais",
       detail:
         uazapiUrl && uazapiToken
-          ? "Credenciais UAZAPI presentes"
+          ? "Credenciais WhatsApp presentes"
           : "Defina UAZAPI_BASE_URL e UAZAPI_INSTANCE_TOKEN",
     },
     {

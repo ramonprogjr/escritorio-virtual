@@ -416,7 +416,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [ragPreparados, setRagPreparados] = useState(false);
   const [ragUploadTotal, setRagUploadTotal] = useState(0);
   const [ragUploadDone, setRagUploadDone] = useState(0);
-  /** Passo Canal: PATCH do modo WhatsApp antes de acções UAZAPI. */
+  /** Passo Canal: PATCH do modo WhatsApp antes de acções WhatsApp. */
   const [syncCanalLoading, setSyncCanalLoading] = useState(false);
 
   useEffect(() => {
@@ -1299,7 +1299,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </h2>
             <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
               Confirmar criação do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>? Em seguida passará por
-              Materiais (playbook) e, se aplicável, Canal (WhatsApp UAZAPI).
+              Materiais (playbook) e, se aplicável, Canal (WhatsApp).
             </p>
             {erro && <p style={{ color: "#ef4444", fontSize: 12, marginBottom: 12 }}>{erro}</p>}
             <div style={{ display: "flex", gap: 10 }}>
@@ -3072,7 +3072,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                   {modoOperacao === "canal_whatsapp"
-                    ? "Passo 1: região + criar instância UAZAPI. Passo 2 (opcional agora): QR ou código para ligar o telefone."
+                    ? "Passo 1: região + criar instância WhatsApp. Passo 2 (opcional agora): QR ou código para ligar o telefone."
                     : "Este agente está em modo copiloto interno (jobs por ciclo). Não há WhatsApp neste fluxo — pode concluir e gerir ciclos na Central ou na ficha do agente."}
                 </p>
               </div>
@@ -3110,7 +3110,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   }}
                 >
                   <strong style={{ color: "#c9a24a" }}>Ciclos vinculados:</strong> associou ciclos existentes da Central a
-                  este agente. Confirme no painel UAZAPI que o <strong style={{ color: "#e6edf3" }}>webhook</strong> aponta
+                  este agente. Confirme no painel WhatsApp que o <strong style={{ color: "#e6edf3" }}>webhook</strong> aponta
                   para <code style={{ fontSize: 11, color: "#93c5fd" }}>/api/whatsapp/webhook</code> e que a instância
                   abaixo fica <strong style={{ color: "#e6edf3" }}>connected</strong> — só assim as mensagens disparam a
                   IA neste modelo.
@@ -3152,7 +3152,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 <div style={{ background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 16 }}>
                   <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                     Para ativar WhatsApp mais tarde, abra a ficha do agente e altere o modo de operação / ciclo ou use o
-                    bloco UAZAPI na área de integrações.
+                    bloco WhatsApp na área de integrações.
                   </p>
                 </div>
               )}

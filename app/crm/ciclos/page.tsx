@@ -1462,7 +1462,7 @@ export default function CiclosPage() {
                     style={{ background: "#1b2532", border: "1px solid #1d3a2c", color: "#8b949e" }}
                   >
                     Agente <strong style={{ color: "#c9a24a" }}>{MODO_OPERACAO_LABEL.canal_whatsapp}</strong>
-                    : a conversa ao vivo é pelo webhook UAZAPI. Use ciclo{" "}
+                    : a conversa ao vivo é pelo webhook WhatsApp. Use ciclo{" "}
                     <strong style={{ color: "#e6edf3" }}>gatilho</strong> para registo no hub; agendamento cron
                     só faz sentido para <strong style={{ color: "#c9a24a" }}>follow-up</strong> (nome ou dispatch
                     atendente/followup).
@@ -1521,7 +1521,7 @@ export default function CiclosPage() {
                     </p>
                     <p className="text-xs m-0 leading-relaxed" style={{ color: "#8b949e" }}>
                       Este agente atua sob <strong style={{ color: "#e6edf3" }}>interação</strong> (mensagens
-                      UAZAPI). O tipo do ciclo fica em <strong style={{ color: "#e6edf3" }}>gatilho</strong> para
+                      WhatsApp). O tipo do ciclo fica em <strong style={{ color: "#e6edf3" }}>gatilho</strong> para
                       documentação no hub. Para cadências de follow-up programadas, use um nome com «follow» ou
                       configure <code style={{ color: "#8b949e" }}>dispatch.atendente/followup</code> e abra os
                       parâmetros de follow-up abaixo.

@@ -27,7 +27,7 @@ describe("webhookAutenticado", () => {
     expect(webhookAutenticado(req, body, secret)).toBe(true);
   });
 
-  it("accepts secret in query param (UAZAPI webhook URL sync)", () => {
+  it("accepts secret in query param (WhatsApp webhook URL sync)", () => {
     const body = "{}";
     const req = new NextRequest(`http://localhost/api/whatsapp/webhook?wh=${encodeURIComponent(secret)}`, {
       method: "POST",

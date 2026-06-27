@@ -18,7 +18,7 @@ import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { normalizarSrcImagemQrUazapi } from "@/lib/whatsapp/qr-uazapi";
 
-/** UAZAPI: QR expira em ~2 min (doc OpenAPI). */
+/** WhatsApp: QR expira em ~2 min (doc OpenAPI). */
 const UAZAPI_QR_VALID_MS = 120_000;
 
 function formatarContagemQr(segundos: number): string {
@@ -46,7 +46,7 @@ type CidadeProxyUazapi = {
 export type AgenteUazapiBlockProps = {
   agenteSlug: string;
   snapshot: AgenteUazapiSnapshot;
-  /** Atualiza só campos UAZAPI no pai (sem recarregar a página). */
+  /** Atualiza só campos WhatsApp no pai (sem recarregar a página). */
   onSnapshotPatch?: (patch: Partial<AgenteUazapiSnapshot>) => void;
   /** Fallback legado — evite na ficha do agente (provoca ecrã de carregamento). */
   onRefresh?: () => Promise<void> | void;
@@ -115,7 +115,7 @@ function AgenteUazapiSideoverShell({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <div style={{ minWidth: 0 }}>
               <p style={{ margin: 0, color: "#8ea1ba", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>
-                WHATSAPP · UAZAPI
+                WHATSAPP
               </p>
               <h2 style={{ margin: "4px 0 0", color: "#e6edf3", fontSize: 17, fontWeight: 800 }}>{title}</h2>
               {subtitle ? (
@@ -209,7 +209,7 @@ function montarErroDoCorpo(data: Record<string, unknown>, status: number): ErroC
 
   if (status === 404) {
     detalhes.push(
-      "404 costuma indicar URL base errada na UAZAPI ou rota do Hub inacessível. Confirme UAZAPI_BASE_URL (ex.: https://subdominio.uazapi.com, sem /api no fim) e reinicie o servidor Next.js."
+      "404 costuma indicar URL base errada na WhatsApp ou rota do Hub inacessível. Confirme UAZAPI_BASE_URL (ex.: https://subdominio.uazapi.com, sem /api no fim) e reinicie o servidor Next.js."
     );
   }
   return { titulo, detalhes };
@@ -384,12 +384,12 @@ export function AgenteUazapiBlock({
       parsed.sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
       setCidadesProxy(parsed);
       if (parsed.length === 0) {
-        setCidadesProxyErro("A UAZAPI não devolveu cidades para o Brasil. Tente de novo ou confira o painel.");
+        setCidadesProxyErro("A WhatsApp não devolveu cidades para o Brasil. Tente de novo ou confira o painel.");
       } else {
         setCidadesProxyErro(null);
       }
     } catch {
-      setCidadesProxyErro("Falha de rede ao carregar cidades UAZAPI.");
+      setCidadesProxyErro("Falha de rede ao carregar cidades WhatsApp.");
       setCidadesProxy([]);
     }
   }, [agenteSlug]);
@@ -481,7 +481,7 @@ export function AgenteUazapiBlock({
               detalhes: [
                 typeof data.connect_hint === "string" && data.connect_hint.trim()
                   ? data.connect_hint.trim()
-                  : "A UAZAPI não devolveu uma imagem QR válida. Desligue a sessão, guarde a região e gere outro código.",
+                  : "A WhatsApp não devolveu uma imagem QR válida. Desligue a sessão, guarde a região e gere outro código.",
               ],
             });
           }
@@ -572,7 +572,7 @@ export function AgenteUazapiBlock({
           (data.webhook_sync as { instance?: boolean }).instance === true
         ) {
           setWebhookAviso(
-            "Webhook UAZAPI sincronizado (URL com segredo, filtros wasSentByApi + isGroupYes). Envie uma mensagem de teste."
+            "Webhook WhatsApp sincronizado (URL com segredo, filtros wasSentByApi + isGroupYes). Envie uma mensagem de teste."
           );
         }
         if (!opts?.silent) {
@@ -764,7 +764,7 @@ export function AgenteUazapiBlock({
             PASSO 1 — CADASTRAR INSTÂNCIA
           </p>
           <p style={{ margin: 0, color: "#8b949e", fontSize: 11, lineHeight: 1.45 }}>
-            Crie a instância na UAZAPI com o botão abaixo. Em seguida escolha a cidade e use «Guardar região». O QR
+            Crie a instância na WhatsApp com o botão abaixo. Em seguida escolha a cidade e use «Guardar região». O QR
             para ligar o telefone fica no passo 2.
           </p>
           <button
@@ -778,7 +778,7 @@ export function AgenteUazapiBlock({
             onClick={() => postAction("create")}
           >
             {loading === "create" ? <Loader2 size={15} className="animate-spin" /> : <Smartphone size={15} />}
-            Criar instância UAZAPI
+            Criar instância WhatsApp
           </button>
           {!regiaoGuardada && temInstancia ? (
             <p style={{ margin: 0, color: "#e6c06a", fontSize: 11 }}>
@@ -861,7 +861,7 @@ export function AgenteUazapiBlock({
             onClick={() => setDialogExcluirUazapi(true)}
           >
             {loading === "delete_remote" ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
-            Eliminar instância na UAZAPI
+            Eliminar instância na WhatsApp
           </button>
         </>
       )}
@@ -936,7 +936,7 @@ export function AgenteUazapiBlock({
                   ) : temInstancia ? (
                     <span style={{ color: "#e6c06a" }}>Escolha a cidade e guarde a região antes do QR</span>
                   ) : (
-                    <span style={{ color: "#e6c06a" }}>Crie a instância UAZAPI (rodapé) — depois escolha a cidade</span>
+                    <span style={{ color: "#e6c06a" }}>Crie a instância WhatsApp (rodapé) — depois escolha a cidade</span>
                   )}
                 </p>
               </div>
@@ -973,7 +973,7 @@ export function AgenteUazapiBlock({
         subtitle={
           temInstancia
             ? "Passo 2: ligue o WhatsApp com QR ou código (instância já cadastrada)."
-            : "Passo 1: criar instância na UAZAPI (sem QR). Depois cidade/região; QR no passo 2."
+            : "Passo 1: criar instância na WhatsApp (sem QR). Depois cidade/região; QR no passo 2."
         }
         footer={botoesFooter}
       >
@@ -1160,12 +1160,12 @@ export function AgenteUazapiBlock({
             {cidadesProxyErro ? (
               <p style={{ margin: "8px 0 0", color: "#f85149", fontSize: 11 }}>
                 {!temInstancia && /invalid token/i.test(cidadesProxyErro)
-                  ? "A lista de cidades só fica disponível depois de criar a instância (botão no rodapé). O admin token da UAZAPI não serve para este catálogo."
+                  ? "A lista de cidades só fica disponível depois de criar a instância (botão no rodapé). O admin token da WhatsApp não serve para este catálogo."
                   : cidadesProxyErro}
               </p>
             ) : !temInstancia && cidadesProxy.length === 0 && !cidadesProxyErro ? (
               <p style={{ margin: "8px 0 0", color: "#8b949e", fontSize: 11 }}>
-                Cidades aparecem após «Criar instância UAZAPI» (rodapé).
+                Cidades aparecem após «Criar instância WhatsApp» (rodapé).
               </p>
             ) : null}
             {proxyState ? (
@@ -1264,7 +1264,7 @@ export function AgenteUazapiBlock({
                   style={fieldStyle}
                 />
                 <p style={{ margin: "8px 0 0", color: "#8b949e", fontSize: 11 }}>
-                  A UAZAPI gera um código de pareamento quando `phone` é enviado no `connect`.
+                  A WhatsApp gera um código de pareamento quando `phone` é enviado no `connect`.
                 </p>
                 {pairingPhone.trim() && !podeConectarPorCodigo ? (
                   <p style={{ margin: "6px 0 0", color: "#f85149", fontSize: 11 }}>
@@ -1394,7 +1394,7 @@ export function AgenteUazapiBlock({
 
           {uazapiDiag?.lastDisconnectReason ? (
             <p style={{ margin: 0, color: "#f85149", fontSize: 11, lineHeight: 1.5 }}>
-              Última desconexão UAZAPI: <strong>{uazapiDiag.lastDisconnectReason}</strong>
+              Última desconexão WhatsApp: <strong>{uazapiDiag.lastDisconnectReason}</strong>
             </p>
           ) : null}
           {uazapiDiag?.connectHint ? (
@@ -1489,7 +1489,7 @@ export function AgenteUazapiBlock({
 
       <CrmConfirmDialog
         open={dialogExcluirUazapi}
-        title="Eliminar instância na UAZAPI?"
+        title="Eliminar instância na WhatsApp?"
         danger
         confirmLabel="Eliminar definitivamente"
         cancelLabel="Cancelar"
@@ -1501,10 +1501,10 @@ export function AgenteUazapiBlock({
         }}
       >
         <p style={{ margin: 0, color: "#9cb0c9", fontSize: 13, lineHeight: 1.55 }}>
-          A instância WhatsApp será removida no painel UAZAPI e a ligação deste agente no Hub será limpa.
+          A instância WhatsApp será removida no painel WhatsApp e a ligação deste agente no Hub será limpa.
         </p>
         <p style={{ margin: "10px 0 0", color: "#b3261e", fontWeight: 600, fontSize: 12 }}>
-          Esta operação não pode ser desfeita na UAZAPI.
+          Esta operação não pode ser desfeita na WhatsApp.
         </p>
       </CrmConfirmDialog>
     </>

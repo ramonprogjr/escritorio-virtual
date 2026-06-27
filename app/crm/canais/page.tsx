@@ -169,7 +169,7 @@ export default function CanaisPage() {
         {[
           { label: "Canais ativos", value: kpis.total, color: "#c9a24a" },
           { label: "Conectados", value: kpis.conectados, color: "#3fb950" },
-          { label: "Com instância UAZAPI", value: kpis.comInstancia, color: "#93c5fd" },
+          { label: "Com instância WhatsApp", value: kpis.comInstancia, color: "#93c5fd" },
         ].map((k) => (
           <div
             key={k.label}
@@ -188,7 +188,7 @@ export default function CanaisPage() {
 
       <p style={{ margin: "0 0 16px", color: "#8b949e", fontSize: 13, lineHeight: 1.5, maxWidth: 720 }}>
         Visão operacional: só estado da conexão. <strong style={{ color: "#c9a24a" }}>Cadastrar instância</strong> (nome,
-        proxy, token UAZAPI) é na ficha do agente; <strong style={{ color: "#c9a24a" }}>QR / pareamento</strong> é um
+        proxy, token WhatsApp) é na ficha do agente; <strong style={{ color: "#c9a24a" }}>QR / pareamento</strong> é um
         passo à parte, quando for ligar o WhatsApp ao telefone.
       </p>
 

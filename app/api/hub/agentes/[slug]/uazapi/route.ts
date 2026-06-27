@@ -201,7 +201,7 @@ export async function POST(
       }
       if (row.uazapi_instance_id?.trim()) {
         return NextResponse.json(
-          { error: "Este agente já tem instância UAZAPI. Use «Eliminar na UAZAPI» para remover antes." },
+          { error: "Este agente já tem instância WhatsApp. Use «Eliminar na WhatsApp» para remover antes." },
           { status: 409 }
         );
       }
@@ -227,7 +227,7 @@ export async function POST(
 
       if (!token || !id) {
         return NextResponse.json(
-          { error: "UAZAPI não devolveu id/token da instância; verifique a resposta.", uazapi: data },
+          { error: "WhatsApp não devolveu id/token da instância; verifique a resposta.", uazapi: data },
           { status: 502 }
         );
       }
@@ -314,7 +314,7 @@ export async function POST(
     }
 
     if (!tokenInst) {
-      return NextResponse.json({ error: "Crie primeiro a instância UAZAPI para este agente." }, { status: 409 });
+      return NextResponse.json({ error: "Crie primeiro a instância WhatsApp para este agente." }, { status: 409 });
     }
 
     if (action === "connect") {
@@ -393,12 +393,12 @@ export async function POST(
         ...(qrPack.qr_invalid
           ? {
               connect_hint:
-                "A UAZAPI devolveu dados que não são uma imagem QR válida. Use «Desligar sessão», guarde a região e «Gerar QR» de novo.",
+                "A WhatsApp devolveu dados que não são uma imagem QR válida. Use «Desligar sessão», guarde a região e «Gerar QR» de novo.",
             }
           : !qrPack.qrcode
             ? {
                 connect_hint:
-                  "UAZAPI não devolveu QR. Tente «Gerar QR» de novo ou «Desligar sessão» antes. O código expira em ~2 minutos.",
+                  "WhatsApp não devolveu QR. Tente «Gerar QR» de novo ou «Desligar sessão» antes. O código expira em ~2 minutos.",
               }
             : {}),
       });

@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       id: "whatsapp",
       label: "WhatsApp / canais",
       ok: canalOk,
-      detail: canalOk ? "UAZAPI ou canal cadastrado" : "Configurar UAZAPI ou /crm/canais",
+      detail: canalOk ? "WhatsApp ou canal cadastrado" : "Configurar WhatsApp ou /crm/canais",
       href: "/crm/canais",
     },
     {

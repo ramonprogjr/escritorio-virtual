@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Lead sem telefone válido" }, { status: 400 });
   }
 
-  // Resolve token UAZAPI: token do agente responsável pelo lead ou variável global
+  // Resolve token WhatsApp: token do agente responsável pelo lead ou variável global
   const agenteSlug = typeof lead.agente_responsavel === "string" ? lead.agente_responsavel.trim() : "";
   const instanceToken = agenteSlug
     ? await tokenUazapiPorAgente(supabase, agenteSlug)

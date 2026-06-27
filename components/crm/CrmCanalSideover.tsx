@@ -261,7 +261,7 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
               }
             />
             <InfoRow label="Conexão" value={statusLabel(agente.uazapi_connection_status)} />
-            <InfoRow label="Token UAZAPI" value={agente.uazapi_has_instance_token ? "Configurado" : "Ausente"} />
+            <InfoRow label="Token WhatsApp" value={agente.uazapi_has_instance_token ? "Configurado" : "Ausente"} />
             <InfoRow label="Modo operação" value={modoLabel} />
             <InfoRow label="Agente ativo" value={agente.ativo === false ? "Não" : "Sim"} />
           </div>

@@ -13,7 +13,7 @@ function db() {
   );
 }
 
-/** Lista canais WhatsApp — só leitura do banco, sem chamadas UAZAPI. */
+/** Lista canais WhatsApp — só leitura do banco, sem chamadas WhatsApp. */
 export async function GET() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
