@@ -1,7 +1,36 @@
 {
-  "geradoEm": "2026-06-27T18:58:28.669Z",
+  "geradoEm": "2026-06-27T19:04:26.839Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "001e2632cc587aa640b11b5c2eb4dafe61390d1a",
+      "hashCurto": "001e263",
+      "mensagem": "Fase 1 — FAB de voz arrastável + painel + central (só leitura)",
+      "mensagemRaw": "feat(copiloto): Fase 1 — FAB de voz arrastável + painel + central (só leitura)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:04:19.000Z",
+      "hora": "16:04",
+      "arquivos": [
+        "app/crm/agentes-reais/page.tsx",
+        "app/crm/layout.tsx",
+        "components/crm/CopilotoVoz.tsx"
+      ],
+      "areas": {
+        "app/crm": 2,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "225b804c0376ba7993a04bbc2cf1b8957934dd74",
+      "hashCurto": "225b804",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:00:04.000Z",
+      "hora": "16:00",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "6f146a61fb27f72a671edbb2a40dbe24861a1dba",
       "hashCurto": "6f146a6",
