@@ -44,10 +44,19 @@ function formatCurrency(val: number | null): string {
 }
 
 const STATUS_COR: Record<string, { bg: string; color: string }> = {
+  captacao: { bg: "#c9a24a22", color: "#c9a24a" },
   disponivel: { bg: "#22c55e22", color: "#22c55e" },
   vendido: { bg: "#3b82f622", color: "#3b82f6" },
   alugado: { bg: "#a855f722", color: "#a855f7" },
   reservado: { bg: "#f59e0b22", color: "#f59e0b" },
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  captacao: "Captação",
+  disponivel: "Disponível",
+  vendido: "Vendido",
+  alugado: "Alugado",
+  reservado: "Reservado",
 };
 
 const TH: React.CSSProperties = {
@@ -288,9 +297,8 @@ export default function ImoveisPage() {
                             background: statusStyle.bg,
                             color: statusStyle.color,
                             border: `1px solid ${statusStyle.color}44`,
-                            textTransform: "capitalize",
                           }}>
-                            {im.status}
+                            {STATUS_LABEL[im.status] ?? im.status}
                           </span>
                         ) : "—"}
                       </td>
