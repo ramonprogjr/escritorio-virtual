@@ -49,6 +49,10 @@ Auditor multi-agente (4 dimensões + síntese) rodou sobre o motor. Veredito: l�
 - **P2:** máscara de telefone BR ligada (pessoas/[id] + sideover de contato).
 - **Barômetro atualizado:** núcleo ~98% · segurança ~93% · visão completa ~88%.
 
+### Sessão 3 (26-27/jun, noite) — HARMONIZAÇÃO VISUAL + DIAGNÓSTICO COMPLETO
+- **App harmonizado no verde+dourado** (fim do "frankenstein"): retematização da fonte única `lib/crm-shell-theme.ts` (azul→verde) + varredura de hexes/grays/tokens em 117+ telas. **Menu mobile unificado** (sanduíche→seções, sem "Pulso"). **Distribuição** → aba Comercial + regras colapsadas. Tudo LOCAL (sem deploy; dono decide quando).
+- **⭐ DIAGNÓSTICO TELA-A-TELA (33 telas, workflow 67 agentes mesa-redonda+diretor+CEO):** `docs/diagnostico-telas/` (1 doc por tela) + **plano de ação `docs/PLANO-ACAO-MACRO-DESIGN.md`** (7 fases). Aguarda aprovação do dono p/ executar. **Achados-chave (P0):** fachada/mentira-de-dado (progresso 0.42, confiança 85%, ring 0.35, KPIs sobre página paginada, Conversões=0, valor financeiro arredondado em telas de pagamento) · IA-first só no diagnóstico/ausente na ação · vazamento técnico (env vars, nomes de tabela, slugs, PT-PT) · tabela-como-tela-de-trabalho · KPIs duplicados · dois-donos-numa-tela (comercial×hub). Sequência: P0 fachada → copy/poda → blindar ações → ativar IA-first → tabela→cards → separar plataforma/tenant → conectar financeiro/obra.
+
 ---
 
 ## 🤝 HANDOFF — ESTADO PARA A PRÓXIMA SESSÃO (26/jun ~18h)
