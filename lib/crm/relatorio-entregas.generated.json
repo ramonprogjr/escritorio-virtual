@@ -1,7 +1,146 @@
 {
-  "geradoEm": "2026-06-27T14:57:43.554Z",
+  "geradoEm": "2026-06-27T16:28:41.985Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "6604df871f2974dcc5df43763fc3f9dc71748668",
+      "hashCurto": "6604df8",
+      "mensagem": "painel 'Gerar com IA' no drawer de playbook (Fase 1 UI)",
+      "mensagemRaw": "feat(agent-builder): painel 'Gerar com IA' no drawer de playbook (Fase 1 UI)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T16:25:53.000Z",
+      "hora": "13:25",
+      "arquivos": [
+        "components/crm/AgenteBuilderIaPanel.tsx",
+        "components/crm/AgentePlaybookCalibracaoDrawer.tsx"
+      ],
+      "areas": {
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "b05648937c78b68a44d3d86ce8fe1eefaae39f2d",
+      "hashCurto": "b056489",
+      "mensagem": "gerador IA de playbook (texto→fluxo+regras) + endpoint",
+      "mensagemRaw": "feat(agent-builder): gerador IA de playbook (texto→fluxo+regras) + endpoint",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T16:16:23.000Z",
+      "hora": "13:16",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/playbook/gerar-por-ia/route.ts",
+        "lib/playbook/gerar-fluxo-ia.test.ts",
+        "lib/playbook/gerar-fluxo-ia.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "outros": 2
+      }
+    },
+    {
+      "hash": "9d18e1488f7f3bfaca4c4fe3cc759b587c59db7f",
+      "hashCurto": "9d18e14",
+      "mensagem": "spec mesa-redonda + dogfooding (descreve→IA monta playbook)",
+      "mensagemRaw": "docs(agent-builder): spec mesa-redonda + dogfooding (descreve→IA monta playbook)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T16:07:12.000Z",
+      "hora": "13:07",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-agent-builder-ia.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "6e03e80d941c87976bd928c43bd424e57e9fce8c",
+      "hashCurto": "6e03e80",
+      "mensagem": "corrige norma de shell (header já vem do layout — não duplicar) + Aprovações deferida com as frentes",
+      "mensagemRaw": "docs: corrige norma de shell (header já vem do layout — não duplicar) + Aprovações deferida com as frentes",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T15:35:07.000Z",
+      "hora": "12:35",
+      "arquivos": [
+        "docs/PADRAO-SHELL-TELAS.md",
+        "docs/superpowers/specs/2026-06-27-central-aprovacoes-agentes-setor.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "c37d5cd2c76b3d4767986caa685cf945fbe151c5",
+      "hashCurto": "c37d5cd",
+      "mensagem": "norma de shell das telas + inventário de pendências de migração",
+      "mensagemRaw": "docs(design): norma de shell das telas + inventário de pendências de migração",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T15:27:50.000Z",
+      "hora": "12:27",
+      "arquivos": [
+        "docs/PADRAO-SHELL-TELAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "e2bcc006df6336704b7d4f10899683b7f130eb88",
+      "hashCurto": "e2bcc00",
+      "mensagem": "Central de Aprovações — agentes por setor + feedback que ensina (alto volume, multi-setor)",
+      "mensagemRaw": "docs(spec): Central de Aprovações — agentes por setor + feedback que ensina (alto volume, multi-setor)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T15:03:17.000Z",
+      "hora": "12:03",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-central-aprovacoes-agentes-setor.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "3b0822a6d0eb105d6c32827c9f7cbd7a96e6148c",
+      "hashCurto": "3b0822a",
+      "mensagem": "B — harmoniza cores fora da marca em todo o CRM (fim do \"frankenstein azul\")",
+      "mensagemRaw": "feat(design): B — harmoniza cores fora da marca em todo o CRM (fim do \"frankenstein azul\")",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T14:58:55.000Z",
+      "hora": "11:58",
+      "arquivos": [
+        "app/crm/agentes/[slug]/page.tsx",
+        "app/crm/agentes/page.tsx",
+        "app/crm/aprovacoes/page.tsx",
+        "app/crm/canais/page.tsx",
+        "app/crm/ciclos/page.tsx",
+        "app/crm/contatos/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/imoveis/page.tsx",
+        "app/crm/negocios/page.tsx",
+        "app/crm/page.tsx",
+        "app/crm/pessoas/[id]/page.tsx",
+        "app/crm/relatorios/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/AgentePlaybookCalibracaoDrawer.tsx",
+        "components/crm/AgenteUazapiBlock.tsx",
+        "components/crm/CrmAnalyticsDashboard.tsx",
+        "components/crm/CrmCanalSideover.tsx",
+        "components/crm/CrmCargosCatalogDrawer.tsx",
+        "components/crm/CrmFerramentasCustomDrawer.tsx",
+        "components/crm/CrmFinanceDashboard.tsx",
+        "components/crm/CrmOperacaoResumo.tsx",
+        "components/crm/FinanceiroContasList.tsx",
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/PlaybookUploadAnalisePanel.tsx",
+        "components/crm/cadastro/CadastroEmpresaSideover.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx",
+        "components/crm/playbook-flow-visual/FlowCanvas.tsx",
+        "components/crm/playbook-flow-visual/FlowCustomNodes.tsx"
+      ],
+      "areas": {
+        "app/crm": 12,
+        "components/crm": 17
+      }
+    },
     {
       "hash": "d35446139cc9c35cf4e77438ecc476ab862da328",
       "hashCurto": "d354461",
