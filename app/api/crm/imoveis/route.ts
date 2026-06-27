@@ -50,7 +50,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data ?? [], total: count ?? 0 });
+  // Contagem REAL por finalidade sobre todo o conjunto ativo (não só a página de 20).
+  let finQuery = supabase.from("hub_imoveis").select("finalidade").eq("ativo", ativo).limit(5000);
+  if (tipo) finQuery = finQuery.eq("tipo", tipo);
+  if (status) finQuery = finQuery.eq("status", status);
+  if (busca) {
+    finQuery = finQuery.or(`titulo.ilike.%${busca}%,cidade.ilike.%${busca}%,bairro.ilike.%${busca}%`);
+  }
+  const { data: finData } = await finQuery;
+  let venda = 0;
+  let locacao = 0;
+  for (const r of finData ?? []) {
+    const f = String((r as { finalidade?: unknown }).finalidade ?? "");
+    if (f === "venda") venda += 1;
+    else if (f === "locacao") locacao += 1;
+  }
+
+  return NextResponse.json({
+    data: data ?? [],
+    total: count ?? 0,
+    finalidade_counts: { venda, locacao },
+  });
 }
 
 export async function POST(request: NextRequest) {

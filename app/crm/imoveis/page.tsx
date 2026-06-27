@@ -73,6 +73,7 @@ export default function ImoveisPage() {
   const { setSlot } = useCrmHeaderSlot();
   const [imoveis, setImoveis] = useState<Imovel[]>([]);
   const [total, setTotal] = useState(0);
+  const [finCounts, setFinCounts] = useState<{ venda: number; locacao: number }>({ venda: 0, locacao: 0 });
   const [busca, setBusca] = useState("");
   const [ativo, setAtivo] = useState(true);
   const [finalidade, setFinalidade] = useState("");
@@ -93,6 +94,7 @@ export default function ImoveisPage() {
       .then((d) => {
         setImoveis(d.data ?? []);
         setTotal(d.total ?? 0);
+        setFinCounts(d.finalidade_counts ?? { venda: 0, locacao: 0 });
         setOffset(LIMIT);
       })
       .catch(() => {})
@@ -115,8 +117,8 @@ export default function ImoveisPage() {
       .finally(() => setCarregandoMais(false));
   }
 
-  const vendaCount = imoveis.filter((i) => i.finalidade === "venda").length;
-  const locacaoCount = imoveis.filter((i) => i.finalidade === "locacao").length;
+  const vendaCount = finCounts.venda;
+  const locacaoCount = finCounts.locacao;
   const temMais = imoveis.length < total;
 
   useEffect(() => {
@@ -155,6 +157,7 @@ export default function ImoveisPage() {
       .then((d) => {
         setImoveis(d.data ?? []);
         setTotal(d.total ?? 0);
+        setFinCounts(d.finalidade_counts ?? { venda: 0, locacao: 0 });
         setOffset(LIMIT);
       })
       .finally(() => setCarregando(false));
