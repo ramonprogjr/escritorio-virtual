@@ -1021,7 +1021,7 @@ function AgentesView() {
                       paddingTop: 10,
                       borderTopWidth: 1,
                       borderTopStyle: "solid",
-                      borderTopColor: "rgba(44, 56, 75, 0.85)",
+                      borderTopColor: "rgba(29, 58, 44, 0.85)",
                       display: "flex",
                       width: "100%",
                       justifyContent: "flex-end",
@@ -1038,8 +1038,8 @@ function AgentesView() {
                         overflow: "hidden",
                         borderStyle: "solid",
                         borderWidth: 1,
-                        borderColor: "rgba(44, 56, 75, 0.95)",
-                        background: "#0f1620",
+                        borderColor: "rgba(29, 58, 44, 0.95)",
+                        background: "#0f1d16",
                         flexShrink: 0,
                       }}
                     >
@@ -1060,7 +1060,7 @@ function AgentesView() {
                           justifyContent: "center",
                           padding: 0,
                           border: 0,
-                          boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                          boxShadow: "inset -1px 0 0 rgba(29, 58, 44, 0.95)",
                           cursor: "pointer",
                           background: "rgba(201, 162, 74, 0.12)",
                           color: "#c9a24a",
@@ -1099,7 +1099,7 @@ function AgentesView() {
                           justifyContent: "center",
                           padding: 0,
                           border: 0,
-                          boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                          boxShadow: "inset -1px 0 0 rgba(29, 58, 44, 0.95)",
                           cursor:
                             !!agente.arquivado_em ||
                             alternandoAtivoSlug === agente.agente_slug ||
@@ -1113,11 +1113,11 @@ function AgentesView() {
                               ? 0.45
                               : 1,
                           background: agente.arquivado_em
-                            ? "rgba(109, 40, 217, 0.12)"
+                            ? "rgba(181, 138, 99, 0.14)"
                             : ativo
                               ? "rgba(34, 197, 94, 0.1)"
                               : "rgba(248, 113, 113, 0.08)",
-                          color: agente.arquivado_em ? "#c4b5fd" : ativo ? "#4ade80" : "#f87171",
+                          color: agente.arquivado_em ? "#b58a63" : ativo ? "#4ade80" : "#f87171",
                         }}
                       >
                         {alternandoAtivoSlug === agente.agente_slug ? (
@@ -1218,7 +1218,7 @@ function AgentesView() {
               bottom: 0,
               width: "min(640px, 100vw)",
               zIndex: 60,
-              background: "#0f1620",
+              background: "#0f1d16",
               borderLeft: "1px solid #2d394b",
               boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
               display: "flex",
@@ -1311,8 +1311,8 @@ function AgentesView() {
                   )}
                   <div
                     style={{
-                      background: "#141d29",
-                      border: "1px solid #2c384b",
+                      background: "#0f1d16",
+                      border: "1px solid #1d3a2c",
                       borderRadius: 12,
                       overflow: "hidden",
                     }}
@@ -1824,7 +1824,7 @@ function AgentesView() {
                     <textarea value={editPrompt} onChange={(e) => setEditPrompt(e.target.value)} rows={7} style={{ width: "100%", background: "#121b27", border: "1px solid #314056", color: "#e6edf3", borderRadius: 8, padding: "9px 11px", fontSize: 13, resize: "vertical", lineHeight: 1.5 }} />
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#141d29", border: "1px solid #2c384b", borderRadius: 8, padding: "10px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 8, padding: "10px 12px" }}>
                     <span style={{ color: "#c3d0e3", fontSize: 12, fontWeight: 700 }}>Status operacional</span>
                     <button
                       type="button"
