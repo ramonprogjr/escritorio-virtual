@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-27T20:06:46.995Z",
+  "geradoEm": "2026-06-27T20:11:26.992Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "f3508a8b312953b09f2cfbca891bd906d3c109d4",
+      "hashCurto": "f3508a8",
+      "mensagem": "polish(texto): suaviza jargão do modelo de IA nas telas de agente",
+      "mensagemRaw": "polish(texto): suaviza jargão do modelo de IA nas telas de agente",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T20:10:58.000Z",
+      "hora": "17:10",
+      "arquivos": [
+        "lib/ia/hub-model-defaults.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4bc3f409033610cd2853bed867237dcedfef85b0",
+      "hashCurto": "4bc3f40",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T20:09:01.000Z",
+      "hora": "17:09",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "7da02d29ff9432eee2f6c4f741f5251f784889d6",
       "hashCurto": "7da02d2",
