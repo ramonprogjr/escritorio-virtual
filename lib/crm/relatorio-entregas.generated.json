@@ -1,7 +1,37 @@
 {
-  "geradoEm": "2026-06-27T17:13:36.029Z",
+  "geradoEm": "2026-06-27T17:19:07.062Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "d03a856b862d91cc44bb49d77b3d925e428a6fb0",
+      "hashCurto": "d03a856",
+      "mensagem": "Fase 4 — instrumentação em hub_eventos",
+      "mensagemRaw": "feat(agent-builder): Fase 4 — instrumentação em hub_eventos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:18:56.000Z",
+      "hora": "14:18",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/playbook/gerar-por-ia/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "482bef6e340c97882b64ed40d22d4bafefe46db8",
+      "hashCurto": "482bef6",
+      "mensagem": "marca Fases 1-3 entregues (texto/PDF/áudio) + artefatos",
+      "mensagemRaw": "docs(agent-builder): marca Fases 1-3 entregues (texto/PDF/áudio) + artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:14:54.000Z",
+      "hora": "14:14",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-agent-builder-ia.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
     {
       "hash": "c845501b145d8fe82433a61516278e6b591ae4de",
       "hashCurto": "c845501",
