@@ -35,10 +35,16 @@ import {
   ragErroPdfSemTexto,
   ragExtensaoAceita,
 } from "@/lib/hub/rag-formatos";
+import { AREAS_ATUACAO } from "@/lib/crm/areas-atuacao";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
+
+/** Rótulo legível de cada sigla de mercado (fonte única: AREAS_ATUACAO). */
+const MERCADO_LABEL: Record<string, string> = Object.fromEntries(
+  AREAS_ATUACAO.filter((a) => a.mercadoSigla).map((a) => [a.mercadoSigla as string, a.label])
+);
 
 /** Passos do assistente — após «Ferramentas» e criar agente, passos 7–8 são pós-criação. */
 const WIZARD_STEP_LABELS = [
@@ -207,7 +213,7 @@ function RagErroAjuda({ mensagem }: { mensagem: string }) {
             rel="noopener noreferrer"
             style={{ color: "#4db3c4", fontWeight: 700 }}
           >
-            o ficheiro .md de exemplo
+            o arquivo .md de exemplo
           </a>{" "}
           ou exporte o mesmo conteúdo em <strong style={{ color: "#e6edf3" }}>.docx</strong> /{" "}
           <strong style={{ color: "#e6edf3" }}>.md</strong>.
@@ -1332,7 +1338,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 lineHeight: 1,
               }}
             >
-              — —
+              ←
             </button>
           </div>
           {cargoSelecionado && nome && (
@@ -1376,7 +1382,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       fontWeight: 700,
                     }}
                   >
-                    {passado ? "—S" : num}
+                    {passado ? "✓" : num}
                   </div>
                   <span
                     style={{
@@ -1658,7 +1664,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                 <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>{c.descricao_curta}</p>
                               )}
                             </div>
-                            {ativo && <span style={{ color: "#c9a24a", fontSize: 16, flexShrink: 0 }}>—S</span>}
+                            {ativo && <span style={{ color: "#c9a24a", fontSize: 16, flexShrink: 0 }}>✓</span>}
                           </button>
                         );
                       })}
@@ -1685,7 +1691,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               {!somentePlaybook && cargoSelecionado ? (
               <div style={{ background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 16 }}>
                 <p style={{ color: "#c9a24a", fontSize: 11, fontWeight: 700, margin: "0 0 12px" }}>
-                  Fixo do cargo —x
+                  Fixo do cargo ✓
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div>
@@ -1752,8 +1758,15 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   {MERCADOS_FIXOS.map((m) => {
                     const sel = mercados.includes(m);
                     return (
-                      <button type="button" key={m} onClick={() => toggleMercado(m)} style={chip(sel)}>
-                        {m}
+                      <button
+                        type="button"
+                        key={m}
+                        onClick={() => toggleMercado(m)}
+                        title={MERCADO_LABEL[m] || m}
+                        style={{ ...chip(sel), display: "inline-flex", alignItems: "center", gap: 6 }}
+                      >
+                        {MERCADO_LABEL[m] || m}
+                        <span style={{ fontSize: 10, opacity: 0.55, fontWeight: 700, letterSpacing: 0.3 }}>{m}</span>
                       </button>
                     );
                   })}
@@ -1983,7 +1996,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       Documentos para RAG (embeddings)
                     </p>
                     <p style={{ color: "#8b949e", fontSize: 12, margin: "0 0 12px", lineHeight: 1.55 }}>
-                      Recomendado: subir até <strong style={{ color: "#adbac7" }}>{RAG_DOCS_LIMIT} ficheiros</strong>{" "}
+                      Recomendado: subir até <strong style={{ color: "#adbac7" }}>{RAG_DOCS_LIMIT} arquivos</strong>{" "}
                       sobre produto, serviços e empresa. Primeiro ficam só no navegador; o envio ao servidor exige um
                       agente criado. Pode indexar já com <strong style={{ color: "#adbac7" }}>Processar embeddings</strong>{" "}
                       (cria o agente se ainda não existir) ou deixar na fila e concluir no passo{" "}
@@ -2078,7 +2091,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     }}
                   >
                     Agente <strong style={{ color: "#e6edf3" }}>{agenteSlugCriado}</strong> criado. Use{" "}
-                    <strong style={{ color: "#e6edf3" }}>Próximo</strong> para Revisão —  Ferramentas —  Materiais —  Canal.
+                    <strong style={{ color: "#e6edf3" }}>Próximo</strong> para Revisão → Ferramentas → Materiais → Canal.
                   </p>
                 ) : null}
 
@@ -2326,7 +2339,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 {criando
                   ? "A gravar⬦"
                   : agenteSlugCriado
-                    ? "Continuar —  Materiais"
+                    ? "Continuar → Materiais"
                     : "Criar agente"}
               </button>
             </div>
@@ -2784,7 +2797,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>Carregando ciclos⬦</p>
                   ) : hubCiclosLista.length === 0 ? (
                     <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>
-                      Nenhum ciclo em hub_ciclos_ia. Crie-os em CRM —  Ciclos IA.
+                      Nenhum ciclo em hub_ciclos_ia. Crie-os em CRM → Ciclos IA.
                     </p>
                   ) : (
                     <div
@@ -2920,8 +2933,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Materiais (playbook)
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
-                  Gera um ficheiro no Storage com a configuração deste agente, para ferramentas ou equipas que precisem
-                  do playbook num URL estável. Se já passou pelo passo Canal (WhatsApp), use <strong style={{ color: "#aebccf" }}>— — Anterior</strong> a partir desse ecrã para voltar aqui antes de concluir.
+                  Gera um arquivo no Storage com a configuração deste agente, para ferramentas ou equipes que precisem
+                  do playbook num URL estável. Se já passou pelo passo Canal (WhatsApp), use <strong style={{ color: "#aebccf" }}>← Anterior</strong> a partir dessa tela para voltar aqui antes de concluir.
                 </p>
               </div>
 
@@ -3213,7 +3226,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   cursor: "pointer",
                 }}
               >
-                — — Anterior
+                ← Anterior
               </button>
             )}
             {passo < 6 && (
@@ -3240,7 +3253,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     (passo === 1 && passo1AvancarBloqueado) || (passo === 2 && !nome.trim()) ? 0.4 : 1,
                 }}
               >
-                Próximo — 
+                Próximo →
               </button>
             )}
             {passo === 7 && agenteSlugCriado ? (
@@ -3259,7 +3272,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   cursor: "pointer",
                 }}
               >
-                Continuar —  Canal
+                Continuar → Canal
               </button>
             ) : null}
             {passo === 8 ? (
