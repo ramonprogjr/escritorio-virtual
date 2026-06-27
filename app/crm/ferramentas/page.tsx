@@ -179,7 +179,7 @@ export default function FerramentasHubPage() {
   const customComChave = useMemo(() => customRows.filter((c) => c.ferramenta_key), [customRows]);
 
   return (
-    <div style={{ background: "#0a140f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a140f", minHeight: "100%" }}>
       <CrmFerramentasCustomDrawer
         open={drawerOpen}
         onClose={() => {

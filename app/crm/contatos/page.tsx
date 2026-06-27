@@ -145,7 +145,7 @@ export default function ContatosPage() {
   }, [pathname, setSlot, mostraNovo]);
 
   return (
-    <div style={{ background: "#0a140f", minHeight: "100vh", padding: "1.5rem" }}>
+    <div style={{ background: "#0a140f", minHeight: "100%", padding: "1.5rem" }}>
       {mostraNovo && (
         <div style={{ background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 14, padding: 18, marginBottom: 20 }}>
           <h2 style={{ color: "#e6edf3", fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>

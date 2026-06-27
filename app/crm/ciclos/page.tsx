@@ -826,7 +826,7 @@ export default function CiclosPage() {
 
   return (
     <>
-    <div style={{ background: "#0a140f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a140f", minHeight: "100%" }}>
       <CrmStickyTabs
         activeId={aba}
         onChange={(id) => setAba(id as typeof aba)}

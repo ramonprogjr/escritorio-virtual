@@ -806,7 +806,7 @@ function AgentesView() {
 
   return (
     <>
-      <div style={{ minHeight: "100vh", background: "#0a140f", padding: "24px" }}>
+      <div style={{ minHeight: "100%", background: "#0a140f", padding: "24px" }}>
         <div style={{ marginBottom: 18 }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "#8b949e", margin: "0 0 10px", letterSpacing: 0.5 }}>
             LISTA
