@@ -2744,7 +2744,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       : "VINCULAR CICLOS EXISTENTES (OPCIONAL)"}
                   </p>
                   {hubCiclosCarregando ? (
-                    <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>A carregar ciclos⬦</p>
+                    <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>Carregando ciclos⬦</p>
                   ) : hubCiclosLista.length === 0 ? (
                     <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>
                       Nenhum ciclo em hub_ciclos_ia. Crie-os em CRM —  Ciclos IA.

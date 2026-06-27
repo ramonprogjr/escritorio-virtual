@@ -5,7 +5,7 @@ export default function CrmLoading() {
       className="flex flex-1 flex-col gap-3 p-4"
       style={{ background: "#0a140f", minHeight: 120 }}
       aria-busy="true"
-      aria-label="A carregar"
+      aria-label="Carregando"
     >
       <div
         className="h-10 w-full max-w-md animate-pulse rounded-lg"

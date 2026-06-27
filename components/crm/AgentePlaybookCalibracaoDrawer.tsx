@@ -761,7 +761,7 @@ export function AgentePlaybookCalibracaoDrawer({
                   }}
                 >
                   <RefreshCw size={18} className="animate-spin" />
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600 }}>A carregar playbook...</p>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600 }}>Carregando playbook...</p>
                 </div>
               ) : (
                 <textarea

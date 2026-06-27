@@ -17,7 +17,7 @@ const FlowCanvas = dynamic(
     loading: () => (
       <div style={loadingStyle}>
         <Workflow size={20} style={{ opacity: 0.3 }} />
-        <span>A carregar diagrama…</span>
+        <span>Carregando diagrama…</span>
       </div>
     ),
   }

@@ -1,6 +1,6 @@
 {
-  "geradoEm": "2026-06-21T04:13:30.244Z",
-  "ambiente": "production",
+  "geradoEm": "2026-06-26T20:11:11.002Z",
+  "ambiente": "local",
   "itens": {
     "ent-lead": {
       "status": "ok",
@@ -560,7 +560,7 @@
         {
           "id": "http-pipelines",
           "ok": false,
-          "detail": "HTTP 401 http://localhost:3001/api/crm/pipelines?tipo=negocio",
+          "detail": "fetch falhou (http://localhost:3001/api/crm/pipelines?tipo=negocio): fetch failed",
           "required": false
         }
       ],
@@ -675,7 +675,7 @@
       "oQueFalta": "—"
     },
     "fn-derivados": {
-      "status": "gap",
+      "status": "ok",
       "checks": [
         {
           "id": "auto-obra",
@@ -685,12 +685,12 @@
         },
         {
           "id": "converter-obra",
-          "ok": false,
-          "detail": "ausente: app/api/crm/negocios/[id]/converter-obra/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/negocios/[id]/converter-obra/route.ts",
           "required": true
         }
       ],
-      "oQueFalta": "Automação criar obra/projeto/produto"
+      "oQueFalta": "—"
     },
     "rf-log-etapa": {
       "status": "ok",
@@ -753,7 +753,7 @@
       "oQueFalta": "Validação gestor/financeiro"
     },
     "rf-alerta-parado": {
-      "status": "parcial",
+      "status": "ok",
       "checks": [
         {
           "id": "col-prox",
@@ -763,12 +763,12 @@
         },
         {
           "id": "alertas-parados",
-          "ok": false,
-          "detail": "ausente: app/api/crm/alertas/parados/route.ts",
+          "ok": true,
+          "detail": "app/api/crm/alertas/parados/route.ts",
           "required": true
         }
       ],
-      "oQueFalta": "Alertas automáticos no dashboard"
+      "oQueFalta": "—"
     },
     "rf-ia-limites": {
       "status": "ok",
@@ -1027,8 +1027,8 @@
         },
         {
           "id": "flag-enc",
-          "ok": false,
-          "detail": "CRM_ENCAMINHAMENTO_V2 não definido ou diferente",
+          "ok": true,
+          "detail": "CRM_ENCAMINHAMENTO_V2=true",
           "required": false
         },
         {
@@ -1502,7 +1502,7 @@
         {
           "id": "http-analytics",
           "ok": false,
-          "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-leads",
+          "detail": "fetch falhou (http://localhost:3001/api/crm/analytics/funil-leads): fetch failed",
           "required": false
         }
       ],
@@ -1600,28 +1600,28 @@
     },
     "flag-pipeline": {
       "id": "flag-pipeline",
-      "ok": false,
-      "detail": "CRM_PIPELINE_V2 não definido ou diferente"
+      "ok": true,
+      "detail": "OK"
     },
     "flag-encaminhamento": {
       "id": "flag-encaminhamento",
-      "ok": false,
-      "detail": "CRM_ENCAMINHAMENTO_V2 não definido ou diferente"
+      "ok": true,
+      "detail": "OK"
     },
     "smoke-kanban": {
       "id": "smoke-kanban",
       "ok": false,
-      "detail": "HTTP 401 http://localhost:3001/api/crm/pipelines?tipo=lead"
+      "detail": "fetch falhou (http://localhost:3001/api/crm/pipelines?tipo=lead): fetch failed"
     },
     "smoke-analytics": {
       "id": "smoke-analytics",
       "ok": false,
-      "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-leads"
+      "detail": "fetch falhou (http://localhost:3001/api/crm/analytics/funil-leads): fetch failed"
     },
     "smoke-negocios": {
       "id": "smoke-negocios",
       "ok": false,
-      "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-negocios"
+      "detail": "fetch falhou (http://localhost:3001/api/crm/analytics/funil-negocios): fetch failed"
     }
   }
 }

@@ -1309,7 +1309,7 @@ function AgentesView() {
                       </div>
                       <div style={{ padding: "6px 14px 12px" }}>
                         {operacaoLoading && (
-                          <p style={{ margin: "0 0 10px", color: "#7f90a8", fontSize: 12 }}>A carregar métricas operacionais…</p>
+                          <p style={{ margin: "0 0 10px", color: "#7f90a8", fontSize: 12 }}>Carregando métricas operacionais…</p>
                         )}
                         {operacao && !operacaoLoading && (
                           <>
@@ -1695,7 +1695,7 @@ function AgentesView() {
                       </div>
                     )}
                     {logsLoading ? (
-                      <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>A carregar interações…</p>
+                      <p style={{ margin: 0, color: "#7f90a8", fontSize: 12 }}>Carregando interações…</p>
                     ) : logs.length === 0 ? (
                       <p style={{ margin: 0, color: "#7f90a8", fontSize: 12, lineHeight: 1.5 }}>
                         Quando o modelo responder no WhatsApp, no copiloto ou em tarefas internas, cada troca aparece aqui como linha do tempo — não é histórico técnico de prompts.

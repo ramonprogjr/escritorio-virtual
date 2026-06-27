@@ -1,7 +1,2755 @@
 {
-  "geradoEm": "2026-06-21T04:13:28.074Z",
+  "geradoEm": "2026-06-26T20:11:08.402Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "7b543f252b0ccdc54f88f9883e4a50ef48e30bb5",
+      "hashCurto": "7b543f2",
+      "mensagem": "relatorio da auditoria de 47 telas + ajuste no doc de design",
+      "mensagemRaw": "docs: relatorio da auditoria de 47 telas + ajuste no doc de design",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T19:23:11.000Z",
+      "hora": "16:23",
+      "arquivos": [
+        "docs/AUDITORIA-47-TELAS.md",
+        "docs/design-cadastro-pipedrive-ia.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "1716e417203150a8edaefc223cbdae4173a0847f",
+      "hashCurto": "1716e41",
+      "mensagem": "P1 — 'Perdido' com seletor de motivo + confirmacao (chip e botao)",
+      "mensagemRaw": "fix(ux): P1 — 'Perdido' com seletor de motivo + confirmacao (chip e botao)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T19:21:09.000Z",
+      "hora": "16:21",
+      "arquivos": [
+        "app/crm/leads/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "58744c34e987738c2ff6db684a7d04e4820953d7",
+      "hashCurto": "58744c3",
+      "mensagem": "P0 da auditoria — botao Ligar, loading do empresas, aba Registros morta",
+      "mensagemRaw": "fix(fachada): P0 da auditoria — botao Ligar, loading do empresas, aba Registros morta",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T18:14:14.000Z",
+      "hora": "15:14",
+      "arquivos": [
+        "app/crm/empresas/page.tsx",
+        "app/crm/leads/page.tsx",
+        "components/crm/cadastro/CadastroFichaTabs.tsx"
+      ],
+      "areas": {
+        "app/crm": 2,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "91dfc605f894e955893c5648b24e842453dadad5",
+      "hashCurto": "91dfc60",
+      "mensagem": "P0 da auditoria — blinda 8 rotas sem guard/tenant",
+      "mensagemRaw": "fix(seguranca): P0 da auditoria — blinda 8 rotas sem guard/tenant",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T18:06:16.000Z",
+      "hora": "15:06",
+      "arquivos": [
+        "app/api/crm/atendimento/mensagens/route.ts",
+        "app/api/crm/especialistas/[id]/route.ts",
+        "app/api/crm/imoveis/[id]/route.ts",
+        "app/api/crm/negocios/[id]/nota/route.ts",
+        "app/api/crm/pedidos/route.ts",
+        "app/api/crm/relatorios/export/route.ts",
+        "app/api/parceiros/[id]/modulo/route.ts"
+      ],
+      "areas": {
+        "app/api": 7
+      }
+    },
+    {
+      "hash": "5e97ba0263a17cf2dccbc09d960ffeeca39ad57b",
+      "hashCurto": "5e97ba0",
+      "mensagem": "C.1c agente auditor autonomo feito (B concluido)",
+      "mensagemRaw": "docs(macro): C.1c agente auditor autonomo feito (B concluido)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T17:18:16.000Z",
+      "hora": "14:18",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "42f6867af94c3f2ddda06081923ef513f367efe2",
+      "hashCurto": "42f6867",
+      "mensagem": "C.1c — auditor autonomo 'a IA audita e cobra sozinha'",
+      "mensagemRaw": "feat(auditor): C.1c — auditor autonomo 'a IA audita e cobra sozinha'",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T17:17:09.000Z",
+      "hora": "14:17",
+      "arquivos": [
+        "app/api/crm/distribuicao/auditor/route.ts",
+        "app/crm/distribuicao/page.tsx",
+        "lib/crm/auditor-autonomo.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "e36aaf4a0dd30d4d47aba9ea1d97d728ecdca9e3",
+      "hashCurto": "e36aaf4",
+      "mensagem": "tenant-scoping no app nas 5 rotas que liam tudo (multi-tenant real no app)",
+      "mensagemRaw": "fix(seguranca): tenant-scoping no app nas 5 rotas que liam tudo (multi-tenant real no app)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T17:03:21.000Z",
+      "hora": "14:03",
+      "arquivos": [
+        "app/api/crm/distribuicao/metricas/route.ts",
+        "app/api/crm/eventos/route.ts",
+        "app/api/crm/leads/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "app/api/crm/notificacoes/route.ts"
+      ],
+      "areas": {
+        "app/api": 5
+      }
+    },
+    {
+      "hash": "4d8ffa8a936c85c87576b04c63ca957187e49214",
+      "hashCurto": "4d8ffa8",
+      "mensagem": "fundacao real flipada e verificada (supervisionado)",
+      "mensagemRaw": "feat(multitenant): fundacao real flipada e verificada (supervisionado)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T16:44:24.000Z",
+      "hora": "13:44",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md",
+        "supabase/migrations/20260626130000_multitenant_foundation.sql"
+      ],
+      "areas": {
+        "outros": 1,
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "6cf2d3cde6785067c65e8ec0dc90fd49aa5f4125",
+      "hashCurto": "6cf2d3c",
+      "mensagem": "C.1b cobranca/aderencia feito; C.2b canais e multi-tenant marcados bloqueados-em-trava com plano de rollout supervisionado",
+      "mensagemRaw": "docs(macro): C.1b cobranca/aderencia feito; C.2b canais e multi-tenant marcados bloqueados-em-trava com plano de rollout supervisionado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T15:07:22.000Z",
+      "hora": "12:07",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "fb95d7346434dc61f951ca62842ad239c5fc3ce8",
+      "hashCurto": "fb95d73",
+      "mensagem": "C.1b — scorecards por fornecedor (aderencia IAH) + acoes Liberar/Cobrar",
+      "mensagemRaw": "feat(auditor): C.1b — scorecards por fornecedor (aderencia IAH) + acoes Liberar/Cobrar",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T14:52:26.000Z",
+      "hora": "11:52",
+      "arquivos": [
+        "app/api/crm/distribuicao/cobrar/route.ts",
+        "app/api/crm/distribuicao/metricas/route.ts",
+        "app/api/crm/notificacoes/route.ts",
+        "app/crm/distribuicao/page.tsx"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "8ccc4ccfba112fafe8f897a94524d3d78e5be8ae",
+      "hashCurto": "8ccc4cc",
+      "mensagem": "blinda rotas de vinculos pessoa-empresa (guard + tenant)",
+      "mensagemRaw": "fix(seguranca): blinda rotas de vinculos pessoa-empresa (guard + tenant)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T13:06:20.000Z",
+      "hora": "10:06",
+      "arquivos": [
+        "app/api/crm/empresas/[id]/vinculos/route.ts",
+        "app/api/crm/pessoas/[id]/vinculos/route.ts",
+        "app/api/crm/vinculos/pessoa-empresa/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "364de8bc3832c989646a79673ab4b119845466ab",
+      "hashCurto": "364de8b",
+      "mensagem": "renomeia navegacao a pedido do dono — Operacoes / Arquitetura / Engenharia",
+      "mensagemRaw": "feat(nav): renomeia navegacao a pedido do dono — Operacoes / Arquitetura / Engenharia",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T12:52:36.000Z",
+      "hora": "09:52",
+      "arquivos": [
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "311a8d8df205d4fd60a3dacb77069082b845999e",
+      "hashCurto": "311a8d8",
+      "mensagem": "C.2a sino de notificacoes feito + verificacao do auditor (C1/C2 provado clicando)",
+      "mensagemRaw": "docs(macro): C.2a sino de notificacoes feito + verificacao do auditor (C1/C2 provado clicando)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T12:39:19.000Z",
+      "hora": "09:39",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "490dbc910870d0dfc9a9d2b905fc31b4ff9017d5",
+      "hashCurto": "490dbc9",
+      "mensagem": "C.2 v1 — sino de notificacoes no header do CRM (deriva hub_eventos)",
+      "mensagemRaw": "feat(notificacoes): C.2 v1 — sino de notificacoes no header do CRM (deriva hub_eventos)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T12:37:14.000Z",
+      "hora": "09:37",
+      "arquivos": [
+        "app/api/crm/notificacoes/route.ts",
+        "components/crm/CrmUniversalHeader.tsx",
+        "components/crm/NotificacoesSino.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "09f21e161e9494dd52474a488e14eaa4b778a05c",
+      "hashCurto": "09f21e1",
+      "mensagem": "reconcilia tracker com resultado da auditoria (5 criticos+4 atencao corrigidos; C.1 dividido em metricas-feito / agente-IA-TODO)",
+      "mensagemRaw": "docs(macro): reconcilia tracker com resultado da auditoria (5 criticos+4 atencao corrigidos; C.1 dividido em metricas-feito / agente-IA-TODO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T03:31:26.000Z",
+      "hora": "00:31",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9865cbdf8e879e31d8d8caf50eb93cbcfe9b4abd",
+      "hashCurto": "9865cbd",
+      "mensagem": "corrige 5 criticos + 4 atencao da auditoria de consistencia",
+      "mensagemRaw": "fix(auditor): corrige 5 criticos + 4 atencao da auditoria de consistencia",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T03:16:54.000Z",
+      "hora": "00:16",
+      "arquivos": [
+        "app/api/crm/distribuicao/[encaminhamentoId]/aprovar/route.ts",
+        "app/api/crm/distribuicao/metricas/route.ts",
+        "app/api/crm/encaminhamentos/[id]/recusar/route.ts",
+        "app/api/crm/negocios/[id]/route.ts",
+        "app/crm/distribuicao/page.tsx",
+        "lib/crm/derivar-entrega.ts",
+        "lib/crm/notificar-parceiro-lead.ts"
+      ],
+      "areas": {
+        "app/api": 4,
+        "app/crm": 1,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "462fe69283bf09ff854da90ec473c093b77af5e5",
+      "hashCurto": "462fe69",
+      "mensagem": "status — C.1 feito, auditor de consistencia rodando",
+      "mensagemRaw": "docs(macro): status — C.1 feito, auditor de consistencia rodando",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T03:10:29.000Z",
+      "hora": "00:10",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "92011648dbd627272b11ef271cd8a2822dbb6305",
+      "hashCurto": "9201164",
+      "mensagem": "C.1 — Auditoria da rede (KPIs do hub_eventos + alertas) na tela de Distribuicao",
+      "mensagemRaw": "feat(auditor): C.1 — Auditoria da rede (KPIs do hub_eventos + alertas) na tela de Distribuicao",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T03:04:04.000Z",
+      "hora": "00:04",
+      "arquivos": [
+        "app/api/crm/distribuicao/metricas/route.ts",
+        "app/crm/distribuicao/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "ba155dbae6a98722fbe6e3171d6caf1f5eed22e1",
+      "hashCurto": "ba155db",
+      "mensagem": "PLANO-MACRO-CONCLUSAO — fonte unica de garantia de conclusao (tudo combinado + status + auditor ao fim)",
+      "mensagemRaw": "docs: PLANO-MACRO-CONCLUSAO — fonte unica de garantia de conclusao (tudo combinado + status + auditor ao fim)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T02:53:26.000Z",
+      "hora": "23:53",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "c54632a53349b79182cee6ec6f835d5b50be5f51",
+      "hashCurto": "c54632a",
+      "mensagem": "F2b cascata de rejeicao — recusar oferta ao proximo candidato",
+      "mensagemRaw": "feat(distribuicao): F2b cascata de rejeicao — recusar oferta ao proximo candidato",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T02:45:19.000Z",
+      "hora": "23:45",
+      "arquivos": [
+        "app/api/crm/encaminhamentos/[id]/recusar/route.ts",
+        "components/crm/DistribuirLeadPanel.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "160196bb3b837bd44b0df8ff90dc32c2f1de5523",
+      "hashCurto": "160196b",
+      "mensagem": "tela de Distribuicao — titulo correto, nome unificado, menos jargao",
+      "mensagemRaw": "fix(ui): tela de Distribuicao — titulo correto, nome unificado, menos jargao",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T02:30:05.000Z",
+      "hora": "23:30",
+      "arquivos": [
+        "app/crm/distribuicao/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "ae766a2b25141c3fe489fc1256e2e55e1b7e011a",
+      "hashCurto": "ae766a2",
+      "mensagem": "Ficha do negocio usa o label real da area (nao fixa obra/projeto)",
+      "mensagemRaw": "fix(esteira): Ficha do negocio usa o label real da area (nao fixa obra/projeto)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T02:23:46.000Z",
+      "hora": "23:23",
+      "arquivos": [
+        "app/crm/negocios/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "e21c59b9944293bd56285129b423f1b76e17bfae",
+      "hashCurto": "e21c59b",
+      "mensagem": "entrega por AREA (uma tabela por area) — marcenaria/marmoraria/vidracaria/servico",
+      "mensagemRaw": "feat(esteira): entrega por AREA (uma tabela por area) — marcenaria/marmoraria/vidracaria/servico",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T02:21:47.000Z",
+      "hora": "23:21",
+      "arquivos": [
+        "lib/crm/derivar-entrega.ts",
+        "lib/crm/derivar-negocio.test.ts",
+        "lib/crm/derivar-negocio.ts"
+      ],
+      "areas": {
+        "lib/crm": 3
+      }
+    },
+    {
+      "hash": "0357c9e54188a1897e271bd91091d1ef3b1deab4",
+      "hashCurto": "0357c9e",
+      "mensagem": "feed 'Atividade da rede' descreve eventos de gate (bloqueio/liberacao)",
+      "mensagemRaw": "feat(distribuicao): feed 'Atividade da rede' descreve eventos de gate (bloqueio/liberacao)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T01:33:55.000Z",
+      "hora": "22:33",
+      "arquivos": [
+        "app/crm/distribuicao/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "ebc5f2d98561fb44b4801803f642ef8694f44976",
+      "hashCurto": "ebc5f2d",
+      "mensagem": "F3 liberacao — Hub libera fornecedor bloqueado/pendente direto no painel",
+      "mensagemRaw": "feat(distribuicao): F3 liberacao — Hub libera fornecedor bloqueado/pendente direto no painel",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T01:28:59.000Z",
+      "hora": "22:28",
+      "arquivos": [
+        "app/api/crm/parceiros/[id]/liberar/route.ts",
+        "components/crm/DistribuirLeadPanel.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "e86e08be4c64e46e8c0845390e6a9516984a9584",
+      "hashCurto": "e86e08b",
+      "mensagem": "flywheel IAH (financeiro) — pendencia rebaixa o ranking dos 5",
+      "mensagemRaw": "feat(distribuicao): flywheel IAH (financeiro) — pendencia rebaixa o ranking dos 5",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T01:23:51.000Z",
+      "hora": "22:23",
+      "arquivos": [
+        "lib/crm/distribuir-lead.ts"
+      ],
+      "areas": {
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "140b257d738d6a6c08e51d1adb58728b7dd43983",
+      "hashCurto": "140b257",
+      "mensagem": "F3 gate financeiro — fornecedor bloqueado por pendencia nao recebe lead",
+      "mensagemRaw": "feat(distribuicao): F3 gate financeiro — fornecedor bloqueado por pendencia nao recebe lead",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T01:21:30.000Z",
+      "hora": "22:21",
+      "arquivos": [
+        "components/crm/DistribuirLeadPanel.tsx",
+        "lib/crm/distribuir-lead.ts",
+        "lib/crm/notificar-parceiro-lead.ts"
+      ],
+      "areas": {
+        "components/crm": 1,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "e1f08820ba4d0b0c621c0149badc1eef60f353fd",
+      "hashCurto": "e1f0882",
+      "mensagem": "painel 'Atividade da rede' — Hub le hub_eventos (gestao completa)",
+      "mensagemRaw": "feat(distribuicao): painel 'Atividade da rede' — Hub le hub_eventos (gestao completa)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T01:05:01.000Z",
+      "hora": "22:05",
+      "arquivos": [
+        "app/api/crm/eventos/route.ts",
+        "app/crm/distribuicao/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "f6eb2a76a669079019b7f708869955ff2033e610",
+      "hashCurto": "f6eb2a7",
+      "mensagem": "hub_eventos (event log append-only) — keystone F4 de KPIs/SLA/gate/IAH",
+      "mensagemRaw": "feat(eventos): hub_eventos (event log append-only) — keystone F4 de KPIs/SLA/gate/IAH",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T00:59:57.000Z",
+      "hora": "21:59",
+      "arquivos": [
+        "lib/crm/derivar-entrega.ts",
+        "lib/crm/notificar-parceiro-lead.ts",
+        "lib/crm/registrar-evento.ts"
+      ],
+      "areas": {
+        "lib/crm": 3
+      }
+    },
+    {
+      "hash": "169f6d2da0894d311c996a7ce4caa8754a83fd3c",
+      "hashCurto": "169f6d2",
+      "mensagem": "entrega (obra/projeto) gerada AUTOMATICAMENTE ao fechar o negocio (etapa->ganho)",
+      "mensagemRaw": "feat(esteira): entrega (obra/projeto) gerada AUTOMATICAMENTE ao fechar o negocio (etapa->ganho)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T00:54:42.000Z",
+      "hora": "21:54",
+      "arquivos": [
+        "app/api/crm/negocios/[id]/converter-obra/route.ts",
+        "app/api/crm/negocios/[id]/route.ts",
+        "lib/crm/derivar-entrega.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "a846770c32697a139e246472e04c5689d53a06d6",
+      "hashCurto": "a846770",
+      "mensagem": "+ Fatia 'Esteira de Entrega' (entrega automatica na area do fornecedor ao fechar) + status Fatia 1 entregue",
+      "mensagemRaw": "docs(distribuicao): + Fatia 'Esteira de Entrega' (entrega automatica na area do fornecedor ao fechar) + status Fatia 1 entregue",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T00:44:47.000Z",
+      "hora": "21:44",
+      "arquivos": [
+        "docs/DISTRIBUICAO-PLANO-CEO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "be01697be7c5fed28390ef99dde4470ccaf5b262",
+      "hashCurto": "be01697",
+      "mensagem": "FATIA 1 — painel 'Quem deve receber este lead?' (5 fornecedores + encaminhar)",
+      "mensagemRaw": "feat(distribuicao): FATIA 1 — painel 'Quem deve receber este lead?' (5 fornecedores + encaminhar)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T00:42:50.000Z",
+      "hora": "21:42",
+      "arquivos": [
+        "app/api/crm/distribuicao/[encaminhamentoId]/aprovar/route.ts",
+        "app/api/crm/distribuicao/sugerir/route.ts",
+        "app/crm/leads/[id]/page.tsx",
+        "components/crm/DistribuirLeadPanel.tsx",
+        "docs/DISTRIBUICAO-PLANO-CEO.md",
+        "lib/crm/notificar-parceiro-lead.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "11e78243b7cb820b8cbf1060ede3cc319c4508fb",
+      "hashCurto": "11e7824",
+      "mensagem": "registra #3 (botao Criar negocio) corrigido",
+      "mensagemRaw": "docs(fila-uiux): registra #3 (botao Criar negocio) corrigido",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T23:39:33.000Z",
+      "hora": "20:39",
+      "arquivos": [
+        "docs/FILA-UIUX.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "0de49c4eb0ec89b6bf943ca94e690c077b0868b2",
+      "hashCurto": "0de49c4",
+      "mensagem": "botao 'Criar negocio' (lead->negocio) quebrado — 3 bugs de schema legado",
+      "mensagemRaw": "fix(crm): botao 'Criar negocio' (lead->negocio) quebrado — 3 bugs de schema legado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T23:36:00.000Z",
+      "hora": "20:36",
+      "arquivos": [
+        "app/api/crm/leads/[id]/converter-negocio/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "lib/crm/negocio-tipo.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "71b215f39493919f50fbbaaa1fac055f76cd0dd3",
+      "hashCurto": "71b215f",
+      "mensagem": "KPIs do log no lead — Toques e 1o contato (derivados de hub_atividades)",
+      "mensagemRaw": "feat(crm): KPIs do log no lead — Toques e 1o contato (derivados de hub_atividades)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T23:13:40.000Z",
+      "hora": "20:13",
+      "arquivos": [
+        "app/crm/leads/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "86fffbd900bd98da526393c7e9b24cb23618002a",
+      "hashCurto": "86fffbd",
+      "mensagem": "aba Registros (mensagem/log) na Ficha de pessoa/empresa — fecha (a) nas 3 entidades",
+      "mensagemRaw": "feat(crm): aba Registros (mensagem/log) na Ficha de pessoa/empresa — fecha (a) nas 3 entidades",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T23:03:02.000Z",
+      "hora": "20:03",
+      "arquivos": [
+        "app/api/crm/pessoas/[id]/nota/route.ts",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "components/crm/cadastro/CadastroFichaTabs.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "495515b69d7e0793373449d0fccf4c95bf0b46e9",
+      "hashCurto": "495515b",
+      "mensagem": "area de mensagem/log no LEAD — caixa 'Registrar nota' na timeline (KPI-ready)",
+      "mensagemRaw": "feat(crm): area de mensagem/log no LEAD — caixa 'Registrar nota' na timeline (KPI-ready)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T22:49:54.000Z",
+      "hora": "19:49",
+      "arquivos": [
+        "app/api/crm/leads/[id]/nota/route.ts",
+        "app/crm/leads/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "b8f3503ab53dd0502ac916619ab538890b0becaf",
+      "hashCurto": "b8f3503",
+      "mensagem": "registra LOTE-FIM aplicado (CPF especialistas + higiene de leads de teste com backup)",
+      "mensagemRaw": "docs(sql): registra LOTE-FIM aplicado (CPF especialistas + higiene de leads de teste com backup)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T22:34:19.000Z",
+      "hora": "19:34",
+      "arquivos": [
+        "docs/sql/PENDENTES-aplicar-no-fim.sql"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "a6ecf054dcf3c35fcddcdb29c4e3228fb8902aba",
+      "hashCurto": "a6ecf05",
+      "mensagem": "CPF unico + dedup (interno + publico) + campo CPF nos forms",
+      "mensagemRaw": "feat(especialistas): CPF unico + dedup (interno + publico) + campo CPF nos forms",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T21:22:20.000Z",
+      "hora": "18:22",
+      "arquivos": [
+        "app/api/crm/especialistas/route.ts",
+        "app/api/public/especialista/route.ts",
+        "app/crm/especialistas/page.tsx",
+        "app/especialista/cadastro/page.tsx"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "b31a5fed66d29b61149cc4a7700c9ea8d6262467",
+      "hashCurto": "b31a5fe",
+      "mensagem": "LINK DE CONVITE publico (auto-cadastro sem login) + rastreio do convidador",
+      "mensagemRaw": "feat(especialistas): LINK DE CONVITE publico (auto-cadastro sem login) + rastreio do convidador",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T21:16:23.000Z",
+      "hora": "18:16",
+      "arquivos": [
+        "app/api/crm/especialistas/convite/route.ts",
+        "app/api/public/especialista/route.ts",
+        "app/crm/especialistas/page.tsx",
+        "app/especialista/cadastro/page.tsx",
+        "lib/crm/especialidades.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "dbf9f6f2e5578f3f8bc7134ef1fbf661c54ad966",
+      "hashCurto": "dbf9f6f",
+      "mensagem": "sec(crm): guard POST de config (canais-entrada, regras de distribuicao) com requireCrmGestor + tenant do ctx",
+      "mensagemRaw": "sec(crm): guard POST de config (canais-entrada, regras de distribuicao) com requireCrmGestor + tenant do ctx",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T21:07:18.000Z",
+      "hora": "18:07",
+      "arquivos": [
+        "app/api/crm/canais-entrada/route.ts",
+        "app/api/crm/distribuicao/regras/route.ts"
+      ],
+      "areas": {
+        "app/api": 2
+      }
+    },
+    {
+      "hash": "a143ce0898b0a694c7a4dc53a2fb7cb848d13826",
+      "hashCurto": "a143ce0",
+      "mensagem": "atalho 'Mao de obra' (especialistas) no cabecalho de Cadastros + lote de migracoes pendentes",
+      "mensagemRaw": "feat(cadastro): atalho 'Mao de obra' (especialistas) no cabecalho de Cadastros + lote de migracoes pendentes",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T21:03:09.000Z",
+      "hora": "18:03",
+      "arquivos": [
+        "app/crm/cadastro/page.tsx",
+        "docs/sql/PENDENTES-aplicar-no-fim.sql"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "f9266c0b908c5d94c150b7d90f61d669f3e84e5d",
+      "hashCurto": "f9266c0",
+      "mensagem": "rastreio — grava cadastrado_por (quem cadastrou) no POST",
+      "mensagemRaw": "feat(especialistas): rastreio — grava cadastrado_por (quem cadastrou) no POST",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T20:57:58.000Z",
+      "hora": "17:57",
+      "arquivos": [
+        "app/api/crm/especialistas/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "2c87c5bc7f2d63eca153565bc1f0931ef69f2dd4",
+      "hashCurto": "2c87c5b",
+      "mensagem": "marca #1 (FAB) e #2 (toggles de mercado) como corrigidos",
+      "mensagemRaw": "docs(fila-uiux): marca #1 (FAB) e #2 (toggles de mercado) como corrigidos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T20:55:11.000Z",
+      "hora": "17:55",
+      "arquivos": [
+        "docs/FILA-UIUX.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "616532d31a74dac3899c723b222cb18b67d1b632",
+      "hashCurto": "616532d",
+      "mensagem": "ux(cadastro): reusa MercadoLeadPicker (chips) na secao Comercial PF/PJ (FILA-UIUX #2)",
+      "mensagemRaw": "ux(cadastro): reusa MercadoLeadPicker (chips) na secao Comercial PF/PJ (FILA-UIUX #2)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T20:54:28.000Z",
+      "hora": "17:54",
+      "arquivos": [
+        "components/crm/cadastro/CadastroComercialSecao.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "f9f913cc90ce3dcb24ef8cdd73dc50828a9fc2b0",
+      "hashCurto": "f9f913c",
+      "mensagem": "ux(leads): mercado em CHIPS no lugar da parede de toggles (FILA-UIUX #2)",
+      "mensagemRaw": "ux(leads): mercado em CHIPS no lugar da parede de toggles (FILA-UIUX #2)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T20:50:06.000Z",
+      "hora": "17:50",
+      "arquivos": [
+        "components/crm/leads/MercadoLeadPicker.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "0162aa191644d4ddb3d2adde3cf881b38a2e9e39",
+      "hashCurto": "0162aa1",
+      "mensagem": "FAB QuickAdd some quando ha sideover/modal aberto (FILA-UIUX #1)",
+      "mensagemRaw": "fix(ux): FAB QuickAdd some quando ha sideover/modal aberto (FILA-UIUX #1)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T20:45:37.000Z",
+      "hora": "17:45",
+      "arquivos": [
+        "components/crm/CrmQuickAdd.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "3c44cef5445a53fd69d0f9ad2c01cb8a22e73753",
+      "hashCurto": "3c44cef",
+      "mensagem": "cadastro mao de obra em CHIPS (padrao Membros) + guards",
+      "mensagemRaw": "feat(especialistas): cadastro mao de obra em CHIPS (padrao Membros) + guards",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T20:03:41.000Z",
+      "hora": "17:03",
+      "arquivos": [
+        "app/api/crm/especialistas/route.ts",
+        "app/crm/especialistas/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "b4287c81e5e6a9c608967fb546575210c27d4a15",
+      "hashCurto": "b4287c8",
+      "mensagem": "cria FILA-UIUX (fila de correcoes de design+funcionalidade) + link no INDICE",
+      "mensagemRaw": "docs: cria FILA-UIUX (fila de correcoes de design+funcionalidade) + link no INDICE",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T19:54:04.000Z",
+      "hora": "16:54",
+      "arquivos": [
+        "docs/FILA-UIUX.md",
+        "docs/INDICE.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "6458859a497a2e95e389b8ca8d23025c25e4d163",
+      "hashCurto": "6458859",
+      "mensagem": "security(api): guards em Operacoes (pedidos/projetos/obras) - lote 6",
+      "mensagemRaw": "security(api): guards em Operacoes (pedidos/projetos/obras) - lote 6",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T19:05:53.000Z",
+      "hora": "16:05",
+      "arquivos": [
+        "app/api/crm/obras/[id]/route.ts",
+        "app/api/crm/pedidos/[id]/route.ts",
+        "app/api/crm/projetos/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "3028d0e46a1592b85c8bf7edc9e2711d50a3a60f",
+      "hashCurto": "3028d0e",
+      "mensagem": "security(api): guard em imoveis (GET=sessao, POST=comercial) - lote 5",
+      "mensagemRaw": "security(api): guard em imoveis (GET=sessao, POST=comercial) - lote 5",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T19:02:36.000Z",
+      "hora": "16:02",
+      "arquivos": [
+        "app/api/crm/imoveis/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "3f5acf3d074d9d9e8b48ec4fb8429aae82bd0c5f",
+      "hashCurto": "3f5acf3",
+      "mensagem": "security(rls): APLICADA rls_crm_core_close_holes (Critico 3) - 4 tabelas",
+      "mensagemRaw": "security(rls): APLICADA rls_crm_core_close_holes (Critico 3) - 4 tabelas",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:58:26.000Z",
+      "hora": "15:58",
+      "arquivos": [
+        "docs/PENDENCIAS.md",
+        "docs/sql/20260624-rls-crm-core-close-holes-AUTORIZADA-pendente-apply.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "cfad2537f498c02cf304008401d91e05ea8203d5",
+      "hashCurto": "cfad253",
+      "mensagem": "security(api): guards em conversao-obra (comercial) + config canais/regras (gestor) - lote 4",
+      "mensagemRaw": "security(api): guards em conversao-obra (comercial) + config canais/regras (gestor) - lote 4",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:47:49.000Z",
+      "hora": "15:47",
+      "arquivos": [
+        "app/api/crm/canais-entrada/[id]/route.ts",
+        "app/api/crm/distribuicao/regras/[id]/route.ts",
+        "app/api/crm/negocios/[id]/converter-obra/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "32ac661abb2537fb556be8831bcbde30bd8b0eb2",
+      "hashCurto": "32ac661",
+      "mensagem": "security(api): guard + tenant-do-ctx nas rotas de criacao/listagem (Critico 1+2 - lote 3)",
+      "mensagemRaw": "security(api): guard + tenant-do-ctx nas rotas de criacao/listagem (Critico 1+2 - lote 3)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:36:32.000Z",
+      "hora": "15:36",
+      "arquivos": [
+        "app/api/crm/leads/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "app/api/crm/pessoas/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "be746f66c800e59eea4ae8f254022dfabad99c06",
+      "hashCurto": "be746f6",
+      "mensagem": "security(api): guard comercial nas mutacoes de negocio/lead + tenant do ctx (Critico 1+2 - lote 2)",
+      "mensagemRaw": "security(api): guard comercial nas mutacoes de negocio/lead + tenant do ctx (Critico 1+2 - lote 2)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:30:46.000Z",
+      "hora": "15:30",
+      "arquivos": [
+        "app/api/crm/leads/[id]/converter-negocio/route.ts",
+        "app/api/crm/leads/[id]/route.ts",
+        "app/api/crm/negocios/[id]/route.ts",
+        "lib/crm/crm-api-auth.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "50a4d61878ff1c30e821ccfd6b590722162b88eb",
+      "hashCurto": "50a4d61",
+      "mensagem": "security(api): guard de papel nas rotas destrutivas/aprovacao (Critico 1 - lote 1)",
+      "mensagemRaw": "security(api): guard de papel nas rotas destrutivas/aprovacao (Critico 1 - lote 1)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:26:30.000Z",
+      "hora": "15:26",
+      "arquivos": [
+        "app/api/aprovacoes/[id]/route.ts",
+        "app/api/crm/cadastro/bulk-delete/route.ts",
+        "app/api/crm/empresas/[id]/route.ts",
+        "app/api/crm/pessoas/[id]/route.ts"
+      ],
+      "areas": {
+        "app/api": 4
+      }
+    },
+    {
+      "hash": "3a8fd08cf3c3568d247204fa052b2b8661ef6d62",
+      "hashCurto": "3a8fd08",
+      "mensagem": "linka ANALISE-MESTRA-ESCOPO como mapa-mestre (entrada)",
+      "mensagemRaw": "docs(indice): linka ANALISE-MESTRA-ESCOPO como mapa-mestre (entrada)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:12:55.000Z",
+      "hora": "15:12",
+      "arquivos": [
+        "docs/INDICE.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "97b83840eca3a325d124d3bb7293351f0f8c9bba",
+      "hashCurto": "97b8384",
+      "mensagem": "ANALISE-MESTRA-ESCOPO (documento vivo) consolidando tudo + mesa redonda 4 especialistas",
+      "mensagemRaw": "docs: ANALISE-MESTRA-ESCOPO (documento vivo) consolidando tudo + mesa redonda 4 especialistas",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T18:11:49.000Z",
+      "hora": "15:11",
+      "arquivos": [
+        "docs/ANALISE-MESTRA-ESCOPO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "bb500765a2f07f00a938b8a7966f32ae949ad369",
+      "hashCurto": "bb50076",
+      "mensagem": "ux(leads): card da Caixa enriquecido + limite '+N pendentes' por faixa",
+      "mensagemRaw": "ux(leads): card da Caixa enriquecido + limite '+N pendentes' por faixa",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T17:41:53.000Z",
+      "hora": "14:41",
+      "arquivos": [
+        "app/crm/leads/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "2f29e2f30de974764843933f1094d6ed5d2291ad",
+      "hashCurto": "2f29e2f",
+      "mensagem": "ux(leads): nova visao 'Caixa de Oportunidades' (superficie de trabalho acionavel)",
+      "mensagemRaw": "ux(leads): nova visao 'Caixa de Oportunidades' (superficie de trabalho acionavel)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T17:23:43.000Z",
+      "hora": "14:23",
+      "arquivos": [
+        "app/crm/leads/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "7a534c221b96fb684555ff08c6d6c3aa96aad9c8",
+      "hashCurto": "7a534c2",
+      "mensagem": "Relatorios/Analytics = BI generativo sob demanda (end-state Bloco 8)",
+      "mensagemRaw": "docs(plano): Relatorios/Analytics = BI generativo sob demanda (end-state Bloco 8)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T16:57:04.000Z",
+      "hora": "13:57",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "f787f9e2e9151ecf43575555653edef9e7403959",
+      "hashCurto": "f787f9e",
+      "mensagem": "regra de ouro #7 (telas para o JOB, nao tabelas) + Onda UX-R transversal",
+      "mensagemRaw": "docs(plano): regra de ouro #7 (telas para o JOB, nao tabelas) + Onda UX-R transversal",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T16:12:14.000Z",
+      "hora": "13:12",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "19dbe9aa63250425984b96438181ebd2c47bf02e",
+      "hashCurto": "19dbe9a",
+      "mensagem": "ux(negocios): combobox unico de participantes (busca) no lugar de 4 selects nativos",
+      "mensagemRaw": "ux(negocios): combobox unico de participantes (busca) no lugar de 4 selects nativos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T15:19:13.000Z",
+      "hora": "12:19",
+      "arquivos": [
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/ParticipantePicker.tsx"
+      ],
+      "areas": {
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "6f402807ebfd2d86f99947f1e6a0e1dcb7c9db24",
+      "hashCurto": "6f40280",
+      "mensagem": "ux(negocios): despressuriza checklist + valor em R$ + botao Proximo dourado",
+      "mensagemRaw": "ux(negocios): despressuriza checklist + valor em R$ + botao Proximo dourado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T13:48:32.000Z",
+      "hora": "10:48",
+      "arquivos": [
+        "components/crm/NegocioFormDrawer.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "4af3310b0fd4a8e7426e7eaa89f48e489be6dea4",
+      "hashCurto": "4af3310",
+      "mensagem": "polish(atendimento): rotulo amigavel de origem + registra achado do gap de dedup (Passo 4)",
+      "mensagemRaw": "polish(atendimento): rotulo amigavel de origem + registra achado do gap de dedup (Passo 4)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T12:33:33.000Z",
+      "hora": "09:33",
+      "arquivos": [
+        "app/crm/atendimento/page.tsx",
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "b95b1d7bda193c2eeca1332fb2691ee9b3e28476",
+      "hashCurto": "b95b1d7",
+      "mensagem": "cadastros e lead na regra dos 3 toques (chips + jargao removido)",
+      "mensagemRaw": "feat(crm): cadastros e lead na regra dos 3 toques (chips + jargao removido)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T12:28:17.000Z",
+      "hora": "09:28",
+      "arquivos": [
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/cadastro/CadastroComercialSecao.tsx",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "components/crm/leads/LeadRapidoSideover.tsx",
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "components/crm": 5,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "022d8efd5735baa3418dde3c7440d781338964c7",
+      "hashCurto": "022d8ef",
+      "mensagem": "PENDENCIAS — registra analise-mestra encomendada (auditoria de telas + metricas->funcoes + CEO)",
+      "mensagemRaw": "docs: PENDENCIAS — registra analise-mestra encomendada (auditoria de telas + metricas->funcoes + CEO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T00:37:04.000Z",
+      "hora": "21:37",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "56763c881f8ec536329022c8c84a8c2b9ab217e6",
+      "hashCurto": "56763c8",
+      "mensagem": "blueprint Central de Performance (metricas/eventos/SLA) + INDICE unico de docs",
+      "mensagemRaw": "docs: blueprint Central de Performance (metricas/eventos/SLA) + INDICE unico de docs",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-25T00:22:17.000Z",
+      "hora": "21:22",
+      "arquivos": [
+        "docs/CENTRAL-PERFORMANCE-METRICAS.md",
+        "docs/INDICE.md",
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 3
+      }
+    },
+    {
+      "hash": "241dc6c340b47d486e72679421bd1c6ddf0da885",
+      "hashCurto": "241dc6c",
+      "mensagem": "backlog de features de produto (BACKLOG-FEATURES.md) + link no plano",
+      "mensagemRaw": "docs: backlog de features de produto (BACKLOG-FEATURES.md) + link no plano",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T23:51:46.000Z",
+      "hora": "20:51",
+      "arquivos": [
+        "docs/BACKLOG-FEATURES.md",
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "e8a6afd56e7d5c6dc8ce7719b656d864dcab2905",
+      "hashCurto": "e8a6afd",
+      "mensagem": "+ Bloco 3.9 Fundacao Multi-Tenant (pre-req de B4/B5) — achado da mesa redonda",
+      "mensagemRaw": "docs(plano): + Bloco 3.9 Fundacao Multi-Tenant (pre-req de B4/B5) — achado da mesa redonda",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T23:34:24.000Z",
+      "hora": "20:34",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "488710e3d1e9b0ec43f860d918709a6f4e68f276",
+      "hashCurto": "488710e",
+      "mensagem": "B4 fatia segura — migracao rls_crm_core_close_holes (autorizada, apply pendente)",
+      "mensagemRaw": "docs(sql): B4 fatia segura — migracao rls_crm_core_close_holes (autorizada, apply pendente)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T23:27:01.000Z",
+      "hora": "20:27",
+      "arquivos": [
+        "docs/PENDENCIAS.md",
+        "docs/sql/20260624-rls-crm-core-close-holes-AUTORIZADA-pendente-apply.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "e5b638332482282111a2d60b8cd4609d96707bce",
+      "hashCurto": "e5b6383",
+      "mensagem": "PENDENCIAS — passo 1 (polish seguro) 100% fechado (#6, Negocios palette, Ctrl+K)",
+      "mensagemRaw": "docs: PENDENCIAS — passo 1 (polish seguro) 100% fechado (#6, Negocios palette, Ctrl+K)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:58:54.000Z",
+      "hora": "19:58",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "fefb01c25c9e902cf66945ae14bd0b8067602faf",
+      "hashCurto": "fefb01c",
+      "mensagem": "dica de Ctrl+K na sidebar (descoberta da paleta de comandos)",
+      "mensagemRaw": "feat(crm): dica de Ctrl+K na sidebar (descoberta da paleta de comandos)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:57:50.000Z",
+      "hora": "19:57",
+      "arquivos": [
+        "app/crm/layout.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "9f5288f05b138ca7079f6f01ba741d4311abfa28",
+      "hashCurto": "9f5288f",
+      "mensagem": "tokeniza tabela-lista de Negocios (--obra-*) — fecha lacuna da auditoria",
+      "mensagemRaw": "style(crm): tokeniza tabela-lista de Negocios (--obra-*) — fecha lacuna da auditoria",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:55:27.000Z",
+      "hora": "19:55",
+      "arquivos": [
+        "app/crm/negocios/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "3ce7b9e85398030297c6e399d5b124eb4b096dcb",
+      "hashCurto": "3ce7b9e",
+      "mensagem": "Onda D #6 — alert()/confirm() nativos -> CrmConfirmDialog + strip dark",
+      "mensagemRaw": "feat(crm): Onda D #6 — alert()/confirm() nativos -> CrmConfirmDialog + strip dark",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:53:51.000Z",
+      "hora": "19:53",
+      "arquivos": [
+        "app/crm/cadastro/page.tsx",
+        "app/crm/leads/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 2
+      }
+    },
+    {
+      "hash": "34db1b3e10f35eeeedc8c63b17ec64641489efde",
+      "hashCurto": "34db1b3",
+      "mensagem": "auditoria do plano — corrige drifts (178->182, polimento feito, B1 ✅) + 2 lacunas",
+      "mensagemRaw": "docs: auditoria do plano — corrige drifts (178->182, polimento feito, B1 ✅) + 2 lacunas",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:47:30.000Z",
+      "hora": "19:47",
+      "arquivos": [
+        "docs/PENDENCIAS.md",
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "296dc22ca9923ce8b3970899f5c117e2ecb8776a",
+      "hashCurto": "296dc22",
+      "mensagem": "PENDENCIAS — Ondas C e D#8 concluidas; D#6 (alert/confirm) deferido com abordagem pronta",
+      "mensagemRaw": "docs: PENDENCIAS — Ondas C e D#8 concluidas; D#6 (alert/confirm) deferido com abordagem pronta",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:41:34.000Z",
+      "hora": "19:41",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "63d7e372c3a0d43c53d5d272020d5467f341e390",
+      "hashCurto": "63d7e37",
+      "mensagem": "Onda D #8 — respostas rapidas (templates) no inbox + label IA dinamico",
+      "mensagemRaw": "feat(crm): Onda D #8 — respostas rapidas (templates) no inbox + label IA dinamico",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:39:32.000Z",
+      "hora": "19:39",
+      "arquivos": [
+        "app/crm/atendimento/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "e0a3db0b011c2f4b64b5e9eecd6057b36b70ab35",
+      "hashCurto": "e0a3db0",
+      "mensagem": "Onda C — selo de SLA textual no card de lead + dashboard por urgencia",
+      "mensagemRaw": "feat(crm): Onda C — selo de SLA textual no card de lead + dashboard por urgencia",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:36:32.000Z",
+      "hora": "19:36",
+      "arquivos": [
+        "app/crm/page.tsx",
+        "components/crm/leads/LeadKanbanCard.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "20450f7c63c86df2d453bb8c676210bedf032ac6",
+      "hashCurto": "20450f7",
+      "mensagem": "PENDENCIAS — Onda B concluida (tabela tokenizada + lucide); Ctrl+K hint sub-item",
+      "mensagemRaw": "docs: PENDENCIAS — Onda B concluida (tabela tokenizada + lucide); Ctrl+K hint sub-item",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:29:50.000Z",
+      "hora": "19:29",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "5aef594335f10a8d74341b84b91dc64dcfe72bff",
+      "hashCurto": "5aef594",
+      "mensagem": "Onda B — tabela de leads tokenizada (--obra-*) + quick-actions com Lucide",
+      "mensagemRaw": "style(crm): Onda B — tabela de leads tokenizada (--obra-*) + quick-actions com Lucide",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:29:13.000Z",
+      "hora": "19:29",
+      "arquivos": [
+        "app/crm/leads/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "4681865ca9b58fd690e80547ffa3bb6aa1518617",
+      "hashCurto": "4681865",
+      "mensagem": "PENDENCIAS — plano UI/UX em 4 ondas (auditoria + diretor); Onda A concluida",
+      "mensagemRaw": "docs: PENDENCIAS — plano UI/UX em 4 ondas (auditoria + diretor); Onda A concluida",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:25:39.000Z",
+      "hora": "19:25",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "77195dfd8fedf96997b4a62aa04885cd5d68b448",
+      "hashCurto": "77195df",
+      "mensagem": "PT-BR — \"Desative/Registros/ativar\" no config de pipeline (Onda A)",
+      "mensagemRaw": "chore(crm): PT-BR — \"Desative/Registros/ativar\" no config de pipeline (Onda A)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:24:31.000Z",
+      "hora": "19:24",
+      "arquivos": [
+        "components/crm/leads/PipelineConfigSideover.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "8e7970e8b52f553d521176f32d078196dfbf69c2",
+      "hashCurto": "8e7970e",
+      "mensagem": "Onda A — cabecalho contextual no sideover + PT-BR/ocultar slug no config de pipeline",
+      "mensagemRaw": "fix(crm): Onda A — cabecalho contextual no sideover + PT-BR/ocultar slug no config de pipeline",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T22:21:39.000Z",
+      "hora": "19:21",
+      "arquivos": [
+        "components/crm/cadastro/CadastroPremiumSideover.tsx",
+        "components/crm/leads/PipelineConfigSideover.tsx"
+      ],
+      "areas": {
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "3d0011a6ef3d7c79db3e8617d78a5a7e79ff6508",
+      "hashCurto": "3d0011a",
+      "mensagem": "PENDENCIAS — Bloco 3 (fatia segura) completo e verificado pos-RLS",
+      "mensagemRaw": "docs: PENDENCIAS — Bloco 3 (fatia segura) completo e verificado pos-RLS",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:59:35.000Z",
+      "hora": "18:59",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "ac0e501a2f3de77d3b7a5a0189f0e41b45a3cd34",
+      "hashCurto": "ac0e501",
+      "mensagem": "RLS tenant-aware de hub_pipeline_estagios APLICADO (autorizado)",
+      "mensagemRaw": "chore(db): RLS tenant-aware de hub_pipeline_estagios APLICADO (autorizado)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:57:05.000Z",
+      "hora": "18:57",
+      "arquivos": [
+        "docs/PENDENCIAS.md",
+        "docs/sql/20260624-rls-pipeline-estagios-tenant-APPLIED.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "87ad84ba198d4c3b7470e7103cc68fefcbf2537d",
+      "hashCurto": "87ad84b",
+      "mensagem": "PROPOSTA de RLS tenant-aware em hub_pipeline_estagios (nao aplicada)",
+      "mensagemRaw": "docs(sql): PROPOSTA de RLS tenant-aware em hub_pipeline_estagios (nao aplicada)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:22:38.000Z",
+      "hora": "18:22",
+      "arquivos": [
+        "docs/PENDENCIAS.md",
+        "docs/sql/20260624-rls-pipeline-estagios-tenant-PROPOSTA.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "d2f9f9f3132394497dedcdbc1c3d456f5f798af1",
+      "hashCurto": "d2f9f9f",
+      "mensagem": "PENDENCIAS — decisao do diretor (B3 fatia) + achado RLS pipelines (anon-open)",
+      "mensagemRaw": "docs: PENDENCIAS — decisao do diretor (B3 fatia) + achado RLS pipelines (anon-open)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:13:40.000Z",
+      "hora": "18:13",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "306c8675e2103a95acae1a951387fdc4f874b2c4",
+      "hashCurto": "306c867",
+      "mensagem": "Bloco 3 — cartao acionavel (proxima-acao no negocio + frescor reutilizavel)",
+      "mensagemRaw": "feat(crm): Bloco 3 — cartao acionavel (proxima-acao no negocio + frescor reutilizavel)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:11:17.000Z",
+      "hora": "18:11",
+      "arquivos": [
+        "app/crm/negocios/page.tsx",
+        "components/crm/leads/LeadKanbanCard.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx",
+        "lib/crm/sla-frescor.test.ts",
+        "lib/crm/sla-frescor.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 2,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "8f6589c575b940a1a697b54479c139eb4598df29",
+      "hashCurto": "8f6589c",
+      "mensagem": "PENDENCIAS — validacao visual do lead OK + fix login 401 registrado",
+      "mensagemRaw": "docs: PENDENCIAS — validacao visual do lead OK + fix login 401 registrado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:01:28.000Z",
+      "hora": "18:01",
+      "arquivos": [
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "c22f9ddf28f7ce4969fb7c67b5b4596631a32163",
+      "hashCurto": "c22f9dd",
+      "mensagem": "login intermitente — retry em falha transitoria ao validar token (crm-session)",
+      "mensagemRaw": "fix(auth): login intermitente — retry em falha transitoria ao validar token (crm-session)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T21:00:41.000Z",
+      "hora": "18:00",
+      "arquivos": [
+        "lib/auth/crm-session.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "3d29e74ac1b5034c5019b57d6a547d480ee9b704",
+      "hashCurto": "3d29e74",
+      "mensagem": "fecha pontas U2 (chips no sideover de edicao + disabled uniforme) + docs/PENDENCIAS.md",
+      "mensagemRaw": "chore(crm): fecha pontas U2 (chips no sideover de edicao + disabled uniforme) + docs/PENDENCIAS.md",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T20:12:09.000Z",
+      "hora": "17:12",
+      "arquivos": [
+        "components/crm/EmpresaFormDrawer.tsx",
+        "components/crm/ImovelFormDrawer.tsx",
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/cadastro/CadastroEmpresaSideover.tsx",
+        "docs/PENDENCIAS.md"
+      ],
+      "areas": {
+        "components/crm": 4,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9978bd938464c6c5a9b9cd241ab091241ea797bc",
+      "hashCurto": "9978bd9",
+      "mensagem": "hardening(auth): mesa redonda seguranca — limpa hash do token + erro neutro no envio",
+      "mensagemRaw": "hardening(auth): mesa redonda seguranca — limpa hash do token + erro neutro no envio",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T19:51:22.000Z",
+      "hora": "16:51",
+      "arquivos": [
+        "app/login/page.tsx",
+        "app/redefinir-senha/page.tsx"
+      ],
+      "areas": {
+        "app/hub": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9aec7123fba3e3ff82f94c2d4e05542933be816f",
+      "hashCurto": "9aec712",
+      "mensagem": "\"Esqueci minha senha\" no login + pagina /redefinir-senha",
+      "mensagemRaw": "feat(auth): \"Esqueci minha senha\" no login + pagina /redefinir-senha",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T19:39:36.000Z",
+      "hora": "16:39",
+      "arquivos": [
+        "app/login/page.tsx",
+        "app/redefinir-senha/page.tsx"
+      ],
+      "areas": {
+        "app/hub": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "e462b051b7469cd242bd0ad1bc3d436bb6967bcf",
+      "hashCurto": "e462b05",
+      "mensagem": "Bloco 2 — rollout Click-and-Go + mesa redonda (UX + revisao) registrado",
+      "mensagemRaw": "docs: Bloco 2 — rollout Click-and-Go + mesa redonda (UX + revisao) registrado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T19:14:54.000Z",
+      "hora": "16:14",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "2787d7f0b59f286fcd44f83a0899fea09e5c7307",
+      "hashCurto": "2787d7f",
+      "mensagem": "negocio — default de etapa \"novo_negocio\" -> \"novo\" (etapa valida)",
+      "mensagemRaw": "fix(crm): negocio — default de etapa \"novo_negocio\" -> \"novo\" (etapa valida)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T19:13:37.000Z",
+      "hora": "16:13",
+      "arquivos": [
+        "components/crm/NegocioFormDrawer.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "25b8b5aedc6925536ce10252739688c21c2715b5",
+      "hashCurto": "25b8b5a",
+      "mensagem": "empresa e imovel — campos categoricos viram chips (Click-and-Go)",
+      "mensagemRaw": "feat(crm): empresa e imovel — campos categoricos viram chips (Click-and-Go)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T19:06:21.000Z",
+      "hora": "16:06",
+      "arquivos": [
+        "components/crm/EmpresaFormDrawer.tsx",
+        "components/crm/ImovelFormDrawer.tsx",
+        "components/crm/SmartField.tsx"
+      ],
+      "areas": {
+        "components/crm": 3
+      }
+    },
+    {
+      "hash": "824900fdb7f2dea74a24714acee63f5dddfcc82d",
+      "hashCurto": "824900f",
+      "mensagem": "negocio — Mercado e Etapa inicial viram chips (Click-and-Go)",
+      "mensagemRaw": "feat(crm): negocio — Mercado e Etapa inicial viram chips (Click-and-Go)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T19:01:35.000Z",
+      "hora": "16:01",
+      "arquivos": [
+        "components/crm/NegocioFormDrawer.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "78fdcf4e19c4bd93935dac2e06144ce2bceaa923",
+      "hashCurto": "78fdcf4",
+      "mensagem": "lead — Tipo de interesse e campos categoricos viram chips (Click-and-Go)",
+      "mensagemRaw": "feat(crm): lead — Tipo de interesse e campos categoricos viram chips (Click-and-Go)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T18:58:51.000Z",
+      "hora": "15:58",
+      "arquivos": [
+        "components/crm/leads/LeadRapidoSideover.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "380d710712ec0f7a233eb0d0ff3a56cae9890c8e",
+      "hashCurto": "380d710",
+      "mensagem": "SmartField v2 (a11y + toque + estados) — mesa redonda UX",
+      "mensagemRaw": "feat(crm): SmartField v2 (a11y + toque + estados) — mesa redonda UX",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T18:57:09.000Z",
+      "hora": "15:57",
+      "arquivos": [
+        "components/crm/SmartField.tsx",
+        "components/crm/leads/LeadRapidoSideover.tsx"
+      ],
+      "areas": {
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "d2456ff51a5d6dfe72ae544639cb1bffc86834ec",
+      "hashCurto": "d2456ff",
+      "mensagem": "Bloco 2 — 1a integracao do SmartField (Origem do lead em chips)",
+      "mensagemRaw": "docs: Bloco 2 — 1a integracao do SmartField (Origem do lead em chips)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T18:45:13.000Z",
+      "hora": "15:45",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "46eb5b8e254bfd81c1fce0d4342394364a105678",
+      "hashCurto": "46eb5b8",
+      "mensagem": "Bloco 2/U2 — Origem do lead vira chips Click-and-Go (SmartField)",
+      "mensagemRaw": "feat(crm): Bloco 2/U2 — Origem do lead vira chips Click-and-Go (SmartField)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T18:44:10.000Z",
+      "hora": "15:44",
+      "arquivos": [
+        "components/crm/leads/LeadRapidoSideover.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "7cca70ab6b918256310f838d6c0cbf816575d40c",
+      "hashCurto": "7cca70a",
+      "mensagem": "Bloco 2 — progresso U2 (QuickAdd + primitivos SmartField/ConfidenceBadge)",
+      "mensagemRaw": "docs: Bloco 2 — progresso U2 (QuickAdd + primitivos SmartField/ConfidenceBadge)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T16:38:33.000Z",
+      "hora": "13:38",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "2e589d491c95cf7b8950183d3c4ef89f74e33aa2",
+      "hashCurto": "2e589d4",
+      "mensagem": "Bloco 2/U2 — primitivos SmartField + ConfidenceBadge (Click-and-Go)",
+      "mensagemRaw": "feat(crm): Bloco 2/U2 — primitivos SmartField + ConfidenceBadge (Click-and-Go)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T16:36:27.000Z",
+      "hora": "13:36",
+      "arquivos": [
+        "components/crm/ConfidenceBadge.tsx",
+        "components/crm/SmartField.tsx",
+        "components/crm/smartfield-faixas.test.ts",
+        "components/crm/smartfield-faixas.ts"
+      ],
+      "areas": {
+        "components/crm": 4
+      }
+    },
+    {
+      "hash": "de89304c2ca3834c15e06bec2fb09204f90faa63",
+      "hashCurto": "de89304",
+      "mensagem": "Bloco 2/U2 — QuickAdd (FAB) com criacao rapida role-aware",
+      "mensagemRaw": "feat(crm): Bloco 2/U2 — QuickAdd (FAB) com criacao rapida role-aware",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T16:31:28.000Z",
+      "hora": "13:31",
+      "arquivos": [
+        "app/crm/cadastro/page.tsx",
+        "app/crm/layout.tsx",
+        "app/crm/negocios/page.tsx",
+        "components/crm/CrmQuickAdd.tsx"
+      ],
+      "areas": {
+        "app/crm": 3,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "718b9937717ba082e9b60c4545a4372b9bb95421",
+      "hashCurto": "718b993",
+      "mensagem": "Bloco 2 — realidade auditada (cadastro ja maduro; net-new = SmartField/Confidence/QuickAdd)",
+      "mensagemRaw": "docs: Bloco 2 — realidade auditada (cadastro ja maduro; net-new = SmartField/Confidence/QuickAdd)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T16:05:50.000Z",
+      "hora": "13:05",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4e331adb88c1cb64b9f88884de418831134a5828",
+      "hashCurto": "4e331ad",
+      "mensagem": "Bloco 1.5 fechado — auditoria menu<->tela (31/31 REAL, cadastro PF/PJ ja unificado)",
+      "mensagemRaw": "docs: Bloco 1.5 fechado — auditoria menu<->tela (31/31 REAL, cadastro PF/PJ ja unificado)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T16:04:12.000Z",
+      "hora": "13:04",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "bc9d9623aa58cd4c35b76d013a3e6c61cce87e78",
+      "hashCurto": "bc9d962",
+      "mensagem": "Bloco 1.5 — \"Empresas\" -> \"Escritorios\" (menu + tela) p/ coerencia",
+      "mensagemRaw": "feat(crm): Bloco 1.5 — \"Empresas\" -> \"Escritorios\" (menu + tela) p/ coerencia",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T16:01:11.000Z",
+      "hora": "13:01",
+      "arquivos": [
+        "app/crm/empresas/page.tsx",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "96366411c4021cea96a508770e10311007c5f4a8",
+      "hashCurto": "9636641",
+      "mensagem": "Bloco 5.5 — separa assinatura SaaS (mensal + por usuario + creditos) do rateio",
+      "mensagemRaw": "docs: Bloco 5.5 — separa assinatura SaaS (mensal + por usuario + creditos) do rateio",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T15:56:10.000Z",
+      "hora": "12:56",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "30ed230c62fb968e8476d4445a53a7a8d02a04bd",
+      "hashCurto": "30ed230",
+      "mensagem": "Bloco 5.5 — motor de comissionamento multi-fonte com rateio (split)",
+      "mensagemRaw": "docs: Bloco 5.5 — motor de comissionamento multi-fonte com rateio (split)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T15:34:48.000Z",
+      "hora": "12:34",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "2433a53274f97770959d1faccc82b00353ed74ab",
+      "hashCurto": "2433a53",
+      "mensagem": "Bloco 5.5 — monetizacao da rede (licenciamento + comissao b + funil/KPI/SLA)",
+      "mensagemRaw": "docs: Bloco 5.5 — monetizacao da rede (licenciamento + comissao b + funil/KPI/SLA)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T15:25:12.000Z",
+      "hora": "12:25",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9a9acfe1689c425d97bdc8067ee189c94b18affa",
+      "hashCurto": "9a9acfe",
+      "mensagem": "menu IA — Integracoes -> IA e Agentes; Onboarding sai do menu; + Bloco 1.5",
+      "mensagemRaw": "feat(crm): menu IA — Integracoes -> IA e Agentes; Onboarding sai do menu; + Bloco 1.5",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:59:00.000Z",
+      "hora": "11:59",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "88a5f3b6a77aa5f2a239b6be73fbc17dd24173e2",
+      "hashCurto": "88a5f3b",
+      "mensagem": "menu — reserva grupo Comunidade (ponte Membros, Bloco 7) sem itens",
+      "mensagemRaw": "feat(crm): menu — reserva grupo Comunidade (ponte Membros, Bloco 7) sem itens",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:56:29.000Z",
+      "hora": "11:56",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "289742629737a6bba91bb1dc8943d1d03ece930a",
+      "hashCurto": "2897426",
+      "mensagem": "menu — Aprovacoes junto de Tarefas (fila de acao) no grupo Comercial/CRM",
+      "mensagemRaw": "feat(crm): menu — Aprovacoes junto de Tarefas (fila de acao) no grupo Comercial/CRM",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:50:52.000Z",
+      "hora": "11:50",
+      "arquivos": [
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "50d6844f56efb098d05af3ff229e8a141437fee7",
+      "hashCurto": "50d6844",
+      "mensagem": "Bloco 1/U1 — menu lateral reagrupado no modelo de plataforma (§8)",
+      "mensagemRaw": "feat(crm): Bloco 1/U1 — menu lateral reagrupado no modelo de plataforma (§8)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:45:53.000Z",
+      "hora": "11:45",
+      "arquivos": [
+        "app/crm/layout.tsx",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "0a722fa908530d690d797f627990b706100c1b4a",
+      "hashCurto": "0a722fa",
+      "mensagem": "plano executivo em blocos (consolida Fases §10 + Ondas U1-U6)",
+      "mensagemRaw": "docs: plano executivo em blocos (consolida Fases §10 + Ondas U1-U6)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:45:52.000Z",
+      "hora": "11:45",
+      "arquivos": [
+        "docs/PLANO-EXECUTIVO-BLOCOS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "999acd771b85841f24b177778e333cab655e0d76",
+      "hashCurto": "999acd7",
+      "mensagem": "§14.1 — preservar e melhorar o que ja funciona (nao reescrever)",
+      "mensagemRaw": "docs: §14.1 — preservar e melhorar o que ja funciona (nao reescrever)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:32:52.000Z",
+      "hora": "11:32",
+      "arquivos": [
+        "docs/INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "cbe7378b2ce12e052783600ea39199e3db508df7",
+      "hashCurto": "cbe7378",
+      "mensagem": "regra de visibilidade (Hub ve tudo / fornecedor so o seu) + auditoria UI/UX",
+      "mensagemRaw": "docs: regra de visibilidade (Hub ve tudo / fornecedor so o seu) + auditoria UI/UX",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:30:55.000Z",
+      "hora": "11:30",
+      "arquivos": [
+        "docs/INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md",
+        "docs/UIUX-AUDITORIA-E-PLANO.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "c191fd5b7a347eacecd90b57fb478ec6225db888",
+      "hashCurto": "c191fd5",
+      "mensagem": "instrucao p/ devs v2 operacional — backlog-ready (feedback do Wendel)",
+      "mensagemRaw": "docs: instrucao p/ devs v2 operacional — backlog-ready (feedback do Wendel)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:23:52.000Z",
+      "hora": "11:23",
+      "arquivos": [
+        "docs/INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "2eb4b9a9f1e2b6c15ca0c7678bab1b6bb128122e",
+      "hashCurto": "2eb4b9a",
+      "mensagem": "instrucao de sistema p/ devs — plataforma Obra10+ (visao completa)",
+      "mensagemRaw": "docs: instrucao de sistema p/ devs — plataforma Obra10+ (visao completa)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T14:12:02.000Z",
+      "hora": "11:12",
+      "arquivos": [
+        "docs/INSTRUCAO-DEVS-PLATAFORMA-OBRA10.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4f1014b84b737bcf096517cbe5c852cf39c67db1",
+      "hashCurto": "4f1014b",
+      "mensagem": "hub_atividades sem negocio_id quebrava a timeline do negocio (drift) + nota F#4",
+      "mensagemRaw": "fix(crm): hub_atividades sem negocio_id quebrava a timeline do negocio (drift) + nota F#4",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T13:49:19.000Z",
+      "hora": "10:49",
+      "arquivos": [
+        "docs/sql/fix-hub-atividades-negocio-APPLIED.sql"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "c49ec8aa654b5ee0f02be77303be350ccbb95574",
+      "hashCurto": "c49ec8a",
+      "mensagem": "login falhava com autofill do navegador (campos preenchidos, state vazio)",
+      "mensagemRaw": "fix(login): login falhava com autofill do navegador (campos preenchidos, state vazio)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T13:38:46.000Z",
+      "hora": "10:38",
+      "arquivos": [
+        "app/login/page.tsx"
+      ],
+      "areas": {
+        "app/hub": 1
+      }
+    },
+    {
+      "hash": "5af9129f5c7b21025d448ddaae2792f08631f669",
+      "hashCurto": "5af9129",
+      "mensagem": "CRM manual #4 (fecha) — vinculo pessoa<->negocio editavel na ficha",
+      "mensagemRaw": "feat(crm): CRM manual #4 (fecha) — vinculo pessoa<->negocio editavel na ficha",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T13:30:28.000Z",
+      "hora": "10:30",
+      "arquivos": [
+        "app/crm/negocios/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "249b3a1b2f5f2198de31ec7c9e0f17a0caefef3c",
+      "hashCurto": "249b3a1",
+      "mensagem": "CRM manual #4 — ficha do negocio: proxima-acao auto-save + nota na timeline",
+      "mensagemRaw": "feat(crm): CRM manual #4 — ficha do negocio: proxima-acao auto-save + nota na timeline",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T13:25:03.000Z",
+      "hora": "10:25",
+      "arquivos": [
+        "app/api/crm/negocios/[id]/nota/route.ts",
+        "app/crm/negocios/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "a6aa4c578bf8fe37dfb1b77e0cc376065cf3a602",
+      "hashCurto": "a6aa4c5",
+      "mensagem": "CRM manual #3 — canais de entrada (registro de fontes de lead) + UI",
+      "mensagemRaw": "feat(crm): CRM manual #3 — canais de entrada (registro de fontes de lead) + UI",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T12:47:43.000Z",
+      "hora": "09:47",
+      "arquivos": [
+        "app/api/crm/canais-entrada/[id]/route.ts",
+        "app/api/crm/canais-entrada/route.ts",
+        "app/crm/canais-entrada/page.tsx",
+        "docs/sql/F3-canais-entrada-APPLIED.sql",
+        "lib/crm-nav-groups.ts",
+        "lib/crm/crm-permissoes.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "outros": 2,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "471038caec9ffab1990979689c81adb0a86ba2de",
+      "hashCurto": "471038c",
+      "mensagem": "CRM manual #4 (parte) — colunas customizaveis nas listas (Pessoas/Empresas)",
+      "mensagemRaw": "feat(crm): CRM manual #4 (parte) — colunas customizaveis nas listas (Pessoas/Empresas)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T12:19:24.000Z",
+      "hora": "09:19",
+      "arquivos": [
+        "app/crm/cadastro/page.tsx",
+        "components/crm/cadastro/ColunasMenu.tsx",
+        "lib/crm/use-colunas-visiveis.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "6ebff6f14f0b4a24a86b50585e7771432c9ec4c1",
+      "hashCurto": "6ebff6f",
+      "mensagem": "CRM manual #2 — roteamento automatico de leads configuravel (regras + UI)",
+      "mensagemRaw": "feat(crm): CRM manual #2 — roteamento automatico de leads configuravel (regras + UI)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:51:34.000Z",
+      "hora": "01:51",
+      "arquivos": [
+        "app/api/crm/distribuicao/regras/[id]/route.ts",
+        "app/api/crm/distribuicao/regras/route.ts",
+        "app/api/whatsapp/webhook/route.ts",
+        "app/crm/distribuicao/page.tsx",
+        "docs/sql/F2-roteamento-leads-APPLIED.sql",
+        "lib/crm-nav-groups.ts",
+        "lib/crm/crm-permissoes.ts",
+        "lib/crm/lead-routing-config.ts",
+        "lib/crm/salvar-super-cadastro.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 1,
+        "outros": 2,
+        "lib/crm": 3
+      }
+    },
+    {
+      "hash": "f66ea15d24ef99a88ac092f0712b615f09216852",
+      "hashCurto": "f66ea15",
+      "mensagem": "F1.1 — negocio flexivel estilo Pipedrive (pessoa_id e lead_id opcionais)",
+      "mensagemRaw": "feat(crm): F1.1 — negocio flexivel estilo Pipedrive (pessoa_id e lead_id opcionais)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:44:13.000Z",
+      "hora": "01:44",
+      "arquivos": [
+        "docs/sql/F1-1-negocio-flexivel-APPLIED.sql"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "ee80c1282164b3edd3567dca1e4a26e0bf792fde",
+      "hashCurto": "ee80c12",
+      "mensagem": "CRM manual #1 — Especialistas e Fornecedores editaveis (antes era cria-e-esquece)",
+      "mensagemRaw": "feat(crm): CRM manual #1 — Especialistas e Fornecedores editaveis (antes era cria-e-esquece)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:31:29.000Z",
+      "hora": "01:31",
+      "arquivos": [
+        "app/api/crm/especialistas/[id]/route.ts",
+        "app/api/crm/fornecedores/[id]/route.ts",
+        "app/crm/especialistas/page.tsx",
+        "app/crm/fornecedores/page.tsx"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 2
+      }
+    },
+    {
+      "hash": "50d20647d8b0015c2048e10703108f3967be0aea",
+      "hashCurto": "50d2064",
+      "mensagem": "refina plano — foco mercados (IMB/ARQ/ENG/SRV + obra), analytics generativo via Claude",
+      "mensagemRaw": "docs(crm): refina plano — foco mercados (IMB/ARQ/ENG/SRV + obra), analytics generativo via Claude",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:14:21.000Z",
+      "hora": "01:14",
+      "arquivos": [
+        "docs/design-cadastro-pipedrive-ia.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "8e82e7dc9a253c1743627674f1a59ae556ce16f0",
+      "hashCurto": "8e82e7d",
+      "mensagem": "plano de cadastro relacional estilo Pipedrive + campos Membros + IA-first",
+      "mensagemRaw": "docs(crm): plano de cadastro relacional estilo Pipedrive + campos Membros + IA-first",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:08:31.000Z",
+      "hora": "01:08",
+      "arquivos": [
+        "docs/design-cadastro-pipedrive-ia.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "7f8a5bd9c5adda74f948a8762046c2df5e148206",
+      "hashCurto": "7f8a5bd",
+      "mensagem": "negocio auto-resolve pipeline por mercado (entra no funil do mercado)",
+      "mensagemRaw": "feat(crm): negocio auto-resolve pipeline por mercado (entra no funil do mercado)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:05:32.000Z",
+      "hora": "01:05",
+      "arquivos": [
+        "app/api/crm/negocios/route.ts",
+        "lib/crm/resolve-pipeline.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "5f03b4e9201fa28a0598fc2dc4de633239d91044",
+      "hashCurto": "5f03b4e",
+      "mensagem": "codigos de rastreio atomicos no formato compacto (PS2026001 / NGIMB2026001)",
+      "mensagemRaw": "fix(crm): codigos de rastreio atomicos no formato compacto (PS2026001 / NGIMB2026001)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T04:01:18.000Z",
+      "hora": "01:01",
+      "arquivos": [
+        "app/api/crm/imoveis/route.ts",
+        "app/api/crm/leads/[id]/converter-negocio/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "docs/sql/codigos-rastreio-APPLIED.sql",
+        "lib/crm/codigos-rastreio.test.ts",
+        "lib/crm/codigos-rastreio.ts",
+        "lib/crm/negocio-cadastro.ts",
+        "lib/crm/resolver-rastreio-codigo.test.ts",
+        "lib/crm/resolver-rastreio-codigo.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "outros": 1,
+        "lib/crm": 5
+      }
+    },
+    {
+      "hash": "7a0b648586d975022f576c82d37d193341ff68d7",
+      "hashCurto": "7a0b648",
+      "mensagem": "Rede B2-B4 — cadastro de Fornecedores + Especialistas (API + telas + menu)",
+      "mensagemRaw": "feat(crm): Rede B2-B4 — cadastro de Fornecedores + Especialistas (API + telas + menu)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T03:19:26.000Z",
+      "hora": "00:19",
+      "arquivos": [
+        "app/api/crm/especialistas/route.ts",
+        "app/api/crm/fornecedores/route.ts",
+        "app/crm/especialistas/page.tsx",
+        "app/crm/fornecedores/page.tsx",
+        "app/crm/layout.tsx",
+        "lib/crm-nav-groups.ts",
+        "lib/crm/crm-nav-permissoes.test.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 3,
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "e498741c85b745c67b7b897362680d933e9b27a3",
+      "hashCurto": "e498741",
+      "mensagem": "Rede B1 — tabelas hub_fornecedores + hub_especialistas (formato Membros) + RLS",
+      "mensagemRaw": "feat(crm): Rede B1 — tabelas hub_fornecedores + hub_especialistas (formato Membros) + RLS",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T03:12:50.000Z",
+      "hora": "00:12",
+      "arquivos": [
+        "docs/sql/bloco-rede-B1-APPLIED.sql"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "89628b9d00e026ae98be6246f1f2443b62166f21",
+      "hashCurto": "89628b9",
+      "mensagem": "menu P1 polish — multiplos grupos abertos + grupos de 1 item viram link direto",
+      "mensagemRaw": "feat(crm): menu P1 polish — multiplos grupos abertos + grupos de 1 item viram link direto",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T03:00:19.000Z",
+      "hora": "00:00",
+      "arquivos": [
+        "app/crm/layout.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "d91d9496b35a8408999f1c0c34e9c1edcdc762d6",
+      "hashCurto": "d91d949",
+      "mensagem": "menu P1 — paleta de comando ⌘K/Ctrl+K \"ir para…\"",
+      "mensagemRaw": "feat(crm): menu P1 — paleta de comando ⌘K/Ctrl+K \"ir para…\"",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T02:43:15.000Z",
+      "hora": "23:43",
+      "arquivos": [
+        "app/crm/layout.tsx",
+        "components/crm/CrmCommandPalette.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "77be217d258da85b72d9c11e7af8162a76c0df92",
+      "hashCurto": "77be217",
+      "mensagem": "menu P1 estrutura — reordena pelo fluxo de valor + Aprovacoes em destaque + grupo Rede",
+      "mensagemRaw": "feat(crm): menu P1 estrutura — reordena pelo fluxo de valor + Aprovacoes em destaque + grupo Rede",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T02:33:27.000Z",
+      "hora": "23:33",
+      "arquivos": [
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4e9f6387646ceb25ab99f841da55bb118cab65cf",
+      "hashCurto": "4e9f638",
+      "mensagem": "menu P0 — fecha vazamento comercial->financeiro + tira 'Progresso sistema' do menu",
+      "mensagemRaw": "fix(seguranca): menu P0 — fecha vazamento comercial->financeiro + tira 'Progresso sistema' do menu",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T01:58:40.000Z",
+      "hora": "22:58",
+      "arquivos": [
+        "lib/crm-nav-groups.ts",
+        "lib/crm/crm-nav-permissoes.test.ts",
+        "lib/crm/crm-permissoes.ts"
+      ],
+      "areas": {
+        "outros": 1,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "e561dabd00bbc0a4871881bc56199796a80f5813",
+      "hashCurto": "e561dab",
+      "mensagem": "Bloco G UI — botao 'Gerar obra/projeto' no negocio ganho + widget 'Leads parados'",
+      "mensagemRaw": "feat(crm): Bloco G UI — botao 'Gerar obra/projeto' no negocio ganho + widget 'Leads parados'",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T01:34:53.000Z",
+      "hora": "22:34",
+      "arquivos": [
+        "app/api/crm/negocios/[id]/converter-obra/route.ts",
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/page.tsx",
+        "components/crm/CrmLeadsParados.tsx",
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 2,
+        "components/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "656610f119c1351779d00c077a03c242ba514b22",
+      "hashCurto": "656610f",
+      "mensagem": "Bloco G backbone — deriva obra/projeto de negocio ganho + alerta de leads parados",
+      "mensagemRaw": "feat(crm): Bloco G backbone — deriva obra/projeto de negocio ganho + alerta de leads parados",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T01:27:35.000Z",
+      "hora": "22:27",
+      "arquivos": [
+        "app/api/crm/alertas/parados/route.ts",
+        "app/api/crm/negocios/[id]/converter-obra/route.ts",
+        "docs/STATUS_MARATONA.md",
+        "lib/crm/derivar-negocio.test.ts",
+        "lib/crm/derivar-negocio.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "outros": 1,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "bc32f0a209deeea5f778404100b946c81eeaeb66",
+      "hashCurto": "bc32f0a",
+      "mensagem": "Bloco D P0 — anon podia DELETAR PII via RPC SECURITY DEFINER",
+      "mensagemRaw": "fix(seguranca): Bloco D P0 — anon podia DELETAR PII via RPC SECURITY DEFINER",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T01:12:45.000Z",
+      "hora": "22:12",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "docs/sql/bloco-d-hardening-APPLIED.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "0bb6ba856769d41637718055208d2afecacc954c",
+      "hashCurto": "0bb6ba8",
+      "mensagem": "trigger set_atualizado_em quebrava UPDATE em hub_conversas e hub_whatsapp_config",
+      "mensagemRaw": "fix(crm): trigger set_atualizado_em quebrava UPDATE em hub_conversas e hub_whatsapp_config",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T01:04:50.000Z",
+      "hora": "22:04",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "docs/sql/fix-trigger-atualizado-em.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "17dbccc9613532a23ada459560bde78e5185d128",
+      "hashCurto": "17dbccc",
+      "mensagem": "Bloco E step 2 — tenant-scoping das 8 tabelas por-lead/negocio",
+      "mensagemRaw": "feat(seguranca): Bloco E step 2 — tenant-scoping das 8 tabelas por-lead/negocio",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T01:00:21.000Z",
+      "hora": "22:00",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "docs/sql/bloco-e-step2-tenant-APPLIED.sql",
+        "docs/sql/bloco-e-step2-tenant-ROLLBACK.sql"
+      ],
+      "areas": {
+        "outros": 3
+      }
+    },
+    {
+      "hash": "a6da7f0754b04566eb908aaa41c4172b977c2079",
+      "hashCurto": "a6da7f0",
+      "mensagem": "repara encaminhamentos/pendentes 500 — coluna encaminhado_para faltava (drift)",
+      "mensagemRaw": "fix(crm): repara encaminhamentos/pendentes 500 — coluna encaminhado_para faltava (drift)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T00:39:42.000Z",
+      "hora": "21:39",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "321da2aab7b0a9338b60f3d419645ad03a23e504",
+      "hashCurto": "321da2a",
+      "mensagem": "Bloco E lote 2 — fecha RLS anon nas ~38 tabelas hub_* restantes",
+      "mensagemRaw": "feat(seguranca): Bloco E lote 2 — fecha RLS anon nas ~38 tabelas hub_* restantes",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T00:32:25.000Z",
+      "hora": "21:32",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "docs/sql/bloco-e-rls-lote2-ROLLBACK.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "cdd78e6c3d05860460042b37ac9429d302df19a2",
+      "hashCurto": "cdd78e6",
+      "mensagem": "Bloco E — QA visual logado prova RLS nao quebra app (138 leads renderizam)",
+      "mensagemRaw": "test(seguranca): Bloco E — QA visual logado prova RLS nao quebra app (138 leads renderizam)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-24T00:12:40.000Z",
+      "hora": "21:12",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4d925da2b75e2b597e78f376b49ef81e1df20fdd",
+      "hashCurto": "4d925da",
+      "mensagem": "Bloco E lote critico — fecha RLS anon em 4 tabelas (leads, pessoas, contas)",
+      "mensagemRaw": "feat(seguranca): Bloco E lote critico — fecha RLS anon em 4 tabelas (leads, pessoas, contas)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T23:56:05.000Z",
+      "hora": "20:56",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "docs/sql/bloco-e-rls-APPLIED.sql",
+        "docs/sql/bloco-e-rls-ROLLBACK.sql"
+      ],
+      "areas": {
+        "outros": 3
+      }
+    },
+    {
+      "hash": "1bf03d4f575edb11eae93e54d374109b00dcc057",
+      "hashCurto": "1bf03d4",
+      "mensagem": "HANDOFF final — estado da sessao, descobertas e como retomar Bloco E",
+      "mensagemRaw": "docs(maratona): HANDOFF final — estado da sessao, descobertas e como retomar Bloco E",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T22:13:09.000Z",
+      "hora": "19:13",
+      "arquivos": [
+        "docs/HANDOFF.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "cc9fcf7c6c4d53bfbdd07a527e1db0cb79773f85",
+      "hashCurto": "cc9fcf7",
+      "mensagem": "Bloco E — migration RLS DRAFT pronta (apply bloqueado no MCP)",
+      "mensagemRaw": "docs(maratona): Bloco E — migration RLS DRAFT pronta (apply bloqueado no MCP)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T21:30:24.000Z",
+      "hora": "18:30",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "docs/sql/bloco-e-rls-DRAFT.sql"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "b3859d6809d04a2f3900d9d0068bd436e41263b5",
+      "hashCurto": "b3859d6",
+      "mensagem": "trava scoring de encaminhamento distribuir-lead (6) — IA-first auditado",
+      "mensagemRaw": "test(maratona): trava scoring de encaminhamento distribuir-lead (6) — IA-first auditado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T20:35:23.000Z",
+      "hora": "17:35",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "lib/crm/distribuir-lead.test.ts"
+      ],
+      "areas": {
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "26e004d9e857374c241b6272d9f26be13b3054f6",
+      "hashCurto": "26e004d",
+      "mensagem": "trava codigos-rastreio (5) + consolida robustez (43 testes na sessao)",
+      "mensagemRaw": "test(maratona): trava codigos-rastreio (5) + consolida robustez (43 testes na sessao)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T20:23:39.000Z",
+      "hora": "17:23",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "lib/crm/codigos-rastreio.test.ts"
+      ],
+      "areas": {
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "07af84105b87f306776c18dffe894748810d9d6b",
+      "hashCurto": "07af841",
+      "mensagem": "trava RBAC CRM (crm-permissoes) — 15 testes anti-escalada",
+      "mensagemRaw": "test(seguranca): trava RBAC CRM (crm-permissoes) — 15 testes anti-escalada",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T20:21:26.000Z",
+      "hora": "17:21",
+      "arquivos": [
+        "lib/crm/crm-permissoes.test.ts"
+      ],
+      "areas": {
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "2ca051f6c0034c9bb68a09a752cd3399c7a54605",
+      "hashCurto": "2ca051f",
+      "mensagem": "trava identidade-por-cookie (resolveCallerAuthId) — 6 testes",
+      "mensagemRaw": "test(seguranca): trava identidade-por-cookie (resolveCallerAuthId) — 6 testes",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T20:13:46.000Z",
+      "hora": "17:13",
+      "arquivos": [
+        "lib/crm/caller-identity.test.ts"
+      ],
+      "areas": {
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "18a102dd8800ba28034ab19f5604db89e359ed6b",
+      "hashCurto": "18a102d",
+      "mensagem": "Bloco J — trava guardrails de perda/ganho (17 testes) + verifica ao vivo",
+      "mensagemRaw": "test(maratona): Bloco J — trava guardrails de perda/ganho (17 testes) + verifica ao vivo",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T20:10:43.000Z",
+      "hora": "17:10",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md",
+        "lib/crm/lead-rules.test.ts",
+        "lib/crm/negocio-rules.test.ts"
+      ],
+      "areas": {
+        "outros": 1,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "91113423c9a33e2dff6d6e61ea276e9d4cee2238",
+      "hashCurto": "9111342",
+      "mensagem": "HANDOFF — estado, descobertas, bloqueios de ferramenta e como retomar",
+      "mensagemRaw": "docs(maratona): HANDOFF — estado, descobertas, bloqueios de ferramenta e como retomar",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T19:25:32.000Z",
+      "hora": "16:25",
+      "arquivos": [
+        "docs/HANDOFF.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "247f5a7a83c7e6ffb8cd5927fb4e2682eaef7a47",
+      "hashCurto": "247f5a7",
+      "mensagem": "Bloco B API GREEN (23/23) + passo 1 seguranca fechado + pre-condicao Bloco E",
+      "mensagemRaw": "docs(maratona): Bloco B API GREEN (23/23) + passo 1 seguranca fechado + pre-condicao Bloco E",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T19:23:34.000Z",
+      "hora": "16:23",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "3ad71dbad61a6da769c745c6938dbc0da9c8d034",
+      "hashCurto": "3ad71db",
+      "mensagem": "identidade do chamador via cookie de sessao (fecha escalada x-caller-auth-id)",
+      "mensagemRaw": "fix(seguranca): identidade do chamador via cookie de sessao (fecha escalada x-caller-auth-id)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T17:46:02.000Z",
+      "hora": "14:46",
+      "arquivos": [
+        "app/api/crm/atendimento/assumir/route.ts",
+        "app/api/crm/atendimento/devolver/route.ts",
+        "app/api/crm/atendimento/send/route.ts",
+        "docs/STATUS_MARATONA.md",
+        "lib/crm/crm-api-auth.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "475a08dbd2589fdea086adfe282072bfe395522a",
+      "hashCurto": "475a08d",
+      "mensagem": "Bloco B desbloqueado — service role key resolve 500/503",
+      "mensagemRaw": "docs(maratona): Bloco B desbloqueado — service role key resolve 500/503",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T17:06:11.000Z",
+      "hora": "14:06",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9324703cb44cd5c22326090f22573fa6f798e36e",
+      "hashCurto": "9324703",
+      "mensagem": "Bloco D — auditoria viva de RLS + plano de seguranca validado",
+      "mensagemRaw": "docs(maratona): Bloco D — auditoria viva de RLS + plano de seguranca validado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T16:30:38.000Z",
+      "hora": "13:30",
+      "arquivos": [
+        "docs/PROPOSTA_CONJUNTA.md",
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "4c2b9625a4eac0ee47e59ab6e26654923f51163e",
+      "hashCurto": "4c2b962",
+      "mensagem": "Bloco D parcial — politicas vivas de users estao travadas (drift repo->prod)",
+      "mensagemRaw": "docs(maratona): Bloco D parcial — politicas vivas de users estao travadas (drift repo->prod)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T15:59:31.000Z",
+      "hora": "12:59",
+      "arquivos": [
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "b776a42e3e146b4c20976e1ee146c1b2112aa4e9",
+      "hashCurto": "b776a42",
+      "mensagem": "Bloco B — service role key destrava data layer do CRM",
+      "mensagemRaw": "fix(maratona): Bloco B — service role key destrava data layer do CRM",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T15:32:37.000Z",
+      "hora": "12:32",
+      "arquivos": [
+        "app/_chk23.js",
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "c256890940ce5a065aafb8d5408644c97718a88e",
+      "hashCurto": "c256890",
+      "mensagem": "Bloco B achado — CRM data layer 500/503 por SUPABASE_SERVICE_ROLE_KEY vazia",
+      "mensagemRaw": "docs(maratona): Bloco B achado — CRM data layer 500/503 por SUPABASE_SERVICE_ROLE_KEY vazia",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T04:38:00.000Z",
+      "hora": "01:38",
+      "arquivos": [
+        ".gitignore",
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "ce8e1d0f022061c4dab9f34cb2730185171d80e7",
+      "hashCurto": "ce8e1d0",
+      "mensagem": "Bloco A — fundacao de trabalho (STATUS, PROPOSTA, _chk23, _publicar)",
+      "mensagemRaw": "chore(maratona): Bloco A — fundacao de trabalho (STATUS, PROPOSTA, _chk23, _publicar)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-23T04:31:39.000Z",
+      "hora": "01:31",
+      "arquivos": [
+        "_publicar.ps1",
+        "app/_chk23.js",
+        "docs/PROPOSTA_CONJUNTA.md",
+        "docs/STATUS_MARATONA.md"
+      ],
+      "areas": {
+        "outros": 4
+      }
+    },
+    {
+      "hash": "99f5c64b930b5d4e5c56369d3a55e92eb23ccdee",
+      "hashCurto": "99f5c64",
+      "mensagem": "redirecionar raiz para login em vez da landing",
+      "mensagemRaw": "fix(hub): redirecionar raiz para login em vez da landing",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-22T23:29:30.000Z",
+      "hora": "20:29",
+      "arquivos": [
+        "app/page.tsx",
+        "proxy.ts"
+      ],
+      "areas": {
+        "app/hub": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "b3422d32b9a02f35d2c368a12d0be398dafcd737",
+      "hashCurto": "b3422d3",
+      "mensagem": "relatorio PDF narrativo por areas (Implementado/Corrigido)",
+      "mensagemRaw": "feat(crm): relatorio PDF narrativo por areas (Implementado/Corrigido)",
+      "autor": "Ramon Pereira",
+      "dataIso": "2026-06-21T04:19:15.000Z",
+      "hora": "01:19",
+      "arquivos": [
+        "components/crm/ProgressoSistemaDashboard.tsx",
+        "lib/crm/progresso-sistema-data.ts",
+        "lib/crm/relatorio-desenvolvimento-estruturado.ts",
+        "lib/crm/relatorio-diario-pdf.ts",
+        "lib/crm/relatorio-git-entregas.ts"
+      ],
+      "areas": {
+        "components/crm": 1,
+        "lib/crm": 4
+      }
+    },
     {
       "hash": "f08a42db4b96f2666526c76366eebd11da72ea73",
       "hashCurto": "f08a42d",
@@ -224,109 +2972,6 @@
         "lib/crm": 14,
         "lib/hub": 1,
         "supabase/migrations": 1
-      }
-    },
-    {
-      "hash": "873ab382974b6a59c64f23bd6accf21c4ca62f4e",
-      "hashCurto": "873ab38",
-      "mensagem": "adicionar Progresso sistema com cronograma por fase expansível",
-      "mensagemRaw": "feat(crm): adicionar Progresso sistema com cronograma por fase expansível",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-19T03:54:44.000Z",
-      "hora": "00:54",
-      "arquivos": [
-        "app/crm/progresso-sistema/page.tsx",
-        "components/crm/ProgressoSistemaDashboard.tsx",
-        "docs/crm-aderencia-pdfs.md",
-        "lib/crm-header-defaults.ts",
-        "lib/crm-nav-groups.ts",
-        "lib/crm/progresso-sistema-data.ts",
-        "lib/mobile/nav.ts"
-      ],
-      "areas": {
-        "app/crm": 1,
-        "components/crm": 1,
-        "outros": 4,
-        "lib/crm": 1
-      }
-    },
-    {
-      "hash": "d97e59b9c2f27d093bb980c2bfd32c7c680851b6",
-      "hashCurto": "d97e59b",
-      "mensagem": "remover botão Ir do header universal",
-      "mensagemRaw": "fix(crm): remover botão Ir do header universal",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-19T02:36:20.000Z",
-      "hora": "23:36",
-      "arquivos": [
-        "components/crm/CrmRastreioBusca.tsx"
-      ],
-      "areas": {
-        "components/crm": 1
-      }
-    },
-    {
-      "hash": "c841d227951d70621f14a69cbe45c8e09d67106d",
-      "hashCurto": "c841d22",
-      "mensagem": "excluir vitest.config.ts do type-check do Next em producao",
-      "mensagemRaw": "fix(build): excluir vitest.config.ts do type-check do Next em producao",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-18T23:32:58.000Z",
-      "hora": "20:32",
-      "arquivos": [
-        "tsconfig.json"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "58bb32275a3c167fb7cef2bb1347abc002639a77",
-      "hashCurto": "58bb322",
-      "mensagem": "validar webhook via NEXT_PUBLIC_APP_URL em vez de URL fixa do Render",
-      "mensagemRaw": "fix(diagnose): validar webhook via NEXT_PUBLIC_APP_URL em vez de URL fixa do Render",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-18T22:55:55.000Z",
-      "hora": "19:55",
-      "arquivos": [
-        "scripts/diagnose-uazapi-webhook.cjs"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "d764648f299f40a8260bd6f61e88a2c832ca15bf",
-      "hashCurto": "d764648",
-      "mensagem": "move tailwind to dependencies for Render production build",
-      "mensagemRaw": "fix(build): move tailwind to dependencies for Render production build",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-18T22:54:38.000Z",
-      "hora": "19:54",
-      "arquivos": [
-        "package.json"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "1ea054b79446900b652e187aeb15a8da9ac715eb",
-      "hashCurto": "1ea054b",
-      "mensagem": "feat cadastros crm",
-      "mensagemRaw": "feat cadastros crm",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-18T03:14:15.000Z",
-      "hora": "00:14",
-      "arquivos": [
-        "app/crm/layout.tsx",
-        "lib/crm-nav-groups.ts",
-        "lib/mobile/nav.ts",
-        "next.config.ts"
-      ],
-      "areas": {
-        "app/crm": 1,
-        "outros": 3
       }
     }
   ]

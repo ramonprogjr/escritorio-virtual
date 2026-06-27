@@ -242,7 +242,7 @@ export function PlaybookFlowVisualBuilder({
   if (!draft) {
     return (
       <div style={panelStyle}>
-        <p style={hintStyle}>A carregar fluxo...</p>
+        <p style={hintStyle}>Carregando fluxo...</p>
       </div>
     );
   }

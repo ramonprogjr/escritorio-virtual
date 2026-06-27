@@ -215,7 +215,7 @@ export default function FerramentasHubPage() {
 
         {loading && (
           <p className="text-sm" style={{ color: "#8b949e" }}>
-            A carregar…
+            Carregando…
           </p>
         )}
 

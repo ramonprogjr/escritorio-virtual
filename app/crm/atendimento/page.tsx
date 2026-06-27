@@ -446,7 +446,7 @@ function AtendimentoContent() {
       actions: (
         <div className="flex items-center gap-3">
           <span className="text-zinc-400 text-sm hidden sm:inline">
-            {carregando ? "A carregar…" : `${leads.length} conversa${leads.length !== 1 ? "s" : ""}`}
+            {carregando ? "Carregando…" : `${leads.length} conversa${leads.length !== 1 ? "s" : ""}`}
           </span>
           {meuNome && (
             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#c9a24a]/25 bg-[#c9a24a]/10 px-3 py-1 text-[11px] text-[#c9a24a] font-medium">
@@ -549,7 +549,7 @@ function AtendimentoContent() {
           <div>
             <p className="text-zinc-100 text-sm font-semibold">Inbox</p>
             <p className="text-zinc-500 text-[11px]">
-              {carregando ? "A carregar…" : `${leadsFiltrados.length} / ${leads.length} conversas`}
+              {carregando ? "Carregando…" : `${leadsFiltrados.length} / ${leads.length} conversas`}
             </p>
           </div>
           {meuSlug && (
@@ -662,7 +662,7 @@ function AtendimentoContent() {
         {/* Lista */}
         <div className="flex-1 overflow-y-auto">
           {carregando && leads.length === 0 && (
-            <div className="text-center text-zinc-600 text-xs mt-10">A carregar conversas…</div>
+            <div className="text-center text-zinc-600 text-xs mt-10">Carregando conversas…</div>
           )}
           {!carregando && leadsFiltrados.length === 0 && (
             <div className="text-center text-zinc-600 text-xs mt-10">Nenhuma conversa neste filtro</div>
@@ -820,7 +820,7 @@ function AtendimentoContent() {
               {carregandoMensagens && mensagens.length === 0 && !mensagensLoadError && (
                 <div className="flex flex-col items-center justify-center h-32 gap-2">
                   <div className="w-5 h-5 border-2 border-[#1d3a2c] border-t-[#c9a24a] rounded-full animate-spin" />
-                  <span className="text-zinc-600 text-xs">A carregar mensagens…</span>
+                  <span className="text-zinc-600 text-xs">Carregando mensagens…</span>
                 </div>
               )}
               {!carregandoMensagens && !mensagensLoadError && mensagens.length === 0 && (
