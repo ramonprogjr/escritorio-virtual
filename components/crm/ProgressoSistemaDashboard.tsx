@@ -85,7 +85,7 @@ function ItemRow({ item }: { item: ProgressoItemMerged }) {
         <p className="mt-0.5 font-mono text-[10px] text-[#6e7681]">{item.pdfRef}</p>
         {failedChecks.length > 0 ? (
           <details className="mt-1">
-            <summary className="cursor-pointer text-[10px] text-[#58a6ff]">
+            <summary className="cursor-pointer text-[10px] text-[#c9a24a]">
               {failedChecks.length} evidência(s) pendente(s)
             </summary>
             <ul className="mt-1 space-y-0.5 text-[10px] text-[#8b949e]">
@@ -112,7 +112,7 @@ function ItemRow({ item }: { item: ProgressoItemMerged }) {
       <td className="px-3 py-2.5 align-top">
         <div className="flex flex-col gap-1">
           {item.rota ? (
-            <Link href={item.rota} className="text-xs text-[#58a6ff] hover:underline">
+            <Link href={item.rota} className="text-xs text-[#c9a24a] hover:underline">
               Abrir tela
             </Link>
           ) : null}
@@ -144,7 +144,7 @@ function ProximoPassoCard({ item }: { item: ProgressoItem }) {
       </div>
       <p className="mt-1.5 text-xs text-[#8b949e]">{item.oQueFalta}</p>
       {item.rota ? (
-        <Link href={item.rota} className="mt-2 inline-block text-xs text-[#58a6ff] hover:underline">
+        <Link href={item.rota} className="mt-2 inline-block text-xs text-[#c9a24a] hover:underline">
           Abrir tela →
         </Link>
       ) : null}
@@ -247,12 +247,12 @@ function FaseDetalhePanel({
                         <button
                           type="button"
                           onClick={() => onVerItemNaMatriz(item)}
-                          className="text-[#58a6ff] hover:underline"
+                          className="text-[#c9a24a] hover:underline"
                         >
                           Ver na matriz
                         </button>
                         {item.rota ? (
-                          <Link href={item.rota} className="text-[#58a6ff] hover:underline">
+                          <Link href={item.rota} className="text-[#c9a24a] hover:underline">
                             Abrir tela
                           </Link>
                         ) : null}

@@ -491,7 +491,7 @@ export default function NegocioDetalhePage() {
       {leadNome && negocio.lead_id && (
         <p style={{ marginTop: 16 }}>
           Lead:{" "}
-          <Link href={`/crm/leads/${negocio.lead_id}`} style={{ color: "#60a5fa" }}>
+          <Link href={`/crm/leads/${negocio.lead_id}`} style={{ color: "#c9a24a" }}>
             {leadNome}
           </Link>
         </p>

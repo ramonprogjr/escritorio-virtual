@@ -83,7 +83,7 @@ function ProjetosPageInner() {
               </p>
               <div className="mt-2 flex flex-wrap gap-2 text-xs">
                 {p.negocio_id && (
-                  <Link href={`/crm/negocios/${p.negocio_id}`} className="font-bold text-[#60a5fa]">
+                  <Link href={`/crm/negocios/${p.negocio_id}`} className="font-bold text-[#c9a24a]">
                     Negócio
                   </Link>
                 )}
