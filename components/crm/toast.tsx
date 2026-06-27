@@ -19,12 +19,16 @@ import { CheckCircle2, AlertTriangle, Info, X } from "lucide-react";
 
 export type ToastKind = "success" | "error" | "info";
 
+/** Ação opcional no toast (ex.: "Desfazer"). */
+export type ToastAction = { label: string; run: () => void };
+
 export type ToastItem = {
   id: number;
   kind: ToastKind;
   message: string;
   /** ms até auto-dispensar (0 = não dispensa sozinho) */
   duration: number;
+  action?: ToastAction;
 };
 
 type Listener = () => void;
@@ -61,9 +65,9 @@ function dismiss(id: number) {
   emit();
 }
 
-function push(kind: ToastKind, message: string, duration: number): number {
+function push(kind: ToastKind, message: string, duration: number, action?: ToastAction): number {
   const id = nextId++;
-  items.push({ id, kind, message, duration });
+  items.push({ id, kind, message, duration, action });
   emit();
   if (duration > 0 && typeof window !== "undefined") {
     timers.set(
@@ -78,6 +82,9 @@ export const toast = {
   success: (message: string, duration = 3200) => push("success", message, duration),
   error: (message: string, duration = 5200) => push("error", message, duration),
   info: (message: string, duration = 3600) => push("info", message, duration),
+  /** Toast com ação (ex.: Desfazer). Janela maior (6s) para dar tempo de reagir. */
+  withAction: (kind: ToastKind, message: string, action: ToastAction, duration = 6000) =>
+    push(kind, message, duration, action),
   dismiss,
 };
 
@@ -117,6 +124,19 @@ function ToastCard({ item }: { item: ToastItem }) {
       <p className="min-w-0 flex-1 text-sm font-medium leading-snug" style={{ color: "#e6edf3" }}>
         {item.message}
       </p>
+      {item.action && (
+        <button
+          type="button"
+          onClick={() => {
+            item.action?.run();
+            toast.dismiss(item.id);
+          }}
+          className="flex-shrink-0 rounded-md px-2 py-0.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-white/10"
+          style={{ color: style.text, cursor: "pointer" }}
+        >
+          {item.action.label}
+        </button>
+      )}
       <button
         type="button"
         onClick={() => toast.dismiss(item.id)}

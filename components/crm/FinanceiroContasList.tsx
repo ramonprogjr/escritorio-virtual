@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { toast } from "@/components/crm/toast";
 import {
   type ContaFinanceira,
   type TipoConta,
@@ -26,14 +28,52 @@ const STATUS_FINAL: Record<TipoConta, { status: string; label: string }> = {
 export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard }: Props) {
   const router = useRouter();
   const final = STATUS_FINAL[tipo];
+  const [processando, setProcessando] = useState<string | null>(null);
+
+  async function patchStatus(id: string, status: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/crm/financeiro/contas/${tipo}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ status }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async function desfazer(id: string) {
+    const ok = await patchStatus(id, "pendente");
+    if (ok) {
+      onAtualizado();
+      toast.info("Baixa desfeita.");
+    } else {
+      toast.error("Não foi possível desfazer.");
+    }
+  }
 
   async function marcarFinalizada(id: string) {
-    const res = await fetch(`/api/crm/financeiro/contas/${tipo}/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-      body: JSON.stringify({ status: final.status }),
-    });
-    if (res.ok) onAtualizado();
+    setProcessando(id);
+    try {
+      const ok = await patchStatus(id, final.status);
+      if (!ok) {
+        toast.error(
+          tipo === "pagar"
+            ? "Não foi possível marcar como pago."
+            : "Não foi possível marcar como recebido.",
+        );
+        return;
+      }
+      onAtualizado();
+      toast.withAction(
+        "success",
+        tipo === "pagar" ? "Conta marcada como paga." : "Conta marcada como recebida.",
+        { label: "Desfazer", run: () => void desfazer(id) },
+      );
+    } finally {
+      setProcessando(null);
+    }
   }
 
   if (contas.length === 0) {
@@ -98,10 +138,11 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
+                  disabled={processando === c.id}
                   onClick={() => void marcarFinalizada(c.id)}
-                  className="min-h-11 flex-1 rounded-lg bg-[#003b26] text-xs font-bold text-[#c9a24a] hover:brightness-110"
+                  className="min-h-11 flex-1 rounded-lg bg-[#003b26] text-xs font-bold text-[#c9a24a] hover:brightness-110 disabled:opacity-60"
                 >
-                  {final.label}
+                  {processando === c.id ? "Salvando…" : final.label}
                 </button>
                 {tipo === "receber" && (
                   <button
