@@ -52,13 +52,6 @@ export default function DashboardPage() {
             <UserPlus className="h-3.5 w-3.5" />
             Leads
           </button>
-          <button
-            type="button"
-            onClick={() => router.push("/crm/parceiros/novo")}
-            className="rounded-lg border border-[#1d3a2c] px-3 py-1.5 text-xs font-bold text-[#8b949e] hover:text-[#c9a24a] hover:bg-[#16271e]"
-          >
-            + Parceiro
-          </button>
         </div>
       ),
     });
