@@ -1,7 +1,34 @@
 {
-  "geradoEm": "2026-06-27T19:04:26.839Z",
+  "geradoEm": "2026-06-27T19:16:16.410Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "0c2590da85db38437a1f9ff71aedd238570d6220",
+      "hashCurto": "0c2590d",
+      "mensagem": "editor do agente config-first em abas + leads sem sobreposição",
+      "mensagemRaw": "fix(mobile): editor do agente config-first em abas + leads sem sobreposição",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:16:10.000Z",
+      "hora": "16:16",
+      "arquivos": [
+        "app/crm/agentes/[slug]/page.tsx",
+        "app/crm/leads/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 2
+      }
+    },
+    {
+      "hash": "59c4d1622aba9c3423f0c6f092ec3cda3176218f",
+      "hashCurto": "59c4d16",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:05:19.000Z",
+      "hora": "16:05",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "001e2632cc587aa640b11b5c2eb4dafe61390d1a",
       "hashCurto": "001e263",
