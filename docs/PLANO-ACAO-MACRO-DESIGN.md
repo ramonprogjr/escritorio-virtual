@@ -2,6 +2,15 @@
 
 > Síntese do CEO sobre TODO o sistema, a partir do diagnóstico das 33 telas ([docs/diagnostico-telas/](diagnostico-telas/README.md)). A incorporar ao plano macro. 27/jun.
 
+## ▶️ STATUS DE EXECUÇÃO (27/jun — atualizado)
+- **F0 (fachada/mentira de dado) — ✅ COMPLETO + deployado.** Barra fake 0.42, confiança 85%, ring 0.35, KPIs sobre página paginada (Negócios/Imóveis→agregado backend), Conversões=0 (Campanhas), valor financeiro arredondado→exato, status sem cor (captacao).
+- **F1 (copy/vazamento/idioma/cor) — ✅ COMPLETO (itens seguros) + deployado.** UAZAPI→WhatsApp, MISTRAL_MODEL/Supabase/nomes de tabela/porta 3001→linguagem de negócio, PT-PT→PT-BR (A carregar/activo/gerir/contacto/equipa/acção), links azuis Shadcn→dourado, botão Sair no padrão, traço "—" fora dos headers, botão "+ Parceiro" removido do Dashboard. **Decisões CEO:** Parceiros→Fornecedores **deferido** (rename estrutural, precisa migração); azuis **semânticos mantidos** (são código de cor, não chrome).
+- **F2 (blindar ações sensíveis) — ✅ COMPLETO + deployado.** Toast ganhou "Desfazer" (reutilizável). Financeiro pagar/receber (loading+erro+undo), Contatos (telefone mascarado+validado), Distribuição Liberar/Cobrar (confirmação+toast nominal), Usuários cortar acesso (confirmação "desativa não exclui"+toast). Negócios/Aprovações já eram seguros. Cadastro bulk-delete já confirmado (remover = item de F4, não pendência).
+- **F3 (ativar IA-first onde o motor já existe) — PRÓXIMO.**
+- F4 (tabela→cards + KPIs duplicados), F5 (separar plataforma×tenant), F6 (financeiro/obra ao motor) — na fila.
+
+---
+
 ## Parecer do CEO
 O sistema está mais maduro do que parece à primeira vista: há um esqueleto correto e repetível em quase toda parte (cards em vez de planilha, estados de erro/vazio honestos, identidade dark verde+dourado coesa, backend real e multi-tenant). Telas como Leads, Atendimento, Aprovações, Visão financeira e Distribuição já provam que sabemos fazer "tela de trabalho" no nosso padrão. O problema NÃO é arquitetura — é três dívidas que se repetem e corroem a régua do produto.
 
