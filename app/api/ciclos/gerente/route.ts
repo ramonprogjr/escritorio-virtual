@@ -1,22 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+let _supabase: SupabaseClient | undefined;
+function supabase(): SupabaseClient {
+  return (_supabase ??= createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ));
+}
 
 async function cicloRelatorioManha() {
   const ontem = new Date(); ontem.setDate(ontem.getDate() - 1); ontem.setHours(0, 0, 0, 0);
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
 
   const [leadsOntem, qualificados, encaminhados, alerts] = await Promise.all([
-    supabase.from("hub_leads_crm").select("id", { count: "exact", head: true }).gte("criado_em", ontem.toISOString()).lt("criado_em", hoje.toISOString()),
-    supabase.from("hub_leads_crm").select("id", { count: "exact", head: true }).eq("estagio", "qualificado").gte("atualizado_em", ontem.toISOString()),
-    supabase.from("hub_encaminhamentos").select("id", { count: "exact", head: true }).gte("enviado_em", ontem.toISOString()),
-    supabase.from("hub_alertas").select("id", { count: "exact", head: true }).eq("resolvido", false),
+    supabase().from("hub_leads_crm").select("id", { count: "exact", head: true }).gte("criado_em", ontem.toISOString()).lt("criado_em", hoje.toISOString()),
+    supabase().from("hub_leads_crm").select("id", { count: "exact", head: true }).eq("estagio", "qualificado").gte("atualizado_em", ontem.toISOString()),
+    supabase().from("hub_encaminhamentos").select("id", { count: "exact", head: true }).gte("enviado_em", ontem.toISOString()),
+    supabase().from("hub_alertas").select("id", { count: "exact", head: true }).eq("resolvido", false),
   ]);
 
   const totalLeads = leadsOntem.count || 0;
@@ -54,7 +57,7 @@ ${totalAlerts > 0 ? "⚡ Há alertas pendentes no sistema." : "✓ Operação sa
     }
   }
 
-  await supabase.from("hub_alertas").insert({
+  await supabase().from("hub_alertas").insert({
     tipo: "info",
     agente_slug: "gerente_atendimento",
     titulo: `Relatório matinal — ${ontem.toLocaleDateString("pt-BR")}`,
@@ -81,7 +84,7 @@ async function cicloSupervisao() {
     const temReclamacao = palavrasReclamacao.some(p => conteudo.includes(p));
 
     if (temReclamacao) {
-      await supabase.from("hub_alertas").insert({
+      await supabase().from("hub_alertas").insert({
         tipo: "importante",
         agente_slug: "gerente_atendimento",
         titulo: "Possível reclamação detectada",
@@ -168,7 +171,7 @@ async function registrarExecucaoGerente(
       ? (resultado as { alertas?: unknown }).alertas
       : [];
 
-  await supabase.from("hub_ciclos_log").insert({
+  await supabase().from("hub_ciclos_log").insert({
     ciclo_id: cfg.id,
     agente_slug: cfg.agente_slug,
     status: statusExec,

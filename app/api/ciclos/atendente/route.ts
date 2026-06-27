@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
 import { parseFollowupFromCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+let _supabase: SupabaseClient | undefined;
+function supabase(): SupabaseClient {
+  return (_supabase ??= createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ));
+}
 
 async function gerarAlerta(tipo: string, agente: string, titulo: string, mensagem: string, dados: Record<string, unknown> = {}, leadId?: string) {
-  await supabase.from("hub_alertas").insert({
+  await supabase().from("hub_alertas").insert({
     tipo, agente_slug: agente, titulo, mensagem, dados,
     lead_id: leadId || null,
   });
@@ -96,7 +99,7 @@ async function cicloFollowup(runtime: ReturnType<typeof parseFollowupFromCicloCo
       .replace("{nome}", nome)
       .replace("{mercado}", mercado);
 
-    await supabase.from("hub_fila_mensagens").insert({
+    await supabase().from("hub_fila_mensagens").insert({
       lead_id: lead.id,
       agente_id: "atendente",
       canal: "whatsapp",
@@ -247,7 +250,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const logRes = await supabase.from("hub_ciclos_log").insert({
+  const logRes = await supabase().from("hub_ciclos_log").insert({
     ciclo_id: cicloConfig?.id ?? null,
     agente_slug: agenteSlugLog,
     status: "rodando",
@@ -263,7 +266,7 @@ export async function GET(request: NextRequest) {
 
     if (logRes.data) {
       const res = resultado as Record<string, unknown>;
-      await supabase.from("hub_ciclos_log").update({
+      await supabase().from("hub_ciclos_log").update({
         status,
         finalizado_em: new Date().toISOString(),
         acoes_tomadas: res.acoes || [],
@@ -290,7 +293,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, ciclo, duracao_ms: Date.now() - inicio, ...resultado });
   } catch (erro) {
     const msg = erro instanceof Error ? erro.message : "Erro desconhecido";
-    if (logRes.data) await supabase.from("hub_ciclos_log").update({ status: "erro", erro: msg, finalizado_em: new Date().toISOString() }).eq("id", logRes.data.id);
+    if (logRes.data) await supabase().from("hub_ciclos_log").update({ status: "erro", erro: msg, finalizado_em: new Date().toISOString() }).eq("id", logRes.data.id);
     return NextResponse.json({ ok: false, erro: msg }, { status: 500 });
   }
 }

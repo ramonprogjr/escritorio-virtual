@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
 import { medirKPIs } from "@/lib/ia/ml";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+let _supabase: SupabaseClient | undefined;
+function supabase(): SupabaseClient {
+  return (_supabase ??= createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ));
+}
 
 /** Slugs reais em hub_agente_identidade (documento mestre — evitar "diretor" inexistente). */
 const AG_TRAFEGO = "diretor_operacoes";
@@ -43,7 +46,7 @@ async function cicloTrafego() {
   const campanhas = await buscarDadosWindsor();
 
   if (!campanhas || campanhas.length === 0) {
-    await supabase.from("hub_alertas").insert({
+    await supabase().from("hub_alertas").insert({
       tipo: "info",
       agente_slug: AG_TRAFEGO,
       titulo: "Verificação de campanhas",
@@ -59,7 +62,7 @@ async function cicloTrafego() {
     const cpc = spend > 0 && clicks > 0 ? spend / clicks : 0;
 
     if (cpc > 5) {
-      await supabase.from("hub_alertas").insert({
+      await supabase().from("hub_alertas").insert({
         tipo: "critico",
         agente_slug: AG_TRAFEGO,
         titulo: `CPC crítico: ${camp.campaign}`,
@@ -68,7 +71,7 @@ async function cicloTrafego() {
       });
       alertas.push(`CPC crítico: ${camp.campaign} — R$${cpc.toFixed(2)}`);
     } else if (cpc > 3) {
-      await supabase.from("hub_alertas").insert({
+      await supabase().from("hub_alertas").insert({
         tipo: "importante",
         agente_slug: AG_TRAFEGO,
         titulo: `CPC alto: ${camp.campaign}`,
@@ -83,7 +86,7 @@ async function cicloTrafego() {
   }
 
   if (sugestoes.length > 0) {
-    await supabase.from("hub_alertas").insert({
+    await supabase().from("hub_alertas").insert({
       tipo: "sugestao",
       agente_slug: AG_TRAFEGO,
       titulo: `${sugestoes.length} sugestão(ões) de otimização`,
@@ -97,9 +100,9 @@ async function cicloTrafego() {
 
 async function cicloAnaliseManha() {
   const [leads, encaminhados, alertasAbertos] = await Promise.all([
-    supabase.from("hub_leads_crm").select("id, estagio, valor_estimado").not("estagio", "in", '("ganho","perdido","arquivado")'),
-    supabase.from("hub_encaminhamentos").select("id, status").gte("enviado_em", new Date(Date.now() - 7 * 24 * 3600000).toISOString()),
-    supabase.from("hub_alertas").select("id, tipo").eq("resolvido", false),
+    supabase().from("hub_leads_crm").select("id, estagio, valor_estimado").not("estagio", "in", '("ganho","perdido","arquivado")'),
+    supabase().from("hub_encaminhamentos").select("id, status").gte("enviado_em", new Date(Date.now() - 7 * 24 * 3600000).toISOString()),
+    supabase().from("hub_alertas").select("id, tipo").eq("resolvido", false),
   ]);
 
   const criticos = (alertasAbertos.data || []).filter(a => a.tipo === "critico").length;
@@ -107,7 +110,7 @@ async function cicloAnaliseManha() {
   const receitaPotencial = todosLeads.reduce((s, l) => s + (l.valor_estimado || 0), 0);
 
   if (criticos > 0) {
-    await supabase.from("hub_alertas").insert({
+    await supabase().from("hub_alertas").insert({
       tipo: "importante",
       agente_slug: AG_ANALISES,
       titulo: `${criticos} alerta(s) crítico(s) pendente(s)`,
@@ -128,9 +131,9 @@ async function cicloAnaliseNoite() {
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
 
   const [leadsHoje, encHoje, alertasHoje] = await Promise.all([
-    supabase.from("hub_leads_crm").select("id, estagio", { count: "exact" }).gte("criado_em", hoje.toISOString()),
-    supabase.from("hub_encaminhamentos").select("id, status", { count: "exact" }).gte("enviado_em", hoje.toISOString()),
-    supabase.from("hub_alertas").select("id, tipo", { count: "exact" }).eq("resolvido", false),
+    supabase().from("hub_leads_crm").select("id, estagio", { count: "exact" }).gte("criado_em", hoje.toISOString()),
+    supabase().from("hub_encaminhamentos").select("id, status", { count: "exact" }).gte("enviado_em", hoje.toISOString()),
+    supabase().from("hub_alertas").select("id, tipo", { count: "exact" }).eq("resolvido", false),
   ]);
 
   const resumo = `📊 *Resumo do dia — Obra10+*
@@ -236,7 +239,7 @@ async function registrarExecucaoDiretor(
       ? (resultado as { alertas?: unknown }).alertas
       : [];
 
-  await supabase.from("hub_ciclos_log").insert({
+  await supabase().from("hub_ciclos_log").insert({
     ciclo_id: cfg.id,
     agente_slug: cfg.agente_slug,
     status: statusExec,
