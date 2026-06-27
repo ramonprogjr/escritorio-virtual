@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from "react";
-import { Activity, ChevronRight, Clock, MessageCircle, Power, Trash2, Webhook, X, Zap } from "lucide-react";
+import { Activity, ChevronRight, Clock, MessageCircle, Pencil, Power, Trash2, Webhook, X, Zap } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
@@ -1043,6 +1043,31 @@ function AgentesView() {
                         flexShrink: 0,
                       }}
                     >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/crm/agentes/${agente.agente_slug}`);
+                        }}
+                        title="Editar agente"
+                        aria-label="Editar agente"
+                        style={{
+                          width: 34,
+                          height: 30,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: 0,
+                          border: 0,
+                          boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                          cursor: "pointer",
+                          background: "rgba(201, 162, 74, 0.12)",
+                          color: "#c9a24a",
+                        }}
+                      >
+                        <Pencil size={14} strokeWidth={2.25} aria-hidden />
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => alternarAtivo(agente, e)}
