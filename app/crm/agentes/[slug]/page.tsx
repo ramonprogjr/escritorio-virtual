@@ -1277,7 +1277,7 @@ function HeaderActionButton({
 }) {
   const palette =
     variant === "ai"
-      ? { bg: "#2e106418", hoverBg: "#2e106428", color: "#c4b5fd", divider: "#6d28d944" }
+      ? { bg: "#c9a24a14", hoverBg: "#c9a24a22", color: "#c9a24a", divider: "#c9a24a44" }
       : { bg: "#16271e", hoverBg: "#1d3a2c", color: "#c9d1d9", divider: "#1d3a2c" };
 
   return (
