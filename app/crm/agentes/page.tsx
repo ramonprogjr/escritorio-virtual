@@ -18,14 +18,14 @@ const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
 const UI_FETCH_CACHE_TTL_MS = 15_000;
 
 const SEGMENTO_COR: Record<string, string> = {
-  Marketing: "#3b82f6",
+  Marketing: "#2f9e8f",
   Comercial: "#10b981",
   Operações: "#f59e0b",
 };
 
 const NIVEL_COR: Record<string, string> = {
   N1: "#fb7185",
-  N2: "#a855f7",
+  N2: "#b58a63",
   N3: "#2dd4bf",
   N4: "#fbbf24",
 };
@@ -919,7 +919,7 @@ function AgentesView() {
         ) : (
           <div style={CRM_ENTITY_GRID}>
             {agentesFiltrados.map((agente) => {
-              const segCor = SEGMENTO_COR[String(agente.segmento || agente.area || "")] || "#3b82f6";
+              const segCor = SEGMENTO_COR[String(agente.segmento || agente.area || "")] || "#2f9e8f";
               const nivelCor = NIVEL_COR[String(agente.nivel || "")] || "#7d8a9a";
               const ativo = agente.ativo !== false;
               const avatarUrl = typeof agente.avatar_url === "string" && agente.avatar_url.trim() ? agente.avatar_url.trim() : null;
@@ -1709,7 +1709,7 @@ function AgentesView() {
                           return (
                             <AgenteSideoverEntityCard
                               key={String(log.id || idx)}
-                              accent="#3b82f6"
+                              accent="#2f9e8f"
                               progress={null}
                               fallbackProgress={0.5}
                               Icon={MessageCircle}

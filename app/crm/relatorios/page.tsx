@@ -129,7 +129,7 @@ export default function Relatorios() {
               {linhasResumo.map((item) => (
                 <div key={item.titulo} className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
                   <p className="text-sm font-bold text-[#e6edf3]">{item.titulo}</p>
-                  <p className="mt-3 text-2xl font-black text-[#f97316]">{item.valor}</p>
+                  <p className="mt-3 text-2xl font-black text-[#e3b341]">{item.valor}</p>
                   <p className="mt-2 text-xs leading-5 text-[#8b949e]">{item.detalhe}</p>
                 </div>
               ))}

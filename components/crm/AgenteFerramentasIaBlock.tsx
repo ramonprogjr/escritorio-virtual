@@ -529,7 +529,7 @@ export function AgenteFerramentasIaBlock({
                           style={{
                             display: "block",
                             fontSize: 10,
-                            color: "#93c5fd",
+                            color: "#93cdd4",
                             marginTop: 4,
                             wordBreak: "break-all",
                           }}

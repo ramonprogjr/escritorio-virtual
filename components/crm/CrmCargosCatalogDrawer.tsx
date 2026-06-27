@@ -33,7 +33,7 @@ import {
 import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
 
 const SEGMENTO_COR: Record<string, string> = {
-  Marketing: "#3b82f6",
+  Marketing: "#2f9e8f",
   Comercial: "#10b981",
   Operações: "#f59e0b",
 };

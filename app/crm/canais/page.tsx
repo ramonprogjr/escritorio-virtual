@@ -169,7 +169,7 @@ export default function CanaisPage() {
         {[
           { label: "Canais ativos", value: kpis.total, color: "#c9a24a" },
           { label: "Conectados", value: kpis.conectados, color: "#3fb950" },
-          { label: "Com instância WhatsApp", value: kpis.comInstancia, color: "#93c5fd" },
+          { label: "Com instância WhatsApp", value: kpis.comInstancia, color: "#93cdd4" },
         ].map((k) => (
           <div
             key={k.label}

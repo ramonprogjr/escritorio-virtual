@@ -444,7 +444,7 @@ export function CrmAnalyticsDashboard() {
                 cor={data.atendimento.leadsAguardando > 0 ? "#d29922" : "#3fb950"}
                 href="/crm/atendimento"
               />
-              <MetricMini label="Agentes IA ativos" value={data.atendimento.agentesAtivos} cor="#60a5fa" href="/crm/agentes" />
+              <MetricMini label="Agentes IA ativos" value={data.atendimento.agentesAtivos} cor="#4db3c4" href="/crm/agentes" />
               <MetricMini
                 label="Aprovações pendentes"
                 value={data.metricas.aprovacoesPendentes}
@@ -455,11 +455,11 @@ export function CrmAnalyticsDashboard() {
 
             <SectionTitle>Parceiros</SectionTitle>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              <MetricMini label="Homologados" value={data.parceiros.homologados} cor="#60a5fa" href="/crm/parceiros" />
+              <MetricMini label="Homologados" value={data.parceiros.homologados} cor="#4db3c4" href="/crm/parceiros" />
               <MetricMini
                 label="Encaminhamentos"
                 value={data.parceiros.encaminhamentosPeriodo}
-                cor="#a78bfa"
+                cor="#b58a63"
                 href="/crm/parceiros"
               />
               <MetricMini label="Taxa encaminhamento" value={`${data.parceiros.taxaEncaminhamento}%`} cor="#f59e0b" />
@@ -469,8 +469,8 @@ export function CrmAnalyticsDashboard() {
             {data.marketing ? (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <MetricMini label="Gasto" value={moedaPipeline(data.marketing.spend)} cor="#ef4444" />
-                <MetricMini label="Cliques" value={data.marketing.clicks} cor="#3b82f6" />
-                <MetricMini label="CPC médio" value={moedaPipeline(data.marketing.cpc)} cor="#f97316" />
+                <MetricMini label="Cliques" value={data.marketing.clicks} cor="#2f9e8f" />
+                <MetricMini label="CPC médio" value={moedaPipeline(data.marketing.cpc)} cor="#e3b341" />
                 <MetricMini label="Campanhas" value={data.marketing.campanhas} cor="#22c55e" href="/crm/trafego" />
               </div>
             ) : (

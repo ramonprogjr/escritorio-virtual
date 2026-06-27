@@ -154,7 +154,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
           label="A pagar (aberto)"
           valor={moedaFinanceiro(kpis.aPagarAberto)}
           sub="pendentes"
-          cor="#f97316"
+          cor="#e3b341"
           href="/crm/financeiro/pagar?status=pendente"
           loading={dash.loading}
         />
@@ -189,7 +189,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
           label="Receita potencial (leads)"
           valor={moedaPipeline(pipeline.receitaPotencialLeads)}
           sub="funil em aberto"
-          cor="#60a5fa"
+          cor="#4db3c4"
           href="/crm/leads"
           loading={dash.loading}
         />
@@ -197,7 +197,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
           label="Receita potencial (negócios)"
           valor={moedaPipeline(pipeline.receitaPotencialNegocios)}
           sub="abertos / em negociação"
-          cor="#a78bfa"
+          cor="#b58a63"
           href="/crm/negocios"
           loading={dash.loading}
         />
@@ -275,7 +275,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
                       <p className="text-[10px] text-[#8b949e]">
                         <span
                           className="mr-2 font-bold uppercase"
-                          style={{ color: l.tipo === "pagar" ? "#f97316" : "#3fb950" }}
+                          style={{ color: l.tipo === "pagar" ? "#e3b341" : "#3fb950" }}
                         >
                           {l.tipo === "pagar" ? "Pagar" : "Receber"}
                         </span>

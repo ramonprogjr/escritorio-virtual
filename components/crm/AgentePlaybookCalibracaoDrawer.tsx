@@ -107,7 +107,7 @@ export function AgentePlaybookCalibracaoDrawer({
 
   const dropzoneBorder =
     uploadHover || uploadStatus === "hover"
-      ? "1px dashed #58a6ff"
+      ? "1px dashed #4db3c4"
       : uploadStatus === "erro"
         ? "1px dashed #f85149"
         : uploadStatus === "sucesso"
@@ -116,7 +116,7 @@ export function AgentePlaybookCalibracaoDrawer({
 
   const dropzoneBg =
     uploadHover || uploadStatus === "hover"
-      ? "#58a6ff14"
+      ? "#4db3c414"
       : uploadStatus === "erro"
         ? "#f8514912"
         : uploadStatus === "sucesso"

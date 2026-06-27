@@ -100,7 +100,7 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
       {contas.map((c) => {
         const dias = diasAteVencimento(c.vencimento);
         const atrasado = dias !== null && dias < 0 && c.status === "pendente";
-        const corBorda = atrasado ? "#f85149" : tipo === "pagar" ? "#f97316" : "#3fb950";
+        const corBorda = atrasado ? "#f85149" : tipo === "pagar" ? "#e3b341" : "#3fb950";
         return (
           <li
             key={c.id}

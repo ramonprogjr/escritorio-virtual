@@ -1,7 +1,289 @@
 {
-  "geradoEm": "2026-06-27T10:20:17.957Z",
+  "geradoEm": "2026-06-27T14:57:43.554Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "d35446139cc9c35cf4e77438ecc476ab862da328",
+      "hashCurto": "d354461",
+      "mensagem": "verificação pós-execução — #3 e #4 já estavam feitos; agente-por-tarefa pronto end-to-end",
+      "mensagemRaw": "docs(agentes): verificação pós-execução — #3 e #4 já estavam feitos; agente-por-tarefa pronto end-to-end",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T14:54:10.000Z",
+      "hora": "11:54",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-agentes-ia-audit-redesign.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "2424596967e2affb27e54b27ed296dc603145430",
+      "hashCurto": "2424596",
+      "mensagem": "diretriz do dono — revisão de design completa (harmonizar TODOS os azuis) em F4/F5, deferida até agentes 100%",
+      "mensagemRaw": "docs(plano): diretriz do dono — revisão de design completa (harmonizar TODOS os azuis) em F4/F5, deferida até agentes 100%",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T14:49:13.000Z",
+      "hora": "11:49",
+      "arquivos": [
+        "docs/PLANO-ACAO-MACRO-DESIGN.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4eac0462a330f19a8b63dc9d9998d60bb400b5eb",
+      "hashCurto": "4eac046",
+      "mensagem": "#2b — passo \"Modelo\" no wizard (Econômico × Turbo × Turbo-alto-valor)",
+      "mensagemRaw": "feat(agentes): #2b — passo \"Modelo\" no wizard (Econômico × Turbo × Turbo-alto-valor)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T14:42:48.000Z",
+      "hora": "11:42",
+      "arquivos": [
+        "app/api/hub/agentes/route.ts",
+        "components/crm/AgenteNovoWizard.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "bde3c1b96f7b262c23a7c2ee81924ad89e205ae8",
+      "hashCurto": "bde3c1b",
+      "mensagem": "#2 — engine escolhe modelo por custo×robustez (alto valor → Turbo)",
+      "mensagemRaw": "feat(agentes): #2 — engine escolhe modelo por custo×robustez (alto valor → Turbo)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T14:34:50.000Z",
+      "hora": "11:34",
+      "arquivos": [
+        "lib/ia/engine.ts",
+        "lib/ia/prompt-builder.ts"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "63baba54bcbd1d543d2c08bda87a638ff34c8705",
+      "hashCurto": "63baba5",
+      "mensagem": "matriz de personalidade 5^5 → 5×5 (Comportamento × Conduta)",
+      "mensagemRaw": "feat(agentes): matriz de personalidade 5^5 → 5×5 (Comportamento × Conduta)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T14:30:44.000Z",
+      "hora": "11:30",
+      "arquivos": [
+        "components/crm/AgenteNovoWizard.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "318ccf070e4d52669201655817f93eb2d9d9b219",
+      "hashCurto": "318ccf0",
+      "mensagem": "auditoria + redesenho dos agentes de IA",
+      "mensagemRaw": "docs(agentes): auditoria + redesenho dos agentes de IA",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T11:45:38.000Z",
+      "hora": "08:45",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-agentes-ia-audit-redesign.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "8ad80da16b163c18d27d4d7a5164709ed024d0c9",
+      "hashCurto": "8ad80da",
+      "mensagem": "V1 — menu enxuto: Analytics/Relatórios saem do lateral → botões no Dashboard",
+      "mensagemRaw": "feat(ux): V1 — menu enxuto: Analytics/Relatórios saem do lateral → botões no Dashboard",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T11:30:19.000Z",
+      "hora": "08:30",
+      "arquivos": [
+        "app/crm/page.tsx",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "49131c6188b10a6de1c6853b8591c1a07283af2b",
+      "hashCurto": "49131c6",
+      "mensagem": "norte IA-first — comando universal + voz + multimodal + agêntico",
+      "mensagemRaw": "docs(visao): norte IA-first — comando universal + voz + multimodal + agêntico",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T11:23:24.000Z",
+      "hora": "08:23",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-visao-ia-first-comando-multimodal.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "590aec52026bca050cce8fdb97a5fc0c81d2de0e",
+      "hashCurto": "590aec5",
+      "mensagem": "status de execução — F0/F1/F2 completos e deployados; F3 próximo",
+      "mensagemRaw": "docs(plano): status de execução — F0/F1/F2 completos e deployados; F3 próximo",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T11:08:30.000Z",
+      "hora": "08:08",
+      "arquivos": [
+        "docs/PLANO-ACAO-MACRO-DESIGN.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "877d7972880270ac8673c8a4a7030064b083783f",
+      "hashCurto": "877d797",
+      "mensagem": "F2 — Usuários: confirma antes de cortar acesso + toast",
+      "mensagemRaw": "feat(ux): F2 — Usuários: confirma antes de cortar acesso + toast",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T11:03:45.000Z",
+      "hora": "08:03",
+      "arquivos": [
+        "app/crm/usuarios/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "0fce45da75d843f84c83a27af955156028e63606",
+      "hashCurto": "0fce45d",
+      "mensagem": "F2 — Distribuição: confirma + toast em Liberar/Cobrar",
+      "mensagemRaw": "feat(ux): F2 — Distribuição: confirma + toast em Liberar/Cobrar",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T11:00:37.000Z",
+      "hora": "08:00",
+      "arquivos": [
+        "app/crm/distribuicao/page.tsx",
+        "components/crm/CrmConfirmDialog.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "b02c88a94e682205b1671d97556ed8a2a293e44c",
+      "hashCurto": "b02c88a",
+      "mensagem": "F2 — Contatos de notificação: máscara + validação de telefone",
+      "mensagemRaw": "feat(ux): F2 — Contatos de notificação: máscara + validação de telefone",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:49:27.000Z",
+      "hora": "07:49",
+      "arquivos": [
+        "app/crm/contatos/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "75d32c3e95b97e595fb0e5758e01f0f745542f13",
+      "hashCurto": "75d32c3",
+      "mensagem": "F2 — blinda baixa financeira (loading + erro + DESFAZER)",
+      "mensagemRaw": "feat(ux): F2 — blinda baixa financeira (loading + erro + DESFAZER)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:44:09.000Z",
+      "hora": "07:44",
+      "arquivos": [
+        "components/crm/FinanceiroContasList.tsx",
+        "components/crm/toast.tsx"
+      ],
+      "areas": {
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "c5c87e308bc361130302fd0f682e7ccfe6b9a846",
+      "hashCurto": "c5c87e3",
+      "mensagem": "F1 — remove botão '+ Parceiro' do Dashboard (cadastro fora da visão geral)",
+      "mensagemRaw": "fix(ux): F1 — remove botão '+ Parceiro' do Dashboard (cadastro fora da visão geral)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:32:38.000Z",
+      "hora": "07:32",
+      "arquivos": [
+        "app/crm/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "9e05fa405624257941fce8b34a16b653d40b3421",
+      "hashCurto": "9e05fa4",
+      "mensagem": "F1 — PT-PT→PT-BR 'contacto'→'contato' e 'equipa'→'equipe' (texto)",
+      "mensagemRaw": "fix(ux): F1 — PT-PT→PT-BR 'contacto'→'contato' e 'equipa'→'equipe' (texto)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:31:09.000Z",
+      "hora": "07:31",
+      "arquivos": [
+        "app/crm/usuarios/page.tsx",
+        "app/parceiro/cadastro/[token]/page.tsx",
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/cadastro/CadastroComercialSecao.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "components/crm/leads/LeadRapidoSideover.tsx",
+        "components/hub/HubLeadForm.tsx",
+        "components/hub/HubLeadFormServer.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1,
+        "components/crm": 4,
+        "components/hub": 2
+      }
+    },
+    {
+      "hash": "78db668bf3d903cd24b70962f2e86c42c71a4757",
+      "hashCurto": "78db668",
+      "mensagem": "F1 — PT-PT→PT-BR (gerir/partilha/acção/equipa/extractos)",
+      "mensagemRaw": "fix(ux): F1 — PT-PT→PT-BR (gerir/partilha/acção/equipa/extractos)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:28:01.000Z",
+      "hora": "07:28",
+      "arquivos": [
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/usuarios/page.tsx",
+        "components/crm/AgenteBriefingChatPanel.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/CrmFerramentasCustomDrawer.tsx",
+        "components/crm/leads/PipelineConfigSideover.tsx",
+        "components/crm/parceiros/ParceiroLinkWizard.tsx"
+      ],
+      "areas": {
+        "app/crm": 2,
+        "components/crm": 5
+      }
+    },
+    {
+      "hash": "decc53d7e4e302de32f79300e70083ef69129dad",
+      "hashCurto": "decc53d",
+      "mensagem": "corrige call-sites supabase() nas rotas de ciclos após merge",
+      "mensagemRaw": "fix(build): corrige call-sites supabase() nas rotas de ciclos após merge",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:22:01.000Z",
+      "hora": "07:22",
+      "arquivos": [
+        "app/api/ciclos/atendente/route.ts",
+        "app/api/ciclos/diretor/route.ts",
+        "app/api/ciclos/gerente/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
     {
       "hash": "d8e66e002941941bf67523960c31e389965d73b1",
       "hashCurto": "d8e66e0",

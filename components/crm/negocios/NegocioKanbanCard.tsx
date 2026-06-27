@@ -10,7 +10,7 @@ import { mercadoAccent, mercadoIcon } from "@/lib/crm/mercado-visual";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 
 const STATUS_COLOR: Record<string, string> = {
-  aberto: "#3b82f6",
+  aberto: "#2f9e8f",
   em_negociacao: "#f59e0b",
   fechado_ganho: "#22c55e",
   fechado_perdido: "#ef4444",

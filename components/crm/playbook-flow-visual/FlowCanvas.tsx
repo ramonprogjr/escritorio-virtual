@@ -283,7 +283,7 @@ function buildInitialEdges(def?: PlaybookFlowDefinition): Edge[] {
           target: opt.next,
           label: opt.label,
           markerEnd: { type: MarkerType.ArrowClosed },
-          style: { stroke: "#a78bfa", strokeWidth: 2 },
+          style: { stroke: "#b58a63", strokeWidth: 2 },
           labelStyle: { fill: "#e2e8f0", fontSize: 10, fontFamily: "inherit", fontWeight: 600 },
           labelBgStyle: { fill: "#0f172acc", opacity: 0.96 },
           labelBgPadding: [4, 4],

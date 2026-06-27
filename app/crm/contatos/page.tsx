@@ -239,7 +239,7 @@ export default function ContatosPage() {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
                 {c.receber_novo_lead && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#34d39915", color: "#34d399", border: "1px solid #34d39930" }}>novo lead</span>}
                 {c.receber_aprovacao && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#ef444415", color: "#ef4444", border: "1px solid #ef444430" }}>aprovação</span>}
-                {c.receber_encaminhamento && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#a78bfa15", color: "#a78bfa", border: "1px solid #a78bfa30" }}>encaminhamento</span>}
+                {c.receber_encaminhamento && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#b58a6315", color: "#b58a63", border: "1px solid #b58a6330" }}>encaminhamento</span>}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => iniciarEdicao(c)}

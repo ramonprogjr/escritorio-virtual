@@ -219,7 +219,7 @@ const metaItem: CSSProperties = {
 
 const metaCode: CSSProperties = {
   fontSize: 10,
-  color: "#93c5fd",
+  color: "#93cdd4",
   fontFamily: "monospace",
 };
 

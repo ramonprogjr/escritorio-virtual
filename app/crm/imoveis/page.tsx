@@ -46,8 +46,8 @@ function formatCurrency(val: number | null): string {
 const STATUS_COR: Record<string, { bg: string; color: string }> = {
   captacao: { bg: "#c9a24a22", color: "#c9a24a" },
   disponivel: { bg: "#22c55e22", color: "#22c55e" },
-  vendido: { bg: "#3b82f622", color: "#3b82f6" },
-  alugado: { bg: "#a855f722", color: "#a855f7" },
+  vendido: { bg: "#2f9e8f22", color: "#2f9e8f" },
+  alugado: { bg: "#b58a6322", color: "#b58a63" },
   reservado: { bg: "#f59e0b22", color: "#f59e0b" },
 };
 
@@ -196,8 +196,8 @@ export default function ImoveisPage() {
       {/* KPI Bar */}
       <KpiBar kpis={[
         { label: "Total", value: total, color: "#c9a24a" },
-        { label: "Venda", value: vendaCount, color: "#3b82f6" },
-        { label: "Locação", value: locacaoCount, color: "#a855f7" },
+        { label: "Venda", value: vendaCount, color: "#2f9e8f" },
+        { label: "Locação", value: locacaoCount, color: "#b58a63" },
       ]} />
 
       {/* Search */}
@@ -282,9 +282,9 @@ export default function ImoveisPage() {
                         {im.finalidade ? (
                           <span style={{
                             fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
-                            background: im.finalidade === "venda" ? "#3b82f622" : "#a855f722",
-                            color: im.finalidade === "venda" ? "#3b82f6" : "#a855f7",
-                            border: `1px solid ${im.finalidade === "venda" ? "#3b82f644" : "#a855f744"}`,
+                            background: im.finalidade === "venda" ? "#2f9e8f22" : "#b58a6322",
+                            color: im.finalidade === "venda" ? "#2f9e8f" : "#b58a63",
+                            border: `1px solid ${im.finalidade === "venda" ? "#2f9e8f44" : "#b58a6344"}`,
                           }}>
                             {im.finalidade === "locacao" ? "Locação" : "Venda"}
                           </span>

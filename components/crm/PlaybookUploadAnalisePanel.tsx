@@ -161,7 +161,7 @@ export function PlaybookUploadAnalisePanel({
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              color: "#58a6ff",
+              color: "#4db3c4",
               fontWeight: 700,
               textDecoration: "none",
             }}
@@ -183,7 +183,7 @@ export function PlaybookUploadAnalisePanel({
             href={PLAYBOOK_ATENDIMENTO_1_MD_URL}
             download={PLAYBOOK_ATENDIMENTO_1_ARQUIVO}
             onClick={(e) => e.stopPropagation()}
-            style={{ color: "#58a6ff", textDecoration: "none" }}
+            style={{ color: "#4db3c4", textDecoration: "none" }}
           >
             Atendimento 1 (triagem + IA)
           </a>
@@ -192,7 +192,7 @@ export function PlaybookUploadAnalisePanel({
             href={PLAYBOOK_MARI_IA_MD_URL}
             download={PLAYBOOK_MARI_IA_ARQUIVO}
             onClick={(e) => e.stopPropagation()}
-            style={{ color: "#58a6ff", textDecoration: "none" }}
+            style={{ color: "#4db3c4", textDecoration: "none" }}
           >
             Mari IA (só playbook)
           </a>
@@ -251,7 +251,7 @@ export function PlaybookUploadAnalisePanel({
                 style={{
                   width: `${Math.max(6, Math.min(100, uploadPct))}%`,
                   height: "100%",
-                  background: "linear-gradient(90deg, #1f6feb 0%, #58a6ff 100%)",
+                  background: "linear-gradient(90deg, #1f6feb 0%, #4db3c4 100%)",
                   transition: "width 220ms ease",
                 }}
               />
@@ -502,7 +502,7 @@ export function PlaybookUploadAnalisePanel({
               ) : null}
               {analiseResultado.recomendacoes.length > 0 ? (
                 <div>
-                  <p style={{ margin: 0, color: "#58a6ff", fontSize: 11, fontWeight: 700 }}>SUGESTÕES</p>
+                  <p style={{ margin: 0, color: "#4db3c4", fontSize: 11, fontWeight: 700 }}>SUGESTÕES</p>
                   <ul style={{ margin: "6px 0 0", paddingLeft: 18, color: "#aebccf", fontSize: 12, lineHeight: 1.5 }}>
                     {analiseResultado.recomendacoes.map((item, idx) => (
                       <li key={idx}>{item}</li>

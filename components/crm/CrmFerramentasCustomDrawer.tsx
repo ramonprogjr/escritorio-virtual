@@ -49,7 +49,7 @@ const CATEGORIA_SECAO: Record<
   { label: string; cor: string }
 > = {
   cliente: { label: "Dados do cliente nesta conversa", cor: "#10b981" },
-  analise: { label: "Análise e compartilhamento", cor: "#3b82f6" },
+  analise: { label: "Análise e compartilhamento", cor: "#2f9e8f" },
   registos: { label: "Registos", cor: "#f59e0b" },
 };
 
@@ -1026,7 +1026,7 @@ export function CrmFerramentasCustomDrawer({
                                   textOverflow: "ellipsis",
                                 }}
                               >
-                                <code style={{ color: "#93c5fd" }}>{r.ferramenta_key}</code>
+                                <code style={{ color: "#93cdd4" }}>{r.ferramenta_key}</code>
                                 {" · "}
                                 {r.builtin_impl}
                                 {smart ? ` · smart:${smart}` : ""}
@@ -1476,7 +1476,7 @@ export function CrmFerramentasCustomDrawer({
             <p id="confirm-del-desc" style={{ margin: 0, color: OB.texto2, fontSize: 13, lineHeight: 1.5 }}>
               <strong style={{ color: "#e6edf3" }}>{confirmDeleteRow.titulo}</strong>
               <br />
-              <code style={{ fontSize: 12, color: "#93c5fd" }}>{confirmDeleteRow.ferramenta_key}</code>
+              <code style={{ fontSize: 12, color: "#93cdd4" }}>{confirmDeleteRow.ferramenta_key}</code>
               <br />
               <br />
               Esta ação remove o registro do sistema. Agentes que tiverem esta chave em{" "}

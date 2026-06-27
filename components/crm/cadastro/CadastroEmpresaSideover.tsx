@@ -369,7 +369,7 @@ export function CadastroEmpresaSideover({
       title={empresa?.razao_social || (loading ? "Carregando…" : "—")}
       subtitle={empresa?.codigo || undefined}
       Icon={Building2}
-      accent="#3b82f6"
+      accent="#2f9e8f"
       badge={
         <>
           {empresa?.prefixo_mercado ? (
@@ -389,7 +389,7 @@ export function CadastroEmpresaSideover({
         <p style={{ margin: "0 0 8px", fontSize: 12 }}>
           <Link
             href={`/crm/empresas/${encodeURIComponent(empresaId)}`}
-            style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}
+            style={{ color: "#2f9e8f", textDecoration: "none", fontWeight: 600 }}
           >
             Abrir ficha completa →
           </Link>
@@ -435,7 +435,7 @@ export function CadastroEmpresaSideover({
             {fichaTab === "resumo" && (
               <>
           <AgenteSideoverEntityCard
-            accent="#3b82f6"
+            accent="#2f9e8f"
             Icon={Building2}
             avatarCaption={empresa.codigo || "Empresa"}
             footer={

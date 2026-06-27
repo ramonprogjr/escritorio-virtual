@@ -18,7 +18,7 @@ export function CrmOperacaoResumo({
           label="Negócios abertos"
           valor={operacao.negociosAbertos}
           sub="pipeline comercial"
-          cor="#3b82f6"
+          cor="#2f9e8f"
           href="/crm/negocios"
           loading={loading}
         />

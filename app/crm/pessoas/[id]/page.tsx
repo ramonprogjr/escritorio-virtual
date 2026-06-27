@@ -217,7 +217,7 @@ export default function PessoaDetalhePage() {
     .join(" · ");
 
   const tipoCor =
-    pessoa.tipo_pessoa === "PF" ? "#3b82f6" : pessoa.tipo_pessoa === "PJ" ? "#10b981" : "#8b949e";
+    pessoa.tipo_pessoa === "PF" ? "#2f9e8f" : pessoa.tipo_pessoa === "PJ" ? "#10b981" : "#8b949e";
 
   return (
     <div style={{ minHeight: "100%", background: "#0a140f" }}>

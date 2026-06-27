@@ -50,7 +50,7 @@ type KindTheme = {
 
 const KIND_THEME: Record<FlowNodeKind, KindTheme> = {
   message: {
-    border: "#60a5fa",
+    border: "#4db3c4",
     headerBg: "#0f1f38",
     headerText: "#bfdbfe",
     badgeBg: "#1d4d8f",
@@ -68,7 +68,7 @@ const KIND_THEME: Record<FlowNodeKind, KindTheme> = {
     Icon: Pencil,
   },
   menu: {
-    border: "#a78bfa",
+    border: "#b58a63",
     headerBg: "#23163b",
     headerText: "#ddd6fe",
     badgeBg: "#4c2b95",
@@ -462,7 +462,7 @@ const titleInput: CSSProperties = {
   fontSize: 12.5,
   fontWeight: 600,
   background: "#0f172a",
-  border: "1px solid #60a5fa",
+  border: "1px solid #4db3c4",
   borderRadius: 6,
   color: "#e2e8f0",
   padding: "5px 7px",
@@ -506,7 +506,7 @@ const contentTextarea: CSSProperties = {
   color: "#e2e8f0",
   lineHeight: 1.55,
   background: "#0f172a",
-  border: "1px solid #60a5fa",
+  border: "1px solid #4db3c4",
   borderRadius: 8,
   padding: "7px 8px",
   resize: "vertical",
@@ -620,7 +620,7 @@ const addOptBtn: CSSProperties = {
   fontSize: 10.5,
   color: "#c4b5fd",
   background: "#1f1638",
-  border: "1px dashed #a78bfa",
+  border: "1px dashed #b58a63",
   borderRadius: 7,
   padding: "6px 8px",
   cursor: "pointer",
@@ -642,7 +642,7 @@ const addOptInput: CSSProperties = {
   fontSize: 10.5,
   color: "#e2e8f0",
   background: "#0f172a",
-  border: "1px solid #a78bfa",
+  border: "1px solid #b58a63",
   borderRadius: 7,
   padding: "5px 7px",
   outline: "none",

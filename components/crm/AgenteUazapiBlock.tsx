@@ -656,9 +656,9 @@ export function AgenteUazapiBlock({
     if (variant === "primary") {
       return {
         ...base,
-        border: "1px solid #58a6ff",
+        border: "1px solid #4db3c4",
         background: disabled ? "#0f1d16" : "#1f6feb22",
-        color: disabled ? "#484f58" : "#58a6ff",
+        color: disabled ? "#484f58" : "#4db3c4",
       };
     }
     if (variant === "danger") {
@@ -951,9 +951,9 @@ export function AgenteUazapiBlock({
                 gap: 8,
                 padding: "9px 14px",
                 borderRadius: 8,
-                border: "1px solid #58a6ff",
+                border: "1px solid #4db3c4",
                 background: bloqueado ? "#0f1d16" : "#1f6feb22",
-                color: bloqueado ? "#484f58" : "#58a6ff",
+                color: bloqueado ? "#484f58" : "#4db3c4",
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: bloqueado ? "not-allowed" : "pointer",
@@ -1096,7 +1096,7 @@ export function AgenteUazapiBlock({
                 style={{
                   border: "none",
                   background: "transparent",
-                  color: "#58a6ff",
+                  color: "#4db3c4",
                   fontSize: 11,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -1301,7 +1301,7 @@ export function AgenteUazapiBlock({
                     style={{
                       fontSize: 11,
                       fontWeight: 800,
-                      color: qrSegundosRestantes <= 30 ? "#f85149" : "#58a6ff",
+                      color: qrSegundosRestantes <= 30 ? "#f85149" : "#4db3c4",
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
@@ -1335,7 +1335,7 @@ export function AgenteUazapiBlock({
               style={{
                 padding: 16,
                 borderRadius: 12,
-                border: "1px solid #58a6ff66",
+                border: "1px solid #4db3c466",
                 background: "rgba(31, 111, 235, 0.14)",
                 textAlign: "center",
               }}

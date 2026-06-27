@@ -53,13 +53,13 @@ const WIZARD_STEP_LABELS = [
 ] as const;
 
 const SEGMENTO_COR: Record<string, string> = {
-  Marketing: "#3b82f6",
+  Marketing: "#2f9e8f",
   Comercial: "#10b981",
   "Operações": "#f59e0b",
 };
 
 const NIVEL_COR: Record<string, string> = {
-  N2: "#a855f7",
+  N2: "#b58a63",
   N3: "#2dd4bf",
   N4: "#fbbf24",
 };
@@ -198,14 +198,14 @@ function RagErroAjuda({ mensagem }: { mensagem: string }) {
     >
       {pdf ? (
         <p style={{ margin: "0 0 8px" }}>
-          <strong style={{ color: "#58a6ff" }}>PDF sem texto seleccionável.</strong> Muitos PDFs criados com
+          <strong style={{ color: "#4db3c4" }}>PDF sem texto seleccionável.</strong> Muitos PDFs criados com
           &quot;Imprimir&quot; ou digitalizados não indexam. Use{" "}
           <a
             href={RAG_EXEMPLO_MD_URL}
             download
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#58a6ff", fontWeight: 700 }}
+            style={{ color: "#4db3c4", fontWeight: 700 }}
           >
             o ficheiro .md de exemplo
           </a>{" "}
@@ -949,7 +949,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
   const playbookDropzoneBorder =
     playbookUploadStatus === "hover"
-      ? "1px dashed #58a6ff"
+      ? "1px dashed #4db3c4"
       : playbookUploadStatus === "erro"
         ? "1px dashed #f85149"
         : playbookUploadStatus === "sucesso"
@@ -958,7 +958,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
   const playbookDropzoneBg =
     playbookUploadStatus === "hover"
-      ? "#58a6ff14"
+      ? "#4db3c414"
       : playbookUploadStatus === "erro"
         ? "#f8514912"
         : playbookUploadStatus === "sucesso"
@@ -2010,7 +2010,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     borderRadius: 10,
                     padding: "14px 12px",
                     cursor: ragPendentes.length >= RAG_DOCS_LIMIT ? "not-allowed" : "pointer",
-                    color: ragPendentes.length >= RAG_DOCS_LIMIT ? "#6e7781" : "#58a6ff",
+                    color: ragPendentes.length >= RAG_DOCS_LIMIT ? "#6e7781" : "#4db3c4",
                     fontSize: 13,
                     fontWeight: 700,
                     textAlign: "center",
@@ -2047,7 +2047,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     fontWeight: 800,
                     border: "1px solid #1d3a2c",
                     background: ragPreparando ? "#16271e" : "#0b5ed722",
-                    color: ragPreparando ? "#8b949e" : "#58a6ff",
+                    color: ragPreparando ? "#8b949e" : "#4db3c4",
                     cursor: ragPreparando || ragPendentes.length === 0 ? "not-allowed" : "pointer",
                     opacity: ragPreparando || ragPendentes.length === 0 ? 0.7 : 1,
                   }}
@@ -2106,7 +2106,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           background:
                             ragUploadTotal > 0
                               ? "linear-gradient(90deg, #238636 0%, #3fb950 100%)"
-                              : "linear-gradient(90deg, #1f6feb 0%, #58a6ff 100%)",
+                              : "linear-gradient(90deg, #1f6feb 0%, #4db3c4 100%)",
                           transition: "width 180ms ease",
                         }}
                       />
@@ -2181,7 +2181,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                     : item.status === "erro"
                                       ? "#f85149"
                                       : item.status === "processando"
-                                        ? "#58a6ff"
+                                        ? "#4db3c4"
                                         : item.status === "preparado"
                                           ? "#c9a24a"
                                           : "#8b949e",
@@ -2938,7 +2938,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   style={{
                     fontSize: 12,
                     fontWeight: 700,
-                    color: "#58a6ff",
+                    color: "#4db3c4",
                     textDecoration: "none",
                   }}
                 >
@@ -3148,7 +3148,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 >
                   <strong style={{ color: "#c9a24a" }}>Ciclos vinculados:</strong> associou ciclos existentes da Central a
                   este agente. Confirme no painel WhatsApp que o <strong style={{ color: "#e6edf3" }}>webhook</strong> aponta
-                  para <code style={{ fontSize: 11, color: "#93c5fd" }}>/api/whatsapp/webhook</code> e que a instância
+                  para <code style={{ fontSize: 11, color: "#93cdd4" }}>/api/whatsapp/webhook</code> e que a instância
                   abaixo fica <strong style={{ color: "#e6edf3" }}>connected</strong> — só assim as mensagens disparam a
                   IA neste modelo.
                 </div>

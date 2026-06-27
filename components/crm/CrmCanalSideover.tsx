@@ -148,7 +148,7 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
               </p>
               <h2 style={{ margin: "4px 0 0", color: "#e6edf3", fontSize: 18, fontWeight: 800 }}>{agente.nome}</h2>
               <p style={{ margin: "6px 0 0", color: "#8b949e", fontSize: 12 }}>
-                <code style={{ color: "#93c5fd", fontSize: 11 }}>{agente.agente_slug}</code>
+                <code style={{ color: "#93cdd4", fontSize: 11 }}>{agente.agente_slug}</code>
                 {" · "}
                 {modoLabel}
               </p>
@@ -254,7 +254,7 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
               label="ID instância"
               value={
                 agente.uazapi_instance_id ? (
-                  <code style={{ fontSize: 11, color: "#93c5fd" }}>{agente.uazapi_instance_id}</code>
+                  <code style={{ fontSize: 11, color: "#93cdd4" }}>{agente.uazapi_instance_id}</code>
                 ) : (
                   "—"
                 )
@@ -276,9 +276,9 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
               width: "100%",
               padding: "10px 14px",
               borderRadius: 8,
-              border: "1px solid #58a6ff66",
+              border: "1px solid #4db3c466",
               background: "#1f6feb22",
-              color: "#58a6ff",
+              color: "#4db3c4",
               fontSize: 12,
               fontWeight: 700,
               textDecoration: "none",

@@ -955,7 +955,7 @@ export default function CiclosPage() {
             {ciclosFiltrados.length > 0 && (
               <div style={CRM_ENTITY_GRID}>
                 {ciclosFiltrados.map((c) => {
-                  const tipoCor = TIPO_COR[c.tipo] || "#3b82f6";
+                  const tipoCor = TIPO_COR[c.tipo] || "#2f9e8f";
                   const st = c.ultimo_status || "nunca_executado";
                   const stCor = STATUS_COR[st] || "#8b949e";
                   const ativo = c.ativo !== false;

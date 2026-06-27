@@ -41,17 +41,17 @@ type EtapaUi = { id: string; label: string; color: string };
 
 const ETAPA_COR: Record<string, string> = {
   novo: "#6b7280",
-  qualificando: "#3b82f6",
+  qualificando: "#2f9e8f",
   qualificado: "#06b6d4",
   proposta: "#eab308",
-  negociando: "#f97316",
-  fechamento: "#a855f7",
+  negociando: "#e3b341",
+  fechamento: "#b58a63",
   ganho: "#22c55e",
   perdido: "#ef4444",
 };
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
-  aberto: { label: "Aberto", color: "#3b82f6", bg: "#3b82f622" },
+  aberto: { label: "Aberto", color: "#2f9e8f", bg: "#2f9e8f22" },
   em_negociacao: { label: "Em negociação", color: "#f59e0b", bg: "#f59e0b22" },
   fechado_ganho: { label: "Ganho", color: "#22c55e", bg: "#22c55e22" },
   fechado_perdido: { label: "Perdido", color: "#ef4444", bg: "#ef444422" },

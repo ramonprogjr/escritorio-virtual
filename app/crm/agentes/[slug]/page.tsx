@@ -17,13 +17,13 @@ import {
 const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
 
 const SEGMENTO_COR: Record<string, string> = {
-  Marketing: "#3b82f6",
+  Marketing: "#2f9e8f",
   Comercial: "#10b981",
   Operações: "#f59e0b",
 };
 
 const NIVEL_COR: Record<string, string> = {
-  N2: "#a855f7",
+  N2: "#b58a63",
   N3: "#2dd4bf",
   N4: "#fbbf24",
 };

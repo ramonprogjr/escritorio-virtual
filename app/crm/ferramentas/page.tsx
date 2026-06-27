@@ -197,7 +197,7 @@ export default function FerramentasHubPage() {
             Catálogo <strong style={{ color: "#aebccf" }}>built-in</strong> mais ferramentas{" "}
             <strong style={{ color: "#c9a24a" }}>custom</strong> do tenant (nome e descrição próprios, mesma execução
             segura; opcional smart Mistral/Gemini). Ativar por agente em{" "}
-            <Link href="/crm/agentes" className="underline font-medium" style={{ color: "#93c5fd" }}>
+            <Link href="/crm/agentes" className="underline font-medium" style={{ color: "#93cdd4" }}>
               Modelos
             </Link>
             .
@@ -278,7 +278,7 @@ export default function FerramentasHubPage() {
                             </div>
                             <code
                               className="mt-1 block truncate text-[11px]"
-                              style={{ color: "#93c5fd" }}
+                              style={{ color: "#93cdd4" }}
                               title={f.mistralFunction.name}
                             >
                               {f.mistralFunction.name}
@@ -412,7 +412,7 @@ export default function FerramentasHubPage() {
                         </div>
                         <code
                           className="mt-1 block break-all text-[11px]"
-                          style={{ color: "#93c5fd" }}
+                          style={{ color: "#93cdd4" }}
                           title={c.ferramenta_key}
                         >
                           {c.ferramenta_key}

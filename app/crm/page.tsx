@@ -73,14 +73,14 @@ export default function DashboardPage() {
       label: "Encaminhamentos hoje",
       valor: m.encaminhamentosHoje,
       sub: "rede de parceiros",
-      cor: "#a78bfa",
+      cor: "#b58a63",
       rota: "/crm/parceiros",
     },
     {
       label: "Modelos IA ativos",
       valor: m.agentesAtivos,
       sub: "agentes no hub",
-      cor: "#60a5fa",
+      cor: "#4db3c4",
       rota: "/crm/agentes",
     },
   ];
@@ -104,7 +104,7 @@ export default function DashboardPage() {
       label: "Parceiros ativos",
       valor: m.parceirosAtivos,
       sub: "homologados",
-      cor: "#60a5fa",
+      cor: "#4db3c4",
       rota: "/crm/parceiros",
     },
     {
