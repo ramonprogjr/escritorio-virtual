@@ -134,7 +134,7 @@ export function CrmConfirmDialog({
               color: danger ? "#ffb4ab" : "#c9a24a",
             }}
           >
-            {loading ? "A processar…" : confirmLabel}
+            {loading ? "Processando…" : confirmLabel}
           </button>
         </div>
       </div>

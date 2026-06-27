@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlotConfig } from "@/hooks/useCrmHeaderSlotConfig";
+import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
+import { toast } from "@/components/crm/toast";
 
 type Regra = {
   id: string;
@@ -91,6 +93,9 @@ export default function DistribuicaoPage() {
   const [eventos, setEventos] = useState<EventoRede[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [acaoForn, setAcaoForn] = useState<string | null>(null);
+  const [confirmar, setConfirmar] = useState<
+    { tipo: "liberar" | "cobrar"; id: string; nome: string; motivo: string | null } | null
+  >(null);
   const [auditorMsg, setAuditorMsg] = useState<string | null>(null);
   const [auditorRodando, setAuditorRodando] = useState(false);
   const [carregando, setCarregando] = useState(true);
@@ -186,28 +191,42 @@ export default function DistribuicaoPage() {
     void carregar();
   }
 
-  async function liberarFornecedor(fornecedorId: string) {
+  async function liberarFornecedor(fornecedorId: string, nome: string) {
     setAcaoForn(fornecedorId);
     try {
-      await fetch(`/api/crm/parceiros/${encodeURIComponent(fornecedorId)}/liberar`, {
+      const res = await fetch(`/api/crm/parceiros/${encodeURIComponent(fornecedorId)}/liberar`, {
         method: "POST",
         headers: internalApiHeaders(),
       });
+      if (!res.ok) {
+        toast.error(`Não foi possível liberar ${nome}.`);
+        return;
+      }
       await carregar();
+      toast.success(`${nome} liberado para receber leads.`);
+    } catch {
+      toast.error("Falha de rede ao liberar.");
     } finally {
       setAcaoForn(null);
     }
   }
 
-  async function cobrarFornecedor(fornecedorId: string, motivo: string | null) {
+  async function cobrarFornecedor(fornecedorId: string, motivo: string | null, nome: string) {
     setAcaoForn(fornecedorId);
     try {
-      await fetch("/api/crm/distribuicao/cobrar", {
+      const res = await fetch("/api/crm/distribuicao/cobrar", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...internalApiHeaders() },
         body: JSON.stringify({ fornecedor_id: fornecedorId, motivo: motivo ?? undefined }),
       });
+      if (!res.ok) {
+        toast.error(`Não foi possível enviar a cobrança a ${nome}.`);
+        return;
+      }
       await carregar();
+      toast.success(`Cobrança enviada a ${nome}.`);
+    } catch {
+      toast.error("Falha de rede ao cobrar.");
     } finally {
       setAcaoForn(null);
     }
@@ -319,12 +338,12 @@ export default function DistribuicaoPage() {
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 70 }}>
                         {f.status_financeiro === "bloqueado" && (
-                          <button type="button" onClick={() => liberarFornecedor(f.fornecedor_id)} disabled={acaoForn === f.fornecedor_id} style={botaoAcao("#3fb950")}>
+                          <button type="button" onClick={() => setConfirmar({ tipo: "liberar", id: f.fornecedor_id, nome: f.nome ?? "Fornecedor", motivo: null })} disabled={acaoForn === f.fornecedor_id} style={botaoAcao("#3fb950")}>
                             {acaoForn === f.fornecedor_id ? "..." : "Liberar"}
                           </button>
                         )}
                         {f.cobranca && (
-                          <button type="button" onClick={() => cobrarFornecedor(f.fornecedor_id, f.cobranca)} disabled={acaoForn === f.fornecedor_id} style={botaoAcao("#c9a24a")}>
+                          <button type="button" onClick={() => setConfirmar({ tipo: "cobrar", id: f.fornecedor_id, nome: f.nome ?? "Fornecedor", motivo: f.cobranca })} disabled={acaoForn === f.fornecedor_id} style={botaoAcao("#c9a24a")}>
                             {acaoForn === f.fornecedor_id ? "..." : "Cobrar"}
                           </button>
                         )}
@@ -457,6 +476,33 @@ export default function DistribuicaoPage() {
           ))}
         </div>
       )}
+
+      <CrmConfirmDialog
+        open={confirmar !== null}
+        title={confirmar?.tipo === "cobrar" ? "Enviar cobrança?" : "Liberar fornecedor?"}
+        confirmLabel={confirmar?.tipo === "cobrar" ? "Enviar cobrança" : "Liberar"}
+        loading={acaoForn !== null}
+        onCancel={() => setConfirmar(null)}
+        onConfirm={() => {
+          const c = confirmar;
+          if (!c) return;
+          setConfirmar(null);
+          if (c.tipo === "cobrar") void cobrarFornecedor(c.id, c.motivo, c.nome);
+          else void liberarFornecedor(c.id, c.nome);
+        }}
+      >
+        {confirmar?.tipo === "cobrar" ? (
+          <>
+            Enviar uma cobrança a <strong style={{ color: "#e6edf3" }}>{confirmar?.nome}</strong>
+            {confirmar?.motivo ? <> pelo motivo: {confirmar.motivo}</> : null}?
+          </>
+        ) : (
+          <>
+            Liberar <strong style={{ color: "#e6edf3" }}>{confirmar?.nome}</strong> para voltar a
+            receber leads?
+          </>
+        )}
+      </CrmConfirmDialog>
     </div>
   );
 }
