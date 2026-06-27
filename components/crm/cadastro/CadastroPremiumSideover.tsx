@@ -57,7 +57,7 @@ export function CadastroPremiumSideover({
           bottom: 0,
           width: "min(640px, 100vw)",
           zIndex: 211,
-          background: "#0f1620",
+          background: "#0f1d16",
           borderLeft: "1px solid #2d394b",
           boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
           display: "flex",
@@ -158,8 +158,8 @@ export function CadastroSideoverPanel({
   return (
     <div
       style={{
-        background: "#141d29",
-        border: "1px solid #2c384b",
+        background: "#0f1d16",
+        border: "1px solid #1d3a2c",
         borderRadius: 12,
         overflow: "hidden",
       }}

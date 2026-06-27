@@ -309,7 +309,7 @@ export function PlaybookFlowVisualBuilder({
               onClick={() => setSelectedStepId(step.id)}
               style={{
                 border: `1px solid ${isActive ? "#388bfd66" : "#1d3a2c"}`,
-                background: isActive ? "#1f6feb22" : "#0f1d16",
+                background: isActive ? "#2f9e8f22" : "#0f1d16",
                 color: isActive ? "#9ecbff" : "#c9d1d9",
                 borderRadius: 10,
                 minWidth: 170,

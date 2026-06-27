@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Loader2, Download } from "lucide-react";
 import {
@@ -251,7 +251,7 @@ export function PlaybookUploadAnalisePanel({
                 style={{
                   width: `${Math.max(6, Math.min(100, uploadPct))}%`,
                   height: "100%",
-                  background: "linear-gradient(90deg, #1f6feb 0%, #4db3c4 100%)",
+                  background: "linear-gradient(90deg, #2f9e8f 0%, #4db3c4 100%)",
                   transition: "width 220ms ease",
                 }}
               />

@@ -2119,7 +2119,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           background:
                             ragUploadTotal > 0
                               ? "linear-gradient(90deg, #238636 0%, #3fb950 100%)"
-                              : "linear-gradient(90deg, #1f6feb 0%, #4db3c4 100%)",
+                              : "linear-gradient(90deg, #2f9e8f 0%, #4db3c4 100%)",
                           transition: "width 180ms ease",
                         }}
                       />

@@ -96,7 +96,7 @@ function AgenteUazapiSideoverShell({
           bottom: 0,
           width: "min(600px, 100vw)",
           zIndex: 100,
-          background: "#0f1620",
+          background: "#0f1d16",
           borderLeft: "1px solid #2d394b",
           boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
           display: "flex",
@@ -657,7 +657,7 @@ export function AgenteUazapiBlock({
       return {
         ...base,
         border: "1px solid #4db3c4",
-        background: disabled ? "#0f1d16" : "#1f6feb22",
+        background: disabled ? "#0f1d16" : "#2f9e8f22",
         color: disabled ? "#484f58" : "#4db3c4",
       };
     }
@@ -883,7 +883,7 @@ export function AgenteUazapiBlock({
         <div
           style={{
             height: 3,
-            background: "linear-gradient(90deg, #25d366, #128c7e, #1f6feb)",
+            background: "linear-gradient(90deg, #25d366, #128c7e, #2f9e8f)",
             opacity: 0.95,
           }}
           aria-hidden
@@ -952,7 +952,7 @@ export function AgenteUazapiBlock({
                 padding: "9px 14px",
                 borderRadius: 8,
                 border: "1px solid #4db3c4",
-                background: bloqueado ? "#0f1d16" : "#1f6feb22",
+                background: bloqueado ? "#0f1d16" : "#2f9e8f22",
                 color: bloqueado ? "#484f58" : "#4db3c4",
                 fontSize: 12,
                 fontWeight: 700,

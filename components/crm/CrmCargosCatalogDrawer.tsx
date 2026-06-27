@@ -48,7 +48,7 @@ const OB = {
   texto2: "var(--obra-texto-2, #8b949e)",
   texto3: "var(--obra-texto-3, #484f58)",
   surface: "var(--obra-dark-3, #16271e)",
-  panel: "#0f1620",
+  panel: "#0f1d16",
   danger: "#f85149",
   dangerMuted: "rgba(248, 81, 73, 0.14)",
   ok: "#3fb950",
@@ -1016,7 +1016,7 @@ export function CrmCargosCatalogDrawer({
                           alignItems: "center",
                           gap: 6,
                           padding: "6px 10px",
-                          background: "#141d29",
+                          background: "#0f1d16",
                           flexShrink: 0,
                         }}
                       >

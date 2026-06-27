@@ -612,7 +612,7 @@ export function AgentePlaybookCalibracaoDrawer({
                   }}
                   style={{
                     ...btnToolbar,
-                    background: "#1f6feb26",
+                    background: "#2f9e8f26",
                     color: "#9ecbff",
                   }}
                   title="Abrir editor visual React Flow em sideover dedicado"

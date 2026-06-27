@@ -36,8 +36,8 @@ const OB = {
   texto: "var(--obra-texto, #e6edf3)",
   texto2: "var(--obra-texto-2, #8b949e)",
   dourado: "var(--obra-dourado, #c9a24a)",
-  panel: "#0f1620",
-  surface: "#141d29",
+  panel: "#0f1d16",
+  surface: "#0f1d16",
 };
 
 const INPUT: React.CSSProperties = {

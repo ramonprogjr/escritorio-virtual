@@ -580,7 +580,7 @@ const optRow: CSSProperties = {
 const optNum: CSSProperties = {
   fontSize: 9.5,
   fontWeight: 700,
-  color: "#7c3aed",
+  color: "#b58a63",
   minWidth: 14,
   textAlign: "center",
 };
@@ -618,7 +618,7 @@ const optRemove: CSSProperties = {
 
 const addOptBtn: CSSProperties = {
   fontSize: 10.5,
-  color: "#c4b5fd",
+  color: "#b58a63",
   background: "#1f1638",
   border: "1px dashed #b58a63",
   borderRadius: 7,

@@ -152,7 +152,7 @@ function metricCard(label: string, value: string, color: string) {
     <div
       style={{
         borderRadius: 10,
-        border: "1px solid #2c384b",
+        border: "1px solid #1d3a2c",
         background: "#0f1d16",
         padding: 10,
       }}
@@ -688,8 +688,8 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                 onClick={() => setStep(item.id)}
                 style={{
                   borderRadius: 12,
-                  border: `1px solid ${active ? "#c9a24a55" : done ? "#22c55e55" : "#2c384b"}`,
-                  background: active ? "#c9a24a18" : done ? "#22c55e14" : "#141d29",
+                  border: `1px solid ${active ? "#c9a24a55" : done ? "#22c55e55" : "#1d3a2c"}`,
+                  background: active ? "#c9a24a18" : done ? "#22c55e14" : "#0f1d16",
                   padding: "10px 12px",
                   textAlign: "left",
                   cursor: "pointer",
@@ -782,7 +782,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
               <div
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #2f81f744",
+                  border: "1px solid #2f9e8f44",
                   background: "#0f1f3322",
                   padding: 12,
                 }}
@@ -929,7 +929,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
             <CadastroSideoverPanel>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
                 {metricCard("Leads", String(form.lead_ids.length), "#9ecbff")}
-                {metricCard("Pessoas", String(form.pessoa_ids.length), "#c4b5fd")}
+                {metricCard("Pessoas", String(form.pessoa_ids.length), "#b58a63")}
                 {metricCard("Empresas", String(form.empresa_ids.length), "#86efac")}
                 {metricCard("Parceiros", String(form.parceiro_ids.length), "#fcd34d")}
               </div>
@@ -963,7 +963,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                 <div
                   style={{
                     borderRadius: 12,
-                    border: "1px solid #2c384b",
+                    border: "1px solid #1d3a2c",
                     background: "#0a140f",
                     minHeight: 260,
                     maxHeight: 360,
@@ -989,8 +989,8 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
                             maxWidth: "88%",
                             borderRadius: 12,
                             padding: "10px 12px",
-                            background: isUser ? "#2f81f720" : "#141d29",
-                            border: `1px solid ${isUser ? "#2f81f755" : "#2c384b"}`,
+                            background: isUser ? "#2f9e8f20" : "#0f1d16",
+                            border: `1px solid ${isUser ? "#2f9e8f55" : "#1d3a2c"}`,
                             color: isUser ? "#cfe7ff" : "#e6edf3",
                             fontSize: 12,
                             lineHeight: 1.55,

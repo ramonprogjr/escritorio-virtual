@@ -22,7 +22,7 @@ export const PARTICIPANTE_TIPO_META: Record<
   { label: string; plural: string; cor: string; bg: string; borda: string }
 > = {
   lead: { label: "Lead", plural: "Leads", cor: "#9ecbff", bg: "rgba(47,129,247,0.13)", borda: "rgba(47,129,247,0.45)" },
-  pessoa: { label: "Pessoa", plural: "Pessoas", cor: "#c4b5fd", bg: "rgba(139,92,246,0.13)", borda: "rgba(139,92,246,0.45)" },
+  pessoa: { label: "Pessoa", plural: "Pessoas", cor: "#b58a63", bg: "rgba(181,138,99,0.13)", borda: "rgba(181,138,99,0.45)" },
   empresa: { label: "Empresa", plural: "Empresas", cor: "#86efac", bg: "rgba(34,197,94,0.13)", borda: "rgba(34,197,94,0.45)" },
   parceiro: { label: "Parceiro", plural: "Parceiros", cor: "#fcd34d", bg: "rgba(245,158,11,0.13)", borda: "rgba(245,158,11,0.45)" },
 };
@@ -146,7 +146,7 @@ export function ParticipantePicker({ opcoes, selecionados, onAdd, onRemove, load
               maxHeight: 320,
               overflowY: "auto",
               background: "#0a140f",
-              border: "1px solid #2c384b",
+              border: "1px solid #1d3a2c",
               borderRadius: 12,
               boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
             }}
