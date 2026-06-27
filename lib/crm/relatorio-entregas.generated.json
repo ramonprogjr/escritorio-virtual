@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-27T17:19:07.062Z",
+  "geradoEm": "2026-06-27T17:34:42.221Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "416ec08106df3925c38eccae2bfb056c85118d56",
+      "hashCurto": "416ec08",
+      "mensagem": "corrige glyphs mojibake + rótulos de mercado legíveis + PT-BR",
+      "mensagemRaw": "fix(wizard): corrige glyphs mojibake + rótulos de mercado legíveis + PT-BR",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:34:15.000Z",
+      "hora": "14:34",
+      "arquivos": [
+        "components/crm/AgenteNovoWizard.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "71dd646296550a8a32c59a7d90a6fc597a0b7506",
+      "hashCurto": "71dd646",
+      "mensagem": "artefatos de progresso",
+      "mensagemRaw": "chore(build): artefatos de progresso",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:20:10.000Z",
+      "hora": "14:20",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "d03a856b862d91cc44bb49d77b3d925e428a6fb0",
       "hashCurto": "d03a856",
