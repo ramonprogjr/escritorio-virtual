@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
+import { formatarTelefoneMascara } from "@/lib/crm/telefone-brasil";
+import { toast } from "@/components/crm/toast";
 
 interface Contato {
   id: string;
@@ -65,7 +67,15 @@ export default function ContatosPage() {
   }
 
   async function salvar() {
-    if (!form.nome.trim() || !form.telefone.trim()) return;
+    if (!form.nome.trim()) {
+      toast.error("Informe o nome do contato.");
+      return;
+    }
+    const digitos = form.telefone.replace(/\D/g, "");
+    if (digitos.length < 10) {
+      toast.error("Telefone inválido — informe DDD + número (ex.: (11) 99999-9999).");
+      return;
+    }
     setSalvando(true);
 
     if (editando) {
@@ -149,7 +159,7 @@ export default function ContatosPage() {
               </div>
               <div>
                 <label style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Telefone *</label>
-                <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} placeholder="(11) 99999-9999" style={INPUT} />
+                <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: formatarTelefoneMascara(e.target.value) }))} placeholder="(11) 99999-9999" style={INPUT} />
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
