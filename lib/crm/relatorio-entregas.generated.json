@@ -1,7 +1,55 @@
 {
-  "geradoEm": "2026-06-27T23:40:09.772Z",
+  "geradoEm": "2026-06-27T23:58:04.406Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "ba90c85c5fa838c3fcba54bf47d1a266b0176c1e",
+      "hashCurto": "ba90c85",
+      "mensagem": "polish(mobile+dados): cards no mobile (Cadastro/Usuários) + Fornecedores enum + file-size guard",
+      "mensagemRaw": "polish(mobile+dados): cards no mobile (Cadastro/Usuários) + Fornecedores enum + file-size guard",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T23:57:48.000Z",
+      "hora": "20:57",
+      "arquivos": [
+        "app/crm/cadastro/page.tsx",
+        "app/crm/fornecedores/page.tsx",
+        "app/crm/usuarios/page.tsx",
+        "components/crm/AgenteBuilderIaPanel.tsx",
+        "components/crm/cadastro/CadastroListaCards.tsx"
+      ],
+      "areas": {
+        "app/crm": 3,
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "4d3f2f41878e67b5137de07b864e528d21f2adb9",
+      "hashCurto": "4d3f2f4",
+      "mensagem": "polish(copiloto): resultado humanizado + animação + hint de descoberta + aviso de confiança",
+      "mensagemRaw": "polish(copiloto): resultado humanizado + animação + hint de descoberta + aviso de confiança",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T23:48:59.000Z",
+      "hora": "20:48",
+      "arquivos": [
+        "components/crm/CopilotoVoz.tsx",
+        "hooks/useCopilotoVoz.ts"
+      ],
+      "areas": {
+        "components/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "fd2c78c26f2b176ff68d7ae42c06b0e3d58065d9",
+      "hashCurto": "fd2c78c",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T23:41:36.000Z",
+      "hora": "20:41",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "c046e22bec9b3ef81c6c2694f08e4fcb1a00be5a",
       "hashCurto": "c046e22",
