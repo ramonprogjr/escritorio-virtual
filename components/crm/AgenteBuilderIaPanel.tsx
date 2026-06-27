@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { useRef, useState } from "react";
+import { Sparkles, Loader2, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 /**
@@ -41,6 +41,17 @@ export type AgenteBuilderIaPanelProps = {
   onGerado: (markdown: string) => void;
 };
 
+const DOC_ACCEPT = ".pdf,.docx,.txt,.md";
+
+function lerArquivoBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: AgenteBuilderIaPanelProps) {
   const [aberto, setAberto] = useState(true);
   const [descricao, setDescricao] = useState("");
@@ -48,11 +59,11 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
   const [erro, setErro] = useState("");
   const [avisos, setAvisos] = useState<string[]>([]);
   const [sucesso, setSucesso] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const podeGerar = descricao.trim().length >= 12 && !gerando;
 
-  async function gerar() {
-    if (!podeGerar) return;
+  async function executarGeracao(extra?: { documento?: { base64: string; mimeType: string; nomeArquivo: string } }) {
     setGerando(true);
     setErro("");
     setAvisos([]);
@@ -61,7 +72,7 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
       const res = await fetch(`/api/hub/agentes/${encodeURIComponent(agenteSlug)}/playbook/gerar-por-ia`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-        body: JSON.stringify({ descricao: descricao.trim() }),
+        body: JSON.stringify({ descricao: descricao.trim(), ...extra }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         markdown?: string;
@@ -79,6 +90,23 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
       setErro(e instanceof Error ? e.message : "Falha de rede ao gerar o playbook.");
     } finally {
       setGerando(false);
+    }
+  }
+
+  function gerar() {
+    if (!podeGerar) return;
+    void executarGeracao();
+  }
+
+  async function enviarDocumento(file: File) {
+    if (gerando) return;
+    try {
+      const dataUrl = await lerArquivoBase64(file);
+      await executarGeracao({
+        documento: { base64: dataUrl, mimeType: file.type || "", nomeArquivo: file.name },
+      });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao ler o documento.");
     }
   }
 
@@ -122,7 +150,7 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
             revisa abaixo e publica.
           </p>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
             {EXEMPLOS.map((ex) => (
               <button
                 key={ex.rotulo}
@@ -143,6 +171,39 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
                 {ex.rotulo}
               </button>
             ))}
+            <span style={{ width: 1, height: 16, background: "#1d3a2c", margin: "0 2px" }} />
+            <input
+              ref={fileRef}
+              type="file"
+              accept={DOC_ACCEPT}
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void enviarDocumento(f);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={gerando}
+              title="Gerar a partir de um PDF, DOCX ou TXT do seu manual de atendimento"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "5px 10px",
+                borderRadius: 999,
+                border: "1px dashed #c9a24a",
+                background: "#0a140f",
+                color: "#e3b341",
+                cursor: gerando ? "default" : "pointer",
+              }}
+            >
+              <FileText size={12} /> Enviar PDF/DOCX
+            </button>
           </div>
 
           <textarea

@@ -1,8 +1,37 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { gerarPlaybookViaIa } from "@/lib/playbook/gerar-fluxo-ia";
+import { extrairTextoDocumentoRag } from "@/lib/hub/rag";
 import { registrarConsumoIA } from "@/lib/ia/metering";
 import { defaultTenantId } from "@/lib/tenant-default";
+
+/** Limite de upload de documento (base64) — alinhado aos uploads de playbook. */
+const MAX_DOC_BYTES = 8 * 1024 * 1024;
+
+type DocumentoEntrada = { base64?: unknown; mimeType?: unknown; nomeArquivo?: unknown };
+
+/** Decodifica um documento base64 e extrai o texto (PDF/DOCX/txt). */
+function textoDoDocumento(
+  doc: DocumentoEntrada
+): { ok: true; texto: string } | { ok: false; error: string } {
+  const base64 = typeof doc.base64 === "string" ? doc.base64 : "";
+  if (!base64) return { ok: false, error: "Documento sem conteúdo." };
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(base64.replace(/^data:[^;]+;base64,/, ""), "base64");
+  } catch {
+    return { ok: false, error: "Documento inválido (base64)." };
+  }
+  if (buffer.byteLength === 0) return { ok: false, error: "Documento vazio." };
+  if (buffer.byteLength > MAX_DOC_BYTES) {
+    return { ok: false, error: "Documento muito grande (máx. 8 MB)." };
+  }
+  return extrairTextoDocumentoRag(
+    typeof doc.nomeArquivo === "string" ? doc.nomeArquivo : "documento",
+    typeof doc.mimeType === "string" ? doc.mimeType : null,
+    buffer
+  );
+}
 
 function db() {
   return createClient(
@@ -28,17 +57,33 @@ export async function POST(
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
-  let body: { descricao?: unknown; tenantId?: unknown };
+  let body: { descricao?: unknown; tenantId?: unknown; documento?: unknown };
   try {
-    body = (await request.json()) as { descricao?: unknown; tenantId?: unknown };
+    body = (await request.json()) as { descricao?: unknown; tenantId?: unknown; documento?: unknown };
   } catch {
     return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
   }
 
-  const descricao = typeof body.descricao === "string" ? body.descricao.trim() : "";
+  const descricaoTexto = typeof body.descricao === "string" ? body.descricao.trim() : "";
+
+  // Fonte da descrição: documento (PDF/DOCX/txt) tem prioridade; texto livre complementa.
+  let avisosEntrada: string[] = [];
+  let descricao = descricaoTexto;
+  if (body.documento && typeof body.documento === "object") {
+    const ext = textoDoDocumento(body.documento as DocumentoEntrada);
+    if (!ext.ok) {
+      return NextResponse.json({ error: ext.error }, { status: 400 });
+    }
+    const doTexto = ext.texto.trim();
+    descricao = descricaoTexto
+      ? `${descricaoTexto}\n\n## Documento de referência\n${doTexto}`
+      : doTexto;
+    avisosEntrada = ["Playbook gerado a partir do documento enviado."];
+  }
+
   if (descricao.length < 12) {
     return NextResponse.json(
-      { error: "Descreva com um pouco mais de detalhe como o agente deve atender (mín. 12 caracteres)." },
+      { error: "Descreva (ou envie um documento com) um pouco mais de detalhe — mín. 12 caracteres de conteúdo útil." },
       { status: 400 }
     );
   }
@@ -86,6 +131,6 @@ export async function POST(
     markdown: out.markdown,
     flowDefinition: out.flowDefinition,
     regras: out.regras,
-    avisos: out.avisos,
+    avisos: [...avisosEntrada, ...out.avisos],
   });
 }
