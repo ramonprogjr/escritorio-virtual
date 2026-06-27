@@ -2,6 +2,9 @@
 
 > Spec de design (não implementação). Como organizar aprovações de alto volume e multi-setor num sistema IA-first. 27/jun/2026. Conecta [[visao-ia-first-comando-multimodal]] (rails+IA), [[agentes-ia-audit-redesign]] (agentes por tarefa, já prontos) e [[creditos-ia-metering-visao]] (Tijolos).
 
+## ⏸️ DEFERIDA (decisão do dono, 27/jun)
+A Central concentra MUITAS frentes — **envio/distribuição de leads, onboarding, academy, atendimento, projeto, arquitetura, obra/engenharia, financeiro, compras, homologação de fornecedor** e o que mais surgir. Por ser tão transversal, o dono decidiu **deixar a reconstrução para depois** — quando chegar a hora dela no planejamento — pra **não ir-e-voltar e travar o avanço atual** (layout/consistência). Este spec fica pronto pra esse momento. (Quando for: validar a lista de frentes/tipos reais + limiares de auto-aprovação com o dono.)
+
 ## O modelo (decisão do dono)
 Cada **setor/atividade tem um AGENTE ESPECIALIZADO** responsável pelas demandas dali. O agente **executa** o trabalho do seu domínio, **gera a aprovação** quando precisa de aval, e o **humano é o checkpoint**. O **aprovar/rejeitar (+ motivo) vira FEEDBACK que melhora o agente** — as tarefas/processos do agente são criados e refinados com base nas decisões. *A IA opera, o humano decide, o agente aprende.*
 

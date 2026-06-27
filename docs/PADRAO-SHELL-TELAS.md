@@ -5,7 +5,20 @@
 ## Por que
 O dono notou que telas têm layout divergente (ex.: Aprovações). Causa: 3 padrões coexistindo (CrmStickyPageHeader × setSlot × shells inline com `minHeight:100vh` que brigam com o scroll do layout). Esta norma elimina a divergência.
 
-## A NORMA (canônica — padrão de `creditos`/`precificacao`)
+## ⚠️ CORREÇÃO (27/jun) — o header já vem do layout
+Verificação no navegador mostrou: o **header universal** do layout (`CrmUniversalHeader` + `crm-header-defaults`) **já renderiza o título/descrição** de quase toda tela. Ele só é escondido em **telas de detalhe** (`leads/[id]`, `parceiros/[id]`, `agentes/[slug]`) via `shouldHideCrmUniversalHeader`. Logo:
+- **NÃO adicionar `CrmStickyPageHeader`** em telas que já recebem o header universal → senão **duplica o título** (erro que cometi no piloto de `contatos`, revertido).
+- **Canônico real (maioria, ~16 telas):** header universal + `setSlot` para as AÇÕES da tela; corpo rolável no padrão abaixo.
+- `CrmStickyPageHeader` fica só para telas standalone/detalhe que escondem o universal.
+- **A divergência que o dono viu (Aprovações) é de CORPO** (empty-state gigante, cards, `minHeight:100vh`), não de header.
+
+## Padrão de CORPO (o que normalizar)
+- Container raiz: `min-h-full` + padding (`px-3 py-4 sm:px-6` ou equivalente). **NUNCA** `minHeight:100vh`/`min-h-screen` (o layout já dá frame+scroll; repetir gera espaço/scroll redundante).
+- Ações da tela via `setSlot` (não recriar barra de título).
+- Card: `rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-5` (lista: `rounded-xl … p-4`).
+- Empty-state: card compacto centrado (ícone + título + 1 linha + CTA), não bloco gigante.
+
+## ~~A NORMA antiga (CrmStickyPageHeader)~~ — substituída pela correção acima
 
 ```tsx
 <div className="flex min-h-full flex-col bg-[#0a140f]">
