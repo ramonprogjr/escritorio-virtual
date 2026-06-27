@@ -64,66 +64,31 @@ const NIVEL_COR: Record<string, string> = {
   N4: "#fbbf24",
 };
 
-const EIXOS = [
-  {
-    nome: "Analítico / Criativo",
-    frases: [
-      "Baseie todas as respostas em dados e lógica. Evite linguagem subjetiva.",
-      "Priorize dados, mas use analogias simples para clareza quando necessário.",
-      "Equilibre argumentos racionais com exemplos práticos e linguagem acessível.",
-      "Use linguagem envolvente, exemplos criativos e storytelling leve.",
-      "Seja criativo, use metáforas e linguagem que engaje emocionalmente.",
-    ],
-  },
-  {
-    nome: "Formal / Informal",
-    frases: [
-      "Mantenha linguagem completamente formal. Sem contrações nem gírias.",
-      "Linguagem profissional e clara, pode usar contrações ocasionalmente.",
-      "Tom neutro e acessível, nem muito formal nem coloquial.",
-      "Linguagem descontraída e próxima, como conversa entre colegas.",
-      "Totalmente informal: uso de gírias leves e tom de conversa casual.",
-    ],
-  },
-  {
-    nome: "Direto / Detalhista",
-    frases: [
-      "Seja extremamente conciso. Máximo 2 frases por resposta.",
-      "Respostas curtas com a informação essencial. Evite explicações longas.",
-      "Resposta completa mas sem excessos. Explique o necessário.",
-      "Inclua contexto e justificativas relevantes nas respostas.",
-      "Seja completo e detalhado. Antecipe dúvidas e inclua exemplos.",
-    ],
-  },
-  {
-    nome: "Conservador / Arrojado",
-    frases: [
-      "Seja cauteloso. Prefira caminhos testados e seguros. Aponte riscos.",
-      "Sugira caminhos tradicionais como padrão, mas apresente alternativas.",
-      "Equilibre sugestões convencionais com oportunidades inovadoras.",
-      "Proponha abordagens ousadas e diferenciadas. Destaque oportunidades.",
-      "Seja provocador e disruptivo. Proponha ideias inovadoras.",
-    ],
-  },
-  {
-    nome: "Empático / Objetivo",
-    frases: [
-      "Priorize o lado humano: valide sentimentos antes de resolver.",
-      "Reconheça o contexto emocional antes de apresentar soluções.",
-      "Equilibre empatia e objetividade. Valide brevemente e siga para a solução.",
-      "Foque na solução e nos resultados práticos. Seja cordial mas eficiente.",
-      "Totalmente focado em resultado e eficiência. Sem rodeios emocionais.",
-    ],
-  },
+// Matriz de comportamento 5×5: 1 COMPORTAMENTO (como pensa/age) + 1 CONDUTA (como se
+// expressa) = 25 combinações nomeadas e claras. Cada escolha = 1 frase de prompt curta
+// e fixa (preset). Sem "níveis de 1 a 5" por eixo (que dava 5^5 ≈ 3.125 presets inúteis).
+const COMPORTAMENTOS = [
+  { nome: "Acolhedor", frase: "Seja caloroso e próximo: acolha a pessoa, valide o contexto e conduza com gentileza." },
+  { nome: "Consultivo", frase: "Aja como consultor: faça boas perguntas, oriente por dados e recomende o melhor caminho." },
+  { nome: "Direto (closer)", frase: "Seja direto e orientado a fechar: foque no próximo passo, remova fricção e conduza à decisão." },
+  { nome: "Técnico", frase: "Seja preciso e técnico: use os termos corretos do domínio e baseie tudo em fatos e dados." },
+  { nome: "Formal", frase: "Mantenha postura formal e institucional: linguagem impecável, sem gírias." },
+];
+
+const CONDUTAS = [
+  { nome: "Conciso", frase: "Responda curto e objetivo: o essencial primeiro, sem rodeios." },
+  { nome: "Detalhado", frase: "Explique com contexto e exemplos quando ajudar, antecipando dúvidas — sem encher linguiça." },
+  { nome: "Proativo", frase: "Antecipe necessidades: sugira o próximo passo e ofereça ajuda além do que foi pedido." },
+  { nome: "Cauteloso", frase: "Seja cauteloso: confirme antes de agir, aponte riscos e evite suposições." },
+  { nome: "Empático", frase: "Priorize o lado humano: reconheça o sentimento da pessoa antes de resolver." },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function gerarPersonalidade(valores: number[]): string {
-  return (
-    "## Tom e estilo de comunicação\n\n" +
-    EIXOS.map((e, i) => e.frases[valores[i] - 1]).join("\n")
-  );
+function gerarPersonalidade(comportamentoIdx: number, condutaIdx: number): string {
+  const c = COMPORTAMENTOS[comportamentoIdx] ?? COMPORTAMENTOS[0];
+  const d = CONDUTAS[condutaIdx] ?? CONDUTAS[0];
+  return `## Tom e estilo de comunicação\n\n${c.frase}\n${d.frase}`;
 }
 
 /** Modelos definidos no catálogo do cargo — alguns IDs antigos são normalizados para `mistral` no servidor. */
@@ -351,7 +316,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [somentePlaybook, setSomentePlaybook] = useState(false);
   const [nome, setNome] = useState("");
   const [mercados, setMercados] = useState<string[]>([]);
-  const [valores, setValores] = useState<number[]>([3, 3, 3, 3, 3]);
+  const [comportamentoIdx, setComportamentoIdx] = useState(1); // Consultivo
+  const [condutaIdx, setCondutaIdx] = useState(0); // Conciso
   const [criando, setCriando] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [erro, setErro] = useState("");
@@ -1077,13 +1043,6 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     );
   }
 
-  function setValor(i: number, v: number) {
-    setValores((prev) => {
-      const n = [...prev];
-      n[i] = v;
-      return n;
-    });
-  }
 
   function fecharAssistente() {
     if (variant === "drawer" && onClose) onClose();
@@ -1108,7 +1067,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       body: JSON.stringify({
         nome,
         prefixo_mercado: mercados.join(","),
-        personalidade: gerarPersonalidade(valores),
+        personalidade: gerarPersonalidade(comportamentoIdx, condutaIdx),
         modo_operacao: modoOperacao,
         ciclo_execucao_padrao: cicloExecucaoPadrao,
         motor_ferramentas_habilitado: motorFerramentasHub,
@@ -1143,7 +1102,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       const payload: Record<string, unknown> = {
         nome,
         prefixo_mercado: mercados.join(","),
-        personalidade: gerarPersonalidade(valores),
+        personalidade: gerarPersonalidade(comportamentoIdx, condutaIdx),
         system_prompt_base: "",
         conhecimento_secoes: {},
         bio: null,
@@ -1240,7 +1199,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     }
   }
 
-  const personalidadeGerada = gerarPersonalidade(valores);
+  const personalidadeGerada = gerarPersonalidade(comportamentoIdx, condutaIdx);
 
   const chip = (ativo: boolean, cor?: string): CSSProperties => ({
     padding: "6px 14px",
@@ -1806,41 +1765,73 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   Personalidade
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
-                  Ajuste os 5 eixos para definir o estilo de comunicação do agente.
+                  Escolha 1 comportamento + 1 conduta. Define o tom do agente de forma simples.
                 </p>
               </div>
 
-              {EIXOS.map((eixo, i) => (
-                <div key={eixo.nome} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3" }}>{eixo.nome}</label>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {[1, 2, 3, 4, 5].map((v) => {
-                      const ativo = valores[i] === v;
-                      return (
-                        <button
-                          type="button"
-                          key={v}
-                          onClick={() => setValor(i, v)}
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "50%",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            cursor: "pointer",
-                            border: `2px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
-                            background: ativo ? "#c9a24a" : "#0f1d16",
-                            color: ativo ? "#003b26" : "#8b949e",
-                            transition: "all 150ms",
-                          }}
-                        >
-                          {v}
-                        </button>
-                      );
-                    })}
-                  </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3" }}>
+                  Comportamento <span style={{ color: "#8b949e", fontWeight: 500 }}>· como pensa e age</span>
+                </label>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {COMPORTAMENTOS.map((c, i) => {
+                    const ativo = comportamentoIdx === i;
+                    return (
+                      <button
+                        type="button"
+                        key={c.nome}
+                        title={c.frase}
+                        onClick={() => setComportamentoIdx(i)}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          border: `2px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                          background: ativo ? "#c9a24a" : "#0f1d16",
+                          color: ativo ? "#003b26" : "#8b949e",
+                          transition: "all 150ms",
+                        }}
+                      >
+                        {c.nome}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3" }}>
+                  Conduta <span style={{ color: "#8b949e", fontWeight: 500 }}>· como se expressa</span>
+                </label>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {CONDUTAS.map((d, i) => {
+                    const ativo = condutaIdx === i;
+                    return (
+                      <button
+                        type="button"
+                        key={d.nome}
+                        title={d.frase}
+                        onClick={() => setCondutaIdx(i)}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          border: `2px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                          background: ativo ? "#c9a24a" : "#0f1d16",
+                          color: ativo ? "#003b26" : "#8b949e",
+                          transition: "all 150ms",
+                        }}
+                      >
+                        {d.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               <div>
                 <label style={{ fontSize: 11, fontWeight: 700, color: "#8b949e", display: "block", marginBottom: 8 }}>
