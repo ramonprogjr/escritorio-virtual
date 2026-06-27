@@ -1,7 +1,43 @@
 {
-  "geradoEm": "2026-06-27T20:11:26.992Z",
+  "geradoEm": "2026-06-27T23:40:09.772Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "c046e22bec9b3ef81c6c2694f08e4fcb1a00be5a",
+      "hashCurto": "c046e22",
+      "mensagem": "4 bugs críticos + mojibake (achados pela auditoria adversarial)",
+      "mensagemRaw": "fix(auditoria): 4 bugs críticos + mojibake (achados pela auditoria adversarial)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T23:39:53.000Z",
+      "hora": "20:39",
+      "arquivos": [
+        "app/api/copiloto/executar/route.ts",
+        "app/api/copiloto/interpretar/route.ts",
+        "app/crm/agentes/[slug]/page.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "hooks/useCopilotoVoz.ts",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 4
+      }
+    },
+    {
+      "hash": "805abe305120493d4e1d60d22435fc718dbe4825",
+      "hashCurto": "805abe3",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T20:14:31.000Z",
+      "hora": "17:14",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "f3508a8b312953b09f2cfbca891bd906d3c109d4",
       "hashCurto": "f3508a8",
