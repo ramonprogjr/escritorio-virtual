@@ -9,6 +9,9 @@
 - **F3 (ativar IA-first onde o motor já existe) — PRÓXIMO.**
 - F4 (tabela→cards + KPIs duplicados), F5 (separar plataforma×tenant), F6 (financeiro/obra ao motor) — na fila.
 
+### ⚠️ DIRETRIZ DO DONO (27/jun) — revisão de design COMPLETA (F4/F5, deferida até agentes 100%)
+O dono cobrou que **todas as telas ainda têm azul/roxo fora da marca** e quer revisão completa: cores na identidade, layouts, cards, botões e **apresentação da informação**. **Reverte a decisão anterior** de "manter azuis semânticos" — agora é harmonizar TUDO na paleta da marca (dourado+verde+âmbar+vermelho+neutro, SEM monocromático). Escopo: 97 ocorrências de azul/roxo em 29 arquivos; tokens `--obra-*`/`--brand-*` já existem. Ver memória `design-overhaul-deferido`. **Ordem combinada:** terminar a tarefa dos AGENTES primeiro (#4 RAG, #3 playbook), depois esta revisão.
+
 ---
 
 ## Parecer do CEO
