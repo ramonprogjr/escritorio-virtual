@@ -430,7 +430,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
     if (!form.data_previsao_fechamento.trim()) items.push("Preencher previsão de fechamento.");
     if (totalVinculos === 0) items.push("Vincular pelo menos um envolvido para rastreio.");
     if (form.pessoa_ids.length === 0 && form.lead_ids.length === 0) {
-      items.push("Adicionar um lead ou contacto principal.");
+      items.push("Adicionar um lead ou contato principal.");
     }
     return items;
   }, [form, totalVinculos]);

@@ -411,7 +411,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
       form.comercial.lead_origem === "indicacao" &&
       !(form.comercial.indicado_por || "").trim()
     ) {
-      setErro("Informe quem indicou este contacto (origem Indicação).");
+      setErro("Informe quem indicou este contato (origem Indicação).");
       return;
     }
 
@@ -614,7 +614,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
               title="Identidade"
               description={
                 tipo === "PF"
-                  ? "Opcional na campanha — informe o que o contacto passar (mín.: nome, telefone ou e-mail)."
+                  ? "Opcional na campanha — informe o que o contato passar (mín.: nome, telefone ou e-mail)."
                   : "Informe o CNPJ primeiro — os dados da empresa são buscados na Receita (OpenCNPJ) e preenchidos automaticamente."
               }
             >

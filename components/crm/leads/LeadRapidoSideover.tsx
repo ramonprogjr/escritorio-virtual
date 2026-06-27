@@ -196,7 +196,7 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
         <section>
           <p className={`${secaoCls} mb-3 flex items-center gap-2`}>
             <Building2 size={14} aria-hidden />
-            Contacto
+            Contato
           </p>
           <div className="flex flex-col gap-3">
             <div>

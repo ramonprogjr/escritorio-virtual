@@ -652,7 +652,7 @@ export default function CadastroParceiro() {
         </button>
 
         <p style={{ color: "#484f58", fontSize: 11, textAlign: "center", lineHeight: 1.5 }}>
-          Após envio, o cadastro fica pendente até homologação pela equipa OBRA10+.
+          Após envio, o cadastro fica pendente até homologação pela equipe OBRA10+.
         </p>
       </div>
     </div>

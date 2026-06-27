@@ -63,7 +63,7 @@ export function HubLeadForm({ variant = "hero" }: Props) {
           <CheckCircle2 className="h-12 w-12 text-[#3fb950]" aria-hidden />
           <h2 className="mt-4 text-xl font-bold text-[var(--obra-texto,#e6edf3)]">Pedido recebido</h2>
           <p className="mt-2 text-sm leading-relaxed text-[var(--obra-texto-2,#8b949e)]">
-            Registámos o seu interesse. A nossa equipa entrará em contacto em breve no e-mail{" "}
+            Registramos o seu interesse. A nossa equipe entrará em contato em breve no e-mail{" "}
             <strong className="text-[var(--obra-texto,#e6edf3)]">{email}</strong>.
           </p>
         </div>
@@ -83,7 +83,7 @@ export function HubLeadForm({ variant = "hero" }: Props) {
         <div>
           <h2 className="text-lg font-bold text-[var(--obra-texto,#e6edf3)]">Cadastre-se no Hub</h2>
           <p className="text-xs text-[var(--obra-texto-2,#8b949e)]">
-            Empresa, contacto e telefone — entramos no funil comercial.
+            Empresa, contato e telefone — entramos no funil comercial.
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ export function HubLeadForm({ variant = "hero" }: Props) {
         </button>
 
         <p className="text-center text-[10px] text-[var(--obra-texto-3,#484f58)]">
-          Ao enviar, autoriza contacto comercial sobre o Obra10+ Hub.
+          Ao enviar, autoriza contato comercial sobre o Obra10+ Hub.
         </p>
       </form>
     </div>

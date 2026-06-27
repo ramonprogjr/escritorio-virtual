@@ -289,7 +289,7 @@ export function CadastroComercialSecao({
                 onChange={(e) =>
                   onComercialChange({ indicado_por: e.target.value })
                 }
-                placeholder="Nome de quem indicou este contacto"
+                placeholder="Nome de quem indicou este contato"
                 autoComplete="name"
               />
               <p style={{ margin: "6px 0 0", fontSize: 11, color: OB.texto2, lineHeight: 1.4 }}>

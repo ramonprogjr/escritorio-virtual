@@ -114,7 +114,7 @@ export default function UsuariosPage() {
       const res = await fetch("/api/crm/usuarios", { headers: await crmApiHeaders() });
       const json = (await res.json()) as { data?: Usuario[]; error?: string };
       if (!res.ok) {
-        setErro(json.error || "Falha ao carregar equipa");
+        setErro(json.error || "Falha ao carregar equipe");
         setUsuarios([]);
       } else {
         setUsuarios(json.data ?? []);
@@ -238,9 +238,9 @@ export default function UsuariosPage() {
         )}
 
         {loading ? (
-          <p className="text-sm text-[#8b949e]">Carregando equipa…</p>
+          <p className="text-sm text-[#8b949e]">Carregando equipe…</p>
         ) : usuarios.length === 0 ? (
-          <p className="text-sm text-[#8b949e]">Nenhum colaborador. Convide o primeiro membro da equipa.</p>
+          <p className="text-sm text-[#8b949e]">Nenhum colaborador. Convide o primeiro membro da equipe.</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-[#1d3a2c]">
             <table className="w-full min-w-[640px] text-left text-sm">
