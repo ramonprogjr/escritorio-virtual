@@ -297,7 +297,7 @@ export default function FerramentasHubPage() {
                           </p>
                           {comTool.length === 0 ? (
                             <p className="m-0 text-xs" style={{ color: "#484f58" }}>
-                              Nenhum agente activo com motor + toggle ligados.
+                              Nenhum agente ativo com o motor ligado.
                             </p>
                           ) : (
                             <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
@@ -437,7 +437,7 @@ export default function FerramentasHubPage() {
                       </p>
                       {comTool.length === 0 ? (
                         <p className="m-0 text-xs" style={{ color: "#484f58" }}>
-                          Nenhum agente activo com motor + toggle ligados.
+                          Nenhum agente ativo com o motor ligado.
                         </p>
                       ) : (
                         <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
