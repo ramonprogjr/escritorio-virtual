@@ -19,6 +19,13 @@ import {
   mergeUsoFerramentasComPadraoPreservandoCustom,
 
 } from "@/lib/hub/agente-ferramentas-registry";
+import {
+  ferramentasRecomendadasPorSetor,
+  rotuloSetor,
+  setorDoCargo,
+  type SetorAgente,
+} from "@/lib/hub/agente-setor";
+import { TAREFAS_POR_SETOR } from "@/lib/hub/tarefas-setor-catalogo";
 import { isHubModeloIdDbCompatible } from "@/lib/ia/hub-model-defaults";
 import {
   PlaybookUploadAnalisePanel,
@@ -95,6 +102,18 @@ function gerarPersonalidade(comportamentoIdx: number, condutaIdx: number): strin
   const c = COMPORTAMENTOS[comportamentoIdx] ?? COMPORTAMENTOS[0];
   const d = CONDUTAS[condutaIdx] ?? CONDUTAS[0];
   return `## Tom e estilo de comunicação\n\n${c.frase}\n${d.frase}`;
+}
+
+/**
+ * FASE 4 — markdown das tarefas recomendadas escolhidas no wizard.
+ * Persistido como secção de conhecimento `atendimento` ("Como atender") no payload
+ * de criação (caminho aditivo já existente no servidor). Não há tabela de tarefas
+ * por agente; isto deixa as tarefas visíveis no playbook/system prompt do agente.
+ */
+function montarSecaoTarefasMd(setorRotulo: string, labels: string[]): string {
+  if (labels.length === 0) return "";
+  const linhas = labels.map((l) => `- ${l}`).join("\n");
+  return `## Tarefas recomendadas (${setorRotulo})\n\nEste agente deve priorizar e executar, quando aplicável:\n\n${linhas}`;
 }
 
 /** Modelos definidos no catálogo do cargo — alguns IDs antigos são normalizados para `mistral` no servidor. */
@@ -358,6 +377,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [usoFerramentasIa, setUsoFerramentasIa] = useState<Record<string, boolean>>(() =>
     mergeUsoFerramentasComPadraoPreservandoCustom({})
   );
+  /** FASE 4 — setor derivado do cargo (sem banco): dirige ferramentas + tarefas recomendadas. */
+  const [setorAgente, setSetorAgente] = useState<SetorAgente | null>(null);
+  /** IDs de ferramentas pré-ligadas automaticamente pelo setor (para o badge "Recomendado"). */
+  const [ferramentasRecomendadasIds, setFerramentasRecomendadasIds] = useState<string[]>([]);
+  /** Tarefas típicas escolhidas (chips Click-and-Go) — ids de TAREFAS_POR_SETOR. */
+  const [tarefasSelecionadas, setTarefasSelecionadas] = useState<string[]>([]);
+  /** Toast efémero "Ferramentas de [setor] ativadas". */
+  const [setorToast, setSetorToast] = useState<string>("");
   const [catalogoCustomFerramentasWizard, setCatalogoCustomFerramentasWizard] = useState<
     CatalogoFerramentaCustomLite[]
   >([]);
@@ -1025,6 +1052,47 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     carregarCargos();
   }, [carregarCargos]);
 
+  /**
+   * FASE 4 — ao escolher/trocar o cargo, derivar o setor e PRÉ-LIGAR as ferramentas
+   * recomendadas (mescla; nunca apaga ferramentas ligadas manualmente nem custom).
+   * Ao trocar de setor, limpa a selecção de tarefas (eram de outro setor) e avisa.
+   */
+  useEffect(() => {
+    if (!cargoSelecionado) {
+      setSetorAgente(null);
+      setFerramentasRecomendadasIds([]);
+      setSetorToast("");
+      return;
+    }
+    const setor = setorDoCargo({
+      segmento: cargoSelecionado.segmento,
+      especialidade: cargoSelecionado.especialidade,
+    });
+    const recomendadas = ferramentasRecomendadasPorSetor(setor);
+    setFerramentasRecomendadasIds(recomendadas);
+    setUsoFerramentasIa((prev) => {
+      const base = mergeUsoFerramentasComPadraoPreservandoCustom(prev);
+      for (const id of recomendadas) base[id] = true; // liga recomendadas, preserva o resto
+      return base;
+    });
+    setSetorAgente((setorAnterior) => {
+      if (setorAnterior !== setor) {
+        // troca real de setor → tarefas anteriores não fazem mais sentido
+        setTarefasSelecionadas([]);
+      }
+      return setor;
+    });
+    setSetorToast(`Ferramentas de ${rotuloSetor(setor)} ativadas`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cargoSelecionado?.slug]);
+
+  /** Toast efémero some sozinho. */
+  useEffect(() => {
+    if (!setorToast) return;
+    const t = window.setTimeout(() => setSetorToast(""), 3200);
+    return () => window.clearTimeout(t);
+  }, [setorToast]);
+
   const segmentos = Array.from(new Set(cargos.map((c) => c.segmento).filter(Boolean))) as string[];
 
   const especialidades = Array.from(
@@ -1108,12 +1176,25 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         return;
       }
 
+      // FASE 4 — tarefas escolhidas viram secção de conhecimento "atendimento"
+      // (caminho aditivo já existente no servidor; best-effort, não bloqueia a criação).
+      const tarefasLabels = setorAgente
+        ? (TAREFAS_POR_SETOR[setorAgente] ?? [])
+            .filter((t) => tarefasSelecionadas.includes(t.id))
+            .map((t) => t.label)
+        : [];
+      const secaoTarefasMd = setorAgente
+        ? montarSecaoTarefasMd(rotuloSetor(setorAgente), tarefasLabels)
+        : "";
+      const conhecimentoSecoes: Record<string, string> = {};
+      if (secaoTarefasMd) conhecimentoSecoes.atendimento = secaoTarefasMd;
+
       const payload: Record<string, unknown> = {
         nome,
         prefixo_mercado: mercados.join(","),
         personalidade: gerarPersonalidade(comportamentoIdx, condutaIdx),
         system_prompt_base: "",
-        conhecimento_secoes: {},
+        conhecimento_secoes: conhecimentoSecoes,
         bio: null,
         horario_inicio: "08:00",
         horario_fim: "22:00",
@@ -1237,6 +1318,33 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
   return (
     <div style={rootStyle}>
+      {setorToast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: 24,
+            transform: "translateX(-50%)",
+            zIndex: 300,
+            background: "#003b26",
+            border: "1px solid #c9a24a55",
+            borderRadius: 999,
+            padding: "10px 18px",
+            color: "#c9a24a",
+            fontSize: 13,
+            fontWeight: 700,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+            maxWidth: "90vw",
+          }}
+        >
+          <Zap size={14} /> {setorToast}
+        </div>
+      ) : null}
       {showConfirm && (
         <div
           onClick={(e) => {
@@ -2267,6 +2375,39 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   aparecem em destaque.
                 </p>
               </div>
+
+              {setorAgente && ferramentasRecomendadasIds.length > 0 ? (
+                <div
+                  style={{
+                    background: "#0f1d16",
+                    border: "1px solid #c9a24a44",
+                    borderRadius: 12,
+                    padding: "12px 14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#c9a24a",
+                      letterSpacing: 0.3,
+                    }}
+                  >
+                    <Zap size={13} /> Recomendado para {rotuloSetor(setorAgente)}
+                  </span>
+                  <p style={{ color: "#8b949e", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                    Já ligámos as ferramentas típicas deste setor. Pode ajustar à vontade abaixo —
+                    nada foi removido do que você escolheu manualmente.
+                  </p>
+                </div>
+              ) : null}
+
               <AgenteFerramentasIaBlock
                 motorHabilitado={motorFerramentasHub}
                 onMotorChange={setMotorFerramentasHub}
@@ -2296,6 +2437,70 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   {erro}
                 </p>
               )}
+
+              {setorAgente && !agenteSlugCriado ? (
+                <div
+                  style={{
+                    background: "#0f1d16",
+                    border: "1px solid #1d3a2c",
+                    borderRadius: 12,
+                    padding: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  <div>
+                    <h3 style={{ color: "#e6edf3", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>
+                      Tarefas recomendadas · {rotuloSetor(setorAgente)}
+                    </h3>
+                    <p style={{ color: "#8b949e", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                      Toque para escolher o que este agente deve priorizar. Vira instrução do agente
+                      (você ajusta depois na ficha).
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {(TAREFAS_POR_SETOR[setorAgente] ?? []).map((t) => {
+                      const ativo = tarefasSelecionadas.includes(t.id);
+                      return (
+                        <button
+                          type="button"
+                          key={t.id}
+                          onClick={() =>
+                            setTarefasSelecionadas((prev) =>
+                              prev.includes(t.id)
+                                ? prev.filter((x) => x !== t.id)
+                                : [...prev, t.id]
+                            )
+                          }
+                          style={{
+                            padding: "8px 14px",
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            textAlign: "left",
+                            border: `1px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                            background: ativo ? "#c9a24a22" : "#16271e",
+                            color: ativo ? "#c9a24a" : "#8b949e",
+                            transition: "all 150ms",
+                          }}
+                        >
+                          {ativo ? "✓ " : ""}
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {tarefasSelecionadas.length > 0 ? (
+                    <p style={{ color: "#3fb950", fontSize: 11, margin: 0 }}>
+                      {tarefasSelecionadas.length} tarefa
+                      {tarefasSelecionadas.length > 1 ? "s" : ""} selecionada
+                      {tarefasSelecionadas.length > 1 ? "s" : ""}.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               {agenteSlugCriado ? (
                 <p style={{ color: "#3fb950", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
