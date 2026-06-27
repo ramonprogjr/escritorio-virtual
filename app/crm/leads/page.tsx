@@ -655,7 +655,7 @@ export default function LeadsPage() {
       {pipelineTabs}
 
       {isMobile && (
-        <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3">
+        <div className="relative z-10 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3">
           <div>
             <h1 className="text-base font-bold text-[#e6edf3]">{limparNomePipeline(pipelineAtivo?.nome) || "Leads"}</h1>
             <p className="text-[11px] text-[#8b949e]">{leadsDoPipeline.length} leads · tempo real</p>

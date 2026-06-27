@@ -7,6 +7,7 @@ import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
 import { AgentePlaybookCalibracaoDrawer } from "@/components/crm/AgentePlaybookCalibracaoDrawer";
 import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
 import { AgenteUazapiBlock, type AgenteUazapiSnapshot } from "@/components/crm/AgenteUazapiBlock";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
 import {
   mergeUsoFerramentasComPadraoPreservandoCustom,
@@ -157,6 +158,24 @@ export default function AgentePage() {
   const params = useParams();
   const router = useRouter();
   const slug = params?.slug as string;
+
+  // Mobile: agrupa o conteúdo em abas (Config / Ferramentas & Canal / Atividade)
+  // para o dono não rolar passando por blocos de manutenção antes da configuração.
+  const narrow = useNarrowViewport();
+  const isMobile = narrow === true;
+  const [abaMobile, setAbaMobile] = useState<"config" | "ferramentas" | "atividade">(() => {
+    if (typeof window === "undefined") return "config";
+    const v = window.sessionStorage.getItem("agente_aba_mobile");
+    return v === "ferramentas" || v === "atividade" ? v : "config";
+  });
+  const trocarAbaMobile = useCallback((aba: "config" | "ferramentas" | "atividade") => {
+    setAbaMobile(aba);
+    try {
+      window.sessionStorage.setItem("agente_aba_mobile", aba);
+    } catch {
+      /* sessionStorage indisponível */
+    }
+  }, []);
 
   const [agente, setAgente] = useState<Agente | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -835,6 +854,8 @@ export default function AgentePage() {
             {erro ? (
               <span style={{ fontSize: 11, color: "#ef4444", maxWidth: 320, textAlign: "right" }}>{erro}</span>
             ) : null}
+            {/* No mobile os botões vão para a aba "Atividade" (evita estouro de largura no header) */}
+            {!isMobile && (
             <HeaderActionGroup>
               <HeaderActionButton
                 icon={<Sparkles size={15} />}
@@ -866,6 +887,7 @@ export default function AgentePage() {
                 position="last"
               />
             </HeaderActionGroup>
+            )}
           </div>
         </div>
       </div>
@@ -883,7 +905,52 @@ export default function AgentePage() {
           gap: 28,
         }}
       >
+        {/* ABAS MOBILE — só no celular, agrupa os blocos existentes sem alterá-los */}
+        {isMobile ? (
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              background: "#0f1d16",
+              border: "1px solid #1d3a2c",
+              borderRadius: 12,
+              padding: 4,
+            }}
+          >
+            {([
+              { id: "config", label: "Config" },
+              { id: "ferramentas", label: "Ferramentas & Canal" },
+              { id: "atividade", label: "Atividade" },
+            ] as const).map((t) => {
+              const ativo = abaMobile === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => trocarAbaMobile(t.id)}
+                  style={{
+                    flex: 1,
+                    padding: "9px 6px",
+                    borderRadius: 9,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    lineHeight: 1.2,
+                    background: ativo ? "#1d3a2c" : "transparent",
+                    color: ativo ? "#c9a24a" : "#8b949e",
+                    transition: "all 150ms",
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
         {/* BLOCO: Configurações fixas */}
+        {(!isMobile || abaMobile === "config") && (
         <div>
           {/* Banner amarelo */}
           <div style={{
@@ -941,12 +1008,16 @@ export default function AgentePage() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* BLOCO: Configurações editáveis */}
+        {/* BLOCO: Configurações editáveis (card contém campos de config + ferramentas/canal + salvar) */}
+        {(!isMobile || abaMobile === "config" || abaMobile === "ferramentas") && (
         <div style={{
           background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 20,
           display: "flex", flexDirection: "column", gap: 20,
         }}>
+          {/* Grupo CONFIG: identidade/personalidade/horário/bio/tom/prompt (aba Config no mobile) */}
+          {(!isMobile || abaMobile === "config") && (<>
           <h2 style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>
             Configurações editáveis
           </h2>
@@ -1107,11 +1178,14 @@ export default function AgentePage() {
               style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
             />
           </div>
+          </>)}
 
+          {/* Grupo FERRAMENTAS & CANAL: ferramentas IA + WhatsApp + sync Mistral (aba Ferramentas no mobile) */}
+          {(!isMobile || abaMobile === "ferramentas") && (
           <div
             style={{
-              borderTop: "1px solid #1d3a2c",
-              paddingTop: 18,
+              borderTop: isMobile ? "none" : "1px solid #1d3a2c",
+              paddingTop: isMobile ? 0 : 18,
             }}
           >
             {agente.modo_operacao === "canal_whatsapp" ? (
@@ -1209,8 +1283,9 @@ export default function AgentePage() {
               ativa.
             </p>
           </div>
+          )}
 
-          {/* Botão salvar */}
+          {/* Botão salvar — salva config + ferramentas; visível em ambas as abas do card */}
           <button
             onClick={() => setShowConfirmSalvar(true)}
             style={{
@@ -1221,6 +1296,66 @@ export default function AgentePage() {
             Salvar alterações
           </button>
         </div>
+        )}
+
+        {/* ABA ATIVIDADE (mobile) — ações de manutenção que antes ficavam no header/topo */}
+        {isMobile && abaMobile === "atividade" && (
+          <div style={{
+            background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 20,
+            display: "flex", flexDirection: "column", gap: 12,
+          }}>
+            <h2 style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>
+              Atividade e manutenção
+            </h2>
+            <p style={{ fontSize: 11, color: "#64748b", margin: "-4px 0 4px", lineHeight: 1.45 }}>
+              Briefing, calibração e ações de reset/arquivamento do agente.
+            </p>
+            <button
+              type="button"
+              onClick={() => setBriefingOpen(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+                padding: "11px 14px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                background: "#c9a24a14", border: "1px solid #c9a24a44", color: "#c9a24a",
+              }}
+            >
+              <Sparkles size={15} /> AI — Funcionários
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalibracaoOpen(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+                padding: "11px 14px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                background: "#c9a24a14", border: "1px solid #c9a24a44", color: "#c9a24a",
+              }}
+            >
+              <BookOpen size={15} /> Playbook — Calibração
+            </button>
+            <button
+              type="button"
+              onClick={() => void abrirModalLimparMemorias()}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+                padding: "11px 14px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                background: "#16271e", border: "1px solid #1d3a2c", color: "#c9d1d9",
+              }}
+            >
+              <Trash2 size={15} /> Limpar memórias
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowArquivar(true); setMotivoArquivamento(""); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
+                padding: "11px 14px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                background: "#16271e", border: "1px solid #1d3a2c", color: "#c9d1d9",
+              }}
+            >
+              <Archive size={15} /> Arquivar
+            </button>
+          </div>
+        )}
       </div>
 
       <AgenteBriefingDrawer
