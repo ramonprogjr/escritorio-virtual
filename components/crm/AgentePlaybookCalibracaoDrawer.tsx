@@ -10,6 +10,7 @@ import {
   type PlaybookUploadStatus,
   PLAYBOOK_ACCEPT_ATTR,
 } from "@/components/crm/PlaybookUploadAnalisePanel";
+import { AgenteBuilderIaPanel } from "@/components/crm/AgenteBuilderIaPanel";
 import { PlaybookFlowStatusBanner } from "@/components/crm/PlaybookFlowStatusBanner";
 import { PlaybookFlowVisualSideover } from "@/components/crm/PlaybookFlowVisualSideover";
 import { CrmHeaderActionsRow } from "@/components/crm/CrmHeaderActionsRow";
@@ -742,6 +743,17 @@ export function AgentePlaybookCalibracaoDrawer({
                 overscrollBehavior: "contain",
               }}
             >
+              {!carregando && (
+                <AgenteBuilderIaPanel
+                  agenteSlug={agenteSlug}
+                  agenteNome={agenteNome}
+                  onGerado={(md) => {
+                    setMarkdownOrigem("texto");
+                    setMarkdown(md);
+                  }}
+                />
+              )}
+
               {carregando ? (
                 <div
                   style={{
