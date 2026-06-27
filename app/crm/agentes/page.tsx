@@ -950,7 +950,7 @@ function AgentesView() {
                       accent="#22c55e"
                       imageUrl={avatarUrl}
                       pixelSize={48}
-                      progress={0.35}
+                      progress={ativo ? 1 : 0}
                       dim={!ativo}
                     />
                     <div style={{ minWidth: 0 }}>
@@ -1207,7 +1207,7 @@ function AgentesView() {
                   <CrmBotRingAvatar
                     accent={accentAgente(detailAgente?.segmento)}
                     progress={progressoSaudeRing(saudeAgente)}
-                    fallbackProgress={0.35}
+                    fallbackProgress={0}
                     pixelSize={52}
                     imageUrl={detailAgente?.avatar_url}
                     dim={detailAgente?.ativo === false || !!detailAgente?.arquivado_em}

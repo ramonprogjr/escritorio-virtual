@@ -17,6 +17,15 @@ const STATUS_COLOR: Record<string, string> = {
   cancelado: "#8b949e",
 };
 
+// Progresso REAL derivado do status do negócio (sem número fabricado).
+const STATUS_PROGRESSO: Record<string, number> = {
+  aberto: 0.2,
+  em_negociacao: 0.6,
+  fechado_ganho: 1,
+  fechado_perdido: 0,
+  cancelado: 0,
+};
+
 export type NegocioKanbanCardData = {
   id: string;
   codigo: string;
@@ -113,7 +122,7 @@ export function NegocioKanbanCard({
       <AgenteSideoverEntityCard
         accent={accent}
         Icon={Icon}
-        fallbackProgress={0.42}
+        progress={STATUS_PROGRESSO[negocio.status] ?? 0}
         avatarCaption={negocio.prefixo_mercado}
         footer={
           <div

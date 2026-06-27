@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
     motivo: row.motivo ?? row.descricao ?? "",
     agente_slug: row.agente_slug ?? row.solicitado_por ?? "sdr",
     agente_nome: row.agente_nome ?? row.agente_slug ?? "IA",
-    confianca_ia: row.confianca_ia ?? 85,
+    // Sem default fabricado: só mostra confiança quando a IA realmente computou (a UI esconde se ausente).
+    confianca_ia: row.confianca_ia ?? null,
     valor_envolvido: row.valor_envolvido ?? row.valor ?? 0,
   }));
 
