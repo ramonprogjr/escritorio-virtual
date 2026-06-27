@@ -329,7 +329,48 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data ?? [], total: count ?? 0 });
+  // Soma REAL sobre TODO o pipeline (não só a página de 20): KPI não pode mudar ao paginar.
+  // Consulta leve (3 colunas), mesmos filtros; sem range. Limite alto como salvaguarda.
+  let aggQuery = supabase
+    .from("hub_negocios")
+    .select("valor_estimado, valor_fechado, etapa")
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
+    .limit(5000);
+  if (status) aggQuery = aggQuery.eq("status", status);
+  if (etapa) aggQuery = aggQuery.eq("etapa", etapa);
+  if (prefixo) aggQuery = aggQuery.eq("prefixo_mercado", prefixo);
+  if (pipelineId) aggQuery = aggQuery.eq("pipeline_id", pipelineId);
+  if (busca) aggQuery = aggQuery.or(`titulo.ilike.%${busca}%,codigo.ilike.%${busca}%`);
+
+  const { data: aggData } = await aggQuery;
+  const valorDe = (r: unknown) =>
+    Number(
+      (r as { valor_fechado?: number | null; valor_estimado?: number | null }).valor_fechado ??
+        (r as { valor_estimado?: number | null }).valor_estimado ??
+        0,
+    );
+  const etapaDe = (r: unknown) => String((r as { etapa?: unknown }).etapa ?? "");
+
+  // Soma e contagem por etapa (todo o pipeline) — cabeçalhos de coluna do Kanban.
+  const etapaTotais: Record<string, number> = {};
+  const etapaCounts: Record<string, number> = {};
+  for (const r of aggData ?? []) {
+    const e = etapaDe(r);
+    etapaTotais[e] = (etapaTotais[e] ?? 0) + valorDe(r);
+    etapaCounts[e] = (etapaCounts[e] ?? 0) + 1;
+  }
+  // Total aberto (exclui ganho/perdido) — KPI "Pipeline Total".
+  const pipelineTotal = (aggData ?? [])
+    .filter((r) => !["ganho", "perdido"].includes(etapaDe(r)))
+    .reduce((s, r) => s + valorDe(r), 0);
+
+  return NextResponse.json({
+    data: data ?? [],
+    total: count ?? 0,
+    pipeline_total: pipelineTotal,
+    etapa_totais: etapaTotais,
+    etapa_counts: etapaCounts,
+  });
 }
 
 export async function POST(request: NextRequest) {

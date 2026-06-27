@@ -89,12 +89,6 @@ function formatData(iso: string | null): string {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
-function totalAberto(negocios: Negocio[]) {
-  return negocios
-    .filter((n) => !["ganho", "perdido"].includes(n.etapa))
-    .reduce((s, n) => s + (n.valor_fechado ?? n.valor_estimado ?? 0), 0);
-}
-
 export default function NegociosPage() {
   const pathname = usePathname();
   const router = useRouter();
@@ -109,6 +103,9 @@ export default function NegociosPage() {
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [moverAlvo, setMoverAlvo] = useState<Negocio | null>(null);
   const [total, setTotal] = useState(0);
+  const [pipelineTotalBackend, setPipelineTotalBackend] = useState(0);
+  const [etapaTotais, setEtapaTotais] = useState<Record<string, number>>({});
+  const [etapaCounts, setEtapaCounts] = useState<Record<string, number>>({});
   const [busca, setBusca] = useState("");
   const [etapa, setEtapa] = useState("");
   const [offset, setOffset] = useState(0);
@@ -176,6 +173,9 @@ export default function NegociosPage() {
           const rows = (d.data ?? []) as Negocio[];
           setNegocios((prev) => (append ? [...prev, ...rows] : rows));
           setTotal(d.total ?? 0);
+          setPipelineTotalBackend(Number(d.pipeline_total ?? 0));
+          setEtapaTotais((d.etapa_totais ?? {}) as Record<string, number>);
+          setEtapaCounts((d.etapa_counts ?? {}) as Record<string, number>);
           setOffset(nextOffset + LIMIT);
         })
         .catch(() => {})
@@ -231,7 +231,7 @@ export default function NegociosPage() {
 
   const qualificadosCount = negocios.filter((n) => n.etapa === "qualificado").length;
   const negociandoCount = negocios.filter((n) => n.etapa === "negociando").length;
-  const pipelineTotal = totalAberto(negocios);
+  const pipelineTotal = pipelineTotalBackend;
   const temMais = negocios.length < total;
   const hoje = new Date().toDateString();
   const negociosHoje = negocios.filter((n) =>
@@ -499,10 +499,9 @@ export default function NegociosPage() {
           >
             {etapasKanban.map((est) => {
               const col = negocios.filter((n) => n.etapa === est.id);
-              const totalCol = col.reduce(
-                (s, n) => s + (n.valor_fechado ?? n.valor_estimado ?? 0),
-                0
-              );
+              // Soma/contagem REAIS do backend (todo o pipeline), não só os cards carregados.
+              const totalCol = etapaTotais[est.id] ?? 0;
+              const countCol = etapaCounts[est.id] ?? col.length;
               return (
                 <div
                   key={est.id}
@@ -525,7 +524,7 @@ export default function NegociosPage() {
                         className="rounded-full px-2 py-0.5 text-xs font-bold text-white"
                         style={{ backgroundColor: est.color + "40" }}
                       >
-                        {col.length}
+                        {countCol}
                       </span>
                     </div>
                     {totalCol > 0 ? (
