@@ -6,6 +6,8 @@ import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { CrmPermissaoSelect } from "@/components/crm/CrmPermissaoSelect";
 import { useCrmTenant } from "@/components/crm/CrmTenantContext";
 import { crmApiHeaders } from "@/lib/internal-api-headers-client";
+import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
+import { toast } from "@/components/crm/toast";
 import {
   CRM_NIVEL_LABEL,
   crmPodeEditarPapelUtilizador,
@@ -62,6 +64,7 @@ export default function UsuariosPage() {
   const [erro, setErro] = useState("");
   const [modal, setModal] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [confirmarDesativar, setConfirmarDesativar] = useState<Usuario | null>(null);
   const [form, setForm] = useState({
     email: "",
     name: "",
@@ -168,14 +171,15 @@ export default function UsuariosPage() {
     });
     const json = (await res.json()) as { error?: string };
     if (!res.ok) {
-      setErro(json.error || "Falha ao atualizar permissão");
+      toast.error(json.error || "Falha ao atualizar permissão");
       return;
     }
     await carregar();
+    toast.success("Permissão atualizada.");
   }
 
-  async function alternarStatus(u: Usuario) {
-    const novo = u.status.trim().toLowerCase() === "ativo" ? "Inativo" : "Ativo";
+  async function executarStatus(u: Usuario, novo: "Ativo" | "Inativo") {
+    const quem = u.name || u.email || "colaborador";
     const res = await fetch(`/api/crm/usuarios/${u.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...(await crmApiHeaders()) },
@@ -183,10 +187,20 @@ export default function UsuariosPage() {
     });
     const json = (await res.json()) as { error?: string };
     if (!res.ok) {
-      setErro(json.error || "Falha ao atualizar status");
+      toast.error(json.error || "Falha ao atualizar acesso");
       return;
     }
     await carregar();
+    toast.success(novo === "Ativo" ? `Acesso de ${quem} reativado.` : `Acesso de ${quem} desativado.`);
+  }
+
+  function alternarStatus(u: Usuario) {
+    // Reativar é seguro; desativar (cortar acesso) pede confirmação.
+    if (u.status.trim().toLowerCase() === "ativo") {
+      setConfirmarDesativar(u);
+    } else {
+      void executarStatus(u, "Ativo");
+    }
   }
 
   if (!myRole && loading) {
@@ -389,6 +403,26 @@ export default function UsuariosPage() {
           </div>
         </div>
       )}
+
+      <CrmConfirmDialog
+        open={confirmarDesativar !== null}
+        title="Desativar acesso?"
+        confirmLabel="Desativar acesso"
+        danger
+        onCancel={() => setConfirmarDesativar(null)}
+        onConfirm={() => {
+          const u = confirmarDesativar;
+          if (!u) return;
+          setConfirmarDesativar(null);
+          void executarStatus(u, "Inativo");
+        }}
+      >
+        Isso <strong style={{ color: "#e6edf3" }}>desativa</strong> (não exclui) o acesso de{" "}
+        <strong style={{ color: "#e6edf3" }}>
+          {confirmarDesativar?.name || confirmarDesativar?.email}
+        </strong>
+        . A pessoa não conseguirá mais entrar no sistema até ser reativada.
+      </CrmConfirmDialog>
     </div>
   );
 }
