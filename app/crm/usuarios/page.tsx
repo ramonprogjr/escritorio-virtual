@@ -204,7 +204,7 @@ export default function UsuariosPage() {
           <UserCog className="mx-auto mb-4 h-8 w-8 text-[#c9a24a]" />
           <h1 className="text-lg font-bold text-[#e6edf3]">Usuários & Permissões</h1>
           <p className="mt-2 text-sm text-[#8b949e]">
-            Apenas owner ou gestor podem gerir colaboradores da equipa.
+            Apenas owner ou gestor podem gerenciar colaboradores da equipe.
           </p>
         </div>
       </div>

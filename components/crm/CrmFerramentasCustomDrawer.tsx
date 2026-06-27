@@ -49,7 +49,7 @@ const CATEGORIA_SECAO: Record<
   { label: string; cor: string }
 > = {
   cliente: { label: "Dados do cliente nesta conversa", cor: "#10b981" },
-  analise: { label: "Análise e partilha", cor: "#3b82f6" },
+  analise: { label: "Análise e compartilhamento", cor: "#3b82f6" },
   registos: { label: "Registos", cor: "#f59e0b" },
 };
 
@@ -1479,7 +1479,7 @@ export function CrmFerramentasCustomDrawer({
               <code style={{ fontSize: 12, color: "#93c5fd" }}>{confirmDeleteRow.ferramenta_key}</code>
               <br />
               <br />
-              Esta acção remove o registo na base de dados. Agentes que tiverem esta chave em{" "}
+              Esta ação remove o registro do sistema. Agentes que tiverem esta chave em{" "}
               <code style={{ fontSize: 11 }}>uso_ferramentas_ia</code> podem ficar com referência órfã até limpar manualmente a
               ficha do agente.
             </p>

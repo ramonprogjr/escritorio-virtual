@@ -152,7 +152,7 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
             }}
           >
             <p style={{ color: OB.texto2, fontSize: 10, fontWeight: 600, margin: "0 0 8px" }}>
-              URL para partilhar
+              URL para compartilhar
             </p>
             <p
               style={{

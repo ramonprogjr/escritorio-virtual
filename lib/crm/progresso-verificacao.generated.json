@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-06-26T20:11:11.002Z",
+  "geradoEm": "2026-06-27T10:20:22.397Z",
   "ambiente": "local",
   "itens": {
     "ent-lead": {
@@ -560,7 +560,7 @@
         {
           "id": "http-pipelines",
           "ok": false,
-          "detail": "fetch falhou (http://localhost:3001/api/crm/pipelines?tipo=negocio): fetch failed",
+          "detail": "HTTP 401 http://localhost:3001/api/crm/pipelines?tipo=negocio",
           "required": false
         }
       ],
@@ -1502,7 +1502,7 @@
         {
           "id": "http-analytics",
           "ok": false,
-          "detail": "fetch falhou (http://localhost:3001/api/crm/analytics/funil-leads): fetch failed",
+          "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-leads",
           "required": false
         }
       ],
@@ -1611,17 +1611,17 @@
     "smoke-kanban": {
       "id": "smoke-kanban",
       "ok": false,
-      "detail": "fetch falhou (http://localhost:3001/api/crm/pipelines?tipo=lead): fetch failed"
+      "detail": "HTTP 401 http://localhost:3001/api/crm/pipelines?tipo=lead"
     },
     "smoke-analytics": {
       "id": "smoke-analytics",
       "ok": false,
-      "detail": "fetch falhou (http://localhost:3001/api/crm/analytics/funil-leads): fetch failed"
+      "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-leads"
     },
     "smoke-negocios": {
       "id": "smoke-negocios",
       "ok": false,
-      "detail": "fetch falhou (http://localhost:3001/api/crm/analytics/funil-negocios): fetch failed"
+      "detail": "HTTP 401 http://localhost:3001/api/crm/analytics/funil-negocios"
     }
   }
 }

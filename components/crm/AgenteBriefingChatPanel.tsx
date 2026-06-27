@@ -310,7 +310,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
             </div>
             <p style={{ fontSize: 10, color: "#6e7681", margin: "8px 0 0", lineHeight: 1.45 }}>
               {modoChat === "briefing_interno"
-                ? "Visão de operação: extractos reais (ciclos, logs, acções). Sem invocar ferramentas Hub — isso só na conversa ao vivo com lead em sessão."
+                ? "Visão de operação: extratos reais (ciclos, logs, ações). Sem invocar ferramentas Hub — isso só na conversa ao vivo com lead em sessão."
                 : modoChat === "simulacao_whatsapp"
                   ? "Mesmo layout do chat: 1ª fase = fluxo do playbook (menus clicáveis); após qualificar = IA Mistral com contexto do fluxo."
                   : "Só prompt de produção em texto livre; sem motor de fluxo. Útil para testar tom após qualificação."}

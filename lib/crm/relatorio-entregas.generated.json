@@ -1,7 +1,1019 @@
 {
-  "geradoEm": "2026-06-26T20:11:08.402Z",
+  "geradoEm": "2026-06-27T10:20:17.957Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "d8e66e002941941bf67523960c31e389965d73b1",
+      "hashCurto": "d8e66e0",
+      "mensagem": "Merge remote-tracking branch 'origin/feature/escritorio-visual' into wendel/dev",
+      "mensagemRaw": "Merge remote-tracking branch 'origin/feature/escritorio-visual' into wendel/dev",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:13:59.000Z",
+      "hora": "07:13",
+      "arquivos": [],
+      "areas": {}
+    },
+    {
+      "hash": "bb51fd2e8b2216a7cf64b7df88f16cc3e09331a0",
+      "hashCurto": "bb51fd2",
+      "mensagem": "F1 — limpa jargão técnico da UI (MISTRAL_MODEL/Supabase/Postgres/trigger)",
+      "mensagemRaw": "fix(ux): F1 — limpa jargão técnico da UI (MISTRAL_MODEL/Supabase/Postgres/trigger)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:09:40.000Z",
+      "hora": "07:09",
+      "arquivos": [
+        "app/agentes/page.tsx",
+        "app/crm/agentes/[slug]/page.tsx",
+        "app/crm/configuracoes/page.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/leads/PipelineConfigSideover.tsx"
+      ],
+      "areas": {
+        "outros": 1,
+        "app/crm": 2,
+        "components/crm": 2
+      }
+    },
+    {
+      "hash": "7a18529a4440b4d208f9ffc453be749aec7bfaf0",
+      "hashCurto": "7a18529",
+      "mensagem": "F1 — \"UAZAPI\" → \"WhatsApp\" na UI (esconde o provedor)",
+      "mensagemRaw": "fix(ux): F1 — \"UAZAPI\" → \"WhatsApp\" na UI (esconde o provedor)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T10:06:49.000Z",
+      "hora": "07:06",
+      "arquivos": [
+        "app/api/crm/atendimento/send/route.ts",
+        "app/api/crm/integracoes/status/route.ts",
+        "app/api/crm/onboarding/status/route.ts",
+        "app/api/hub/agentes/[slug]/uazapi/route.ts",
+        "app/api/hub/canais/route.ts",
+        "app/api/whatsapp/webhook/route.test.ts",
+        "app/crm/canais/page.tsx",
+        "app/crm/ciclos/page.tsx",
+        "app/crm/configuracoes/page.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/AgenteUazapiBlock.tsx",
+        "components/crm/CrmCanalSideover.tsx"
+      ],
+      "areas": {
+        "app/api": 6,
+        "app/crm": 3,
+        "components/crm": 3
+      }
+    },
+    {
+      "hash": "4bd0bcb6893d88560a59307f29a95729761e678b",
+      "hashCurto": "4bd0bcb",
+      "mensagem": "F1 — tira nomes de tabela da UI (linguagem de negócio)",
+      "mensagemRaw": "fix(ux): F1 — tira nomes de tabela da UI (linguagem de negócio)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:55:47.000Z",
+      "hora": "06:55",
+      "arquivos": [
+        "app/crm/ciclos/page.tsx",
+        "app/crm/configuracoes/page.tsx",
+        "app/crm/leads/[id]/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 3
+      }
+    },
+    {
+      "hash": "83402a1bb37c1a63dfd564178c5ddbb19b5e8360",
+      "hashCurto": "83402a1",
+      "mensagem": "F1 — empty-state de Analytics sem instrução de dev (porta 3001)",
+      "mensagemRaw": "fix(ux): F1 — empty-state de Analytics sem instrução de dev (porta 3001)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:52:47.000Z",
+      "hora": "06:52",
+      "arquivos": [
+        "components/crm/CrmAnalyticsDashboard.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "e146054c55d4c4486e7f70aeea114fe72f208555",
+      "hashCurto": "e146054",
+      "mensagem": "F1 — links azuis Shadcn → dourado da marca (chrome, não-semântico)",
+      "mensagemRaw": "fix(ux): F1 — links azuis Shadcn → dourado da marca (chrome, não-semântico)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:51:24.000Z",
+      "hora": "06:51",
+      "arquivos": [
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/projetos/page.tsx",
+        "components/crm/ProgressoSistemaDashboard.tsx"
+      ],
+      "areas": {
+        "app/crm": 2,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "6a0ba908c2d5a63c7216ed7217735c9f859bcac5",
+      "hashCurto": "6a0ba90",
+      "mensagem": "F1 — 'agente activo' → 'agente ativo' (ferramentas)",
+      "mensagemRaw": "fix(ux): F1 — 'agente activo' → 'agente ativo' (ferramentas)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:45:13.000Z",
+      "hora": "06:45",
+      "arquivos": [
+        "app/crm/ferramentas/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "e7c8c4e1e99a8e5135241e823ad23a97173f247c",
+      "hashCurto": "e7c8c4e",
+      "mensagem": "F1 — PT-PT→PT-BR (activo/activa→ativo/ativa) + tira \"(tenant)\" da UI",
+      "mensagemRaw": "fix(ux): F1 — PT-PT→PT-BR (activo/activa→ativo/ativa) + tira \"(tenant)\" da UI",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:40:42.000Z",
+      "hora": "06:40",
+      "arquivos": [
+        "app/crm/configuracoes/page.tsx",
+        "app/crm/ferramentas/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 2
+      }
+    },
+    {
+      "hash": "5bbf7655f3f82de9925131686058fdd6213f80e9",
+      "hashCurto": "5bbf765",
+      "mensagem": "F1 — 'A carregar' → 'Carregando' (PT-PT → PT-BR) em 8 telas/componentes",
+      "mensagemRaw": "fix(ux): F1 — 'A carregar' → 'Carregando' (PT-PT → PT-BR) em 8 telas/componentes",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:38:49.000Z",
+      "hora": "06:38",
+      "arquivos": [
+        "app/crm/agentes/page.tsx",
+        "app/crm/atendimento/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/loading.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/AgentePlaybookCalibracaoDrawer.tsx",
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/PlaybookFlowVisualBuilder.tsx"
+      ],
+      "areas": {
+        "app/crm": 4,
+        "components/crm": 4
+      }
+    },
+    {
+      "hash": "05d4c122cafff35ba6484020366c772da4ad0cb9",
+      "hashCurto": "05d4c12",
+      "mensagem": "F1 — remove o traço redundante \"<Módulo> —\" dos cabeçalhos de pipeline",
+      "mensagemRaw": "fix(ux): F1 — remove o traço redundante \"<Módulo> —\" dos cabeçalhos de pipeline",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:36:20.000Z",
+      "hora": "06:36",
+      "arquivos": [
+        "app/crm/leads/page.tsx",
+        "app/crm/negocios/page.tsx",
+        "lib/crm/pipeline-defaults.ts"
+      ],
+      "areas": {
+        "app/crm": 2,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "80e713c225bd50c1a3e09b0bad201da8215cbddf",
+      "hashCurto": "80e713c",
+      "mensagem": "F1 — botão Sair no padrão da marca (vermelho só no hover)",
+      "mensagemRaw": "fix(ux): F1 — botão Sair no padrão da marca (vermelho só no hover)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:30:00.000Z",
+      "hora": "06:30",
+      "arquivos": [
+        "components/crm/CrmSessionFooter.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "f7c02a6166ce8474212decb3879dda1a22f52852",
+      "hashCurto": "f7c02a6",
+      "mensagem": "F0 — status de Imóveis com cor e rótulo (fim do 'captacao' cinza cru)",
+      "mensagemRaw": "fix(ux): F0 — status de Imóveis com cor e rótulo (fim do 'captacao' cinza cru)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:24:58.000Z",
+      "hora": "06:24",
+      "arquivos": [
+        "app/crm/imoveis/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "f32713723108c95101a6a2bc8b17aab6a1de07e9",
+      "hashCurto": "f327137",
+      "mensagem": "F0 — KPIs de Imóveis (Venda/Locação) contados no backend, não na página",
+      "mensagemRaw": "fix(ux): F0 — KPIs de Imóveis (Venda/Locação) contados no backend, não na página",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:22:57.000Z",
+      "hora": "06:22",
+      "arquivos": [
+        "app/api/crm/imoveis/route.ts",
+        "app/crm/imoveis/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "b6fbd5be5e555429cf4b1075abc7de9301e3be3d",
+      "hashCurto": "b6fbd5b",
+      "mensagem": "F0 — KPIs de Negócios sobre TODO o pipeline, não sobre a página de 20",
+      "mensagemRaw": "fix(ux): F0 — KPIs de Negócios sobre TODO o pipeline, não sobre a página de 20",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:20:27.000Z",
+      "hora": "06:20",
+      "arquivos": [
+        "app/api/crm/negocios/route.ts",
+        "app/crm/negocios/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "ab4c05e175933277f33b2cb28dc734f41611f827",
+      "hashCurto": "ab4c05e",
+      "mensagem": "F0 — Campanhas busca 'conversions' na Windsor (métrica não fica mais 0)",
+      "mensagemRaw": "fix(ux): F0 — Campanhas busca 'conversions' na Windsor (métrica não fica mais 0)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T09:05:23.000Z",
+      "hora": "06:05",
+      "arquivos": [
+        "app/api/windsor/campanhas/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "200157abc023d6f46ba4433de6e3712e17b6fb98",
+      "hashCurto": "200157a",
+      "mensagem": "F0 — valor financeiro do item EXATO com centavos (não arredondar 'R$ 2k')",
+      "mensagemRaw": "fix(ux): F0 — valor financeiro do item EXATO com centavos (não arredondar 'R$ 2k')",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T08:55:31.000Z",
+      "hora": "05:55",
+      "arquivos": [
+        "components/crm/FinanceiroContasList.tsx",
+        "lib/crm/finance-contas.ts"
+      ],
+      "areas": {
+        "components/crm": 1,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "4053d422ed8435bcc61962e2110e185cb07840f9",
+      "hashCurto": "4053d42",
+      "mensagem": "F0 — mata mentiras de dado em Negócios, Aprovações e Agentes",
+      "mensagemRaw": "fix(ux): F0 — mata mentiras de dado em Negócios, Aprovações e Agentes",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T08:46:40.000Z",
+      "hora": "05:46",
+      "arquivos": [
+        "app/api/hub/aprovacoes/route.ts",
+        "app/crm/agentes/page.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "c45bbc0fd93f480ab8ed18a060cdf9e6f4650aa3",
+      "hashCurto": "c45bbc0",
+      "mensagem": "aponta diagnóstico tela-a-tela + plano de ação de design (sessão 3)",
+      "mensagemRaw": "docs(macro): aponta diagnóstico tela-a-tela + plano de ação de design (sessão 3)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T03:26:32.000Z",
+      "hora": "00:26",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "f0eaed905e5f88abcdf3603bc9bf93e1d24b47b5",
+      "hashCurto": "f0eaed9",
+      "mensagem": "varredura completa do sistema (33 telas) + plano de ação macro",
+      "mensagemRaw": "docs(diagnostico): varredura completa do sistema (33 telas) + plano de ação macro",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T03:24:39.000Z",
+      "hora": "00:24",
+      "arquivos": [
+        "docs/PLANO-ACAO-MACRO-DESIGN.md",
+        "docs/diagnostico-telas/01-vis-o-geral-dashboard.md",
+        "docs/diagnostico-telas/02-vis-o-geral-analytics.md",
+        "docs/diagnostico-telas/03-vis-o-geral-relat-rios.md",
+        "docs/diagnostico-telas/04-comercial-leads.md",
+        "docs/diagnostico-telas/05-comercial-distribui-o-de-leads.md",
+        "docs/diagnostico-telas/06-comercial-neg-cios.md",
+        "docs/diagnostico-telas/07-comercial-cadastros.md",
+        "docs/diagnostico-telas/08-comercial-atendimento-inbox-de-conversas-chat-ao-vivo.md",
+        "docs/diagnostico-telas/09-comercial-canais.md",
+        "docs/diagnostico-telas/10-comercial-tarefas-comerciais.md",
+        "docs/diagnostico-telas/11-comercial-aprova-es.md",
+        "docs/diagnostico-telas/12-opera-es-arquitetura-rotulada-internamente-como-projetos.md",
+        "docs/diagnostico-telas/13-opera-es-engenharia-obras.md",
+        "docs/diagnostico-telas/14-opera-es-im-veis.md",
+        "docs/diagnostico-telas/15-opera-es-pedidos-de-material.md",
+        "docs/diagnostico-telas/16-fornecedores-parceiros-rede-de-fornecedores-membros.md",
+        "docs/diagnostico-telas/17-fornecedores-fornecedores.md",
+        "docs/diagnostico-telas/18-fornecedores-especialistas-m-o-de-obra.md",
+        "docs/diagnostico-telas/19-financeiro-contas-a-receber.md",
+        "docs/diagnostico-telas/20-financeiro-contas-a-pagar.md",
+        "docs/diagnostico-telas/21-financeiro-vis-o-financeira.md",
+        "docs/diagnostico-telas/22-marketing-campanhas-marketing-tr-fego.md",
+        "docs/diagnostico-telas/23-marketing-canais-de-entrada.md",
+        "docs/diagnostico-telas/24-ia-e-agentes-agentes-ia.md",
+        "docs/diagnostico-telas/25-ia-e-agentes-automa-es-ciclos-de-ia.md",
+        "docs/diagnostico-telas/26-ia-e-agentes-ferramentas-ia-hub.md",
+        "docs/diagnostico-telas/27-ia-e-agentes-carteira-de-tijolos.md",
+        "docs/diagnostico-telas/28-ia-e-agentes-precifica-o-ia.md",
+        "docs/diagnostico-telas/29-ia-e-agentes-integra-es.md",
+        "docs/diagnostico-telas/30-administra-o-configura-es.md",
+        "docs/diagnostico-telas/31-administra-o-contatos-de-notifica-o.md",
+        "docs/diagnostico-telas/32-administra-o-usu-rios-permiss-es.md",
+        "docs/diagnostico-telas/33-administra-o-escrit-rios-tenants-administra-o.md",
+        "docs/diagnostico-telas/README.md"
+      ],
+      "areas": {
+        "outros": 35
+      }
+    },
+    {
+      "hash": "19f2dde516d8251d4202154b51cb55c8f88884f0",
+      "hashCurto": "19f2dde",
+      "mensagem": "Distribuição → aba Comercial + Regras colapsadas (progressive disclosure)",
+      "mensagemRaw": "feat(ux): Distribuição → aba Comercial + Regras colapsadas (progressive disclosure)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T03:10:25.000Z",
+      "hora": "00:10",
+      "arquivos": [
+        "app/crm/distribuicao/page.tsx",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "11b5ecd79502f9df28b3c0c92b39cd119c51ba62",
+      "hashCurto": "11b5ecd",
+      "mensagem": "harmoniza o app no verde+dourado da marca (fim do \"frankenstein\")",
+      "mensagemRaw": "feat(ux): harmoniza o app no verde+dourado da marca (fim do \"frankenstein\")",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T02:48:02.000Z",
+      "hora": "23:48",
+      "arquivos": [
+        "app/crm/agentes-reais/page.tsx",
+        "app/crm/agentes/[slug]/page.tsx",
+        "app/crm/agentes/page.tsx",
+        "app/crm/atendimento/page.tsx",
+        "app/crm/cadastro/page.tsx",
+        "app/crm/canais-entrada/page.tsx",
+        "app/crm/canais/page.tsx",
+        "app/crm/ciclos/page.tsx",
+        "app/crm/configuracoes/page.tsx",
+        "app/crm/contatos/page.tsx",
+        "app/crm/conteudo/page.tsx",
+        "app/crm/creditos/page.tsx",
+        "app/crm/distribuicao/page.tsx",
+        "app/crm/empresas/[id]/page.tsx",
+        "app/crm/empresas/page.tsx",
+        "app/crm/especialistas/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/financeiro/pagar/page.tsx",
+        "app/crm/financeiro/receber/page.tsx",
+        "app/crm/fornecedores/page.tsx",
+        "app/crm/imoveis/page.tsx",
+        "app/crm/integracoes/page.tsx",
+        "app/crm/layout.tsx",
+        "app/crm/lead/[id]/page.tsx",
+        "app/crm/leads/[id]/page.tsx",
+        "app/crm/leads/page.tsx",
+        "app/crm/loading.tsx",
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/negocios/page.tsx",
+        "app/crm/obras/[id]/page.tsx",
+        "app/crm/obras/page.tsx",
+        "app/crm/onboarding-tenant/page.tsx",
+        "app/crm/page.tsx",
+        "app/crm/parceiros/[id]/page.tsx",
+        "app/crm/parceiros/novo/page.tsx",
+        "app/crm/parceiros/page.tsx",
+        "app/crm/pedidos/page.tsx",
+        "app/crm/pessoas/[id]/page.tsx",
+        "app/crm/precificacao/page.tsx",
+        "app/crm/projetos/page.tsx",
+        "app/crm/relatorios/page.tsx",
+        "app/crm/tarefas/page.tsx",
+        "app/crm/trafego/page.tsx",
+        "app/crm/usuarios/page.tsx",
+        "app/globals.css",
+        "components/crm/AgenteBriefingChatPanel.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/AgentePlaybookCalibracaoDrawer.tsx",
+        "components/crm/AgenteUazapiBlock.tsx",
+        "components/crm/BriefingWhatsappBubble.tsx",
+        "components/crm/CrmAcaoAgora.tsx",
+        "components/crm/CrmAlertasStrip.tsx",
+        "components/crm/CrmAnalyticsDashboard.tsx",
+        "components/crm/CrmBotRingAvatar.tsx",
+        "components/crm/CrmCanalSideover.tsx",
+        "components/crm/CrmCargosCatalogDrawer.tsx",
+        "components/crm/CrmCheckbox.tsx",
+        "components/crm/CrmCommandPalette.tsx",
+        "components/crm/CrmConfirmDialog.tsx",
+        "components/crm/CrmEquipeResumo.tsx",
+        "components/crm/CrmFerramentasCustomDrawer.tsx",
+        "components/crm/CrmFinanceDashboard.tsx",
+        "components/crm/CrmLeadsEntradaPeriodo.tsx",
+        "components/crm/CrmLeadsParados.tsx",
+        "components/crm/CrmMetricCard.tsx",
+        "components/crm/CrmPermissaoSelect.tsx",
+        "components/crm/CrmPipelineResumo.tsx",
+        "components/crm/CrmQuickAdd.tsx",
+        "components/crm/CrmRastreioBusca.tsx",
+        "components/crm/CrmRastreioCadeia.tsx",
+        "components/crm/CrmSessionFooter.tsx",
+        "components/crm/CrmSideoverShell.tsx",
+        "components/crm/CrmStickyPageHeader.tsx",
+        "components/crm/CrmStickyTabs.tsx",
+        "components/crm/CrmTelefoneCell.tsx",
+        "components/crm/CrmToggleSwitch.tsx",
+        "components/crm/CrmUltimosLeads.tsx",
+        "components/crm/DistribuirLeadPanel.tsx",
+        "components/crm/EmpresaFormDrawer.tsx",
+        "components/crm/FilterPills.tsx",
+        "components/crm/FinanceiroContasList.tsx",
+        "components/crm/FinanceiroNovoLancamentoModal.tsx",
+        "components/crm/FunilOperacionalChart.tsx",
+        "components/crm/ImovelFormDrawer.tsx",
+        "components/crm/KpiBar.tsx",
+        "components/crm/LeadPropostasPanel.tsx",
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/NotificacoesSino.tsx",
+        "components/crm/ParticipantePicker.tsx",
+        "components/crm/PessoaFormModal.tsx",
+        "components/crm/PlaybookFlowStatusBanner.tsx",
+        "components/crm/PlaybookFlowVisualBuilder.tsx",
+        "components/crm/PlaybookUploadAnalisePanel.tsx",
+        "components/crm/ProgressoSistemaDashboard.tsx",
+        "components/crm/SearchBar.tsx",
+        "components/crm/SmartField.tsx",
+        "components/crm/cadastro/CadastroComercialSecao.tsx",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "components/crm/cadastro/CadastroEmpresaSideover.tsx",
+        "components/crm/cadastro/CadastroFichaRelacionados.tsx",
+        "components/crm/cadastro/CadastroFichaTabs.tsx",
+        "components/crm/cadastro/CadastroFiltrosBar.tsx",
+        "components/crm/cadastro/CadastroListaTable.tsx",
+        "components/crm/cadastro/CadastroPremiumSideover.tsx",
+        "components/crm/cadastro/CadastroScrollTable.tsx",
+        "components/crm/cadastro/CadastroVinculosPessoaEmpresa.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "components/crm/cadastro/ColunasMenu.tsx",
+        "components/crm/leads/EncaminhamentosPendentesPanel.tsx",
+        "components/crm/leads/LeadEncaminharModal.tsx",
+        "components/crm/leads/LeadRapidoSideover.tsx",
+        "components/crm/leads/MercadoLeadPicker.tsx",
+        "components/crm/leads/PipelineConfigSideover.tsx",
+        "components/crm/parceiros/ParceiroLinkWizard.tsx",
+        "components/crm/pipelines/PipelineTabsBar.tsx",
+        "components/crm/playbook-flow-visual/FlowNodeInspector.tsx",
+        "components/crm/playbook-flow-visual/FlowNodePalette.tsx",
+        "components/crm/toast.tsx",
+        "lib/crm-shell-theme.ts"
+      ],
+      "areas": {
+        "app/crm": 44,
+        "outros": 2,
+        "components/crm": 74
+      }
+    },
+    {
+      "hash": "2c6924717ac6dbe43d686947fff20afc36e88d33",
+      "hashCurto": "2c69247",
+      "mensagem": "unifica menu mobile — sanduíche + drawer em seções (estilo onboarding)",
+      "mensagemRaw": "feat(ux): unifica menu mobile — sanduíche + drawer em seções (estilo onboarding)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T01:08:26.000Z",
+      "hora": "22:08",
+      "arquivos": [
+        "components/mobile/MobileShell.tsx"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "97e4de76b67237236e1b1a77fecf49eb98b84d27",
+      "hashCurto": "97e4de7",
+      "mensagem": "auditoria do onboarding (Área de Membros) + diagnóstico dos menus",
+      "mensagemRaw": "docs(sidequest): auditoria do onboarding (Área de Membros) + diagnóstico dos menus",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T01:00:24.000Z",
+      "hora": "22:00",
+      "arquivos": [
+        "docs/SIDEQUEST-AUDITORIA-ONBOARDING-E-MENUS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "18add2014bfb4393d810f28b2c10e9ffc6d289f3",
+      "hashCurto": "18add20",
+      "mensagem": "Tijolos Fases 2 e 4 entregues (carteira + super-admin precificação)",
+      "mensagemRaw": "docs(macro): Tijolos Fases 2 e 4 entregues (carteira + super-admin precificação)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:36:20.000Z",
+      "hora": "20:36",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "27a28b2f5d012286123ff80d3d43b9198cfe9c8d",
+      "hashCurto": "27a28b2",
+      "mensagem": "Tijolos Fase 4 — painel super-admin de Precificação & IA (owner)",
+      "mensagemRaw": "feat(ia): Tijolos Fase 4 — painel super-admin de Precificação & IA (owner)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:35:38.000Z",
+      "hora": "20:35",
+      "arquivos": [
+        "app/api/crm/ia/config/route.ts",
+        "app/api/crm/ia/precos/route.ts",
+        "app/crm/precificacao/page.tsx",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "72f464af7c2dd963b096f2dc56d821ee1e196189",
+      "hashCurto": "72f464a",
+      "mensagem": "Tijolos Fase 2 — Carteira de Tijolos na tela (saldo + extrato)",
+      "mensagemRaw": "feat(ia): Tijolos Fase 2 — Carteira de Tijolos na tela (saldo + extrato)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:31:00.000Z",
+      "hora": "20:31",
+      "arquivos": [
+        "app/crm/creditos/page.tsx",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "54bf6bb497643bdd54b715bd5e5c09fa2308889c",
+      "hashCurto": "54bf6bb",
+      "mensagem": "P2 — máscara de digitação de telefone BR ((XX) XXXXX-XXXX)",
+      "mensagemRaw": "feat(ux): P2 — máscara de digitação de telefone BR ((XX) XXXXX-XXXX)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:23:52.000Z",
+      "hora": "20:23",
+      "arquivos": [
+        "app/crm/pessoas/[id]/page.tsx",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "lib/crm/telefone-brasil.test.ts",
+        "lib/crm/telefone-brasil.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1,
+        "lib/crm": 2
+      }
+    },
+    {
+      "hash": "161624be2f15dac750cd93f8aaaf449e8e968353",
+      "hashCurto": "161624b",
+      "mensagem": "adendo sessão 2 — P1 completo, scrollbar, trafego, Tijolos Fase 1, mobile",
+      "mensagemRaw": "docs(macro): adendo sessão 2 — P1 completo, scrollbar, trafego, Tijolos Fase 1, mobile",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:19:26.000Z",
+      "hora": "20:19",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "f33c766967e19115f46a4e5c6068c389db8fd77a",
+      "hashCurto": "f33c766",
+      "mensagem": "relatório da auditoria de mobile",
+      "mensagemRaw": "docs(mobile): relatório da auditoria de mobile",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:18:28.000Z",
+      "hora": "20:18",
+      "arquivos": [
+        "docs/AUDITORIA-MOBILE-2026-06-26.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "eb903853e4a482629a1d028502e15e9471d9a682",
+      "hashCurto": "eb90385",
+      "mensagem": "rota GET /api/crm/ia/creditos (saldo + extrato) — Fase 1 Task 5",
+      "mensagemRaw": "feat(ia): rota GET /api/crm/ia/creditos (saldo + extrato) — Fase 1 Task 5",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:06:54.000Z",
+      "hora": "20:06",
+      "arquivos": [
+        "app/api/crm/ia/creditos/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "cc0c53fe90e67838b2ca7be2f56de200ad1cbe99",
+      "hashCurto": "cc0c53f",
+      "mensagem": "liga medição de consumo (sombra) no motor de IA — Fase 1 Task 4",
+      "mensagemRaw": "feat(ia): liga medição de consumo (sombra) no motor de IA — Fase 1 Task 4",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:06:11.000Z",
+      "hora": "20:06",
+      "arquivos": [
+        "lib/ia/engine.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "54d1f017cee7fc58c6df3d78b5065926d3a87d84",
+      "hashCurto": "54d1f01",
+      "mensagem": "recorder de consumo + config + saldo (Tijolos) — Fase 1 Task 3",
+      "mensagemRaw": "feat(ia): recorder de consumo + config + saldo (Tijolos) — Fase 1 Task 3",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:04:52.000Z",
+      "hora": "20:04",
+      "arquivos": [
+        "lib/ia/metering.test.ts",
+        "lib/ia/metering.ts"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "10bcfd39a07905c5b29c4e6cc3c081f5b8ec3c6b",
+      "hashCurto": "10bcfd3",
+      "mensagem": "arquivo de migração do metering (Tijolos) — Fase 1 Task 2",
+      "mensagemRaw": "feat(ia): arquivo de migração do metering (Tijolos) — Fase 1 Task 2",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:03:36.000Z",
+      "hora": "20:03",
+      "arquivos": [
+        "supabase/migrations/20260626210000_ia_metering.sql"
+      ],
+      "areas": {
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "002b22d1e5b72ddd3284a1e216c8534e632b6573",
+      "hashCurto": "002b22d",
+      "mensagem": "funções puras de precificação de consumo de IA (Tijolos) — Fase 1 Task 1",
+      "mensagemRaw": "feat(ia): funções puras de precificação de consumo de IA (Tijolos) — Fase 1 Task 1",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:01:38.000Z",
+      "hora": "20:01",
+      "arquivos": [
+        "lib/ia/metering-calc.test.ts",
+        "lib/ia/metering-calc.ts"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "01dea45fb2a07bf29381368bdeac1cb0b190ca47",
+      "hashCurto": "01dea45",
+      "mensagem": "moeda = Tijolos (reconfigurável) + painel super-admin de precificação",
+      "mensagemRaw": "docs(spec/plan): moeda = Tijolos (reconfigurável) + painel super-admin de precificação",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T23:00:17.000Z",
+      "hora": "20:00",
+      "arquivos": [
+        "docs/superpowers/plans/2026-06-26-creditos-ia-fase1.md",
+        "docs/superpowers/specs/2026-06-26-creditos-ia-metering-design.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "2797075766a1e261eac81d82ca7f8278aa21173b",
+      "hashCurto": "2797075",
+      "mensagem": "tipar supabase() como SupabaseClient para evitar never no insert",
+      "mensagemRaw": "fix(types): tipar supabase() como SupabaseClient para evitar never no insert",
+      "autor": "Obra10+",
+      "dataIso": "2026-06-26T22:58:53.000Z",
+      "hora": "19:58",
+      "arquivos": [
+        "app/api/ciclos/atendente/route.ts",
+        "app/api/ciclos/diretor/route.ts",
+        "app/api/ciclos/gerente/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "734d8472818e43ed532f024721a584e1653106b6",
+      "hashCurto": "734d847",
+      "mensagem": "plano de implementação da Fase 1 do metering de IA (TDD)",
+      "mensagemRaw": "docs(plan): plano de implementação da Fase 1 do metering de IA (TDD)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:57:58.000Z",
+      "hora": "19:57",
+      "arquivos": [
+        "docs/superpowers/plans/2026-06-26-creditos-ia-fase1.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "53f2be4acc51cf46816c2153ebfd9be387ab3151",
+      "hashCurto": "53f2be4",
+      "mensagem": "grava decisões do dono — 1 crédito=R$0,10, markup 10x",
+      "mensagemRaw": "docs(spec): grava decisões do dono — 1 crédito=R$0,10, markup 10x",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:53:58.000Z",
+      "hora": "19:53",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-26-creditos-ia-metering-design.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "e4da185f72edc8a55b42deae06ab07890127111a",
+      "hashCurto": "e4da185",
+      "mensagem": "trava pré-pago + Claude como nível premium (provider-agnostic)",
+      "mensagemRaw": "docs(spec): trava pré-pago + Claude como nível premium (provider-agnostic)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:52:16.000Z",
+      "hora": "19:52",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-26-creditos-ia-metering-design.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "89ea9cd56c3f07774c155c8dc4ac422b62b84d83",
+      "hashCurto": "89ea9cd",
+      "mensagem": "lazy-init supabase nas rotas /api/ciclos para evitar crash no next build",
+      "mensagemRaw": "fix(build): lazy-init supabase nas rotas /api/ciclos para evitar crash no next build",
+      "autor": "Obra10+",
+      "dataIso": "2026-06-26T22:49:16.000Z",
+      "hora": "19:49",
+      "arquivos": [
+        "app/api/ciclos/atendente/route.ts",
+        "app/api/ciclos/diretor/route.ts",
+        "app/api/ciclos/gerente/route.ts"
+      ],
+      "areas": {
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "89a020a2d89f84500a3b5f1b7a0e3165941d4663",
+      "hashCurto": "89a020a",
+      "mensagem": "metering de IA + créditos pré-pagos (desenho da mesa redonda)",
+      "mensagemRaw": "docs(spec): metering de IA + créditos pré-pagos (desenho da mesa redonda)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:43:30.000Z",
+      "hora": "19:43",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-26-creditos-ia-metering-design.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "53f6d8cd9b71f6d783e4aa3aaae8a864597ff731",
+      "hashCurto": "53f6d8c",
+      "mensagem": "remove whatsapp-job-worker, jobs processados pelo web service",
+      "mensagemRaw": "chore(render): remove whatsapp-job-worker, jobs processados pelo web service",
+      "autor": "Obra10+",
+      "dataIso": "2026-06-26T22:42:54.000Z",
+      "hora": "19:42",
+      "arquivos": [
+        "render.yaml"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "6c4f4fc562751b9f41b0e71d3de634f5789eed4c",
+      "hashCurto": "6c4f4fc",
+      "mensagem": "P2 — scrollbar e trafego corrigidos; tokenização reavaliada",
+      "mensagemRaw": "docs(handoff): P2 — scrollbar e trafego corrigidos; tokenização reavaliada",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:27:46.000Z",
+      "hora": "19:27",
+      "arquivos": [
+        "docs/HANDOFF-PROXIMA-SESSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "4d6f4cef8d7f7cd6959b7fb3cb417955d3bd316c",
+      "hashCurto": "4d6f4ce",
+      "mensagem": "filtro de período deixa de ser fachada (respeita 7d/14d/30d)",
+      "mensagemRaw": "fix(trafego): filtro de período deixa de ser fachada (respeita 7d/14d/30d)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:25:24.000Z",
+      "hora": "19:25",
+      "arquivos": [
+        "app/api/windsor/campanhas/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "3f64337c0b7f4ebc9c2e2c721fa9683cedc1fda4",
+      "hashCurto": "3f64337",
+      "mensagem": "scrollbar visível — conteúdo abaixo da dobra passava despercebido",
+      "mensagemRaw": "fix(ux): scrollbar visível — conteúdo abaixo da dobra passava despercebido",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:18:43.000Z",
+      "hora": "19:18",
+      "arquivos": [
+        "app/globals.css"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "6d2144ac0e018ae9659db406cc7ef66e8982c804",
+      "hashCurto": "6d2144a",
+      "mensagem": "P1 da fila COMPLETO (4/4) — trackers atualizados",
+      "mensagemRaw": "docs(handoff): P1 da fila COMPLETO (4/4) — trackers atualizados",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:12:51.000Z",
+      "hora": "19:12",
+      "arquivos": [
+        "docs/HANDOFF-PROXIMA-SESSAO.md",
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "0052edd02cf2e7b84cca9c7797f0595c3d73222e",
+      "hashCurto": "0052edd",
+      "mensagem": "P1 — seletor de destino na distribuição (fim do slug/ID cru)",
+      "mensagemRaw": "feat(ux): P1 — seletor de destino na distribuição (fim do slug/ID cru)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:12:11.000Z",
+      "hora": "19:12",
+      "arquivos": [
+        "app/api/crm/distribuicao/destinos/route.ts",
+        "app/crm/distribuicao/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "687e653460e1bb6944013658475a551e6ede394b",
+      "hashCurto": "687e653",
+      "mensagem": "P1 — ações por linha em Escritórios (ativar/desativar tenant)",
+      "mensagemRaw": "feat(ux): P1 — ações por linha em Escritórios (ativar/desativar tenant)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:06:14.000Z",
+      "hora": "19:06",
+      "arquivos": [
+        "app/api/crm/tenants/[id]/route.ts",
+        "app/crm/empresas/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "6c9695d179ca94269afbd9c069ab965e8c621fa2",
+      "hashCurto": "6c9695d",
+      "mensagem": "P1 — mover etapa no mobile (negócios) via seletor Click-and-Go",
+      "mensagemRaw": "feat(ux): P1 — mover etapa no mobile (negócios) via seletor Click-and-Go",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T22:01:30.000Z",
+      "hora": "19:01",
+      "arquivos": [
+        "app/crm/negocios/page.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "91cb7999f4ba12a33ef1d0a945dfab18bf21b5b7",
+      "hashCurto": "91cb799",
+      "mensagem": "P1 — toasts de sucesso/erro nas escritas silenciosas",
+      "mensagemRaw": "feat(ux): P1 — toasts de sucesso/erro nas escritas silenciosas",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T21:55:35.000Z",
+      "hora": "18:55",
+      "arquivos": [
+        "app/crm/empresas/[id]/page.tsx",
+        "app/crm/empresas/page.tsx",
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/pessoas/[id]/page.tsx",
+        "app/layout.tsx",
+        "components/crm/toast.tsx"
+      ],
+      "areas": {
+        "app/crm": 4,
+        "outros": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "46bc8047adfface41729b381990d1487c1163e52",
+      "hashCurto": "46bc804",
+      "mensagem": "documento completo de contexto para a proxima sessao (visao, estado, deploy, entregue, fila, tecnico, travas)",
+      "mensagemRaw": "docs(handoff): documento completo de contexto para a proxima sessao (visao, estado, deploy, entregue, fila, tecnico, travas)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T21:43:11.000Z",
+      "hora": "18:43",
+      "arquivos": [
+        "docs/HANDOFF-PROXIMA-SESSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "3236ec613e9fbc01b23644510afdf5f6b6aec42c",
+      "hashCurto": "3236ec6",
+      "mensagem": "estado para proxima sessao — deploy live, P0 auditoria corrigido, fila P1/P2, obra deferida",
+      "mensagemRaw": "docs(handoff): estado para proxima sessao — deploy live, P0 auditoria corrigido, fila P1/P2, obra deferida",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-26T21:34:36.000Z",
+      "hora": "18:34",
+      "arquivos": [
+        "docs/PLANO-MACRO-CONCLUSAO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
     {
       "hash": "7b543f252b0ccdc54f88f9883e4a50ef48e30bb5",
       "hashCurto": "7b543f2",

@@ -184,7 +184,7 @@ export function PipelineConfigSideover({
                 <div>
                   <p className="text-xs font-bold text-[#e6edf3]">Pipelines</p>
                   <p className="mt-1 text-[11px] leading-relaxed text-[#8b949e]">
-                    Selecione um pipeline para gerir os estágios. Novos pipelines criados aqui
+                    Selecione um pipeline para gerenciar os estágios. Novos pipelines criados aqui
                     nascem livres, sem vínculo de mercado, e herdam os estágios padrão.
                   </p>
                 </div>

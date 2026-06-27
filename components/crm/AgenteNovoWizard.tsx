@@ -416,7 +416,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [ragPreparados, setRagPreparados] = useState(false);
   const [ragUploadTotal, setRagUploadTotal] = useState(0);
   const [ragUploadDone, setRagUploadDone] = useState(0);
-  /** Passo Canal: PATCH do modo WhatsApp antes de acções WhatsApp. */
+  /** Passo Canal: PATCH do modo WhatsApp antes de ações WhatsApp. */
   const [syncCanalLoading, setSyncCanalLoading] = useState(false);
 
   useEffect(() => {
@@ -3070,7 +3070,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                   {modoOperacao === "canal_whatsapp"
                     ? "Passo 1: região + criar instância WhatsApp. Passo 2 (opcional agora): QR ou código para ligar o telefone."
-                    : "Este agente está em modo copiloto interno (jobs por ciclo). Não há WhatsApp neste fluxo — pode concluir e gerir ciclos na Central ou na ficha do agente."}
+                    : "Este agente está em modo copiloto interno (jobs por ciclo). Não há WhatsApp neste fluxo — pode concluir e gerenciar ciclos na Central ou na ficha do agente."}
                 </p>
               </div>
 

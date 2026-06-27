@@ -151,7 +151,7 @@ export default function FerramentasHubPage() {
             className="rounded px-2 py-1 font-semibold"
             style={{ background: "#16271e", color: "#c9a24a", border: "1px solid #1d3a2c", cursor: "pointer" }}
           >
-            Gerir custom + IA
+            Gerenciar custom + IA
           </button>
           <span className="rounded px-2 py-1" style={{ background: "#16271e", border: "1px solid #1d3a2c" }}>
             {HUB_AGENTE_FERRAMENTAS_CATALOGO.length} builtins
