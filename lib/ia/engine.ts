@@ -218,6 +218,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
       turnosAnteriores,
       turnosConversa: turnosParaPrompt,
       sessaoReiniciada: historicoCtx.sessaoReiniciada,
+      valorEstimado: ctx.valorEstimado,
     });
 
     if (!promptData) {

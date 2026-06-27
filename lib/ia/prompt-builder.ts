@@ -56,6 +56,8 @@ export interface PromptParams {
   /** Briefing/simulação CRM: fluxo playbook concluído sem lead real. */
   simulacaoWaPlaybookComplete?: boolean;
   simulacaoWaPlaybookAnswers?: Record<string, string>;
+  /** Valor estimado do lead — usado para escalar p/ o modelo robusto (Turbo) em alto valor. */
+  valorEstimado?: number;
 }
 
 /** Fonte de conhecimento injetada no system prompt (para UI de briefing / debug). */
@@ -188,8 +190,11 @@ export async function construirPrompt(params: PromptParams): Promise<PromptCompl
         .eq("ativo", true)
         .order("prioridade", { ascending: false });
 
-  // 5. Seleciona modelo baseado no contexto
-  const modelo = selecionarModelo(agente, params.mercado);
+  // 5. Seleciona modelo baseado no contexto (custo × robustez)
+  const modelo = selecionarModelo(agente, {
+    mercado: params.mercado,
+    valorEstimado: params.valorEstimado,
+  });
 
   // 6. Monta o prompt em camadas
   const secoes: string[] = [];
@@ -518,13 +523,28 @@ Adapte sua linguagem e conhecimento para este contexto específico.`);
   };
 }
 
-function selecionarModelo(agente: Record<string, unknown>, mercado?: string): string {
-  if (mercado === "imobiliario") {
-    const m = (agente.modelo_critico as string)?.trim();
-    return m || HUB_MODELO_SENTINEL;
-  }
-  const m = (agente.modelo_padrao as string)?.trim();
-  return m || HUB_MODELO_SENTINEL;
+/** Lead acima deste valor (R$) escala para o modelo robusto (Turbo), se configurado. Ajustável. */
+const LIMIAR_ALTO_VALOR_BRL = 50_000;
+
+/**
+ * Escolhe o modelo do agente por contexto (custo × robustez):
+ * - alto valor (lead ≥ limiar) → modelo_alto_valor (Turbo), se definido;
+ * - mercado/operação crítica → modelo_critico, se definido;
+ * - caso contrário → modelo_padrao (Econômico).
+ * Cada coluna cai no sentinel (Mistral) quando vazia, então um agente "todo Mistral"
+ * continua barato; só usa o robusto quando o dono configurou e o contexto pede.
+ */
+function selecionarModelo(
+  agente: Record<string, unknown>,
+  opts: { mercado?: string; valorEstimado?: number },
+): string {
+  const padrao = (agente.modelo_padrao as string)?.trim() || HUB_MODELO_SENTINEL;
+  const critico = (agente.modelo_critico as string)?.trim();
+  const altoValor = (agente.modelo_alto_valor as string)?.trim();
+
+  if (altoValor && (opts.valorEstimado ?? 0) >= LIMIAR_ALTO_VALOR_BRL) return altoValor;
+  if (critico && opts.mercado === "imobiliario") return critico;
+  return padrao;
 }
 
 export function estimarCusto(tokensEntrada: number, modelo: string): number {
