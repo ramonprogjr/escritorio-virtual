@@ -19,7 +19,7 @@ async function gerarAlerta(tipo: string, agente: string, titulo: string, mensage
   });
 
   if (tipo === "critico") {
-    const { data: contatos } = await supabase
+    const { data: contatos } = await supabase()
       .from("hub_contatos_notificacao")
       .select("*")
       .eq("ativo", true)
@@ -44,7 +44,7 @@ async function cicloFollowup(runtime: ReturnType<typeof parseFollowupFromCicloCo
   const agora = new Date();
   const acoes: string[] = [];
 
-  const { data: leads } = await supabase
+  const { data: leads } = await supabase()
     .from("hub_leads_crm")
     .select("id, nome, telefone, estagio, followup_passo, followup_pausado, ultimo_followup, atualizado_em, metadata")
     .not("estagio", "in", '("ganho","perdido","arquivado")')
@@ -57,7 +57,7 @@ async function cicloFollowup(runtime: ReturnType<typeof parseFollowupFromCicloCo
     const mercado = (lead.metadata as Record<string, unknown>)?.mercado as string || "geral";
     const passo = (lead.followup_passo || 0) + 1;
 
-    const { data: config } = await supabase
+    const { data: config } = await supabase()
       .from("hub_followup_config")
       .select("*")
       .or(`mercado.eq.${mercado},mercado.eq.geral`)
@@ -86,7 +86,7 @@ async function cicloFollowup(runtime: ReturnType<typeof parseFollowupFromCicloCo
     if (horasPassadas < horasNecessarias) continue;
 
     if (passo > 3 && horasPassadas > runtime.arquivarAposHoras) {
-      await supabase
+      await supabase()
         .from("hub_leads_crm")
         .update({ estagio: "arquivado", followup_pausado: true })
         .eq("id", lead.id);
@@ -118,7 +118,7 @@ async function cicloFollowup(runtime: ReturnType<typeof parseFollowupFromCicloCo
       }
     }
 
-    await supabase
+    await supabase()
       .from("hub_leads_crm")
       .update({
         followup_passo: passo,
@@ -137,7 +137,7 @@ async function cicloSLA() {
   const alertas: string[] = [];
   const limite15min = new Date(Date.now() - 15 * 60000).toISOString();
 
-  const { data: msgs15 } = await supabase
+  const { data: msgs15 } = await supabase()
     .from("hub_fila_mensagens")
     .select("*, lead:hub_leads_crm(nome, telefone)")
     .eq("direcao", "entrada")
@@ -148,7 +148,7 @@ async function cicloSLA() {
     const lead = msg.lead as Record<string, unknown>;
     const mins = Math.round((Date.now() - new Date(msg.criado_em).getTime()) / 60000);
 
-    const { data: alertaExiste } = await supabase
+    const { data: alertaExiste } = await supabase()
       .from("hub_alertas")
       .select("id")
       .eq("lead_id", msg.lead_id)
@@ -183,7 +183,7 @@ async function resolveAtendenteCicloId(ciclo: string): Promise<string | undefine
       : ["%SLA%", "%Monitor SLA%", "%monitor%", "%sla%", "%SLA %"];
 
   for (const pat of patterns) {
-    const { data } = await supabase
+    const { data } = await supabase()
       .from("hub_ciclos_ia")
       .select("id")
       .eq("agente_slug", "atendente")
@@ -193,7 +193,7 @@ async function resolveAtendenteCicloId(ciclo: string): Promise<string | undefine
     if (data?.id) return data.id as string;
   }
 
-  const { data: rows } = await supabase
+  const { data: rows } = await supabase()
     .from("hub_ciclos_ia")
     .select("id, nome")
     .eq("agente_slug", "atendente")
@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
   let followupRuntime = parseFollowupFromCicloConfiguracoes(undefined);
 
   if (hubCicloId) {
-    const { data: row } = await supabase
+    const { data: row } = await supabase()
       .from("hub_ciclos_ia")
       .select("id, agente_slug, configuracoes")
       .eq("id", hubCicloId)
@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
     const cicloId = await resolveAtendenteCicloId(ciclo);
     cicloConfig = cicloId ? { id: cicloId } : null;
     if (ciclo === "followup" && cicloConfig?.id) {
-      const { data: cicloRow } = await supabase
+      const { data: cicloRow } = await supabase()
         .from("hub_ciclos_ia")
         .select("configuracoes")
         .eq("id", cicloConfig.id)
@@ -275,12 +275,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (cicloConfig?.id) {
-      const { data: rowAt } = await supabase
+      const { data: rowAt } = await supabase()
         .from("hub_ciclos_ia")
         .select("total_execucoes")
         .eq("id", cicloConfig.id)
         .maybeSingle();
-      await supabase
+      await supabase()
         .from("hub_ciclos_ia")
         .update({
           ultimo_ciclo: new Date().toISOString(),

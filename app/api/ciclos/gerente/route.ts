@@ -40,7 +40,7 @@ ${totalAlerts > 0 ? "⚡ Há alertas pendentes no sistema." : "✓ Operação sa
 
 👉 ${process.env.NEXT_PUBLIC_APP_URL || "https://escritorio-virtual-xi.vercel.app"}/crm`;
 
-  const { data: contatos } = await supabase
+  const { data: contatos } = await supabase()
     .from("hub_contatos_notificacao")
     .select("*")
     .eq("ativo", true)
@@ -71,7 +71,7 @@ ${totalAlerts > 0 ? "⚡ Há alertas pendentes no sistema." : "✓ Operação sa
 async function cicloSupervisao() {
   const alertas: string[] = [];
 
-  const { data: msgsRecentes } = await supabase
+  const { data: msgsRecentes } = await supabase()
     .from("hub_fila_mensagens")
     .select("lead_id, conteudo, direcao, criado_em, agente_id")
     .eq("direcao", "entrada")
@@ -122,7 +122,7 @@ async function registrarExecucaoGerente(
   let cfg: { id: string; total_execucoes: number | null; agente_slug: string } | null = null;
 
   if (hubCicloId) {
-    const { data } = await supabase
+    const { data } = await supabase()
       .from("hub_ciclos_ia")
       .select("id, total_execucoes, agente_slug")
       .eq("id", hubCicloId)
@@ -137,7 +137,7 @@ async function registrarExecucaoGerente(
         : ["%Supervis%", "%supervis%"];
 
     for (const frag of frags) {
-      const { data } = await supabase
+      const { data } = await supabase()
         .from("hub_ciclos_ia")
         .select("id, total_execucoes, agente_slug")
         .eq("agente_slug", "gerente_atendimento")
@@ -151,7 +151,7 @@ async function registrarExecucaoGerente(
     }
 
     if (!cfg?.id) {
-      const { data: rows } = await supabase
+      const { data: rows } = await supabase()
         .from("hub_ciclos_ia")
         .select("id, nome, total_execucoes, agente_slug")
         .eq("agente_slug", "gerente_atendimento")
@@ -180,7 +180,7 @@ async function registrarExecucaoGerente(
     alertas_gerados: Array.isArray(alertasGer) ? alertasGer : [],
   });
 
-  await supabase
+  await supabase()
     .from("hub_ciclos_ia")
     .update({
       ultimo_ciclo: new Date().toISOString(),

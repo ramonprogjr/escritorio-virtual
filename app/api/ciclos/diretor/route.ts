@@ -145,7 +145,7 @@ async function cicloAnaliseNoite() {
 ${(alertasHoje.count || 0) > 0 ? "Verifique os alertas pendentes." : "✓ Operação saudável hoje!"}`;
 
   if ((alertasHoje.count || 0) > 0) {
-    const { data: contatos } = await supabase
+    const { data: contatos } = await supabase()
       .from("hub_contatos_notificacao")
       .select("*")
       .eq("ativo", true)
@@ -193,7 +193,7 @@ async function registrarExecucaoDiretor(
   let cfg: { id: string; total_execucoes: number | null; agente_slug: string } | null = null;
 
   if (hubCicloId) {
-    const { data } = await supabase
+    const { data } = await supabase()
       .from("hub_ciclos_ia")
       .select("id, total_execucoes, agente_slug")
       .eq("id", hubCicloId)
@@ -204,7 +204,7 @@ async function registrarExecucaoDiretor(
   const map = CICLO_NOME_FRAG[ciclo];
 
   if (!cfg && map) {
-    let { data } = await supabase
+    let { data } = await supabase()
       .from("hub_ciclos_ia")
       .select("id, total_execucoes, agente_slug")
       .eq("agente_slug", map.slug)
@@ -212,7 +212,7 @@ async function registrarExecucaoDiretor(
       .maybeSingle();
 
     if (!data && ciclo === "trafego") {
-      const alt = await supabase
+      const alt = await supabase()
         .from("hub_ciclos_ia")
         .select("id, total_execucoes, agente_slug")
         .eq("agente_slug", map.slug)
@@ -221,7 +221,7 @@ async function registrarExecucaoDiretor(
       data = alt.data;
     }
     if (!data && ciclo === "analise_manha") {
-      const alt = await supabase
+      const alt = await supabase()
         .from("hub_ciclos_ia")
         .select("id, total_execucoes, agente_slug")
         .eq("agente_slug", map.slug)
@@ -248,7 +248,7 @@ async function registrarExecucaoDiretor(
     alertas_gerados: Array.isArray(alertasGer) ? alertasGer : [],
   });
 
-  await supabase
+  await supabase()
     .from("hub_ciclos_ia")
     .update({
       ultimo_ciclo: new Date().toISOString(),
