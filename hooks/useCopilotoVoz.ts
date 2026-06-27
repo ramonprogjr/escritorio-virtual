@@ -53,6 +53,11 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const silencioRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finalRef = useRef("");
+  const erroRef = useRef<string | null>(null);
+  // Fallback de gravação (Voxtral) p/ navegadores sem Web Speech (iOS Safari, etc.).
+  const mediaRecRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef(opts.contexto);
   ctxRef.current = opts.contexto;
 
@@ -205,6 +210,11 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     setEstado("done");
   }, []);
 
+  const pararStream = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  };
+
   const parar = useCallback(() => {
     limparSilencio();
     try {
@@ -212,16 +222,86 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     } catch {
       /* noop */
     }
+    try {
+      mediaRecRef.current?.stop();
+    } catch {
+      /* noop */
+    }
   }, []);
+
+  // Fallback Voxtral: envia o áudio gravado para transcrição no servidor.
+  const enviarParaTranscrever = useCallback(
+    async (blob: Blob) => {
+      setEstado("processing");
+      try {
+        const fd = new FormData();
+        fd.append("audio", blob, "copiloto.webm");
+        const r = await fetch("/api/copiloto/transcrever", {
+          method: "POST",
+          headers: internalApiHeaders(),
+          body: fd,
+        });
+        const d = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+        if (!r.ok || typeof d.texto !== "string" || !d.texto.trim()) {
+          setMensagem(typeof d.error === "string" ? d.error : "Não consegui entender o áudio.");
+          setEstado("erro");
+          return;
+        }
+        setTranscricaoLive(d.texto);
+        await processar(d.texto);
+      } catch (e) {
+        setMensagem(e instanceof Error ? e.message : "Falha de rede.");
+        setEstado("erro");
+      }
+    },
+    [processar]
+  );
+
+  const iniciarGravacao = useCallback(async () => {
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices?.getUserMedia ||
+      typeof MediaRecorder === "undefined"
+    ) {
+      setMensagem("Seu navegador não permite gravar áudio. Tente pelo Chrome.");
+      setEstado("erro");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = () => {
+        pararStream();
+        mediaRecRef.current = null;
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        if (blob.size > 0) void enviarParaTranscrever(blob);
+        else setEstado((s) => (s === "listening" ? "idle" : s));
+      };
+      mediaRecRef.current = rec;
+      setTranscricaoLive("");
+      setMensagem("");
+      setEstado("listening");
+      rec.start();
+    } catch {
+      setEstado("erro");
+      setMensagem("Não consegui acessar o microfone. Verifique a permissão.");
+    }
+  }, [enviarParaTranscrever]);
 
   const iniciar = useCallback(() => {
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) {
-      setMensagem("Seu navegador não suporta voz ao vivo. (Fallback de gravação em breve.)");
-      setEstado("erro");
+      // Sem transcrição ao vivo no navegador → grava e transcreve no servidor (Voxtral).
+      void iniciarGravacao();
       return;
     }
     finalRef.current = "";
+    erroRef.current = null;
     setTranscricaoLive("");
     setResultado(null);
     setMensagem("");
@@ -244,12 +324,29 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       limparSilencio();
       silencioRef.current = setTimeout(() => parar(), 3000);
     };
-    rec.onerror = () => {
-      /* tratado no onend */
+    rec.onerror = (e) => {
+      const code = (e && e.error) || "";
+      erroRef.current =
+        code === "not-allowed" || code === "service-not-allowed"
+          ? "Permissão do microfone negada. Libere o microfone para este site nas configurações do navegador."
+          : code === "no-speech"
+            ? "Não ouvi nada. Toque de novo e fale mais perto do microfone."
+            : code === "audio-capture"
+              ? "Não encontrei um microfone neste aparelho."
+              : code === "network"
+                ? "Sem conexão para reconhecer a voz agora. Tente de novo."
+                : "Não consegui ouvir. Tente de novo.";
     };
     rec.onend = () => {
       limparSilencio();
       recRef.current = null;
+      // Se houve erro, mostra a causa em vez de fechar em silêncio.
+      if (erroRef.current) {
+        setMensagem(erroRef.current);
+        erroRef.current = null;
+        setEstado("erro");
+        return;
+      }
       const texto = finalRef.current.trim();
       if (texto) void processar(texto);
       else setEstado((s) => (s === "listening" ? "idle" : s));
@@ -262,7 +359,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       setEstado("erro");
       setMensagem("Não consegui acessar o microfone. Verifique a permissão.");
     }
-  }, [parar, processar]);
+  }, [parar, processar, iniciarGravacao]);
 
   const toggle = useCallback(() => {
     if (estado === "listening") parar();
@@ -277,12 +374,27 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       /* noop */
     }
     recRef.current = null;
+    try {
+      mediaRecRef.current?.stop();
+    } catch {
+      /* noop */
+    }
+    mediaRecRef.current = null;
+    pararStream();
     setEstado("idle");
     setTranscricaoLive("");
     setResultado(null);
     setMensagem("");
     setAcaoPendente(null);
   }, []);
+
+  // Toque no FAB: idle→ouvir, ouvindo→parar, processando→ignora, resto (done/erro/confirmando)→FECHA.
+  const aoTocarFab = useCallback(() => {
+    if (estado === "listening") parar();
+    else if (estado === "processing") return;
+    else if (estado === "idle") iniciar();
+    else cancelar();
+  }, [estado, iniciar, parar, cancelar]);
 
   useEffect(() => () => {
     limparSilencio();
@@ -291,6 +403,12 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     } catch {
       /* noop */
     }
+    try {
+      mediaRecRef.current?.stop();
+    } catch {
+      /* noop */
+    }
+    pararStream();
   }, []);
 
   return {
@@ -302,6 +420,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     suporteVoz,
     acaoPendente,
     toggle,
+    aoTocarFab,
     cancelar,
     confirmarAcao,
     cancelarAcao,

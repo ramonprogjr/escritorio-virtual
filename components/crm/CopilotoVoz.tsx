@@ -50,6 +50,7 @@ export function CopilotoVoz() {
     modeloUsado,
     acaoPendente,
     toggle,
+    aoTocarFab,
     cancelar,
     confirmarAcao,
     cancelarAcao,
@@ -117,7 +118,7 @@ export function CopilotoVoz() {
       /* ignore */
     }
     if (!d.moved) {
-      toggle();
+      aoTocarFab();
       return;
     }
     // snap à borda horizontal mais próxima
@@ -132,7 +133,7 @@ export function CopilotoVoz() {
       }
       return next;
     });
-  }, [toggle]);
+  }, [aoTocarFab]);
 
   if (!pos) return null;
 
@@ -143,6 +144,15 @@ export function CopilotoVoz() {
 
   return (
     <>
+      {/* Backdrop — tocar fora fecha o painel */}
+      {aberto && (
+        <div
+          onClick={cancelar}
+          aria-hidden
+          style={{ position: "fixed", inset: 0, zIndex: 89, background: "rgba(0,0,0,0.25)" }}
+        />
+      )}
+
       {/* Painel */}
       {aberto && (
         <div
@@ -201,8 +211,17 @@ export function CopilotoVoz() {
                 {/claude/i.test(modeloUsado) ? "Claude" : "Mistral"}
               </span>
             )}
-            <button onClick={cancelar} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "#8b949e", padding: 4 }}>
-              <X size={18} />
+            <button
+              onClick={cancelar}
+              aria-label="Fechar"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 36, height: 36, flexShrink: 0,
+                background: "#16271e", border: "1px solid #1d3a2c", borderRadius: 10,
+                cursor: "pointer", color: "#cdd9d2",
+              }}
+            >
+              <X size={20} />
             </button>
           </div>
 
