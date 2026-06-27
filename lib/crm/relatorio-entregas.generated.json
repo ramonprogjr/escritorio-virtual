@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-27T17:41:39.258Z",
+  "geradoEm": "2026-06-27T17:49:48.572Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "9ef786418b31068f76ef1415e9e44dc8ae9278e3",
+      "hashCurto": "9ef7864",
+      "mensagem": "harmoniza cores off-brand da tela ao verde+dourado da marca",
+      "mensagemRaw": "style(agentes): harmoniza cores off-brand da tela ao verde+dourado da marca",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:49:20.000Z",
+      "hora": "14:49",
+      "arquivos": [
+        "app/crm/agentes/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "0beaae96fb654a88133841ae85f8e0ff6c4a576c",
+      "hashCurto": "0beaae9",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:44:10.000Z",
+      "hora": "14:44",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "fabe431f39b051f9723f713e9815b2c0c202d0ec",
       "hashCurto": "fabe431",
