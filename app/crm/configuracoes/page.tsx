@@ -254,9 +254,9 @@ export default function Configuracoes() {
 
         <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <p className="text-sm font-bold text-[#e6edf3]">Cadência de follow-up</p>
-          <p className="mt-1 text-xs text-[#8b949e]">hub_followup_config — horas entre passos.</p>
+          <p className="mt-1 text-xs text-[#8b949e]">Horas entre cada passo do follow-up automático.</p>
           {followup.length === 0 ? (
-            <p className="mt-3 text-sm text-[#8b949e]">Nenhuma linha ativa. Configure no Supabase ou ciclos.</p>
+            <p className="mt-3 text-sm text-[#8b949e]">Nenhuma cadência ativa. Configure em Automações.</p>
           ) : (
             <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
               {followup.map((r, i) => (

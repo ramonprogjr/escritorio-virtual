@@ -1835,8 +1835,8 @@ export default function CiclosPage() {
                     </p>
                   )}
                   <p className="text-xs m-0" style={{ color: "#484f58", lineHeight: 1.45 }}>
-                    Valores gravados em <code style={{ color: "#8b949e" }}>configuracoes</code> (horas por passo e dias
-                    até arquivar); textos das mensagens vêm de <code style={{ color: "#8b949e" }}>hub_followup_config</code>.
+                    As horas por passo e os dias até arquivar ficam nas configurações; os textos das
+                    mensagens vêm da cadência de follow-up.
                   </p>
                   <p className="text-xs font-bold m-0" style={{ color: "#c9a24a" }}>Parâmetros de follow-up</p>
                   <label className="block m-0">
@@ -1932,7 +1932,7 @@ export default function CiclosPage() {
 
                   <div className="rounded-lg p-3 space-y-2" style={{ background: "#0a140f", border: "1px solid #1d3a2c" }}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-xs font-bold m-0" style={{ color: "#e6edf3" }}>Pré-visualizar merge com hub_followup_config</p>
+                      <p className="text-xs font-bold m-0" style={{ color: "#e6edf3" }}>Pré-visualizar as mensagens do follow-up</p>
                       {mercadosPreviewOptions.length > 1 && (
                         <label className="flex items-center gap-2 m-0 text-xs" style={{ color: "#8b949e" }}>
                           <span>Mercado</span>
@@ -2051,7 +2051,7 @@ export default function CiclosPage() {
                     </p>
                   )}
                   <p className="text-xs m-0" style={{ color: "#484f58", lineHeight: 1.45 }}>
-                    O texto de cada mensagem continua a vir de <code style={{ color: "#8b949e" }}>hub_followup_config</code> por mercado e passo.
+                    O texto de cada mensagem vem da cadência de follow-up, por mercado e passo.
                   </p>
                   </div>
                 </details>

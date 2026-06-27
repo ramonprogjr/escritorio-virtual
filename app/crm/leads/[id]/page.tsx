@@ -800,16 +800,11 @@ export default function LeadFichaPage() {
                   color: "#8b949e",
                 }}
               >
-                <p className="font-medium text-gray-300">Memórias e schema</p>
+                <p className="font-medium text-gray-300">Memórias da IA</p>
                 <p className="mt-1.5">
-                  O CRM lê <code className="rounded bg-black/40 px-1 py-0.5 text-[10px]">hub_memorias_lead</code> com{" "}
-                  <code className="rounded bg-black/40 px-1 py-0.5 text-[10px]">lead_id</code> igual ao deste lead em{" "}
-                  <code className="rounded bg-black/40 px-1 py-0.5 text-[10px]">hub_leads_crm</code>, ou ao{" "}
-                  <code className="rounded bg-black/40 px-1 py-0.5 text-[10px]">hub_leads</code> mais recente da mesma{" "}
-                  <code className="rounded bg-black/40 px-1 py-0.5 text-[10px]">pessoa_id</code> quando a primeira
-                  consulta vem vazia. Se a tabela no Supabase tiver FK só para um dos modelos ou colunas só em JSON
-                  (sem <code className="text-[10px]">chave</code>/<code className="text-[10px]">valor</code>), os
-                  inserts antigos podem falhar ou esta lista fica vazia até alinhar migração e RLS.
+                  Aqui aparecem as memórias que a IA guardou sobre este lead durante os atendimentos
+                  (preferências, contexto, combinados). Se a lista estiver vazia, ainda não há memórias
+                  registradas para este contato.
                 </p>
               </div>
 
