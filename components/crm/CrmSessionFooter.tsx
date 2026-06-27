@@ -204,7 +204,7 @@ export function CrmSessionFooter({
           type="button"
           title="Sair da conta"
           aria-label="Sair da conta"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#f8514944] bg-[#f8514914] text-[#f85149] transition-colors hover:border-[#f85149] hover:bg-[#f8514930]"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#2b3544] bg-transparent text-[#8b949e] transition-colors hover:border-[#f8514966] hover:bg-[#f8514914] hover:text-[#f85149]"
           onClick={() => void signOutAndRedirect(router, onNavigate)}
         >
           <LogOut size={15} strokeWidth={2} aria-hidden />
