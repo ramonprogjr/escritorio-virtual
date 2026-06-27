@@ -1,7 +1,54 @@
 {
-  "geradoEm": "2026-06-27T18:09:44.396Z",
+  "geradoEm": "2026-06-27T18:15:24.755Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "2c8c35c56afbbc1d2014f90820db93411e25e9f2",
+      "hashCurto": "2c8c35c",
+      "mensagem": "telas-lista usam minHeight 100% (era 100vh) — fim do duplo-scroll",
+      "mensagemRaw": "fix(shell): telas-lista usam minHeight 100% (era 100vh) — fim do duplo-scroll",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T18:15:16.000Z",
+      "hora": "15:15",
+      "arquivos": [
+        "app/crm/agentes/page.tsx",
+        "app/crm/ciclos/page.tsx",
+        "app/crm/contatos/page.tsx",
+        "app/crm/ferramentas/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 4
+      }
+    },
+    {
+      "hash": "6e41d502499616c52fa4026910e1f9fb6a53ec53",
+      "hashCurto": "6e41d50",
+      "mensagem": "harmoniza cores off-brand em 15 componentes ao verde+dourado",
+      "mensagemRaw": "style(crm): harmoniza cores off-brand em 15 componentes ao verde+dourado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T18:11:18.000Z",
+      "hora": "15:11",
+      "arquivos": [
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/AgentePlaybookCalibracaoDrawer.tsx",
+        "components/crm/AgenteUazapiBlock.tsx",
+        "components/crm/CrmCanalSideover.tsx",
+        "components/crm/CrmCargosCatalogDrawer.tsx",
+        "components/crm/CrmFerramentasCustomDrawer.tsx",
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/ParticipantePicker.tsx",
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/PlaybookFlowVisualBuilder.tsx",
+        "components/crm/PlaybookUploadAnalisePanel.tsx",
+        "components/crm/cadastro/CadastroPremiumSideover.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "components/crm/parceiros/ParceiroLinkWizard.tsx",
+        "components/crm/playbook-flow-visual/FlowCustomNodes.tsx"
+      ],
+      "areas": {
+        "components/crm": 15
+      }
+    },
     {
       "hash": "e5c624eff9699b48e47e22a0fc1e43d401882e25",
       "hashCurto": "e5c624e",
