@@ -1,0 +1,44 @@
+# Engenharia (Obras)  ·  Operações
+
+**Rota:** 
+
+## Veredito do diretor
+Hoje esta tela NÃO é o módulo Engenharia da visão — é um atalho técnico (MVP/CRUD) que viola três premissas centrais ao mesmo tempo: IA-first/Click-and-Go (criação por texto livre), funcional-não-fachada (painel [id] = 3 listas read-only sem nenhuma ação) e coesão de nomenclatura (chama-se "Obras" sob o grupo "Operações", com a visão renomeando para "Engenharia" + forks Construção×Reforma). Pior que feio: é gerador de dados-lixo — a criação inline produz obras órfãs sem negócio/imóvel/cliente/endereço/tipo, justamente o oposto da regra de que OBRA NASCE DE NEGÓCIO GANHO e do código único como pilar de comissão/rastreio. O backend está mais maduro que a UI (aceita negocio_id/imovel_id, suporta ?status=, gera OBR-AAAA-#### e é multi-tenant correto) — então o trabalho aqui é majoritariamente de UI/fluxo reaproveitando o que já existe, não de backend. Decisão de produto: tratar como RASCUNHO, não como tela pronta, coerente com a decisão registrada de deferir gestão de obra até ter dados do dono. A entrega de curto prazo deve focar em três coisas baratas e seguras (renomear/coesão, matar a criação órfã, enriquecer cards + busca/filtro já suportada) e BLOQUEAR a criação por texto livre que gera lixo. A reconstrução profunda do painel [id] (Escopo, Cronograma/Curva S, Avanço & Medição) fica deferida — mas a tela não pode ser apresentada como funcional enquanto for fachada. Importante para o TODO: a obra é onde o fornecedor EXECUTA e onde nasce a comissão transacional por código; portanto a porta de entrada precisa amarrar obra↔negócio↔imóvel↔cliente desde o nascimento, senão a monetização e a Central de Performance herdam dados sujos.
+
+## Cenários trazidos
+- SERVIR O FORNECEDOR (operação) vs SERVIR O HUB (governança): a tela é primariamente do fornecedor que executa (precisa ver avanço, marco, medição). Mas o código único e o vínculo a negócio existem para o Hub cobrar comissão e medir SLA. Veredito: priorizar a experiência do fornecedor na superfície (cards de avanço, ações), e garantir os vínculos no backend silenciosamente — o usuário não digita código, a IA amarra. Não construir telas de governança aqui; isso vai para Central de Performance/relatórios.
+- TABELA vs CARTÕES: coerente com a régua 'tabela ≠ tela de trabalho', manter CARTÕES clicáveis (já são) e enriquecê-los (cliente + tipo + barra de avanço + próximo marco). A visão tabular (lista densa filtrável) é legítima, mas pertence a /crm/relatorios como relatório de carteira de obras — não como tela de trabalho. Evita conflito com a diretriz aplicada nas outras telas.
+- CRIAÇÃO: (A) Nascer do negócio ganho (seletor/IA sugere negócios elegíveis sem obra) — caminho canônico, alinhado à visão e ao botão 'Gerar obra'; (B) Wizard de 5 passos (modulo-engenharia-obra) — completo, porém mais pesado para o curto prazo; (C) Texto livre atual — gera lixo, descartar como caminho primário. Recomendo (A) agora como entrada padrão e deixar (B) plugado para quando houver dados do dono; (C) só como fallback explícito 'obra avulsa' com aviso, ou remover.
+- PROFUNDIDADE DO PAINEL [id] AGORA vs DEFERIR: (A) Reconstruir já as 4 telas do módulo — alto custo, sem dados do dono, risco de retrabalho; (B) Deferir o miolo mas trocar as 3 listas-fachada por um estado honesto ('Em construção — execução detalhada chega com seus dados') + 2-3 ações reais que já dão para suportar (registrar avanço %, pedido de material, check-in). Recomendo (B): não apresentar fachada como pronto, mas dar pelo menos uma ação Click-and-Go real.
+- CONSTRUÇÃO × REFORMA: (A) Separar já em dois sub-itens de menu/abas (fiel à visão de forks); (B) Um único fluxo com 'tipo' como atributo (chip Construção/Reforma) e filtro. Recomendo (B) no curto prazo (1 atributo + chip + filtro) e promover a sub-itens de menu só na renomeação de navegação já atribuída, para não duplicar telas prematuramente.
+
+## ✅ Manter
+- Card totalmente clicável (1 clique abre o painel) — respeita mínimo de cliques, é o ponto forte da tela.
+- Código único OBR-AAAA-#### gerado no backend — pilar de dedup/rastreio/comissão; manter a geração, apenas rebaixar visualmente na UI.
+- Multi-tenant correto no backend e capacidades já existentes (?status=, aceita negocio_id/imovel_id) — base sólida a reaproveitar.
+- EmptyState e estado de carregamento como conceitos (feedback é correto) — manter, apenas elevar ao padrão visual e torná-los acionáveis.
+- Status como informação na superfície do card — útil para orientar; manter, virando badge semântico.
+
+## ❌ Remover (ruído)
+- Criação por TEXTO LIVRE como caminho primário ('Título da obra' + '+ Nova obra' que cria obra só com título) — gera obras órfãs/dados-lixo e fere IA-first; substituir por nascer-do-negócio (manter no máximo como fallback 'obra avulsa' com aviso).
+- Código OBR-AAAA-#### como destaque visual no card — é dado de sistema, não de trabalho; rebaixar a chip discreto ou só no detalhe.
+- Campo cidade/estado exibido quando vazio ('—') — mostrar local só quando existir; hoje aparece vazio porque a criação não coleta endereço.
+- Apresentar o painel /crm/obras/[id] (3 listas read-only) como funcionalidade pronta — é fachada; remover do escopo de 'entregue' e marcar honestamente como em construção.
+- Cores hardcoded via style inline / grid fixo de 3 colunas no detalhe — remover em favor de tokens --obra-*/--brand- e grid responsivo.
+
+## 🤖 Promover a IA-first / 1-toque
+- Criar obra a partir de negócio ganho: a IA lista/sugere os negócios elegíveis sem obra e pré-preenche cliente, imóvel, endereço e tipo (Construção/Reforma) — usuário escolhe e confirma em ≤3 cliques (Click-and-Go), sem digitar.
+- Inferência do tipo Construção×Reforma a partir do escopo/produto do negócio, com a IA sugerindo o chip e o usuário só confirmando.
+- EmptyState IA-first com CTA único 'Gerar obra a partir de um negócio ganho' que já abre o seletor com sugestões — transforma vazio passivo em próximo passo de 1 toque.
+- Card enriquecido com avanço (curva S) e 'próximo marco' calculados/estimados pela IA quando faltar dado, sinalizando confiança — ajuda a escolher qual obra abrir sem leitura densa.
+- No painel [id]: registrar avanço por voz/foto+GPS (ponto de obra) com a IA transcrevendo/classificando em itens de medição — primeira ação Click-and-Go real do módulo, mesmo antes da reconstrução completa.
+
+## 🎯 Ações priorizadas
+
+- **P1** · medio · risco medio — Bloquear/trocar a criação por texto livre: nova obra nasce de negócio ganho via seletor com sugestões da IA (pré-preenche cliente/imóvel/endereço/tipo); amarrar negocio_id/imovel_id já aceitos pelo backend. Texto livre só como fallback 'obra avulsa' com aviso, ou remover.  _(premissa: IA-first/Click-and-Go + funcional-não-fachada + integridade do código único (obra nasce de negócio ganho); estanca dados-lixo.)_
+- **P2** · pequeno · risco baixo — Coesão de nomenclatura: renomear título para 'Engenharia' com subtítulo 'Suas obras em execução'; alinhar ao grupo Operações e à renomeação de navegação já atribuída. Não duplicar telas Construção/Reforma agora — usar atributo 'tipo' + chip.  _(premissa: Coesão e clareza (premissa 3 e 'fácil de entender'); evita dissonância com o nome do job e com outras telas.)_
+- **P3** · medio · risco baixo — Enriquecer o card: cliente + tipo (chip Construção/Reforma) + badge de status semântico (planejamento/execução/concluída) + barra de avanço e próximo marco; rebaixar o código a chip discreto; ocultar cidade/estado quando vazio.  _(premissa: Útil e fácil de entender + mínimo de cliques (escolher qual obra abrir sem leitura densa); 'tabela ≠ tela de trabalho'.)_
+- **P4** · pequeno · risco baixo — Expor busca + chips de filtro (status e tipo) reaproveitando o ?status= que o backend já suporta; remover scroll cego do limit 50.  _(premissa: Prático/≤3 cliques; aproveita capacidade existente desperdiçada.)_
+- **P5** · medio · risco medio — Tornar o painel [id] honesto: substituir as 3 listas read-only por estado 'Em construção — execução detalhada chega com seus dados' + 1 ação real Click-and-Go (registrar avanço % e/ou pedido de material). Não apresentar como pronto.  _(premissa: Funcional-não-fachada; entrega valor mínimo real sem fingir completude.)_
+- **P6** · pequeno · risco baixo — Migrar a tela para tokens do design system (--obra-*/--brand-*), hover/focus/transições e grid responsivo (eliminar grid fixo de 3 colunas no detalhe).  _(premissa: Coesão visual (premissa 3) e mobile importa; manutenção sustentável.)_
+- **P7** · grande · risco alto — Deferir formalmente a reconstrução completa do módulo (Escopo, Cronograma/Curva S, Avanço & Medição, wizard 5 passos) até haver dados do dono; registrar como rascunho no handoff para não ser apresentado como entregue.  _(premissa: Priorização por impacto×esforço; evita retrabalho sem dados; mantém o sistema honesto sobre o que está pronto.)_
