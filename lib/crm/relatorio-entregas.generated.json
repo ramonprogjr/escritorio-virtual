@@ -1,7 +1,40 @@
 {
-  "geradoEm": "2026-06-27T19:16:16.410Z",
+  "geradoEm": "2026-06-27T19:25:26.384Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "244f29b2418ef92df6047846ceae827c895e4e29",
+      "hashCurto": "244f29b",
+      "mensagem": "Fase 3 — ações de ESCRITA com confirmação obrigatória",
+      "mensagemRaw": "feat(copiloto): Fase 3 — ações de ESCRITA com confirmação obrigatória",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:25:19.000Z",
+      "hora": "16:25",
+      "arquivos": [
+        "app/api/copiloto/executar/route.ts",
+        "app/api/copiloto/interpretar/route.ts",
+        "components/crm/CopilotoVoz.tsx",
+        "hooks/useCopilotoVoz.ts",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "components/crm": 1,
+        "outros": 3
+      }
+    },
+    {
+      "hash": "22dedacd58939000c5d38d87e4b8abd5d0a9317c",
+      "hashCurto": "22dedac",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:17:09.000Z",
+      "hora": "16:17",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "0c2590da85db38437a1f9ff71aedd238570d6220",
       "hashCurto": "0c2590d",
