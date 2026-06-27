@@ -4,6 +4,7 @@ import { gerarPlaybookViaIa } from "@/lib/playbook/gerar-fluxo-ia";
 import { extrairTextoDocumentoRag } from "@/lib/hub/rag";
 import { mistralTranscreverAudioBuffer } from "@/lib/whatsapp/mistral-transcribe-audio";
 import { registrarConsumoIA } from "@/lib/ia/metering";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { defaultTenantId } from "@/lib/tenant-default";
 
 /** Limite de upload de documento (base64) — alinhado aos uploads de playbook. */
@@ -164,6 +165,31 @@ export async function POST(
       refId: slug,
     });
   }
+
+  // Instrumentação (Fase 4): mede se o feature é útil/fácil — entrada usada, sucesso,
+  // se o fluxo validou de primeira (sem auto_fix), se usou fallback de template, e custo.
+  const temDoc = Boolean(body.documento && typeof body.documento === "object");
+  const temAudio = Boolean(body.audio && typeof body.audio === "object");
+  const entrada = temAudio ? "audio" : temDoc ? "documento" : "texto";
+  const tokensTotal = out.usos.reduce((s, u) => s + u.tokensEntrada + u.tokensSaida, 0);
+  void registrarEvento(supabase, {
+    event_type: "playbook_builder_gerado",
+    entity_type: "agente",
+    entity_id: slug,
+    ator: "owner",
+    tenant_id: tenantId,
+    payload: {
+      entrada,
+      multi_entrada: [temAudio, temDoc, Boolean(descricaoTexto)].filter(Boolean).length > 1,
+      sucesso: out.ok,
+      fases: out.usos.length,
+      precisou_auto_fix: out.usos.some((u) => u.fase === "auto_fix"),
+      usou_fallback_template: out.ok && out.avisos.some((a) => /esqueleto/i.test(a)),
+      tokens_total: tokensTotal,
+      descricao_chars: descricao.length,
+      erro: out.ok ? null : out.erro,
+    },
+  });
 
   if (!out.ok) {
     return NextResponse.json({ error: out.erro }, { status: 502 });
