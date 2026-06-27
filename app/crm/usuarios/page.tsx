@@ -18,6 +18,7 @@ import {
   type CrmNivel,
 } from "@/lib/crm/crm-permissoes";
 import { supabase } from "@/lib/supabase/client";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import type { TenantRow } from "@/app/api/crm/tenants/route";
 
 type Usuario = {
@@ -42,6 +43,14 @@ function roleLabel(role: string): string {
   return CRM_NIVEL_LABEL[key] ?? role;
 }
 
+function iniciais(nome: string | null, email: string | null): string {
+  const base = (nome && nome.trim()) || (email && email.trim()) || "?";
+  const partes = base.split(/[\s@.]+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  if (partes.length === 1) return partes[0]!.slice(0, 2).toUpperCase();
+  return (partes[0]![0]! + partes[1]![0]!).toUpperCase();
+}
+
 function statusBadge(status: string) {
   const ativo = status.trim().toLowerCase() === "ativo";
   return (
@@ -57,6 +66,7 @@ function statusBadge(status: string) {
 
 export default function UsuariosPage() {
   const { tenantNome: myTenantNome } = useCrmTenant();
+  const isMobile = useNarrowViewport() === true;
   const [myRole, setMyRole] = useState("");
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -255,6 +265,79 @@ export default function UsuariosPage() {
           <p className="text-sm text-[#8b949e]">Carregando equipe…</p>
         ) : usuarios.length === 0 ? (
           <p className="text-sm text-[#8b949e]">Nenhum colaborador. Convide o primeiro membro da equipe.</p>
+        ) : isMobile ? (
+          <ul className="space-y-2">
+            {usuarios.map((u) => {
+              const roleKey = normalizeRoleKey(String(u.role));
+              const ownerFixo = isCrmOwnerFixo(u.email, u.role);
+              const podeEditarRole =
+                !ownerFixo && crmPodeEditarPapelUtilizador(myRole, u.email, u.role);
+              const podeAlterarStatus = crmPodeAlterarStatusUtilizador(myRole, u.email, u.role);
+              const ativo = u.status.trim().toLowerCase() === "ativo";
+              return (
+                <li
+                  key={u.id}
+                  className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#16271e] text-xs font-bold text-[#c9a24a]"
+                      aria-hidden
+                    >
+                      {iniciais(u.name, u.email)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-[#e6edf3]">{u.name || "—"}</p>
+                      <p className="truncate text-xs text-[#8b949e]">{u.email}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-[#6e7681]">{u.empresa ?? empresaNome}</p>
+                    </div>
+                    {statusBadge(u.status)}
+                  </div>
+
+                  <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#16271e] pt-2.5">
+                    {podeEditarRole ? (
+                      <CrmPermissaoSelect
+                        actorRole={myRole}
+                        value={roleKey}
+                        onChange={(r) => void atualizarRole(u.id, r)}
+                        showDescription={false}
+                        className="rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 py-1.5 text-xs"
+                      />
+                    ) : (
+                      <span
+                        className="text-xs text-[#c9a24a]"
+                        title={ownerFixo ? "Owner fixo da plataforma" : undefined}
+                      >
+                        {roleLabel(u.role)}
+                        {ownerFixo ? " · fixo" : ""}
+                      </span>
+                    )}
+                    {podeAlterarStatus ? (
+                      <button
+                        type="button"
+                        onClick={() => void alternarStatus(u)}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-semibold text-[#8b949e] hover:text-[#e6edf3]"
+                      >
+                        {ativo ? (
+                          <>
+                            <UserX className="h-4 w-4" />
+                            Desativar
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="h-4 w-4" />
+                            Reativar
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-[#484f58]">—</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-[#1d3a2c]">
             <table className="w-full min-w-[640px] text-left text-sm">

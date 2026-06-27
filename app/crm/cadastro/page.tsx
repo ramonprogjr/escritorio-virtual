@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/crm/EmptyState";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { CadastroFiltrosBar } from "@/components/crm/cadastro/CadastroFiltrosBar";
 import { CadastroListaTable } from "@/components/crm/cadastro/CadastroListaTable";
+import { CadastroListaCards } from "@/components/crm/cadastro/CadastroListaCards";
 import { ColunasMenu } from "@/components/crm/cadastro/ColunasMenu";
 import { useColunasVisiveis } from "@/lib/crm/use-colunas-visiveis";
 import { EMPRESA_SEGMENTOS } from "@/lib/crm/empresa-cadastro";
@@ -27,6 +28,7 @@ import type { HubPessoaRow } from "@/lib/crm/hub-pessoas-compat";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { crmApiHeadersWithActor } from "@/lib/internal-api-headers-client";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
 import { useCrmEmpresasList, useCrmPessoasList } from "@/hooks/useCrmListQueries";
 import { isCrmListInitialLoad } from "@/hooks/useCrmListQueryUi";
@@ -91,6 +93,35 @@ function registoFromSearchParams(sp: URLSearchParams): RegistoId {
   return "contactos";
 }
 
+/** Badge PF/PJ usado nos cards mobile. */
+function TipoPessoaBadge({ tipo }: { tipo: unknown }) {
+  const t = String(tipo ?? "").trim().toUpperCase();
+  const pj = t === "PJ";
+  return (
+    <span className="shrink-0 rounded-full bg-[#1d3a2c] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+      {pj ? "Emp" : "PF"}
+    </span>
+  );
+}
+
+/** Botão WhatsApp do card mobile (só aparece se houver telefone). */
+function CadastroCardWhatsApp({ telefone }: { telefone: unknown }) {
+  const digits = String(telefone ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  const wa = digits.startsWith("55") ? digits : `55${digits}`;
+  return (
+    <a
+      href={`https://wa.me/${wa}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="mt-2 flex min-h-9 w-full items-center justify-center rounded-lg bg-[#25D366]/15 text-xs font-bold text-[#25D366] transition-colors hover:bg-[#25D366]/25"
+    >
+      WhatsApp
+    </a>
+  );
+}
+
 function actorFromUser(user: User | null) {
   if (!user) return {};
   const meta = user.user_metadata as { name?: string } | undefined;
@@ -106,6 +137,8 @@ export default function CadastroPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const narrow = useNarrowViewport();
+  const isMobile = narrow === true;
 
   const filtroRegisto = registoFromSearchParams(searchParams);
 
@@ -638,6 +671,24 @@ export default function CadastroPage() {
     []
   );
 
+  // ─── Cards mobile (apresentação alternativa à tabela em < 768px) ───
+  const pessoaBadge = useMemo(
+    () => (p: PessoaListaRow) => <TipoPessoaBadge tipo={p.tipo_pessoa} />,
+    []
+  );
+  const empresaBadge = useMemo(
+    () => () => <TipoPessoaBadge tipo="PJ" />,
+    []
+  );
+  const pessoaFooter = useMemo(
+    () => (p: PessoaListaRow) => <CadastroCardWhatsApp telefone={p.telefone} />,
+    []
+  );
+  const empresaFooter = useMemo(
+    () => (e: EmpresaListaRow) => <CadastroCardWhatsApp telefone={e.telefone} />,
+    []
+  );
+
   return (
     <div
       style={{
@@ -752,6 +803,32 @@ export default function CadastroPage() {
               <EmptyState message="Nenhum cadastro. Use «Novo cadastro» ou ajuste os filtros." />
             )}
             {!pessoasCarregando && pessoas.length > 0 && (
+              isMobile ? (
+                <CadastroListaCards<PessoaListaRow>
+                  rows={pessoas}
+                  selectedIds={selecionados}
+                  onToggleRow={toggleSelecao}
+                  primaryColumn={pessoaPrimaryColumn}
+                  badge={pessoaBadge}
+                  footer={pessoaFooter}
+                  onRowClick={(p) => {
+                    setContactoId(p.id);
+                    setContactoMode("view");
+                  }}
+                  onView={(p) => {
+                    setContactoId(p.id);
+                    setContactoMode("view");
+                  }}
+                  onEdit={(p) => {
+                    setContactoId(p.id);
+                    setContactoMode("edit");
+                  }}
+                  onDelete={(p) => {
+                    const label = p.codigo ? `${p.nome} (${p.codigo})` : String(p.nome);
+                    void excluirRegistro(p.id, "pessoa", label);
+                  }}
+                />
+              ) : (
               <div className="flex min-h-0 flex-1 flex-col gap-2">
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <ColunasMenu colunas={COLUNAS_PESSOAS} isVisivel={colsPessoas.isVisivel} alternar={colsPessoas.alternar} restaurar={colsPessoas.restaurar} />
@@ -783,6 +860,7 @@ export default function CadastroPage() {
                 }}
               />
               </div>
+              )
             )}
           </>
         )}
@@ -808,6 +886,32 @@ export default function CadastroPage() {
               <EmptyState message="Nenhuma empresa. Use «Novo cadastro» (PJ) ou ajuste os filtros." />
             )}
             {!empresasCarregando && empresas.length > 0 && (
+              isMobile ? (
+                <CadastroListaCards<EmpresaListaRow>
+                  rows={empresas}
+                  selectedIds={selecionados}
+                  onToggleRow={toggleSelecao}
+                  primaryColumn={empresaPrimaryColumn}
+                  badge={empresaBadge}
+                  footer={empresaFooter}
+                  onRowClick={(e) => {
+                    setEmpresaId(e.id);
+                    setEmpresaMode("view");
+                  }}
+                  onView={(e) => {
+                    setEmpresaId(e.id);
+                    setEmpresaMode("view");
+                  }}
+                  onEdit={(e) => {
+                    setEmpresaId(e.id);
+                    setEmpresaMode("edit");
+                  }}
+                  onDelete={(e) => {
+                    const label = e.codigo ? `${e.razao_social} (${e.codigo})` : String(e.razao_social);
+                    void excluirRegistro(e.id, "empresa", label);
+                  }}
+                />
+              ) : (
               <div className="flex min-h-0 flex-1 flex-col gap-2">
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <ColunasMenu colunas={COLUNAS_EMPRESAS} isVisivel={colsEmpresas.isVisivel} alternar={colsEmpresas.alternar} restaurar={colsEmpresas.restaurar} />
@@ -839,6 +943,7 @@ export default function CadastroPage() {
                 }}
               />
               </div>
+              )
             )}
           </>
         )}

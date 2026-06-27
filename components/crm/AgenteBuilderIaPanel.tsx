@@ -43,6 +43,17 @@ export type AgenteBuilderIaPanelProps = {
 
 const DOC_ACCEPT = ".pdf,.docx,.txt,.md";
 
+/**
+ * Limite de upload antes do envio base64. O endpoint é serverless e o payload
+ * vai como data-URL no JSON (base64 ≈ +33%), então acima disso o risco é 413.
+ */
+const MAX_UPLOAD_MB = 3;
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+
+function arquivoGrandeDemais(size: number): boolean {
+  return size > MAX_UPLOAD_BYTES;
+}
+
 function lerArquivoBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -109,6 +120,10 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
 
   async function enviarDocumento(file: File) {
     if (gerando) return;
+    if (arquivoGrandeDemais(file.size)) {
+      setErro(`Arquivo muito grande (máx. ${MAX_UPLOAD_MB}MB). Tente um menor.`);
+      return;
+    }
     try {
       const dataUrl = await lerArquivoBase64(file);
       await executarGeracao({
@@ -121,6 +136,10 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
 
   async function enviarAudio(file: Blob, nome: string) {
     if (gerando) return;
+    if (arquivoGrandeDemais(file.size)) {
+      setErro(`Arquivo muito grande (máx. ${MAX_UPLOAD_MB}MB). Tente um menor.`);
+      return;
+    }
     try {
       const dataUrl = await lerArquivoBase64(file as File);
       await executarGeracao({

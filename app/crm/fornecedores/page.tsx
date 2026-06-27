@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Handshake, Plus } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import {
+  AREAS_ATUACAO,
+  isAreaAtuacaoValid,
+  labelAreaAtuacao,
+  normalizarAreaAtuacao,
+} from "@/lib/crm/areas-atuacao";
 
 type Fornecedor = {
   id: string;
@@ -66,7 +72,8 @@ export default function FornecedoresPage() {
         cnpj: String(f.cnpj ?? f.cpf ?? ""),
         email: String(f.email ?? ""),
         telefone: String(f.telefone ?? ""),
-        area_atuacao: String(f.area_atuacao ?? ""),
+        // Normaliza para o value canônico da lista; texto livre legado é preservado como está.
+        area_atuacao: ((raw) => normalizarAreaAtuacao(raw) ?? raw)(String(f.area_atuacao ?? "")),
         cidade: String(f.cidade ?? ""),
         estado: String(f.estado ?? ""),
       });
@@ -146,7 +153,24 @@ export default function FornecedoresPage() {
             <input style={inputStyle} placeholder={form.tipo_pessoa === "PJ" ? "CNPJ" : "CPF"} value={form.cnpj} onChange={(e) => setForm((f) => ({ ...f, cnpj: e.target.value }))} />
             <input style={inputStyle} placeholder="E-mail" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             <input style={inputStyle} placeholder="Telefone / WhatsApp" value={form.telefone} onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))} />
-            <input style={inputStyle} placeholder="Área de atuação (ex.: elétrica, materiais)" value={form.area_atuacao} onChange={(e) => setForm((f) => ({ ...f, area_atuacao: e.target.value }))} />
+            <select
+              style={inputStyle}
+              value={form.area_atuacao}
+              onChange={(e) => setForm((f) => ({ ...f, area_atuacao: e.target.value }))}
+            >
+              <option value="">Área de atuação…</option>
+              {AREAS_ATUACAO.map((a) => (
+                <option key={a.value} value={a.value}>
+                  {a.label}
+                </option>
+              ))}
+              {/* Compatibilidade: preserva valor legado (texto livre) que não está na lista. */}
+              {form.area_atuacao && !isAreaAtuacaoValid(form.area_atuacao) && (
+                <option value={form.area_atuacao}>
+                  {labelAreaAtuacao(form.area_atuacao)} (atual)
+                </option>
+              )}
+            </select>
             <input style={inputStyle} placeholder="Cidade" value={form.cidade} onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
             <select style={inputStyle} value={form.estado} onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))}>
               <option value="">UF</option>
