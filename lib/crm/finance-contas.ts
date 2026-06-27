@@ -39,6 +39,7 @@ export function labelDias(dias: number | null): string {
   return `Em ${dias}d`;
 }
 
+/** Abreviado (k/M) — usar APENAS em KPIs agregados de cabeçalho, nunca no item a pagar/receber. */
 export function moedaFinanceiro(v: number): string {
   if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `R$ ${(v / 1_000).toFixed(0)}k`;
@@ -48,6 +49,16 @@ export function moedaFinanceiro(v: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(v);
+}
+
+/** EXATO com centavos — usar no VALOR DO ITEM que será efetivamente pago/recebido (nunca abreviar). */
+export function moedaFinanceiroExata(v: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(v ?? 0);
 }
 
 export function filtrarContas(

@@ -8,7 +8,7 @@ import {
   type TipoConta,
   diasAteVencimento,
   labelDias,
-  moedaFinanceiro,
+  moedaFinanceiroExata,
 } from "@/lib/crm/finance-contas";
 
 type Props = {
@@ -71,7 +71,7 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-[#e6edf3]">{c.descricao}</p>
                 <p className="mt-1 text-lg font-black tabular-nums text-[#e6edf3]">
-                  {moedaFinanceiro(c.valor)}
+                  {moedaFinanceiroExata(c.valor)}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#8b949e]">
                   <span
