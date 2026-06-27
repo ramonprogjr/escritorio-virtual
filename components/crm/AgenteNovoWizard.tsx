@@ -1749,8 +1749,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     )}
                   </div>
                   <p style={{ fontSize: 12, color: "#64748b", margin: 0, lineHeight: 1.5 }}>
-                    Inferência: <strong style={{ color: "#8b949e" }}>Mistral</strong> (Agno). Modelo efectivo em{" "}
-                    <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor — sem escolha por agente.
+                    Este agente usa o modelo de IA padrão configurado no sistema (igual para todos os agentes).
                   </p>
                 </div>
               </div>
@@ -2371,12 +2370,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     lineHeight: 1.5,
                   }}
                 >
-                  <strong style={{ color: "#e3b341" }}>Modelo de IA no catálogo</strong>
+                  <strong style={{ color: "#e3b341" }}>Modelo de IA</strong>
                   <br />
-                  Este cargo tem IDs de modelo que o Postgres não aceita na tabela de identidade. Ao criar o agente, o
-                  servidor grava <strong>mistral</strong> nesses campos (sinónimo do modelo definido em{" "}
-                  <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> no servidor). Atualize o catálogo se quiser
-                  manter outro fabricante explicitamente.
+                  Este agente usará o modelo de IA padrão do sistema. Ajuste o catálogo de modelos se quiser
+                  definir outro modelo para este cargo.
                 </div>
               )}
 

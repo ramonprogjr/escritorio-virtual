@@ -167,7 +167,7 @@ export default function Configuracoes() {
 
         <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <p className="text-sm font-bold text-[#e6edf3]">Horário comercial</p>
-          <p className="mt-1 text-xs text-[#8b949e]">Persistido em hub_tenants.settings (admin).</p>
+          <p className="mt-1 text-xs text-[#8b949e]">Salvo nas configurações do escritório (requer admin).</p>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <label className="text-[10px] font-bold uppercase text-[#8b949e]">
               Início

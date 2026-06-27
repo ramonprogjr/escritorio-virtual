@@ -254,8 +254,8 @@ export function PipelineConfigSideover({
           <p className="text-sm text-[#8b949e]">Carregando…</p>
         ) : !pipeline ? (
           <p className="text-sm text-[#8b949e]">
-            Execute a migração <code className="text-[#c9a24a]">hub_pipelines</code> no Supabase
-            para ativar a configuração na base de dados. O kanban usa o template padrão até lá.
+            A personalização de etapas ainda não está ativa para este pipeline. O quadro usa as
+            etapas padrão por enquanto.
           </p>
         ) : (
           <>

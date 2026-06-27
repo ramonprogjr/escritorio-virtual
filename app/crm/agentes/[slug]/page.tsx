@@ -891,7 +891,7 @@ export default function AgentePage() {
             borderRadius: 8, padding: "10px 16px", marginBottom: 16,
           }}>
             <p style={{ color: "#c9a24a", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
-              Cargo, segmento, nível e referência de modelo são imutáveis após criação — protegidos por trigger no banco. O ID efectivo da API segue <code style={{ fontSize: 11 }}>MISTRAL_MODEL</code> quando o registo usa o sentinel Mistral.
+              Cargo, segmento, nível e modelo são definidos na criação e não mudam depois. O agente usa o modelo de IA padrão configurado no sistema.
             </p>
           </div>
 

@@ -157,7 +157,7 @@ export default function AgentesPage() {
         {/* Sidebar — lista de agentes */}
         <div className="w-64 flex-shrink-0 border-r border-gray-800 overflow-y-auto">
           {loading && (
-            <div className="px-4 py-6 text-xs text-gray-500">Carregando agentes do Supabase...</div>
+            <div className="px-4 py-6 text-xs text-gray-500">Carregando agentes...</div>
           )}
           {erro && (
             <div className="px-4 py-6 text-xs text-red-400">{erro}</div>
