@@ -318,6 +318,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [mercados, setMercados] = useState<string[]>([]);
   const [comportamentoIdx, setComportamentoIdx] = useState(1); // Consultivo
   const [condutaIdx, setCondutaIdx] = useState(0); // Conciso
+  const [modeloPreferencia, setModeloPreferencia] = useState<
+    "economico" | "turbo" | "turbo_alto_valor"
+  >("economico");
   const [criando, setCriando] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [erro, setErro] = useState("");
@@ -1111,6 +1114,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         motor_ferramentas_habilitado: motorFerramentasHub,
         mistral_agent_sync_habilitado: mistralProvisionar,
         uso_ferramentas_ia: usoFerramentasIa,
+        modelo_preferencia: modeloPreferencia,
       };
       if (somentePlaybook) {
         payload.playbook_only = true;
@@ -1831,6 +1835,51 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     );
                   })}
                 </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3" }}>
+                  Modelo de IA <span style={{ color: "#8b949e", fontWeight: 500 }}>· custo × robustez</span>
+                </label>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {(
+                    [
+                      { id: "economico", nome: "Econômico", desc: "Mistral — barato e rápido (padrão)" },
+                      { id: "turbo", nome: "Turbo", desc: "Claude — robusto, sempre" },
+                      { id: "turbo_alto_valor", nome: "Turbo só em alto valor", desc: "Econômico no dia a dia; Claude em lead grande" },
+                    ] as const
+                  ).map((opt) => {
+                    const ativo = modeloPreferencia === opt.id;
+                    return (
+                      <button
+                        type="button"
+                        key={opt.id}
+                        title={opt.desc}
+                        onClick={() => setModeloPreferencia(opt.id)}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          border: `2px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                          background: ativo ? "#c9a24a" : "#0f1d16",
+                          color: ativo ? "#003b26" : "#8b949e",
+                          transition: "all 150ms",
+                        }}
+                      >
+                        {opt.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p style={{ fontSize: 11, color: "#6e7681", margin: 0 }}>
+                  {modeloPreferencia === "economico"
+                    ? "Mistral em tudo — menor consumo de Tijolos."
+                    : modeloPreferencia === "turbo"
+                      ? "Claude em tudo — respostas mais fortes, consome mais Tijolos."
+                      : "Mistral no dia a dia; Claude só quando o lead vale a pena (≥ R$ 50 mil)."}
+                </p>
               </div>
 
               <div>

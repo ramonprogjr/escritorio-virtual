@@ -36,6 +36,28 @@ function parseBoolFerr(v: unknown, defaultVal: boolean): boolean {
   return defaultVal;
 }
 
+/** Modelo "Turbo" (robusto) quando o dono escolhe Claude. Cai p/ Mistral se ANTHROPIC_API_KEY ausente. */
+const MODELO_TURBO = "claude-sonnet-4-6";
+
+/**
+ * Aplica a escolha do dono no passo "Modelo" do wizard sobre as colunas-base:
+ * - 'turbo'            → os 3 tiers em Claude (sempre robusto);
+ * - 'turbo_alto_valor' → padrão fica Econômico, só alto_valor vira Claude (engine escala por valor);
+ * - 'economico'/ausente → mantém o base (Mistral do cargo).
+ */
+function aplicarModeloPreferencia(
+  pref: unknown,
+  base: Record<string, unknown>,
+): Record<string, unknown> {
+  if (pref === "turbo") {
+    return { modelo_padrao: MODELO_TURBO, modelo_critico: MODELO_TURBO, modelo_alto_valor: MODELO_TURBO };
+  }
+  if (pref === "turbo_alto_valor") {
+    return { ...base, modelo_alto_valor: MODELO_TURBO };
+  }
+  return base;
+}
+
 const CICLO_EXECUCAO_OPCOES = ["interacao", "tempo_real", "agenda"] as const;
 type CicloExecucaoCliente = (typeof CICLO_EXECUCAO_OPCOES)[number];
 
@@ -416,7 +438,7 @@ export async function POST(request: NextRequest) {
       tom_voz: (tom_voz && String(tom_voz).trim()) || "profissional e cordial",
       estilo_comunicacao: (estilo_comunicacao && String(estilo_comunicacao).trim()) || "Direto",
       system_prompt_base: promptBasePlaybook,
-      ...forceMistralModeloTripleForDb(),
+      ...aplicarModeloPreferencia(body.modelo_preferencia, forceMistralModeloTripleForDb()),
       pode_fazer: [],
       nao_pode_fazer: [],
       sempre_dizer: [],
@@ -483,7 +505,7 @@ export async function POST(request: NextRequest) {
     tom_voz: (tom_voz && String(tom_voz).trim()) || "profissional e cordial",
     estilo_comunicacao: (estilo_comunicacao && String(estilo_comunicacao).trim()) || "Direto",
     system_prompt_base: promptBase,
-    ...modeloCols,
+    ...aplicarModeloPreferencia(body.modelo_preferencia, modeloCols),
     pode_fazer: podeFazer,
     nao_pode_fazer: naoPode,
     sempre_dizer: [],
