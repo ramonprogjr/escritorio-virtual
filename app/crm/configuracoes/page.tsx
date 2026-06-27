@@ -224,7 +224,7 @@ export default function Configuracoes() {
                 setTenantSettings((s) => ({ ...s, distribuicao_auto: e.target.checked }))
               }
             />
-            Sugestão automática activa (tenant)
+            Sugestão automática ativa (deste escritório)
           </label>
           <label className="mt-3 block text-[10px] font-bold uppercase text-[#8b949e]">
             Prazo validação humana (horas)

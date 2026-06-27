@@ -157,7 +157,7 @@ export default function FerramentasHubPage() {
             {HUB_AGENTE_FERRAMENTAS_CATALOGO.length} builtins
           </span>
           <span className="rounded px-2 py-1" style={{ background: "#003b2630", color: "#c9a24a" }}>
-            {agentesProducao.length} agentes activos
+            {agentesProducao.length} agentes ativos
           </span>
         </div>
       ),
@@ -196,7 +196,7 @@ export default function FerramentasHubPage() {
           <p className="mt-2 text-sm leading-relaxed m-0" style={{ color: "#8b949e" }}>
             Catálogo <strong style={{ color: "#aebccf" }}>built-in</strong> mais ferramentas{" "}
             <strong style={{ color: "#c9a24a" }}>custom</strong> do tenant (nome e descrição próprios, mesma execução
-            segura; opcional smart Mistral/Gemini). Activar por agente em{" "}
+            segura; opcional smart Mistral/Gemini). Ativar por agente em{" "}
             <Link href="/crm/agentes" className="underline font-medium" style={{ color: "#93c5fd" }}>
               Modelos
             </Link>
@@ -293,7 +293,7 @@ export default function FerramentasHubPage() {
                             className="mb-2 text-[11px] font-bold uppercase tracking-wide m-0"
                             style={{ color: "#6e7681" }}
                           >
-                            Agentes com esta ferramenta activa ({comTool.length})
+                            Agentes com esta ferramenta ativa ({comTool.length})
                           </p>
                           {comTool.length === 0 ? (
                             <p className="m-0 text-xs" style={{ color: "#484f58" }}>
@@ -390,7 +390,7 @@ export default function FerramentasHubPage() {
                               className="rounded px-2 py-0.5 text-[10px] font-bold"
                               style={{ background: "#484f5822", color: "#8b949e" }}
                             >
-                              Inactiva no catálogo
+                              Inativa no catálogo
                             </span>
                           ) : null}
                           {c.smart_provider !== "none" ? (
@@ -433,7 +433,7 @@ export default function FerramentasHubPage() {
                         className="mb-2 text-[11px] font-bold uppercase tracking-wide m-0"
                         style={{ color: "#6e7681" }}
                       >
-                        Agentes com esta ferramenta activa ({comTool.length})
+                        Agentes com esta ferramenta ativa ({comTool.length})
                       </p>
                       {comTool.length === 0 ? (
                         <p className="m-0 text-xs" style={{ color: "#484f58" }}>
