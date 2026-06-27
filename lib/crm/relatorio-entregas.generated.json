@@ -1,7 +1,56 @@
 {
-  "geradoEm": "2026-06-27T18:15:24.755Z",
+  "geradoEm": "2026-06-27T18:58:28.669Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "6f146a61fb27f72a671edbb2a40dbe24861a1dba",
+      "hashCurto": "6f146a6",
+      "mensagem": "Fase 0 — fundação do copiloto de voz (endpoints + hook + travas)",
+      "mensagemRaw": "feat(copiloto): Fase 0 — fundação do copiloto de voz (endpoints + hook + travas)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T18:58:22.000Z",
+      "hora": "15:58",
+      "arquivos": [
+        ".env.example",
+        "app/api/copiloto/executar/route.ts",
+        "app/api/copiloto/interpretar/route.ts",
+        "app/api/copiloto/transcrever/route.ts",
+        "hooks/useCopilotoVoz.ts",
+        "lib/copiloto/copiloto-auth.ts",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts"
+      ],
+      "areas": {
+        "outros": 5,
+        "app/api": 3
+      }
+    },
+    {
+      "hash": "7ba73ad3982bca0417361f1159e8f7971539357f",
+      "hashCurto": "7ba73ad",
+      "mensagem": "spec mesa-redonda do copiloto de voz global + setor + WhatsApp agnóstico",
+      "mensagemRaw": "docs(copiloto): spec mesa-redonda do copiloto de voz global + setor + WhatsApp agnóstico",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T18:51:14.000Z",
+      "hora": "15:51",
+      "arquivos": [
+        "docs/superpowers/specs/2026-06-27-copiloto-voz-global.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "5016148a850e8911ec5719617341b90b083d981f",
+      "hashCurto": "5016148",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T18:16:12.000Z",
+      "hora": "15:16",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "2c8c35c56afbbc1d2014f90820db93411e25e9f2",
       "hashCurto": "2c8c35c",
