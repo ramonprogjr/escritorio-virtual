@@ -1055,7 +1055,7 @@ export default function CiclosPage() {
                           paddingTop: 10,
                           borderTopWidth: 1,
                           borderTopStyle: "solid",
-                          borderTopColor: "rgba(44, 56, 75, 0.85)",
+                          borderTopColor: "rgba(29, 58, 44, 0.85)",
                           display: "flex",
                           width: "100%",
                           justifyContent: "flex-end",
@@ -1072,8 +1072,8 @@ export default function CiclosPage() {
                             overflow: "hidden",
                             borderStyle: "solid",
                             borderWidth: 1,
-                            borderColor: "rgba(44, 56, 75, 0.95)",
-                            background: "#0f1620",
+                            borderColor: "rgba(29, 58, 44, 0.95)",
+                            background: "#0f1d16",
                             flexShrink: 0,
                           }}
                         >
@@ -1095,7 +1095,7 @@ export default function CiclosPage() {
                               justifyContent: "center",
                               padding: 0,
                               border: 0,
-                              boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                              boxShadow: "inset -1px 0 0 rgba(29, 58, 44, 0.95)",
                               cursor: executando === c.id || !c.ativo ? "not-allowed" : "pointer",
                               opacity: executando === c.id || !c.ativo ? 0.45 : 1,
                               background: c.ativo ? "rgba(34, 197, 94, 0.12)" : "rgba(72, 79, 88, 0.2)",
@@ -1126,7 +1126,7 @@ export default function CiclosPage() {
                               justifyContent: "center",
                               padding: 0,
                               border: 0,
-                              boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                              boxShadow: "inset -1px 0 0 rgba(29, 58, 44, 0.95)",
                               cursor: excluindoCicloId ? "not-allowed" : "pointer",
                               opacity: excluindoCicloId ? 0.45 : 1,
                               background: "rgba(30, 41, 59, 0.65)",
@@ -1150,7 +1150,7 @@ export default function CiclosPage() {
                               justifyContent: "center",
                               padding: 0,
                               border: 0,
-                              boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                              boxShadow: "inset -1px 0 0 rgba(29, 58, 44, 0.95)",
                               cursor:
                                 limpandoCicloId === c.id || excluindoCicloId === c.id ? "not-allowed" : "pointer",
                               opacity: limpandoCicloId === c.id || excluindoCicloId === c.id ? 0.45 : 1,
@@ -1182,7 +1182,7 @@ export default function CiclosPage() {
                               justifyContent: "center",
                               padding: 0,
                               border: 0,
-                              boxShadow: "inset -1px 0 0 rgba(44, 56, 75, 0.95)",
+                              boxShadow: "inset -1px 0 0 rgba(29, 58, 44, 0.95)",
                               cursor:
                                 alternandoCicloId === c.id || excluindoCicloId === c.id
                                   ? "not-allowed"
