@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const dateTo = hoje.toISOString().split("T")[0];
 
     const res = await fetch(
-      `https://connectors.windsor.ai/facebook?api_key=${apiKey}&date_from=${dateFrom}&date_to=${dateTo}&fields=campaign,spend,clicks,impressions,cpc,ctr`,
+      `https://connectors.windsor.ai/facebook?api_key=${apiKey}&date_from=${dateFrom}&date_to=${dateTo}&fields=campaign,spend,clicks,impressions,cpc,ctr,conversions`,
       { next: { revalidate: 21600 } }
     );
     if (!res.ok) return NextResponse.json([]);
