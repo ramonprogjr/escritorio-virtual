@@ -12,10 +12,16 @@ import { INFERENCIA_IA_CRM_COPIA } from "@/lib/ia/hub-model-defaults";
 import {
   mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
+import { AREAS_ATUACAO } from "@/lib/crm/areas-atuacao";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MERCADOS_FIXOS = ["IMB", "ARQ", "RFM", "MRC", "ENG", "SRV", "PRO", "FOR"];
+
+/** Rótulo legível de cada sigla de mercado (fonte única: AREAS_ATUACAO). */
+const MERCADO_LABEL: Record<string, string> = Object.fromEntries(
+  AREAS_ATUACAO.filter((a) => a.mercadoSigla).map((a) => [a.mercadoSigla as string, a.label])
+);
 
 const SEGMENTO_COR: Record<string, string> = {
   Marketing: "#2f9e8f",
@@ -1044,9 +1050,11 @@ export default function AgentePage() {
                 <button
                   key={m}
                   onClick={() => toggleMercado(m)}
-                  style={chipStyle(mercados.includes(m))}
+                  title={MERCADO_LABEL[m] || m}
+                  style={{ ...chipStyle(mercados.includes(m)), display: "inline-flex", alignItems: "center", gap: 6 }}
                 >
-                  {m}
+                  {MERCADO_LABEL[m] || m}
+                  <span style={{ fontSize: 10, opacity: 0.55, fontWeight: 700, letterSpacing: 0.3 }}>{m}</span>
                 </button>
               ))}
             </div>

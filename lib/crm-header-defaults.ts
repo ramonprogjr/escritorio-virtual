@@ -86,7 +86,7 @@ export function defaultCrmHeaderForPath(pathname: string): CrmHeaderDefault {
     ciclos: { title: "Automações", subtitle: "Fluxos automáticos e ciclos dos agentes" },
     canais: {
       title: "Canais WhatsApp",
-      subtitle: "Instâncias UAZAPI conectadas aos agentes — operação e status",
+      subtitle: "Instâncias WhatsApp conectadas aos agentes — operação e status",
     },
     ferramentas: { title: "Ferramentas IA", subtitle: "Catálogo e uso por modelo" },
     contatos: {

@@ -274,7 +274,7 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
     categoria: "cliente",
     titulo: "Menu WhatsApp (botões, lista, enquete ou carrossel)",
     descricao:
-      "Envia mensagem interactiva via UAZAPI ao número deste lead: botões, lista, enquete ou carrossel (rede finita OpenAPI: /send/menu e /send/carousel).",
+      "Envia mensagem interactiva via WhatsApp ao número deste lead: botões, lista, enquete ou carrossel (rede finita OpenAPI: /send/menu e /send/carousel).",
     recomendadoWhatsApp: true,
     mistralFunction: {
       name: "hub_whatsapp_menu",
