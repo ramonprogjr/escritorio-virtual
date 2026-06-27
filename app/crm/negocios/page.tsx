@@ -10,7 +10,7 @@ import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
 import { NegocioKanbanCard } from "@/components/crm/negocios/NegocioKanbanCard";
 import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
-import { ESTAGIOS_FALLBACK_UI } from "@/lib/crm/pipeline-defaults";
+import { ESTAGIOS_FALLBACK_UI, limparNomePipeline } from "@/lib/crm/pipeline-defaults";
 
 const LIMIT = 20;
 
@@ -259,7 +259,7 @@ export default function NegociosPage() {
     }
     setSlot({
       path: pathname,
-      subtitle: `${pipelineAtivo?.nome || "Negócios"} · ${total} negócios`,
+      subtitle: `${limparNomePipeline(pipelineAtivo?.nome) || "Negócios"} · ${total} negócios`,
       actions: (
         <>
           {botaoNovoNegocio}
@@ -463,7 +463,7 @@ export default function NegociosPage() {
           <div>
             <h1 className="text-base font-bold text-[#e6edf3]">Negócios</h1>
             <p className="text-[11px] text-[#8b949e]">
-              {pipelineAtivo?.nome || "Pipeline global"} · {total} negócios
+              {limparNomePipeline(pipelineAtivo?.nome) || "Pipeline global"} · {total} negócios
             </p>
           </div>
           <div className="flex flex-col gap-2">{headerControls}</div>

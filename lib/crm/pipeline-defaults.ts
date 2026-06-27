@@ -12,6 +12,17 @@ export const ESTAGIOS_PADRAO = [
 
 export type PipelineTipo = "lead" | "negocio";
 
+/**
+ * Limpa o nome do pipeline para exibição em cabeçalhos: remove o prefixo redundante
+ * "<Módulo> — " (traço espaçado), que duplica o título da página. Ex.:
+ * "Leads — Pipeline global" → "Pipeline global". Preserva hífens normais (ex.: "Pré-venda").
+ */
+export function limparNomePipeline(nome: string | null | undefined): string {
+  const n = (nome ?? "").trim();
+  if (!n) return "";
+  return n.replace(/^.*?\s[—–]\s+/, "").trim() || n;
+}
+
 export type PipelineEstagioRow = {
   id: string;
   pipeline_id: string;

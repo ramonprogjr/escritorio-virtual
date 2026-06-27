@@ -10,7 +10,7 @@ import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { estagioParaColunaKanban } from "@/lib/crm/estagio-map";
 import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
-import { ESTAGIOS_FALLBACK_UI } from "@/lib/crm/pipeline-defaults";
+import { ESTAGIOS_FALLBACK_UI, limparNomePipeline } from "@/lib/crm/pipeline-defaults";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { LeadEncaminharModal } from "@/components/crm/leads/LeadEncaminharModal";
@@ -507,7 +507,7 @@ export default function LeadsPage() {
     }
     setSlot({
       path: pathname,
-      subtitle: `${pipelineAtivo?.nome || "Pipeline de Leads"} · ${leadsDoPipeline.length} leads`,
+      subtitle: `${limparNomePipeline(pipelineAtivo?.nome) || "Pipeline de Leads"} · ${leadsDoPipeline.length} leads`,
       actions: (
         <>
           {botaoNovoLead}
@@ -657,7 +657,7 @@ export default function LeadsPage() {
       {isMobile && (
         <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3">
           <div>
-            <h1 className="text-base font-bold text-[#e6edf3]">{pipelineAtivo?.nome || "Leads"}</h1>
+            <h1 className="text-base font-bold text-[#e6edf3]">{limparNomePipeline(pipelineAtivo?.nome) || "Leads"}</h1>
             <p className="text-[11px] text-[#8b949e]">{leadsDoPipeline.length} leads · tempo real</p>
           </div>
           <div className="flex flex-col gap-2">{headerControls}</div>
