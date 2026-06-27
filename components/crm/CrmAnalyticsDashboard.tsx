@@ -343,7 +343,8 @@ export function CrmAnalyticsDashboard() {
           <div className="mt-12 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-8 text-center">
             <p className="font-bold text-[#e6edf3]">Nenhum dado de analytics</p>
             <p className="mt-2 text-sm text-[#8b949e]">
-              Reinicie o servidor de desenvolvimento (porta 3001) para carregar o código atualizado.
+              Ainda não há dados suficientes para gerar os indicadores. Assim que houver movimento
+              (leads, negócios, atendimentos), os números aparecem aqui.
             </p>
             <button
               type="button"
