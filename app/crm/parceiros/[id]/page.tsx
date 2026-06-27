@@ -27,7 +27,7 @@ const STATUS_COR: Record<string, string> = {
 };
 
 const MODULO_STATUS_COR: Record<string, string> = {
-  concluido: "#003b26", em_andamento: "#c9a24a", reprovado: "#b3261e", pendente: "#21262d",
+  concluido: "#003b26", em_andamento: "#c9a24a", reprovado: "#b3261e", pendente: "#16271e",
 };
 
 function tempoRelativo(d: string): string {
@@ -103,7 +103,7 @@ export default function ParceiroDetalhePage() {
   }
 
   if (!parceiro) {
-    return <div style={{ background: "#0d1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    return <div style={{ background: "#0a140f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <p style={{ color: "#484f58" }}>Carregando...</p>
     </div>;
   }
@@ -111,10 +111,10 @@ export default function ParceiroDetalhePage() {
   const statusCor = STATUS_COR[parceiro.status] || "#8b949e";
 
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
+    <div style={{ background: "#0a140f", minHeight: "100vh" }}>
       {/* Header */}
       <div className="px-4 py-3 flex items-start gap-3 sticky top-0 z-10"
-        style={{ background: "#161b22", borderBottom: "1px solid #30363d" }}>
+        style={{ background: "#0f1d16", borderBottom: "1px solid #1d3a2c" }}>
         <button onClick={() => router.back()} style={{ color: "#8b949e", background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", paddingTop: 2 }}>←</button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -126,7 +126,7 @@ export default function ParceiroDetalhePage() {
             <button
               type="button"
               onClick={() => void copiarLinkPortal()}
-              className="text-xs px-2 py-0.5 rounded border border-[#30363d] text-[#8b949e] hover:text-[#c9a24a]"
+              className="text-xs px-2 py-0.5 rounded border border-[#1d3a2c] text-[#8b949e] hover:text-[#c9a24a]"
             >
               Link portal
             </button>
@@ -141,13 +141,13 @@ export default function ParceiroDetalhePage() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-px" style={{ background: "#30363d" }}>
+      <div className="grid grid-cols-3 gap-px" style={{ background: "#1d3a2c" }}>
         {[
           { val: `${parceiro.modulo_atual}/8`, label: "Módulo" },
           { val: parceiro.total_leads_recebidos, label: "Leads" },
           { val: `${parceiro.comissao_pct}%`, label: "Comissão" },
         ].map(s => (
-          <div key={s.label} className="py-2 text-center" style={{ background: "#161b22" }}>
+          <div key={s.label} className="py-2 text-center" style={{ background: "#0f1d16" }}>
             <p className="font-bold" style={{ color: "#c9a24a" }}>{s.val}</p>
             <p className="text-xs" style={{ color: "#484f58" }}>{s.label}</p>
           </div>
@@ -171,7 +171,7 @@ export default function ParceiroDetalhePage() {
         {/* PERFIL */}
         {aba === "perfil" && (
           <div className="space-y-3">
-            <div className="rounded-xl p-4" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+            <div className="rounded-xl p-4" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
               <p className="text-xs font-bold mb-3" style={{ color: "#484f58", textTransform: "uppercase", letterSpacing: "0.08em" }}>Contato</p>
               <div className="space-y-2">
                 {[
@@ -191,7 +191,7 @@ export default function ParceiroDetalhePage() {
               </div>
             </div>
 
-            <div className="rounded-xl p-4" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+            <div className="rounded-xl p-4" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
               <p className="text-xs font-bold mb-3" style={{ color: "#484f58", textTransform: "uppercase", letterSpacing: "0.08em" }}>Captação</p>
               <div className="space-y-2">
                 {[
@@ -210,7 +210,7 @@ export default function ParceiroDetalhePage() {
             </div>
 
             {parceiro.bio && (
-              <div className="rounded-xl p-4" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+              <div className="rounded-xl p-4" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
                 <p className="text-xs font-bold mb-2" style={{ color: "#484f58", textTransform: "uppercase", letterSpacing: "0.08em" }}>Bio</p>
                 <p className="text-sm" style={{ color: "#e6edf3" }}>{parceiro.bio}</p>
               </div>
@@ -228,7 +228,7 @@ export default function ParceiroDetalhePage() {
               const podeAvancar = !m || status !== "concluido";
               return (
                 <div key={tmpl.numero} className="rounded-xl p-3"
-                  style={{ background: "#161b22", border: `1px solid ${cor}40`, opacity: status === "pendente" ? 0.7 : 1 }}>
+                  style={{ background: "#0f1d16", border: `1px solid ${cor}40`, opacity: status === "pendente" ? 0.7 : 1 }}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className="rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
@@ -276,7 +276,7 @@ export default function ParceiroDetalhePage() {
                 {documentos.map(d => {
                   const cor = d.status === "aprovado" ? "#003b26" : d.status === "rejeitado" ? "#b3261e" : "#c9a24a";
                   return (
-                    <div key={d.id} className="rounded-xl p-3" style={{ background: "#161b22", border: `1px solid ${cor}40` }}>
+                    <div key={d.id} className="rounded-xl p-3" style={{ background: "#0f1d16", border: `1px solid ${cor}40` }}>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-white font-bold text-sm">{d.tipo}</p>
@@ -302,7 +302,7 @@ export default function ParceiroDetalhePage() {
             ) : (
               <div className="space-y-2">
                 {referencias.map(r => (
-                  <div key={r.id} className="rounded-xl p-3" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+                  <div key={r.id} className="rounded-xl p-3" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-white font-bold text-sm">{r.nome}</p>
                       {r.verificado && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "#003b2620", color: "#34d399" }}>verificado</span>}
@@ -326,7 +326,7 @@ export default function ParceiroDetalhePage() {
               <p className="text-center py-8 text-sm" style={{ color: "#484f58" }}>Sem eventos registrados</p>
             ) : (
               <div className="relative">
-                <div className="absolute left-3 top-0 bottom-0 w-px" style={{ background: "#30363d" }} />
+                <div className="absolute left-3 top-0 bottom-0 w-px" style={{ background: "#1d3a2c" }} />
                 <div className="space-y-4 pl-8">
                   {logs.map(l => (
                     <div key={l.id} className="relative">

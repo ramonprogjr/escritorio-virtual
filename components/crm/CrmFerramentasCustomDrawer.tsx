@@ -32,11 +32,11 @@ const OB = {
   verde: "var(--obra-verde, #003b26)",
   dourado: "var(--obra-dourado, #c9a24a)",
   douradoLight: "var(--obra-dourado-light, #e0b86a)",
-  borda: "var(--obra-borda, #30363d)",
+  borda: "var(--obra-borda, #1d3a2c)",
   texto: "var(--obra-texto, #e6edf3)",
   texto2: "var(--obra-texto-2, #8b949e)",
   texto3: "var(--obra-texto-3, #484f58)",
-  surface: "var(--obra-dark-3, #21262d)",
+  surface: "var(--obra-dark-3, #16271e)",
   panel: "#0f1620",
   danger: "#f85149",
   dangerMuted: "rgba(248, 81, 73, 0.14)",
@@ -73,7 +73,7 @@ function toolbarIconButtonStyle(variant: ToolbarIconVariant, disabled: boolean):
     return {
       ...base,
       border: `1px solid ${OB.borda}`,
-      background: "#161b22",
+      background: "#0f1d16",
       color: OB.texto3,
       opacity: 0.72,
     };
@@ -128,7 +128,7 @@ function toolbarIconButtonStyle(variant: ToolbarIconVariant, disabled: boolean):
 }
 
 const inp: CSSProperties = {
-  background: "#161b22",
+  background: "#0f1d16",
   border: `1px solid ${OB.borda}`,
   color: OB.texto,
   borderRadius: 8,
@@ -665,7 +665,7 @@ export function CrmFerramentasCustomDrawer({
                       minWidth: 72,
                       height: 32,
                       boxSizing: "border-box",
-                      background: "#161b22",
+                      background: "#0f1d16",
                       border: `1px solid ${OB.borda}`,
                       color: OB.texto,
                       borderRadius: 8,
@@ -684,7 +684,7 @@ export function CrmFerramentasCustomDrawer({
                       maxWidth: "min(200px, 40vw)",
                       height: 32,
                       boxSizing: "border-box",
-                      background: "#161b22",
+                      background: "#0f1d16",
                       border: `1px solid ${OB.borda}`,
                       color: OB.texto,
                       borderRadius: 8,

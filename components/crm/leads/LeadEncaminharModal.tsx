@@ -92,7 +92,7 @@ export function LeadEncaminharModal({ open, leadId, leadNome, onClose, onSuccess
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-xl border border-[#30363d] bg-[#161b22] p-5 shadow-xl">
+      <div className="w-full max-w-md rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-5 shadow-xl">
         <h3 className="text-base font-bold text-[#e6edf3]">Encaminhar lead</h3>
         <p className="mt-1 text-sm text-[#8b949e]">{leadNome}</p>
 
@@ -120,7 +120,7 @@ export function LeadEncaminharModal({ open, leadId, leadNome, onClose, onSuccess
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#8b949e]">Para quem *</label>
             <input
-              className="w-full rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3]"
+              className="w-full rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3]"
               value={destinatario}
               onChange={(e) => setDestinatario(e.target.value)}
               placeholder="Corretor, arquiteto, fornecedor…"
@@ -129,7 +129,7 @@ export function LeadEncaminharModal({ open, leadId, leadNome, onClose, onSuccess
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#8b949e]">Segmento</label>
             <input
-              className="w-full rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3]"
+              className="w-full rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3]"
               value={segmento}
               onChange={(e) => setSegmento(e.target.value)}
             />
@@ -137,7 +137,7 @@ export function LeadEncaminharModal({ open, leadId, leadNome, onClose, onSuccess
           <div>
             <label className="mb-1 block text-xs font-semibold text-[#8b949e]">Autorizado por</label>
             <input
-              className="w-full rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3]"
+              className="w-full rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3]"
               value={responsavel}
               onChange={(e) => setResponsavel(e.target.value)}
               placeholder="Seu nome ou e-mail"
@@ -155,7 +155,7 @@ export function LeadEncaminharModal({ open, leadId, leadNome, onClose, onSuccess
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-[#30363d] py-2 text-sm text-[#8b949e]"
+            className="flex-1 rounded-lg border border-[#1d3a2c] py-2 text-sm text-[#8b949e]"
           >
             Cancelar
           </button>

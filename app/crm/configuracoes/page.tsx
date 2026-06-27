@@ -118,7 +118,7 @@ export default function Configuracoes() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0d1117]">
+    <div className="flex min-h-full flex-col bg-[#0a140f]">
       <CrmStickyPageHeader
         title="Configurações"
         description="Ambiente, follow-up e horário comercial"
@@ -131,7 +131,7 @@ export default function Configuracoes() {
           </p>
         )}
 
-        <div className="mb-6 rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+        <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-bold text-[#e6edf3]">Ambiente e integrações</p>
             <span
@@ -147,7 +147,7 @@ export default function Configuracoes() {
               {health.checks.map((check) => (
                 <div
                   key={check.name}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2"
                 >
                   <p className="truncate text-xs font-bold text-[#e6edf3]">
                     {LABELS[check.name] || check.name}
@@ -165,7 +165,7 @@ export default function Configuracoes() {
           )}
         </div>
 
-        <div className="mb-6 rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+        <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <p className="text-sm font-bold text-[#e6edf3]">Horário comercial</p>
           <p className="mt-1 text-xs text-[#8b949e]">Persistido em hub_tenants.settings (admin).</p>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -177,7 +177,7 @@ export default function Configuracoes() {
                 onChange={(e) =>
                   setTenantSettings((s) => ({ ...s, horario_inicio: e.target.value }))
                 }
-                className="mt-1 w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-2 text-sm text-[#e6edf3]"
+                className="mt-1 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-sm text-[#e6edf3]"
               />
             </label>
             <label className="text-[10px] font-bold uppercase text-[#8b949e]">
@@ -188,7 +188,7 @@ export default function Configuracoes() {
                 onChange={(e) =>
                   setTenantSettings((s) => ({ ...s, horario_fim: e.target.value }))
                 }
-                className="mt-1 w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-2 text-sm text-[#e6edf3]"
+                className="mt-1 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-sm text-[#e6edf3]"
               />
             </label>
             <label className="col-span-2 text-[10px] font-bold uppercase text-[#8b949e] sm:col-span-1">
@@ -196,7 +196,7 @@ export default function Configuracoes() {
               <input
                 value={tenantSettings.timezone ?? "America/Sao_Paulo"}
                 onChange={(e) => setTenantSettings((s) => ({ ...s, timezone: e.target.value }))}
-                className="mt-1 w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-2 text-sm text-[#e6edf3]"
+                className="mt-1 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-sm text-[#e6edf3]"
               />
             </label>
           </div>
@@ -210,7 +210,7 @@ export default function Configuracoes() {
           </button>
         </div>
 
-        <div className="mb-6 rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+        <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <p className="text-sm font-bold text-[#e6edf3]">Distribuição de leads</p>
           <p className="mt-1 text-xs text-[#8b949e]">
             IA sugere parceiro após qualificação; gestor valida em Leads → Encaminhamentos pendentes.
@@ -239,7 +239,7 @@ export default function Configuracoes() {
                   distribuicao_validacao_horas: Number(e.target.value) || 24,
                 }))
               }
-              className="mt-1 w-full max-w-[120px] min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-2 text-sm text-[#e6edf3]"
+              className="mt-1 w-full max-w-[120px] min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-sm text-[#e6edf3]"
             />
           </label>
           <button
@@ -252,7 +252,7 @@ export default function Configuracoes() {
           </button>
         </div>
 
-        <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+        <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <p className="text-sm font-bold text-[#e6edf3]">Cadência de follow-up</p>
           <p className="mt-1 text-xs text-[#8b949e]">hub_followup_config — horas entre passos.</p>
           {followup.length === 0 ? (
@@ -262,7 +262,7 @@ export default function Configuracoes() {
               {followup.map((r, i) => (
                 <li
                   key={`${r.mercado}-${r.passo}`}
-                  className="flex flex-wrap items-center gap-2 rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-xs"
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2 text-xs"
                 >
                   <span className="font-bold text-[#c9a24a]">
                     {r.mercado} · passo {r.passo}
@@ -277,7 +277,7 @@ export default function Configuracoes() {
                         rows.map((row, j) => (j === i ? { ...row, horas_espera: v } : row))
                       );
                     }}
-                    className="w-20 rounded border border-[#30363d] bg-[#21262d] px-2 py-1 text-[#e6edf3]"
+                    className="w-20 rounded border border-[#1d3a2c] bg-[#16271e] px-2 py-1 text-[#e6edf3]"
                   />
                   <span className="text-[#8b949e]">h</span>
                 </li>
@@ -288,7 +288,7 @@ export default function Configuracoes() {
             type="button"
             disabled={salvandoFollowup || followup.length === 0}
             onClick={() => void salvarFollowup()}
-            className="mt-3 min-h-10 rounded-lg border border-[#c9a24a55] bg-[#21262d] px-4 text-xs font-bold text-[#c9a24a] disabled:opacity-50"
+            className="mt-3 min-h-10 rounded-lg border border-[#c9a24a55] bg-[#16271e] px-4 text-xs font-bold text-[#c9a24a] disabled:opacity-50"
           >
             {salvandoFollowup ? "Salvando…" : "Guardar follow-up"}
           </button>

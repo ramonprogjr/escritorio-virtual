@@ -115,7 +115,7 @@ export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
         {rows.map((r) => (
           <li
             key={r.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#30363d] bg-[#161b22] px-3 py-2"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#1d3a2c] bg-[#0f1d16] px-3 py-2"
           >
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white">
@@ -133,7 +133,7 @@ export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
                 type="button"
                 disabled={processando === r.id}
                 onClick={() => void recusar(r.id)}
-                className="rounded-lg border border-[#30363d] px-3 py-1.5 text-xs text-[#8b949e] hover:bg-[#21262d]"
+                className="rounded-lg border border-[#1d3a2c] px-3 py-1.5 text-xs text-[#8b949e] hover:bg-[#16271e]"
               >
                 Recusar
               </button>

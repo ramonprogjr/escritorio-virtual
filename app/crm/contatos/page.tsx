@@ -22,7 +22,7 @@ function Toggle({ ativo, onChange }: { ativo: boolean; onChange: () => void }) {
     <button onClick={onChange}
       style={{
         width: 38, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
-        background: ativo ? "#34d399" : "#30363d", position: "relative", transition: "background 200ms",
+        background: ativo ? "#34d399" : "#1d3a2c", position: "relative", transition: "background 200ms",
         padding: 0, flexShrink: 0,
       }}>
       <span style={{
@@ -102,7 +102,7 @@ export default function ContatosPage() {
 
   const INPUT = {
     width: "100%", padding: "11px 13px", borderRadius: 10,
-    border: "1px solid #30363d", background: "#0d1117",
+    border: "1px solid #1d3a2c", background: "#0a140f",
     color: "#e6edf3", fontSize: 14, boxSizing: "border-box" as const,
   };
 
@@ -122,7 +122,7 @@ export default function ContatosPage() {
             border: "none",
             cursor: "pointer",
             background: "#c9a24a",
-            color: "#0d1117",
+            color: "#0a140f",
             fontWeight: 800,
             fontSize: 13,
           }}
@@ -135,9 +135,9 @@ export default function ContatosPage() {
   }, [pathname, setSlot, mostraNovo]);
 
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh", padding: "1.5rem" }}>
+    <div style={{ background: "#0a140f", minHeight: "100vh", padding: "1.5rem" }}>
       {mostraNovo && (
-        <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 14, padding: 18, marginBottom: 20 }}>
+        <div style={{ background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 14, padding: 18, marginBottom: 20 }}>
           <h2 style={{ color: "#e6edf3", fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>
             {editando ? "Editar contato" : "Novo contato"}
           </h2>
@@ -185,11 +185,11 @@ export default function ContatosPage() {
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button onClick={() => { resetForm(); setMostraNovo(false); }}
-                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #30363d", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 13 }}>
+                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #1d3a2c", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 13 }}>
                 Cancelar
               </button>
               <button onClick={salvar} disabled={salvando || !form.nome || !form.telefone}
-                style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", background: "#c9a24a", color: "#0d1117", fontWeight: 700, fontSize: 13, opacity: (!form.nome || !form.telefone) ? 0.5 : 1 }}>
+                style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", background: "#c9a24a", color: "#0a140f", fontWeight: 700, fontSize: 13, opacity: (!form.nome || !form.telefone) ? 0.5 : 1 }}>
                 {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Adicionar contato"}
               </button>
             </div>
@@ -209,7 +209,7 @@ export default function ContatosPage() {
           {contatos.map(c => (
             <div key={c.id}
               style={{
-                background: "#161b22", border: "1px solid #30363d", borderRadius: 14, padding: 16,
+                background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 14, padding: 16,
                 opacity: c.ativo ? 1 : 0.5,
               }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -220,7 +220,7 @@ export default function ContatosPage() {
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#30363d40", color: "#8b949e" }}>
+                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#1d3a2c40", color: "#8b949e" }}>
                     {CANAL_LABEL[c.canal] || c.canal}
                   </span>
                   <Toggle ativo={c.ativo} onChange={() => toggleAtivo(c)} />
@@ -233,7 +233,7 @@ export default function ContatosPage() {
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => iniciarEdicao(c)}
-                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid #30363d", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 12 }}>
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid #1d3a2c", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 12 }}>
                   Editar
                 </button>
                 <button onClick={() => remover(c.id)}

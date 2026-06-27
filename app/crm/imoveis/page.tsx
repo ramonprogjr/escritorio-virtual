@@ -58,7 +58,7 @@ const TH: React.CSSProperties = {
   fontWeight: 600,
   textTransform: "uppercase",
   whiteSpace: "nowrap",
-  borderBottom: "1px solid #30363d",
+  borderBottom: "1px solid #1d3a2c",
 };
 
 const TD: React.CSSProperties = {
@@ -161,7 +161,7 @@ export default function ImoveisPage() {
   }
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#0d1117", padding: "24px" }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#0a140f", padding: "24px" }}>
       <ImovelFormDrawer
         open={drawerAberto}
         onClose={() => { setDrawerAberto(false); setEditImovel(null); }}
@@ -198,7 +198,7 @@ export default function ImoveisPage() {
       </div>
 
       {/* Ativos / Arquivados tab */}
-      <div style={{ display: "flex", borderBottom: "1px solid #30363d", marginBottom: 12 }}>
+      <div style={{ display: "flex", borderBottom: "1px solid #1d3a2c", marginBottom: 12 }}>
         {[
           { id: true, label: "Ativos" },
           { id: false, label: "Arquivados" },
@@ -257,8 +257,8 @@ export default function ImoveisPage() {
                     <tr
                       key={im.id}
                       onClick={() => { setEditImovel(im); setDrawerAberto(true); }}
-                      style={{ borderBottom: "1px solid #21262d", cursor: "pointer" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#161b22"; }}
+                      style={{ borderBottom: "1px solid #16271e", cursor: "pointer" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#0f1d16"; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
                     >
                       <td style={{ ...TD, color: "#8b949e", fontSize: 12 }}>{im.codigo || "—"}</td>
@@ -311,7 +311,7 @@ export default function ImoveisPage() {
               <button
                 onClick={carregarMais}
                 disabled={carregandoMais}
-                style={{ padding: "10px 24px", borderRadius: 8, background: "#161b22", border: "1px solid #30363d", color: "#8b949e", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+                style={{ padding: "10px 24px", borderRadius: 8, background: "#0f1d16", border: "1px solid #1d3a2c", color: "#8b949e", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
               >
                 {carregandoMais ? "Carregando..." : `Carregar mais (${total - imoveis.length} restantes)`}
               </button>

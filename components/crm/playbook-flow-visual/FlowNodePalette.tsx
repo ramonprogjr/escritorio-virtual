@@ -77,7 +77,7 @@ const panelStyle: CSSProperties = {
   gap: 10,
   border: "1px solid #2b3544",
   borderRadius: 12,
-  background: "linear-gradient(180deg, #121926 0%, #0d1117 55%)",
+  background: "linear-gradient(180deg, #121926 0%, #0a140f 55%)",
   padding: "12px 14px",
 };
 

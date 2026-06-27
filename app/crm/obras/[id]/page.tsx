@@ -58,7 +58,7 @@ export default function ObraPainelPage() {
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 32 }}>
-        <section style={{ background: "#161b22", borderRadius: 10, padding: 16, border: "1px solid #30363d" }}>
+        <section style={{ background: "#0f1d16", borderRadius: 10, padding: 16, border: "1px solid #1d3a2c" }}>
           <h2 style={{ fontSize: 14, margin: "0 0 12px" }}>Pedidos de material</h2>
           {pedidos.length === 0 ? (
             <p style={{ fontSize: 12, color: "#8b949e" }}>Nenhum pedido.</p>
@@ -70,7 +70,7 @@ export default function ObraPainelPage() {
             ))
           )}
         </section>
-        <section style={{ background: "#161b22", borderRadius: 10, padding: 16, border: "1px solid #30363d" }}>
+        <section style={{ background: "#0f1d16", borderRadius: 10, padding: 16, border: "1px solid #1d3a2c" }}>
           <h2 style={{ fontSize: 14, margin: "0 0 12px" }}>Check-ins</h2>
           {checkins.length === 0 ? (
             <p style={{ fontSize: 12, color: "#8b949e" }}>Nenhum check-in.</p>
@@ -82,7 +82,7 @@ export default function ObraPainelPage() {
             ))
           )}
         </section>
-        <section style={{ background: "#161b22", borderRadius: 10, padding: 16, border: "1px solid #30363d" }}>
+        <section style={{ background: "#0f1d16", borderRadius: 10, padding: 16, border: "1px solid #1d3a2c" }}>
           <h2 style={{ fontSize: 14, margin: "0 0 12px" }}>Diário de obra</h2>
           {diario.length === 0 ? (
             <p style={{ fontSize: 12, color: "#8b949e" }}>Sem registros.</p>

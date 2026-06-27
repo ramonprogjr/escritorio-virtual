@@ -87,7 +87,7 @@ const KIND_STYLE: Record<
 > = {
   success: { bg: "#0d1a13", border: "#2ea04366", text: "#3fb950", Icon: CheckCircle2 },
   error: { bg: "#1a0a0a", border: "#f8514966", text: "#ff7b72", Icon: AlertTriangle },
-  info: { bg: "#161b22", border: "#c9a24a55", text: "#e0b86a", Icon: Info },
+  info: { bg: "#0f1d16", border: "#c9a24a55", text: "#e0b86a", Icon: Info },
 };
 
 function ToastCard({ item }: { item: ToastItem }) {

@@ -55,12 +55,12 @@ export function CrmCheckbox({
           width: size,
           height: size,
           borderRadius: 5,
-          border: `1px solid ${ativo ? "rgba(201, 162, 74, 0.5)" : "#30363d"}`,
+          border: `1px solid ${ativo ? "rgba(201, 162, 74, 0.5)" : "#1d3a2c"}`,
           background: checked
             ? "rgba(0, 59, 38, 0.85)"
             : parcial
               ? "rgba(201, 162, 74, 0.14)"
-              : "#161b22",
+              : "#0f1d16",
           opacity: disabled ? 0.45 : 1,
           boxShadow: ativo ? "inset 0 0 0 1px rgba(201, 162, 74, 0.12)" : undefined,
         }}

@@ -611,7 +611,7 @@ export default function LeadFichaPage() {
           onClick={() => setPerdaAberta(false)}
           style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, borderRadius: 14, border: "1px solid #30363d", background: "#0d1117", padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, borderRadius: 14, border: "1px solid #1d3a2c", background: "#0a140f", padding: 20 }}>
             <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "#e6edf3" }}>Marcar lead como perdido</p>
             <p style={{ margin: "0 0 14px", fontSize: 12, color: "#8b949e" }}>Escolha o motivo — alimenta os KPIs de perda.</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
@@ -619,17 +619,17 @@ export default function LeadFichaPage() {
                 const sel = motivoPerda === m;
                 return (
                   <button key={m} type="button" onClick={() => setMotivoPerda(m)}
-                    style={{ padding: "6px 11px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: sel ? "1px solid #c9a24a" : "1px solid #30363d", background: sel ? "#c9a24a22" : "transparent", color: sel ? "#c9a24a" : "#8b949e" }}>
+                    style={{ padding: "6px 11px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: sel ? "1px solid #c9a24a" : "1px solid #1d3a2c", background: sel ? "#c9a24a22" : "transparent", color: sel ? "#c9a24a" : "#8b949e" }}>
                     {MOTIVOS_PERDA_LABEL[m] ?? m}
                   </button>
                 );
               })}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button type="button" onClick={() => setPerdaAberta(false)} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button type="button" onClick={() => setPerdaAberta(false)} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: "#8b949e", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Cancelar
               </button>
-              <button type="button" onClick={() => void confirmarPerda()} disabled={!motivoPerda} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: motivoPerda ? "#da3633" : "#30363d", color: "#fff", fontSize: 13, fontWeight: 700, cursor: motivoPerda ? "pointer" : "not-allowed" }}>
+              <button type="button" onClick={() => void confirmarPerda()} disabled={!motivoPerda} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: motivoPerda ? "#da3633" : "#1d3a2c", color: "#fff", fontSize: 13, fontWeight: 700, cursor: motivoPerda ? "pointer" : "not-allowed" }}>
                 Confirmar perda
               </button>
             </div>

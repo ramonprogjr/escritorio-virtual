@@ -207,8 +207,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
           height: "100vh",
           width: "min(100vw, 820px)",
           maxWidth: "100%",
-          background: "#0d1117",
-          borderLeft: "1px solid #30363d",
+          background: "#0a140f",
+          borderLeft: "1px solid #1d3a2c",
           boxShadow: open ? "-12px 0 40px rgba(0,0,0,0.45)" : "none",
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -221,12 +221,12 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
           style={{
             flexShrink: 0,
             padding: "14px 16px",
-            borderBottom: "1px solid #30363d",
+            borderBottom: "1px solid #1d3a2c",
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
             gap: 12,
-            background: "linear-gradient(180deg, #161b22 0%, #0d1117 100%)",
+            background: "linear-gradient(180deg, #0f1d16 0%, #0a140f 100%)",
           }}
         >
           <div style={{ minWidth: 0, flex: 1 }}>
@@ -259,8 +259,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 style={{
                   padding: "8px 12px",
                   borderRadius: 8,
-                  border: `1px solid ${modoChat === "briefing_interno" ? "#c9a24a88" : "#30363d"}`,
-                  background: modoChat === "briefing_interno" ? "#c9a24a22" : "#21262d",
+                  border: `1px solid ${modoChat === "briefing_interno" ? "#c9a24a88" : "#1d3a2c"}`,
+                  background: modoChat === "briefing_interno" ? "#c9a24a22" : "#16271e",
                   color: modoChat === "briefing_interno" ? "#d6b976" : "#8b949e",
                   fontSize: 12,
                   fontWeight: 700,
@@ -276,8 +276,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 style={{
                   padding: "8px 12px",
                   borderRadius: 8,
-                  border: `1px solid ${modoChat === "simulacao_whatsapp" ? "#00a88488" : "#30363d"}`,
-                  background: modoChat === "simulacao_whatsapp" ? "#00a88418" : "#21262d",
+                  border: `1px solid ${modoChat === "simulacao_whatsapp" ? "#00a88488" : "#1d3a2c"}`,
+                  background: modoChat === "simulacao_whatsapp" ? "#00a88418" : "#16271e",
                   color: modoChat === "simulacao_whatsapp" ? "#5eead4" : "#8b949e",
                   fontSize: 12,
                   fontWeight: 700,
@@ -297,8 +297,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 style={{
                   padding: "8px 12px",
                   borderRadius: 8,
-                  border: `1px solid ${modoChat === "simulacao_canal" ? "#c9a24a88" : "#30363d"}`,
-                  background: modoChat === "simulacao_canal" ? "#c9a24a22" : "#21262d",
+                  border: `1px solid ${modoChat === "simulacao_canal" ? "#c9a24a88" : "#1d3a2c"}`,
+                  background: modoChat === "simulacao_canal" ? "#c9a24a22" : "#16271e",
                   color: modoChat === "simulacao_canal" ? "#d6b976" : "#8b949e",
                   fontSize: 12,
                   fontWeight: 700,
@@ -325,8 +325,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
               width: 40,
               height: 40,
               borderRadius: 10,
-              border: "1px solid #30363d",
-              background: "#21262d",
+              border: "1px solid #1d3a2c",
+              background: "#16271e",
               color: "#c9d1d9",
               cursor: "pointer",
               display: "flex",
@@ -338,7 +338,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
           </button>
         </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0, background: "#0d1117" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0, background: "#0a140f" }}>
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 20px" }}>
             {erro && (
               <div
@@ -482,8 +482,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                       {(m.conteudo?.trim() || simPart?.kind === "menu") ? (
                       <div
                         style={{
-                          background: isUser ? "#1c2a3a" : "#161b22",
-                          border: `1px solid ${isUser ? "#388bfd44" : "#30363d"}`,
+                          background: isUser ? "#1c2a3a" : "#0f1d16",
+                          border: `1px solid ${isUser ? "#388bfd44" : "#1d3a2c"}`,
                           borderRadius: isUser ? "16px 16px 6px 16px" : "16px 16px 16px 6px",
                           padding: m.conteudo?.trim() ? "12px 14px" : 0,
                           fontSize: 13,
@@ -609,8 +609,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                       aria-live="polite"
                       aria-busy="true"
                       style={{
-                        background: "#161b22",
-                        border: "1px solid #30363d",
+                        background: "#0f1d16",
+                        border: "1px solid #1d3a2c",
                         borderRadius: "16px 16px 16px 6px",
                         padding: "14px 16px",
                         display: "flex",
@@ -646,8 +646,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
             style={{
               flexShrink: 0,
               padding: "12px 16px 16px",
-              borderTop: "1px solid #30363d",
-              background: "#161b22",
+              borderTop: "1px solid #1d3a2c",
+              background: "#0f1d16",
             }}
           >
             <div
@@ -655,8 +655,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                 display: "flex",
                 alignItems: "flex-end",
                 gap: 10,
-                background: "#0d1117",
-                border: "1px solid #30363d",
+                background: "#0a140f",
+                border: "1px solid #1d3a2c",
                 borderRadius: 14,
                 padding: "8px 10px 8px 14px",
               }}
@@ -697,7 +697,7 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                   borderRadius: "50%",
                   border: "none",
                   background:
-                    enviando || !input.trim() ? "#30363d" : "linear-gradient(145deg, #003b26, #14532d)",
+                    enviando || !input.trim() ? "#1d3a2c" : "linear-gradient(145deg, #003b26, #14532d)",
                   color: "#c9a24a",
                   cursor: enviando || !input.trim() ? "not-allowed" : "pointer",
                   display: "flex",

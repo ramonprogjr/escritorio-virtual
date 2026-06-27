@@ -61,8 +61,8 @@ function ContasPagarInner() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#0d1117]">
-      <div className="sticky top-0 z-10 shrink-0 border-b border-[#30363d] bg-[#161b22] px-3 py-3 sm:px-6">
+    <div className="flex min-h-0 flex-1 flex-col bg-[#0a140f]">
+      <div className="sticky top-0 z-10 shrink-0 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <Link href="/crm/financeiro" className="text-[11px] font-bold text-[#c9a24a] hover:underline">
@@ -94,7 +94,7 @@ function ContasPagarInner() {
                   })
                   .catch(() => {});
               }}
-              className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-xs font-bold text-[#8b949e]"
+              className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#8b949e]"
             >
               <Download className="h-4 w-4" aria-hidden />
               CSV
@@ -104,7 +104,7 @@ function ContasPagarInner() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href="/crm/financeiro/pagar"
-            className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${!statusFiltro && !vencido && !proximos ? "bg-[#30363d] text-white" : "bg-[#21262d] text-[#8b949e]"}`}
+            className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${!statusFiltro && !vencido && !proximos ? "bg-[#1d3a2c] text-white" : "bg-[#16271e] text-[#8b949e]"}`}
           >
             Todas
           </Link>
@@ -112,20 +112,20 @@ function ContasPagarInner() {
             <Link
               key={s.id}
               href={`/crm/financeiro/pagar?status=${s.id}`}
-              className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${statusFiltro === s.id && !vencido ? "bg-[#30363d] text-white" : "bg-[#21262d] text-[#8b949e]"}`}
+              className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${statusFiltro === s.id && !vencido ? "bg-[#1d3a2c] text-white" : "bg-[#16271e] text-[#8b949e]"}`}
             >
               {s.label}
             </Link>
           ))}
           <Link
             href="/crm/financeiro/pagar?status=pendente&vencido=1"
-            className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${vencido ? "bg-[#b3261e] text-white" : "bg-[#21262d] text-[#8b949e]"}`}
+            className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${vencido ? "bg-[#b3261e] text-white" : "bg-[#16271e] text-[#8b949e]"}`}
           >
             Vencidas
           </Link>
           <Link
             href="/crm/financeiro/pagar?status=pendente&proximos=7"
-            className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${proximos === "7" ? "bg-[#c9a24a] text-[#003b26]" : "bg-[#21262d] text-[#8b949e]"}`}
+            className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold ${proximos === "7" ? "bg-[#c9a24a] text-[#003b26]" : "bg-[#16271e] text-[#8b949e]"}`}
           >
             7 dias
           </Link>
@@ -136,7 +136,7 @@ function ContasPagarInner() {
         {carregando ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 animate-pulse rounded-xl bg-[#21262d]" />
+              <div key={i} className="h-20 animate-pulse rounded-xl bg-[#16271e]" />
             ))}
           </div>
         ) : (
@@ -163,7 +163,7 @@ export default function ContasPagarPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-0 flex-1 items-center justify-center bg-[#0d1117] p-6 text-sm text-[#8b949e]">
+        <div className="flex min-h-0 flex-1 items-center justify-center bg-[#0a140f] p-6 text-sm text-[#8b949e]">
           Carregando contas a pagar…
         </div>
       }

@@ -23,7 +23,7 @@ export function CrmPermissaoSelect({
   onChange,
   id = "crm-permissao",
   required = true,
-  className = "w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]",
+  className = "w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]",
   showDescription = true,
 }: Props) {
   const opcoes = crmRolesAtribuiveisPor(actorRole);

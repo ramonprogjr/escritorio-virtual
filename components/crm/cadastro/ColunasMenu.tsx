@@ -28,7 +28,7 @@ export function ColunasMenu({
         aria-expanded={aberto}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8,
-          border: "1px solid #30363d", background: "#21262d", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer",
+          border: "1px solid #1d3a2c", background: "#16271e", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer",
         }}
       >
         <SlidersHorizontal size={14} aria-hidden /> Colunas

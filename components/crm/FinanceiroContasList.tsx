@@ -38,7 +38,7 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
 
   if (contas.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-[#30363d] bg-[#161b22] px-6 py-12 text-center">
+      <div className="rounded-xl border border-dashed border-[#1d3a2c] bg-[#0f1d16] px-6 py-12 text-center">
         <p className="text-sm font-bold text-[#e6edf3]">Nenhum lançamento neste filtro</p>
         <p className="mt-1 text-xs text-[#8b949e]">
           Ajuste os filtros ou cadastre um novo lançamento no painel financeiro.
@@ -64,7 +64,7 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
         return (
           <li
             key={c.id}
-            className="rounded-xl border border-[#30363d] bg-[#161b22] p-3"
+            className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3"
             style={{ borderLeftWidth: 3, borderLeftColor: corBorda }}
           >
             <div className="flex items-start justify-between gap-2">
@@ -107,7 +107,7 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
                   <button
                     type="button"
                     onClick={() => router.push("/crm/negocios")}
-                    className="min-h-11 rounded-lg border border-[#30363d] px-3 text-xs font-semibold text-[#8b949e]"
+                    className="min-h-11 rounded-lg border border-[#1d3a2c] px-3 text-xs font-semibold text-[#8b949e]"
                   >
                     Negócios
                   </button>

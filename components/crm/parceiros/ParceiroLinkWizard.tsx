@@ -8,7 +8,7 @@ import {
 } from "@/lib/crm/parceiro-link-publico";
 
 const OB = {
-  borda: "var(--obra-borda, #30363d)",
+  borda: "var(--obra-borda, #1d3a2c)",
   texto: "var(--obra-texto, #e6edf3)",
   texto2: "var(--obra-texto-2, #8b949e)",
   dourado: "var(--obra-dourado, #c9a24a)",
@@ -144,7 +144,7 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
 
           <div
             style={{
-              background: "#161b22",
+              background: "#0f1d16",
               border: `1px solid ${OB.borda}`,
               borderRadius: 12,
               padding: 14,
@@ -209,7 +209,7 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
               padding: "12px",
               borderRadius: 10,
               border: `1px solid ${OB.borda}`,
-              background: "#161b22",
+              background: "#0f1d16",
               color: OB.texto2,
               fontWeight: 600,
               cursor: "pointer",
@@ -232,7 +232,7 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
             padding: "14px 20px",
             borderTop: `1px solid ${OB.borda}`,
             flexShrink: 0,
-            background: "#0d1117",
+            background: "#0a140f",
           }}
         >
           <button

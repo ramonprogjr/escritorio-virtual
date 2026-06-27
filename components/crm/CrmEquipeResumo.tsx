@@ -20,9 +20,9 @@ export function CrmEquipeResumo({
   if (loading) {
     return (
       <div className="animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-4">
-        <div className="mb-3 h-4 w-24 rounded bg-[#21262d]" />
+        <div className="mb-3 h-4 w-24 rounded bg-[#16271e]" />
         {[1, 2, 3].map((i) => (
-          <div key={i} className="mb-2 h-12 rounded-xl bg-[#21262d]" />
+          <div key={i} className="mb-2 h-12 rounded-xl bg-[#16271e]" />
         ))}
       </div>
     );
@@ -36,7 +36,7 @@ export function CrmEquipeResumo({
         <h2 className="m-0 text-sm font-bold tracking-tight text-[#e6edf3]">Equipe IA</h2>
         <Link
           href="/crm/agentes"
-          className="rounded-lg border border-[#30363d] px-2 py-1 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a55]"
+          className="rounded-lg border border-[#1d3a2c] px-2 py-1 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a55]"
         >
           Ver todos →
         </Link>

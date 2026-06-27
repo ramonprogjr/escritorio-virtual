@@ -32,11 +32,11 @@ function statusLabel(status?: string | null): string {
 }
 
 function statusCores(status?: string | null, temInstancia?: boolean): { bg: string; fg: string; border: string } {
-  if (!temInstancia) return { bg: "#30363d", fg: "#8b949e", border: "#484f58" };
+  if (!temInstancia) return { bg: "#1d3a2c", fg: "#8b949e", border: "#484f58" };
   const s = (status || "").toLowerCase();
   if (s === "connected") return { bg: "#23863633", fg: "#3fb950", border: "#3fb95044" };
   if (s === "connecting") return { bg: "#bb800926", fg: "#e6c06a", border: "#bb800966" };
-  return { bg: "#30363d", fg: "#8b949e", border: "#484f58" };
+  return { bg: "#1d3a2c", fg: "#8b949e", border: "#484f58" };
 }
 
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
@@ -48,7 +48,7 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
         gap: 12,
         alignItems: "start",
         padding: "10px 0",
-        borderBottom: "1px solid #21262d",
+        borderBottom: "1px solid #16271e",
       }}
     >
       <span
@@ -162,8 +162,8 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
                 width: 36,
                 height: 36,
                 borderRadius: 8,
-                border: "1px solid #30363d",
-                background: "#21262d",
+                border: "1px solid #1d3a2c",
+                background: "#16271e",
                 color: "#8b949e",
                 cursor: "pointer",
                 display: "flex",
@@ -198,8 +198,8 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
           <div
             style={{
               borderRadius: 12,
-              border: "1px solid #30363d",
-              background: "#161b22",
+              border: "1px solid #1d3a2c",
+              background: "#0f1d16",
               padding: 16,
               marginBottom: 16,
             }}
@@ -240,8 +240,8 @@ export function CrmCanalSideover({ agente, onClose }: Props) {
           <div
             style={{
               borderRadius: 12,
-              border: "1px solid #30363d",
-              background: "#0d1117",
+              border: "1px solid #1d3a2c",
+              background: "#0a140f",
               padding: "4px 16px 12px",
               marginBottom: 16,
             }}

@@ -806,7 +806,7 @@ function AgentesView() {
 
   return (
     <>
-      <div style={{ minHeight: "100vh", background: "#0d1117", padding: "24px" }}>
+      <div style={{ minHeight: "100vh", background: "#0a140f", padding: "24px" }}>
         <div style={{ marginBottom: 18 }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "#8b949e", margin: "0 0 10px", letterSpacing: 0.5 }}>
             LISTA
@@ -1162,8 +1162,8 @@ function AgentesView() {
               bottom: 0,
               width: "min(620px, 100vw)",
               zIndex: 50,
-              background: "#0d1117",
-              borderLeft: "1px solid #30363d",
+              background: "#0a140f",
+              borderLeft: "1px solid #1d3a2c",
               boxShadow: "-8px 0 32px rgba(0,0,0,0.45)",
               display: "flex",
               flexDirection: "column",
@@ -1853,7 +1853,7 @@ function AgentesView() {
 
 export default function AgentesPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0d1117", padding: 24, color: "#8b949e" }}>Carregando...</div>}>
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0a140f", padding: 24, color: "#8b949e" }}>Carregando...</div>}>
       <AgentesView />
     </Suspense>
   );

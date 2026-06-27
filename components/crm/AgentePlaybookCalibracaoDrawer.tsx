@@ -121,7 +121,7 @@ export function AgentePlaybookCalibracaoDrawer({
         ? "#f8514912"
         : uploadStatus === "sucesso"
           ? "#23863618"
-          : "#0d1117";
+          : "#0a140f";
 
   const carregarConteudo = useCallback(async () => {
     if (!agenteSlug) return;
@@ -530,8 +530,8 @@ export function AgentePlaybookCalibracaoDrawer({
           height: "100vh",
           width: "min(100vw, 1180px)",
           maxWidth: "100%",
-          background: "#0d1117",
-          borderLeft: "1px solid #30363d",
+          background: "#0a140f",
+          borderLeft: "1px solid #1d3a2c",
           boxShadow: open ? "-12px 0 40px rgba(0,0,0,0.45)" : "none",
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -544,11 +544,11 @@ export function AgentePlaybookCalibracaoDrawer({
           style={{
             flexShrink: 0,
             padding: "14px 16px",
-            borderBottom: "1px solid #30363d",
+            borderBottom: "1px solid #1d3a2c",
             display: "flex",
             flexDirection: "column",
             gap: 10,
-            background: "linear-gradient(180deg, #161b22 0%, #0d1117 100%)",
+            background: "linear-gradient(180deg, #0f1d16 0%, #0a140f 100%)",
           }}
         >
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -582,8 +582,8 @@ export function AgentePlaybookCalibracaoDrawer({
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                border: "1px solid #30363d",
-                background: "#21262d",
+                border: "1px solid #1d3a2c",
+                background: "#16271e",
                 color: "#c9d1d9",
                 cursor: "pointer",
                 display: "flex",
@@ -641,7 +641,7 @@ export function AgentePlaybookCalibracaoDrawer({
                 style={{
                   ...btnToolbar,
                   background:
-                    flowStatus.kind === "ready" ? "#21262d" : "rgba(35, 134, 54, 0.18)",
+                    flowStatus.kind === "ready" ? "#16271e" : "rgba(35, 134, 54, 0.18)",
                   color: flowStatus.kind === "ready" ? "#8b949e" : "#3fb950",
                 }}
                 title="Mantém o texto actual e acrescenta o bloco json obra10_playbook_flow (template v1) para o WhatsApp"
@@ -726,7 +726,7 @@ export function AgentePlaybookCalibracaoDrawer({
               flexDirection: "column",
               minWidth: 0,
               minHeight: 0,
-              borderRight: "1px solid #30363d",
+              borderRight: "1px solid #1d3a2c",
               overflow: "hidden",
             }}
           >
@@ -750,8 +750,8 @@ export function AgentePlaybookCalibracaoDrawer({
                     minHeight: 220,
                     maxHeight: 420,
                     borderRadius: 10,
-                    border: "1px solid #30363d",
-                    background: "#0d1117",
+                    border: "1px solid #1d3a2c",
+                    background: "#0a140f",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -779,8 +779,8 @@ export function AgentePlaybookCalibracaoDrawer({
                     maxHeight: 420,
                     resize: "none",
                     borderRadius: 10,
-                    border: "1px solid #30363d",
-                    background: "#0d1117",
+                    border: "1px solid #1d3a2c",
+                    background: "#0a140f",
                     color: "#e6edf3",
                     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                     fontSize: 12,
@@ -833,7 +833,7 @@ export function AgentePlaybookCalibracaoDrawer({
               style={{
                 flexShrink: 0,
                 padding: "10px 14px",
-                borderBottom: "1px solid #30363d",
+                borderBottom: "1px solid #1d3a2c",
               }}
             >
               <p style={{ margin: 0, color: "#e6edf3", fontSize: 13, fontWeight: 700 }}>
@@ -878,8 +878,8 @@ export function AgentePlaybookCalibracaoDrawer({
                       <div
                         style={{
                           maxWidth: "92%",
-                          background: isUser ? "#1c2a3a" : "#161b22",
-                          border: `1px solid ${isUser ? "#388bfd44" : "#30363d"}`,
+                          background: isUser ? "#1c2a3a" : "#0f1d16",
+                          border: `1px solid ${isUser ? "#388bfd44" : "#1d3a2c"}`,
                           borderRadius: 10,
                           padding: "10px 12px",
                           fontSize: 12,
@@ -912,7 +912,7 @@ export function AgentePlaybookCalibracaoDrawer({
               style={{
                 flexShrink: 0,
                 padding: 12,
-                borderTop: "1px solid #30363d",
+                borderTop: "1px solid #1d3a2c",
                 display: "flex",
                 gap: 8,
               }}
@@ -937,8 +937,8 @@ export function AgentePlaybookCalibracaoDrawer({
                   flex: 1,
                   resize: "none",
                   borderRadius: 10,
-                  border: "1px solid #30363d",
-                  background: "#161b22",
+                  border: "1px solid #1d3a2c",
+                  background: "#0f1d16",
                   color: "#e6edf3",
                   fontSize: 12,
                   padding: "10px 12px",
@@ -1001,7 +1001,7 @@ const btnToolbar: CSSProperties = {
   padding: "8px 12px",
   borderRadius: 0,
   border: "none",
-  background: "#21262d",
+  background: "#16271e",
   color: "#c9d1d9",
   fontSize: 11,
   fontWeight: 700,

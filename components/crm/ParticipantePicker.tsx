@@ -43,8 +43,8 @@ const INPUT: React.CSSProperties = {
   width: "100%",
   padding: "11px 13px 11px 38px",
   borderRadius: 10,
-  border: "1px solid #30363d",
-  background: "#161b22",
+  border: "1px solid #1d3a2c",
+  background: "#0f1d16",
   color: "#e6edf3",
   fontSize: 14,
   boxSizing: "border-box",
@@ -127,7 +127,7 @@ export function ParticipantePicker({ opcoes, selecionados, onAdd, onRemove, load
               onRemove(chips[chips.length - 1].uid);
             }
           }}
-          style={{ ...INPUT, borderColor: open ? "#c9a24a" : "#30363d" }}
+          style={{ ...INPUT, borderColor: open ? "#c9a24a" : "#1d3a2c" }}
         />
 
         {open && !loading && (
@@ -145,7 +145,7 @@ export function ParticipantePicker({ opcoes, selecionados, onAdd, onRemove, load
               listStyle: "none",
               maxHeight: 320,
               overflowY: "auto",
-              background: "#0d1117",
+              background: "#0a140f",
               border: "1px solid #2c384b",
               borderRadius: 12,
               boxShadow: "0 12px 32px rgba(0,0,0,0.45)",

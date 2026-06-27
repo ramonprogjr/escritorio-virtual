@@ -10,7 +10,7 @@ type Props = {
 
 function NoRow({ node }: { node: RastreioCadeia["principal"] }) {
   return (
-    <li style={{ padding: "8px 0", borderBottom: "1px solid #30363d" }}>
+    <li style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
       <Link href={node.href} style={{ color: "#c9a24a", fontWeight: 600, textDecoration: "none" }}>
         {node.codigo ? `${node.codigo} · ` : ""}
         {node.titulo}
@@ -28,8 +28,8 @@ export function CrmRastreioCadeia({ cadeia, compact }: Props) {
       style={{
         padding: compact ? 0 : 14,
         borderRadius: compact ? 0 : 10,
-        border: compact ? "none" : "1px solid #30363d",
-        background: compact ? "transparent" : "#161b22",
+        border: compact ? "none" : "1px solid #1d3a2c",
+        background: compact ? "transparent" : "#0f1d16",
       }}
     >
       {!compact ? (

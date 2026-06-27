@@ -20,8 +20,8 @@ export function CrmAlertasStrip({
   if (loading) {
     return (
       <div className="mb-6 animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-4">
-        <div className="mb-3 h-3 w-20 rounded bg-[#21262d]" />
-        <div className="h-11 rounded-xl bg-[#21262d]" />
+        <div className="mb-3 h-3 w-20 rounded bg-[#16271e]" />
+        <div className="h-11 rounded-xl bg-[#16271e]" />
       </div>
     );
   }
@@ -36,10 +36,10 @@ export function CrmAlertasStrip({
           <Link
             key={a.id}
             href={hrefAlerta(a)}
-            className="flex items-center justify-between gap-3 rounded-xl border border-[#2b3544] bg-[#0f1520] px-3.5 py-2.5 transition-colors hover:border-[#d2992255] hover:bg-[#161b22]"
+            className="flex items-center justify-between gap-3 rounded-xl border border-[#2b3544] bg-[#0f1520] px-3.5 py-2.5 transition-colors hover:border-[#d2992255] hover:bg-[#0f1d16]"
           >
             <span className="truncate text-sm font-medium text-[#e6edf3]">{a.titulo}</span>
-            <span className="shrink-0 rounded-full border border-[#30363d] bg-[#21262d] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+            <span className="shrink-0 rounded-full border border-[#1d3a2c] bg-[#16271e] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
               {a.tipo}
             </span>
           </Link>

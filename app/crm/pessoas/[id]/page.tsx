@@ -172,7 +172,7 @@ export default function PessoaDetalhePage() {
       <div
         style={{
           minHeight: "100%",
-          background: "#0d1117",
+          background: "#0a140f",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -185,7 +185,7 @@ export default function PessoaDetalhePage() {
 
   if (!pessoa) {
     return (
-      <div style={{ minHeight: "100%", background: "#0d1117", padding: 24 }}>
+      <div style={{ minHeight: "100%", background: "#0a140f", padding: 24 }}>
         <button
           type="button"
           onClick={() => router.push("/crm/pessoas")}
@@ -220,14 +220,14 @@ export default function PessoaDetalhePage() {
     pessoa.tipo_pessoa === "PF" ? "#3b82f6" : pessoa.tipo_pessoa === "PJ" ? "#10b981" : "#8b949e";
 
   return (
-    <div style={{ minHeight: "100%", background: "#0d1117" }}>
+    <div style={{ minHeight: "100%", background: "#0a140f" }}>
       <div
         style={{
           position: "sticky",
           top: 0,
           zIndex: 10,
-          background: "#161b22",
-          borderBottom: "1px solid #30363d",
+          background: "#0f1d16",
+          borderBottom: "1px solid #1d3a2c",
           padding: "14px 20px",
         }}
       >
@@ -253,7 +253,7 @@ export default function PessoaDetalhePage() {
                 <input
                   value={pessoa.nome}
                   onChange={(e) => setPessoa((p) => (p ? { ...p, nome: e.target.value } : p))}
-                  style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }}
+                  style={{ padding: 8, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }}
                 />
                 <input
                   value={pessoa.telefone ?? ""}
@@ -261,13 +261,13 @@ export default function PessoaDetalhePage() {
                     setPessoa((p) => (p ? { ...p, telefone: formatarTelefoneMascara(e.target.value) } : p))
                   }
                   placeholder="Telefone"
-                  style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }}
+                  style={{ padding: 8, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }}
                 />
                 <input
                   value={pessoa.email ?? ""}
                   onChange={(e) => setPessoa((p) => (p ? { ...p, email: e.target.value } : p))}
                   placeholder="E-mail"
-                  style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }}
+                  style={{ padding: 8, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }}
                 />
                 <button type="button" disabled={salvando} onClick={() => void salvarEdicao()} style={{ padding: "8px 12px", borderRadius: 8, background: "#c9a24a", color: "#003b26", border: "none", fontWeight: 700, cursor: "pointer" }}>
                   {salvando ? "Salvando…" : "Guardar"}
@@ -286,7 +286,7 @@ export default function PessoaDetalhePage() {
             )}
           </div>
           {!editando && (
-            <button type="button" onClick={() => setEditando(true)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #30363d", background: "#21262d", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button type="button" onClick={() => setEditando(true)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #1d3a2c", background: "#16271e", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               Editar
             </button>
           )}
@@ -348,8 +348,8 @@ export default function PessoaDetalhePage() {
                 style={{
                   padding: 16,
                   borderRadius: 10,
-                  border: "1px solid #30363d",
-                  background: "#161b22",
+                  border: "1px solid #1d3a2c",
+                  background: "#0f1d16",
                   display: "flex",
                   flexDirection: "column",
                   gap: 12,

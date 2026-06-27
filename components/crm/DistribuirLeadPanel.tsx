@@ -147,7 +147,7 @@ export function DistribuirLeadPanel({
         type="button"
         onClick={() => void abrir()}
         className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition-colors md:text-sm"
-        style={{ borderColor: "#30363d", color: "#c9a24a", background: "#003b2622" }}
+        style={{ borderColor: "#1d3a2c", color: "#c9a24a", background: "#003b2622" }}
       >
         <Share2 className="h-4 w-4" strokeWidth={2} />
         Distribuir
@@ -175,7 +175,7 @@ export function DistribuirLeadPanel({
             style={{
               width: "100%",
               maxWidth: 620,
-              background: "#0d1117",
+              background: "#0a140f",
               border: "1px solid #c9a24a44",
               borderRadius: 16,
               padding: 22,
@@ -218,7 +218,7 @@ export function DistribuirLeadPanel({
                       type="button"
                       disabled={recolocando}
                       onClick={() => void recusarEOfertarProximo()}
-                      style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontWeight: 700, fontSize: 12, cursor: recolocando ? "default" : "pointer" }}
+                      style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: "#8b949e", fontWeight: 700, fontSize: 12, cursor: recolocando ? "default" : "pointer" }}
                     >
                       {recolocando ? "Recolocando…" : "Fornecedor recusou? → oferecer ao próximo"}
                     </button>
@@ -243,8 +243,8 @@ export function DistribuirLeadPanel({
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      border: `1px solid ${i === 0 ? "#c9a24a55" : "#30363d"}`,
-                      background: i === 0 ? "rgba(201,162,74,0.06)" : "#161b22",
+                      border: `1px solid ${i === 0 ? "#c9a24a55" : "#1d3a2c"}`,
+                      background: i === 0 ? "rgba(201,162,74,0.06)" : "#0f1d16",
                       borderRadius: 12,
                       padding: "12px 14px",
                     }}
@@ -315,7 +315,7 @@ export function DistribuirLeadPanel({
                               fontWeight: 700,
                               padding: "2px 9px",
                               borderRadius: 999,
-                              border: "1px solid #30363d",
+                              border: "1px solid #1d3a2c",
                               background: "transparent",
                               color: "#8b949e",
                               cursor: "pointer",

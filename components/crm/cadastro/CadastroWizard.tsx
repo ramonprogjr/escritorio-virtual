@@ -32,7 +32,7 @@ import {
 } from "@/lib/crm/verificar-documento-disponivel";
 
 const OB = {
-  borda: "var(--obra-borda, #30363d)",
+  borda: "var(--obra-borda, #1d3a2c)",
   texto: "var(--obra-texto, #e6edf3)",
   texto2: "var(--obra-texto-2, #8b949e)",
   dourado: "var(--obra-dourado, #c9a24a)",
@@ -45,7 +45,7 @@ const INPUT: React.CSSProperties = {
   padding: "11px 13px",
   borderRadius: 10,
   border: `1px solid ${OB.borda}`,
-  background: "#161b22",
+  background: "#0f1d16",
   color: OB.texto,
   fontSize: 14,
   boxSizing: "border-box",
@@ -595,7 +595,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                         padding: "14px 16px",
                         borderRadius: 10,
                         border: `2px solid ${ativo ? OB.dourado : OB.borda}`,
-                        background: ativo ? "rgba(201, 162, 74, 0.12)" : "#161b22",
+                        background: ativo ? "rgba(201, 162, 74, 0.12)" : "#0f1d16",
                         color: OB.texto,
                         fontWeight: 700,
                         fontSize: 13,
@@ -894,7 +894,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                         padding: "0 14px",
                         borderRadius: 10,
                         border: `1px solid ${OB.borda}`,
-                        background: "#21262d",
+                        background: "#16271e",
                         color: OB.texto,
                         cursor: "pointer",
                         fontSize: 12,
@@ -994,7 +994,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
             gap: 10,
             justifyContent: "flex-end",
             flexShrink: 0,
-            background: "#0d1117",
+            background: "#0a140f",
           }}
         >
           <button

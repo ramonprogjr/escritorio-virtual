@@ -802,7 +802,7 @@ export default function CiclosPage() {
           <button
             onClick={abrirNovoCiclo}
             className="rounded px-2 py-1 font-semibold"
-            style={{ background: "#21262d", color: "#c9a24a", border: "1px solid #30363d" }}
+            style={{ background: "#16271e", color: "#c9a24a", border: "1px solid #1d3a2c" }}
           >
             Novo ciclo
           </button>
@@ -812,7 +812,7 @@ export default function CiclosPage() {
           <span
             className="rounded px-2 py-1"
             style={{
-              background: alertas.length > 0 ? "#b3261e30" : "#21262d",
+              background: alertas.length > 0 ? "#b3261e30" : "#16271e",
               color: alertas.length > 0 ? "#b3261e" : "#8b949e",
             }}
           >
@@ -826,7 +826,7 @@ export default function CiclosPage() {
 
   return (
     <>
-    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
+    <div style={{ background: "#0a140f", minHeight: "100vh" }}>
       <CrmStickyTabs
         activeId={aba}
         onChange={(id) => setAba(id as typeof aba)}
@@ -1244,7 +1244,7 @@ export default function CiclosPage() {
             {logs.length === 0 ? (
               <p className="text-center py-8 text-sm" style={{ color: "#484f58" }}>Nenhuma execução registrada ainda</p>
             ) : logs.map(l => (
-              <div key={l.id as string} className="rounded-xl p-3" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+              <div key={l.id as string} className="rounded-xl p-3" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-white font-bold text-sm">{l.agente_slug as string}</p>
                   <span className="text-xs px-2 py-0.5 rounded-full"
@@ -1279,7 +1279,7 @@ export default function CiclosPage() {
               return (
                 <div key={a.id as string} className="rounded-xl p-3"
                   style={{
-                    background: "#161b22",
+                    background: "#0f1d16",
                     borderTop: `1px solid ${cor}44`,
                     borderRight: `1px solid ${cor}44`,
                     borderBottom: `1px solid ${cor}44`,
@@ -1297,7 +1297,7 @@ export default function CiclosPage() {
                     </div>
                     <button onClick={() => resolverAlerta(a.id as string)}
                       className="ml-2 text-xs px-2 py-1 rounded-lg flex-shrink-0"
-                      style={{ background: "#21262d", color: "#c9a24a", border: "none", cursor: "pointer" }}>
+                      style={{ background: "#16271e", color: "#c9a24a", border: "none", cursor: "pointer" }}>
                       Resolver
                     </button>
                   </div>
@@ -1317,7 +1317,7 @@ export default function CiclosPage() {
         >
           <aside
             className="h-full w-full max-w-xl border-l p-4 overflow-auto"
-            style={{ background: "#0d1117", borderColor: "#30363d" }}
+            style={{ background: "#0a140f", borderColor: "#1d3a2c" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
@@ -1332,7 +1332,7 @@ export default function CiclosPage() {
               <button
                 onClick={() => setDrawerOpen(false)}
                 className="text-sm px-2 py-1 rounded"
-                style={{ background: "#21262d", color: "#8b949e", border: "1px solid #30363d" }}
+                style={{ background: "#16271e", color: "#8b949e", border: "1px solid #1d3a2c" }}
               >
                 Fechar
               </button>
@@ -1345,7 +1345,7 @@ export default function CiclosPage() {
                 {drawerMode === "edit" && selectedCicloId && (
                   <div
                     className="mb-4 flex w-full overflow-hidden rounded-lg"
-                    style={{ border: "1px solid #30363d" }}
+                    style={{ border: "1px solid #1d3a2c" }}
                   >
                     {(["dados", "timeline"] as const).map((tab, i) => (
                       <button
@@ -1357,8 +1357,8 @@ export default function CiclosPage() {
                           margin: 0,
                           borderRadius: 0,
                           border: "none",
-                          borderLeft: i > 0 ? "1px solid #30363d" : "none",
-                          background: drawerSubTab === tab ? "#1b2532" : "#161b22",
+                          borderLeft: i > 0 ? "1px solid #1d3a2c" : "none",
+                          background: drawerSubTab === tab ? "#1b2532" : "#0f1d16",
                           color: drawerSubTab === tab ? "#c9a24a" : "#8b949e",
                           cursor: "pointer",
                           textTransform: tab === "timeline" ? "none" : "capitalize",
@@ -1378,7 +1378,7 @@ export default function CiclosPage() {
                     {timelineLoading ? (
                       <p className="text-sm" style={{ color: "#8b949e" }}>Carregando histórico…</p>
                     ) : timelineLogs.length === 0 ? (
-                      <div className="rounded-lg p-4 space-y-2" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+                      <div className="rounded-lg p-4 space-y-2" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
                         <p className="text-sm m-0" style={{ color: "#8b949e" }}>
                           Ainda não há linhas em <span style={{ color: "#c9a24a" }}>hub_ciclos_log</span> com o identificador deste ciclo.
                         </p>
@@ -1389,7 +1389,7 @@ export default function CiclosPage() {
                         </p>
                       </div>
                     ) : (
-                      <ul className="space-y-2 pl-0 list-none m-0" style={{ borderLeft: "2px solid #30363d", marginLeft: 8, paddingLeft: 16 }}>
+                      <ul className="space-y-2 pl-0 list-none m-0" style={{ borderLeft: "2px solid #1d3a2c", marginLeft: 8, paddingLeft: 16 }}>
                         {timelineLogs.map((log) => {
                           const st = String(log.status ?? "");
                           return (
@@ -1408,7 +1408,7 @@ export default function CiclosPage() {
                                   background: STATUS_COR[st] || "#484f58",
                                 }}
                               />
-                              <div className="rounded-lg p-3" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+                              <div className="rounded-lg p-3" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
                                   <span className="text-xs font-bold" style={{ color: "#e6edf3" }}>
                                     {log.agente_slug as string}
@@ -1452,14 +1452,14 @@ export default function CiclosPage() {
                     value={fAgenteSlug}
                     onChange={(e) => setFAgenteSlug(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm"
-                    style={{ background: "#161b22", border: "1px solid #30363d", color: "#e6edf3" }}
+                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                     placeholder="ex.: gerente_atendimento"
                   />
                 </label>
                 {agenteSomenteCanalWa && (
                   <p
                     className="text-xs m-0 rounded-lg p-3 leading-relaxed"
-                    style={{ background: "#1b2532", border: "1px solid #30363d", color: "#8b949e" }}
+                    style={{ background: "#1b2532", border: "1px solid #1d3a2c", color: "#8b949e" }}
                   >
                     Agente <strong style={{ color: "#c9a24a" }}>{MODO_OPERACAO_LABEL.canal_whatsapp}</strong>
                     : a conversa ao vivo é pelo webhook UAZAPI. Use ciclo{" "}
@@ -1474,7 +1474,7 @@ export default function CiclosPage() {
                     value={fNome}
                     onChange={(e) => setFNome(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm"
-                    style={{ background: "#161b22", border: "1px solid #30363d", color: "#e6edf3" }}
+                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                   />
                 </label>
                 <label className="block">
@@ -1488,9 +1488,9 @@ export default function CiclosPage() {
                       disabled={sugestaoIaLoading !== null || !fNome.trim() || !fAgenteSlug.trim()}
                       className="inline-flex items-center gap-1.5 text-xs font-bold rounded-md px-2 py-1"
                       style={{
-                        background: "#21262d",
+                        background: "#16271e",
                         color: "#c9a24a",
-                        border: "1px solid #30363d",
+                        border: "1px solid #1d3a2c",
                         cursor:
                           sugestaoIaLoading !== null || !fNome.trim() || !fAgenteSlug.trim()
                             ? "not-allowed"
@@ -1508,13 +1508,13 @@ export default function CiclosPage() {
                     onChange={(e) => setFDescricao(e.target.value)}
                     rows={3}
                     className="w-full rounded-lg px-3 py-2 text-sm"
-                    style={{ background: "#161b22", border: "1px solid #30363d", color: "#e6edf3" }}
+                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                   />
                 </label>
                 {esconderAgendamentoCron ? (
                   <div
                     className="rounded-lg p-3 space-y-2"
-                    style={{ background: "#161b22", border: "1px solid #30363d" }}
+                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}
                   >
                     <p className="text-xs font-bold m-0" style={{ color: "#c9a24a" }}>
                       Canal WhatsApp — sem agendamento cron
@@ -1532,10 +1532,10 @@ export default function CiclosPage() {
                   open={agendaDetailsAberto}
                   onToggle={(e) => setAgendaDetailsAberto(e.currentTarget.open)}
                   className="rounded-lg"
-                  style={{ background: "#161b22", border: "1px solid #30363d" }}
+                  style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}
                 >
                   <summary
-                    className="cursor-pointer list-none flex items-center gap-2 p-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22] focus-visible:ring-[#c9a24a66]"
+                    className="cursor-pointer list-none flex items-center gap-2 p-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1d16] focus-visible:ring-[#c9a24a66]"
                     style={{ color: "#c9a24a" }}
                     aria-expanded={agendaDetailsAberto}
                   >
@@ -1596,15 +1596,15 @@ export default function CiclosPage() {
                           }}
                           className="w-full text-left rounded-lg p-3 transition-colors"
                           style={{
-                            border: sel ? "1px solid rgba(201, 162, 74, 0.55)" : "1px solid #30363d",
-                            background: sel ? "#1b2532" : "#0d1117",
+                            border: sel ? "1px solid rgba(201, 162, 74, 0.55)" : "1px solid #1d3a2c",
+                            background: sel ? "#1b2532" : "#0a140f",
                             cursor: "pointer",
                           }}
                         >
                           <div className="flex items-start gap-2">
                             <span
                               className="mt-0.5 inline-flex rounded-md p-1"
-                              style={{ background: sel ? "#c9a24a22" : "#21262d", color: sel ? "#c9a24a" : "#8b949e" }}
+                              style={{ background: sel ? "#c9a24a22" : "#16271e", color: sel ? "#c9a24a" : "#8b949e" }}
                             >
                               <Icon size={16} aria-hidden />
                             </span>
@@ -1631,7 +1631,7 @@ export default function CiclosPage() {
                       value={fIntervalo}
                       onChange={(e) => setFIntervalo(e.target.value)}
                       className="w-full rounded-lg px-3 py-2 text-sm"
-                      style={{ background: "#161b22", border: "1px solid #30363d", color: "#e6edf3" }}
+                      style={{ background: "#0f1d16", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                       placeholder={fTipo === "continuo" ? "ex.: 15" : "ex.: 360"}
                     />
                     <p className="text-xs mt-1 m-0" style={{ color: "#484f58" }}>
@@ -1643,7 +1643,7 @@ export default function CiclosPage() {
                 {fTipo === "programado" && (
                   <div
                     className="rounded-lg p-3 space-y-3"
-                    style={{ background: "#161b22", border: "1px solid #30363d" }}
+                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-bold m-0" style={{ color: "#c9a24a" }}>
@@ -1685,7 +1685,7 @@ export default function CiclosPage() {
                                 setCronHr(Math.min(23, Math.max(0, Number.parseInt(e.target.value, 10) || 0)))
                               }
                               className="w-24 rounded-lg px-3 py-2 text-sm"
-                              style={{ background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3" }}
+                              style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                             />
                           </label>
                           <label className="m-0">
@@ -1701,7 +1701,7 @@ export default function CiclosPage() {
                                 setCronMin(Math.min(59, Math.max(0, Number.parseInt(e.target.value, 10) || 0)))
                               }
                               className="w-24 rounded-lg px-3 py-2 text-sm"
-                              style={{ background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3" }}
+                              style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                             />
                           </label>
                         </div>
@@ -1719,8 +1719,8 @@ export default function CiclosPage() {
                                   onClick={() => toggleCronDia(dow)}
                                   className="text-xs font-bold rounded-md px-2.5 py-1.5"
                                   style={{
-                                    border: on ? "1px solid #c9a24a" : "1px solid #30363d",
-                                    background: on ? "#c9a24a22" : "#0d1117",
+                                    border: on ? "1px solid #c9a24a" : "1px solid #1d3a2c",
+                                    background: on ? "#c9a24a22" : "#0a140f",
                                     color: on ? "#c9a24a" : "#8b949e",
                                     cursor: "pointer",
                                   }}
@@ -1747,7 +1747,7 @@ export default function CiclosPage() {
                           value={fCron}
                           onChange={(e) => setFCron(e.target.value)}
                           className="w-full rounded-lg px-3 py-2 text-sm font-mono"
-                          style={{ background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3" }}
+                          style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                           placeholder="ex.: 0 12 * * 1-5"
                         />
                       </label>
@@ -1756,7 +1756,7 @@ export default function CiclosPage() {
                 )}
 
                 {fTipo === "gatilho" && (
-                  <p className="text-xs m-0 rounded-lg p-3" style={{ background: "#0d1117", border: "1px solid #30363d", color: "#8b949e" }}>
+                  <p className="text-xs m-0 rounded-lg p-3" style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#8b949e" }}>
                     Este modo não agenda sozinho: use <strong style={{ color: "#c9a24a" }}>Executar</strong> no card ou ligue o ciclo a filas/webhooks na sua integração.
                   </p>
                 )}
@@ -1766,7 +1766,7 @@ export default function CiclosPage() {
                 {!mostrarBlocoFollowup ? (
                   <div
                     className="rounded-lg p-3 space-y-2"
-                    style={{ background: "#161b22", border: "1px solid #30363d" }}
+                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}
                   >
                     <p className="text-xs m-0" style={{ color: "#8b949e", lineHeight: 1.5 }}>
                       <strong style={{ color: "#c9a24a" }}>Follow-up WhatsApp</strong> — horas por passo e
@@ -1784,9 +1784,9 @@ export default function CiclosPage() {
                       }}
                       className="text-xs font-bold px-2.5 py-1.5 rounded-md"
                       style={{
-                        background: "#21262d",
+                        background: "#16271e",
                         color: "#c9a24a",
-                        border: "1px solid #30363d",
+                        border: "1px solid #1d3a2c",
                         cursor: "pointer",
                       }}
                     >
@@ -1797,12 +1797,12 @@ export default function CiclosPage() {
                 <details
                   key={`adv-followup-${drawerMode}-${selectedCicloId ?? "novo"}`}
                   className="rounded-lg"
-                  style={{ background: "#161b22", border: "1px solid #30363d" }}
+                  style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}
                   open={followupDetailsAberto}
                   onToggle={(e) => setFollowupDetailsAberto(e.currentTarget.open)}
                 >
                   <summary
-                    className="cursor-pointer list-none flex items-center gap-2 p-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#161b22] focus-visible:ring-[#c9a24a66]"
+                    className="cursor-pointer list-none flex items-center gap-2 p-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1d16] focus-visible:ring-[#c9a24a66]"
                     style={{ color: "#c9a24a" }}
                     aria-expanded={followupDetailsAberto}
                   >
@@ -1824,8 +1824,8 @@ export default function CiclosPage() {
                     <p
                       className="text-xs m-0 rounded-md px-2 py-1.5"
                       style={{
-                        background: "#21262d",
-                        border: "1px solid #30363d",
+                        background: "#16271e",
+                        border: "1px solid #1d3a2c",
                         color: "#8b949e",
                         lineHeight: 1.45,
                       }}
@@ -1850,9 +1850,9 @@ export default function CiclosPage() {
                         disabled={sugestaoIaLoading !== null || !fNome.trim() || !fAgenteSlug.trim()}
                         className="inline-flex items-center gap-1.5 text-xs font-bold rounded-md px-2 py-1"
                         style={{
-                          background: "#21262d",
+                          background: "#16271e",
                           color: "#c9a24a",
-                          border: "1px solid #30363d",
+                          border: "1px solid #1d3a2c",
                           cursor:
                             sugestaoIaLoading !== null || !fNome.trim() || !fAgenteSlug.trim()
                               ? "not-allowed"
@@ -1879,8 +1879,8 @@ export default function CiclosPage() {
                           onClick={() => setFHorasFollowup(p.v)}
                           className="text-xs px-2 py-1 rounded"
                           style={{
-                            background: "#0d1117",
-                            border: "1px solid #30363d",
+                            background: "#0a140f",
+                            border: "1px solid #1d3a2c",
                             color: "#8b949e",
                             cursor: "pointer",
                           }}
@@ -1893,7 +1893,7 @@ export default function CiclosPage() {
                       value={fHorasFollowup}
                       onChange={(e) => setFHorasFollowup(e.target.value)}
                       className="w-full rounded-lg px-3 py-2 text-sm"
-                      style={{ background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3" }}
+                      style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                       placeholder="ex.: 2, 24, 48"
                     />
                     <span className="text-xs mt-1 block" style={{ color: "#484f58" }}>
@@ -1910,8 +1910,8 @@ export default function CiclosPage() {
                           onClick={() => setFArquivarAposDias(String(d))}
                           className="text-xs px-2 py-1 rounded"
                           style={{
-                            background: "#0d1117",
-                            border: "1px solid #30363d",
+                            background: "#0a140f",
+                            border: "1px solid #1d3a2c",
                             color: "#8b949e",
                             cursor: "pointer",
                           }}
@@ -1926,11 +1926,11 @@ export default function CiclosPage() {
                       value={fArquivarAposDias}
                       onChange={(e) => setFArquivarAposDias(e.target.value)}
                       className="w-full rounded-lg px-3 py-2 text-sm"
-                      style={{ background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3" }}
+                      style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3" }}
                     />
                   </label>
 
-                  <div className="rounded-lg p-3 space-y-2" style={{ background: "#0d1117", border: "1px solid #30363d" }}>
+                  <div className="rounded-lg p-3 space-y-2" style={{ background: "#0a140f", border: "1px solid #1d3a2c" }}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-bold m-0" style={{ color: "#e6edf3" }}>Pré-visualizar merge com hub_followup_config</p>
                       {mercadosPreviewOptions.length > 1 && (
@@ -1941,8 +1941,8 @@ export default function CiclosPage() {
                             onChange={(e) => setPreviewMercado(e.target.value)}
                             className="rounded px-2 py-1 text-xs"
                             style={{
-                              background: "#161b22",
-                              border: "1px solid #30363d",
+                              background: "#0f1d16",
+                              border: "1px solid #1d3a2c",
                               color: "#e6edf3",
                             }}
                           >
@@ -1963,10 +1963,10 @@ export default function CiclosPage() {
                       </p>
                     ) : (
                       <>
-                        <div className="overflow-x-auto rounded-md" style={{ border: "1px solid #30363d" }}>
+                        <div className="overflow-x-auto rounded-md" style={{ border: "1px solid #1d3a2c" }}>
                           <table className="w-full text-xs border-collapse" style={{ color: "#e6edf3" }}>
                             <thead>
-                              <tr style={{ background: "#161b22", color: "#8b949e", textAlign: "left" }}>
+                              <tr style={{ background: "#0f1d16", color: "#8b949e", textAlign: "left" }}>
                                 <th className="px-2 py-1.5 font-semibold">Passo</th>
                                 <th className="px-2 py-1.5 font-semibold">Hub (h)</th>
                                 <th className="px-2 py-1.5 font-semibold">Após merge (h)</th>
@@ -1975,7 +1975,7 @@ export default function CiclosPage() {
                             </thead>
                             <tbody>
                               {mergePreviewLinhas.map((row) => (
-                                <tr key={row.passo} style={{ borderTop: "1px solid #30363d" }}>
+                                <tr key={row.passo} style={{ borderTop: "1px solid #1d3a2c" }}>
                                   <td className="px-2 py-1.5">{row.passo}</td>
                                   <td className="px-2 py-1.5">{row.hubHoras}</td>
                                   <td
@@ -2033,9 +2033,9 @@ export default function CiclosPage() {
                           onClick={preencherHorasDoHubNoForm}
                           className="text-xs px-2 py-1.5 rounded"
                           style={{
-                            background: "#21262d",
+                            background: "#16271e",
                             color: "#c9a24a",
-                            border: "1px solid #30363d",
+                            border: "1px solid #1d3a2c",
                             cursor: "pointer",
                           }}
                         >

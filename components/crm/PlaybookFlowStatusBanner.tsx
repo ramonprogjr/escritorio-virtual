@@ -92,7 +92,7 @@ function Banner({
     success: { bg: "#2386361a", border: "#23863655", fg: "#7ee787", title: "#aff5b4" },
     warning: { bg: "#c9a24a14", border: "#c9a24a44", fg: "#d6b976", title: "#e3c77a" },
     danger: { bg: "#f8514914", border: "#f8514944", fg: "#ffaba8", title: "#ffb4b0" },
-    neutral: { bg: "#21262d", border: "#30363d", fg: "#8b949e", title: "#c9d1d9" },
+    neutral: { bg: "#16271e", border: "#1d3a2c", fg: "#8b949e", title: "#c9d1d9" },
   }[tone];
 
   return (

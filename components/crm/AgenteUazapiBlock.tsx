@@ -131,8 +131,8 @@ function AgenteUazapiSideoverShell({
                 width: 36,
                 height: 36,
                 borderRadius: 8,
-                border: "1px solid #30363d",
-                background: "#21262d",
+                border: "1px solid #1d3a2c",
+                background: "#16271e",
                 color: "#8b949e",
                 cursor: "pointer",
                 display: "flex",
@@ -166,7 +166,7 @@ function badgeCor(status?: string | null): { bg: string; fg: string; bar: string
   const s = (status || "").toLowerCase();
   if (s === "connected") return { bg: "#23863633", fg: "#3fb950", bar: "#3fb950" };
   if (s === "connecting") return { bg: "#bb800926", fg: "#e6c06a", bar: "#e6c06a" };
-  return { bg: "#30363d", fg: "#8b949e", bar: "#484f58" };
+  return { bg: "#1d3a2c", fg: "#8b949e", bar: "#484f58" };
 }
 
 type ErroCtx = { titulo: string; detalhes: string[] };
@@ -632,8 +632,8 @@ export function AgenteUazapiBlock({
     width: "100%",
     padding: "10px 12px",
     borderRadius: 9,
-    border: "1px solid #30363d",
-    background: "#0d1117",
+    border: "1px solid #1d3a2c",
+    background: "#0a140f",
     color: "#e6edf3",
     fontSize: 13,
     boxSizing: "border-box",
@@ -657,7 +657,7 @@ export function AgenteUazapiBlock({
       return {
         ...base,
         border: "1px solid #58a6ff",
-        background: disabled ? "#161b22" : "#1f6feb22",
+        background: disabled ? "#0f1d16" : "#1f6feb22",
         color: disabled ? "#484f58" : "#58a6ff",
       };
     }
@@ -665,14 +665,14 @@ export function AgenteUazapiBlock({
       return {
         ...base,
         border: "1px solid #f8514966",
-        background: disabled ? "#161b22" : "#f8514910",
+        background: disabled ? "#0f1d16" : "#f8514910",
         color: disabled ? "#484f58" : "#f85149",
       };
     }
     return {
       ...base,
-      border: "1px solid #30363d",
-      background: disabled ? "#161b22" : "#21262d",
+      border: "1px solid #1d3a2c",
+      background: disabled ? "#0f1d16" : "#16271e",
       color: disabled ? "#484f58" : "#e6edf3",
     };
   };
@@ -680,9 +680,9 @@ export function AgenteUazapiBlock({
   const btnGroupShell: CSSProperties = {
     display: "grid",
     borderRadius: 10,
-    border: "1px solid #30363d",
+    border: "1px solid #1d3a2c",
     overflow: "hidden",
-    background: "#161b22",
+    background: "#0f1d16",
   };
 
   const btnInGroup = (
@@ -697,7 +697,7 @@ export function AgenteUazapiBlock({
       minHeight: 42,
       borderRadius: 0,
       border: "none",
-      borderRight: withRightDivider ? "1px solid #30363d" : undefined,
+      borderRight: withRightDivider ? "1px solid #1d3a2c" : undefined,
       boxShadow: "none",
     };
   };
@@ -874,8 +874,8 @@ export function AgenteUazapiBlock({
         style={{
           marginBottom: 18,
           borderRadius: 14,
-          border: "1px solid #30363d",
-          background: "linear-gradient(180deg, #151a22 0%, #0d1117 48px, #0d1117 100%)",
+          border: "1px solid #1d3a2c",
+          background: "linear-gradient(180deg, #151a22 0%, #0a140f 48px, #0a140f 100%)",
           boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
           overflow: "hidden",
         }}
@@ -952,7 +952,7 @@ export function AgenteUazapiBlock({
                 padding: "9px 14px",
                 borderRadius: 8,
                 border: "1px solid #58a6ff",
-                background: bloqueado ? "#161b22" : "#1f6feb22",
+                background: bloqueado ? "#0f1d16" : "#1f6feb22",
                 color: bloqueado ? "#484f58" : "#58a6ff",
                 fontSize: 12,
                 fontWeight: 700,
@@ -990,8 +990,8 @@ export function AgenteUazapiBlock({
               style={{
                 padding: "8px 10px",
                 borderRadius: 8,
-                border: `1px solid ${!temInstancia ? "#c9a24a66" : "#30363d"}`,
-                background: !temInstancia ? "#c9a24a14" : "#0d1117",
+                border: `1px solid ${!temInstancia ? "#c9a24a66" : "#1d3a2c"}`,
+                background: !temInstancia ? "#c9a24a14" : "#0a140f",
                 textAlign: "center",
               }}
             >
@@ -1003,8 +1003,8 @@ export function AgenteUazapiBlock({
               style={{
                 padding: "8px 10px",
                 borderRadius: 8,
-                border: `1px solid ${temInstancia ? "#c9a24a66" : "#30363d"}`,
-                background: temInstancia ? "#c9a24a14" : "#0d1117",
+                border: `1px solid ${temInstancia ? "#c9a24a66" : "#1d3a2c"}`,
+                background: temInstancia ? "#c9a24a14" : "#0a140f",
                 textAlign: "center",
                 opacity: temInstancia ? 1 : 0.45,
               }}
@@ -1020,8 +1020,8 @@ export function AgenteUazapiBlock({
               position: "relative",
               padding: "14px 16px",
               borderRadius: 12,
-              background: "#161b22",
-              border: "1px solid #30363d",
+              background: "#0f1d16",
+              border: "1px solid #1d3a2c",
             }}
           >
             <div
@@ -1071,8 +1071,8 @@ export function AgenteUazapiBlock({
             style={{
               padding: "14px 16px",
               borderRadius: 12,
-              border: "1px solid #30363d",
-              background: "#161b22",
+              border: "1px solid #1d3a2c",
+              background: "#0f1d16",
             }}
           >
             <p style={{ margin: "0 0 12px", color: "#c9a24a", fontSize: 11, fontWeight: 800, letterSpacing: 0.06 }}>
@@ -1181,7 +1181,7 @@ export function AgenteUazapiBlock({
                 padding: "14px 16px",
                 borderRadius: 12,
                 border: "1px dashed #484f58",
-                background: "#0d1117",
+                background: "#0a140f",
               }}
             >
               <p style={{ margin: 0, color: "#8b949e", fontSize: 12, lineHeight: 1.5 }}>
@@ -1211,8 +1211,8 @@ export function AgenteUazapiBlock({
             style={{
               padding: "14px 16px",
               borderRadius: 12,
-              background: "#161b22",
-              border: "1px solid #30363d",
+              background: "#0f1d16",
+              border: "1px solid #1d3a2c",
             }}
           >
             <p style={{ margin: "0 0 10px", color: "#c9a24a", fontSize: 11, fontWeight: 800, letterSpacing: 0.06 }}>
@@ -1281,8 +1281,8 @@ export function AgenteUazapiBlock({
               style={{
                 padding: 16,
                 borderRadius: 12,
-                border: "1px solid #30363d",
-                background: "#161b22",
+                border: "1px solid #1d3a2c",
+                background: "#0f1d16",
                 textAlign: "center",
               }}
             >
@@ -1318,7 +1318,7 @@ export function AgenteUazapiBlock({
                   width: 260,
                   height: "auto",
                   borderRadius: 10,
-                  border: "1px solid #30363d",
+                  border: "1px solid #1d3a2c",
                   margin: "0 auto",
                   display: "block",
                 }}
@@ -1405,8 +1405,8 @@ export function AgenteUazapiBlock({
             style={{
               padding: "10px 14px",
               borderRadius: 10,
-              border: "1px solid #30363d",
-              background: "#0d1117",
+              border: "1px solid #1d3a2c",
+              background: "#0a140f",
             }}
           >
             <summary

@@ -67,7 +67,7 @@ export function LeadPropostasPanel({ leadId }: { leadId: string }) {
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           className="rounded border px-2 py-1.5 text-xs"
-          style={{ borderColor: "#30363d", background: "#0d1117", color: "#e6edf3" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f", color: "#e6edf3" }}
         />
         <input
           placeholder="Valor R$"
@@ -75,7 +75,7 @@ export function LeadPropostasPanel({ leadId }: { leadId: string }) {
           onChange={(e) => setValor(e.target.value)}
           type="number"
           className="rounded border px-2 py-1.5 text-xs"
-          style={{ borderColor: "#30363d", background: "#0d1117", color: "#e6edf3" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f", color: "#e6edf3" }}
         />
         <button
           type="button"

@@ -24,7 +24,7 @@ const TIPOS: { value: string; label: string }[] = [
 ];
 const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? t;
 const inputStyle: React.CSSProperties = {
-  padding: 9, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13,
+  padding: 9, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13,
 };
 
 export default function CanaisEntradaPage() {
@@ -116,13 +116,13 @@ export default function CanaisEntradaPage() {
       {carregando ? (
         <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando…</p>
       ) : lista.length === 0 ? (
-        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #30363d", borderRadius: 12 }}>
+        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #1d3a2c", borderRadius: 12 }}>
           Nenhum canal registrado. Adicione o 1º acima.
         </div>
       ) : (
-        <div style={{ border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: "1px solid #1d3a2c", borderRadius: 12, overflow: "hidden" }}>
           {lista.map((c, i) => (
-            <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none", opacity: c.ativo ? 1 : 0.5 }}>
+            <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #16271e" : "none", opacity: c.ativo ? 1 : 0.5 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#c9a24a", border: "1px solid #c9a24a35", background: "#c9a24a18", borderRadius: 999, padding: "2px 8px" }}>{tipoLabel(c.tipo)}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{c.nome}</p>
@@ -131,7 +131,7 @@ export default function CanaisEntradaPage() {
                 </p>
               </div>
               <button type="button" onClick={() => void toggle(c)}
-                style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #30363d", background: "transparent", color: c.ativo ? "#34d399" : "#8b949e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #1d3a2c", background: "transparent", color: c.ativo ? "#34d399" : "#8b949e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 {c.ativo ? "ativo" : "inativo"}
               </button>
               <button type="button" onClick={() => void excluir(c.id)} title="Excluir"

@@ -204,8 +204,8 @@ export function PipelineConfigSideover({
                         }}
                         className="rounded-lg border px-3 py-2 text-xs font-bold"
                         style={{
-                          borderColor: ativo ? "#c9a24a" : "#30363d",
-                          background: ativo ? "rgba(201,162,74,0.12)" : "#0d1117",
+                          borderColor: ativo ? "#c9a24a" : "#1d3a2c",
+                          background: ativo ? "rgba(201,162,74,0.12)" : "#0a140f",
                           color: ativo ? "#e6edf3" : "#8b949e",
                         }}
                       >
@@ -231,9 +231,9 @@ export function PipelineConfigSideover({
                     value={novoPipelineNome}
                     onChange={(e) => setNovoPipelineNome(e.target.value)}
                     placeholder="Nome do pipeline"
-                    className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#e6edf3]"
+                    className="rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2 text-sm text-[#e6edf3]"
                   />
-                  <div className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#8b949e]">
+                  <div className="rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2 text-sm text-[#8b949e]">
                     Sem vínculo de mercado
                   </div>
                   <button
@@ -271,8 +271,8 @@ export function PipelineConfigSideover({
                       key={est.slug}
                       className="flex items-center gap-3 rounded-xl border px-3.5 py-3"
                       style={{
-                        borderColor: est.ativo ? `${est.cor}55` : "#30363d",
-                        background: est.ativo ? `${est.cor}0c` : "#161b22",
+                        borderColor: est.ativo ? `${est.cor}55` : "#1d3a2c",
+                        background: est.ativo ? `${est.cor}0c` : "#0f1d16",
                       }}
                     >
                       <span
@@ -300,14 +300,14 @@ export function PipelineConfigSideover({
                   ))}
                 </ul>
 
-                <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-3">
+                <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3">
                   <p className="mb-2 text-xs font-bold text-[#e6edf3]">Novo estágio</p>
                   <div className="flex flex-col gap-2">
                     <input
                       value={novoLabel}
                       onChange={(e) => setNovoLabel(e.target.value)}
                       placeholder="Nome do estágio"
-                      className="rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#e6edf3]"
+                      className="rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2 text-sm text-[#e6edf3]"
                     />
                     <button
                       type="button"

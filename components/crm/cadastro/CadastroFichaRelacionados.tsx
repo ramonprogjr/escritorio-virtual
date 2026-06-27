@@ -24,7 +24,7 @@ export function CadastroFichaRelacionados({ leads = [], negocios = [], variant =
             <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhum lead vinculado.</li>
           ) : (
             leads.map((l) => (
-              <li key={l.id} style={{ padding: "8px 0", borderBottom: "1px solid #30363d" }}>
+              <li key={l.id} style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
                 <Link
                   href={`/crm/leads/${l.id}`}
                   style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
@@ -47,7 +47,7 @@ export function CadastroFichaRelacionados({ leads = [], negocios = [], variant =
             <li style={{ color: "#8b949e", fontSize: 13 }}>Nenhum negócio vinculado.</li>
           ) : (
             negocios.map((n) => (
-              <li key={n.id} style={{ padding: "8px 0", borderBottom: "1px solid #30363d" }}>
+              <li key={n.id} style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
                 <Link
                   href={`/crm/negocios?destaque=${n.id}`}
                   style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}

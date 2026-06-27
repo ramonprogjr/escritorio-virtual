@@ -113,7 +113,7 @@ export default function Relatorios() {
     RELATORIO_ENTIDADES_UI.find((e) => e.id === entidadeAtiva)?.label ?? entidadeAtiva;
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0d1117]">
+    <div className="flex min-h-full flex-col bg-[#0a140f]">
       <CrmStickyPageHeader
         title="Relatórios"
         description="Consulta operacional na tela — dados reais do Supabase"
@@ -127,7 +127,7 @@ export default function Relatorios() {
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {linhasResumo.map((item) => (
-                <div key={item.titulo} className="rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+                <div key={item.titulo} className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
                   <p className="text-sm font-bold text-[#e6edf3]">{item.titulo}</p>
                   <p className="mt-3 text-2xl font-black text-[#f97316]">{item.valor}</p>
                   <p className="mt-2 text-xs leading-5 text-[#8b949e]">{item.detalhe}</p>
@@ -138,7 +138,7 @@ export default function Relatorios() {
           <p className="mt-2 text-[10px] text-[#6e7681]">Fonte: `/api/crm/metricas`</p>
         </div>
 
-        <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+        <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold text-[#e6edf3]">Detalhamento — {entidadeLabel}</p>
@@ -150,7 +150,7 @@ export default function Relatorios() {
               type="button"
               onClick={() => void carregarTabela()}
               disabled={tabelaLoading}
-              className="flex items-center gap-1.5 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:bg-[#30363d] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:bg-[#1d3a2c] disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${tabelaLoading ? "animate-spin" : ""}`} />
               Atualizar
@@ -165,9 +165,9 @@ export default function Relatorios() {
                 onClick={() => setEntidadeAtiva(e.id)}
                 className="rounded-lg px-3 py-2 text-xs font-bold transition-colors"
                 style={{
-                  background: entidadeAtiva === e.id ? "#30363d" : "#21262d",
+                  background: entidadeAtiva === e.id ? "#1d3a2c" : "#16271e",
                   color: entidadeAtiva === e.id ? "#e6edf3" : "#8b949e",
-                  border: `1px solid ${entidadeAtiva === e.id ? "#c9a24a66" : "#30363d"}`,
+                  border: `1px solid ${entidadeAtiva === e.id ? "#c9a24a66" : "#1d3a2c"}`,
                 }}
               >
                 {e.label}
@@ -199,10 +199,10 @@ export default function Relatorios() {
           ) : dataset && dataset.rows.length === 0 && !dataset.aviso ? (
             <p className="py-12 text-center text-sm text-[#8b949e]">Nenhum registo encontrado.</p>
           ) : dataset && (dataset.rows.length > 0 || dataset.aviso) ? (
-            <div className="max-h-[min(70vh,640px)] overflow-auto rounded-lg border border-[#30363d]">
+            <div className="max-h-[min(70vh,640px)] overflow-auto rounded-lg border border-[#1d3a2c]">
               <table className="w-full min-w-[640px] text-left text-xs">
-                <thead className="sticky top-0 z-10 bg-[#21262d]">
-                  <tr className="border-b border-[#30363d] text-[#8b949e]">
+                <thead className="sticky top-0 z-10 bg-[#16271e]">
+                  <tr className="border-b border-[#1d3a2c] text-[#8b949e]">
                     {dataset.headers.map((h) => (
                       <th key={h} className="whitespace-nowrap px-3 py-2.5 font-bold">
                         {RELATORIO_HEADER_LABELS[h] ?? h}
@@ -212,7 +212,7 @@ export default function Relatorios() {
                 </thead>
                 <tbody>
                   {dataset.rows.map((row, ri) => (
-                    <tr key={ri} className="border-b border-[#21262d] text-[#e6edf3] hover:bg-[#21262d]/60">
+                    <tr key={ri} className="border-b border-[#16271e] text-[#e6edf3] hover:bg-[#16271e]/60">
                       {dataset.headers.map((h) => (
                         <td key={h} className="max-w-[220px] truncate whitespace-nowrap px-3 py-2" title={String(row[h] ?? "")}>
                           {formatarCelulaRelatorio(h, row[h])}

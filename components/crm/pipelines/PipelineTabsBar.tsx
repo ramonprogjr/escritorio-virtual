@@ -69,12 +69,12 @@ export function PipelineTabsBar({ pipelines, activePipelineId, onSelect }: Props
   if (tabs.length === 0) return null;
 
   return (
-    <div className="relative border-b border-[#30363d] bg-[#111827] px-3 py-2 sm:px-4">
+    <div className="relative border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-2 sm:px-4">
       {canScrollLeft ? (
         <button
           type="button"
           onClick={() => scroll("left")}
-          className="absolute left-3 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[#30363d] bg-[#0d1117]/95 text-[#8b949e] shadow-lg backdrop-blur sm:inline-flex"
+          className="absolute left-3 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[#1d3a2c] bg-[#0a140f]/95 text-[#8b949e] shadow-lg backdrop-blur sm:inline-flex"
           aria-label="Rolar pipelines para a esquerda"
         >
           <ChevronLeft size={16} />
@@ -84,7 +84,7 @@ export function PipelineTabsBar({ pipelines, activePipelineId, onSelect }: Props
         <button
           type="button"
           onClick={() => scroll("right")}
-          className="absolute right-3 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[#30363d] bg-[#0d1117]/95 text-[#8b949e] shadow-lg backdrop-blur sm:inline-flex"
+          className="absolute right-3 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[#1d3a2c] bg-[#0a140f]/95 text-[#8b949e] shadow-lg backdrop-blur sm:inline-flex"
           aria-label="Rolar pipelines para a direita"
         >
           <ChevronRight size={16} />
@@ -105,8 +105,8 @@ export function PipelineTabsBar({ pipelines, activePipelineId, onSelect }: Props
               onClick={() => onSelect(pipe.id)}
               className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors"
               style={{
-                borderColor: active ? "#c9a24a" : "#30363d",
-                background: active ? "rgba(201,162,74,0.12)" : "#161b22",
+                borderColor: active ? "#c9a24a" : "#1d3a2c",
+                background: active ? "rgba(201,162,74,0.12)" : "#0f1d16",
                 color: active ? "#e6edf3" : "#8b949e",
               }}
               title={pipe.nome}

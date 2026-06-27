@@ -25,8 +25,8 @@ const TH: React.CSSProperties = {
   fontWeight: 600,
   textTransform: "uppercase",
   whiteSpace: "nowrap",
-  borderBottom: "1px solid #30363d",
-  background: "#161b22",
+  borderBottom: "1px solid #1d3a2c",
+  background: "#0f1d16",
   position: "sticky",
   top: 0,
   zIndex: 2,
@@ -56,9 +56,9 @@ export function CadastroScrollTable<T>({ columns, rows, rowKey, actions, emptyMe
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
-        border: "1px solid #30363d",
+        border: "1px solid #1d3a2c",
         borderRadius: 12,
-        background: "#0d1117",
+        background: "#0a140f",
         overflow: "hidden",
       }}
     >
@@ -87,7 +87,7 @@ export function CadastroScrollTable<T>({ columns, rows, rowKey, actions, emptyMe
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={rowKey(row)} style={{ borderTop: "1px solid #21262d" }}>
+              <tr key={rowKey(row)} style={{ borderTop: "1px solid #16271e" }}>
                 {columns.map((c) => (
                   <td key={c.id} style={TD}>
                     {c.render(row)}

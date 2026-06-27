@@ -50,10 +50,10 @@ function KpiCardView({ kpi }: { kpi: KpiCard }) {
       ? "border-[#f8514966]"
       : kpi.nivel_alerta === "atencao"
         ? "border-[#d2992266]"
-        : "border-[#30363d]";
+        : "border-[#1d3a2c]";
 
   return (
-    <div className={`rounded-xl border bg-[#161b22] p-4 ${border}`}>
+    <div className={`rounded-xl border bg-[#0f1d16] p-4 ${border}`}>
       <div className="mb-2 flex items-start justify-between gap-2">
         <p className="min-w-0 text-sm font-bold text-[#e6edf3]" title={kpi.slug}>
           {kpi.nome}
@@ -76,7 +76,7 @@ function KpiCardView({ kpi }: { kpi: KpiCard }) {
       </div>
       {kpi.progresso_pct != null && (
         <div className="mt-3">
-          <div className="h-1.5 overflow-hidden rounded-full bg-[#21262d]">
+          <div className="h-1.5 overflow-hidden rounded-full bg-[#16271e]">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
@@ -121,8 +121,8 @@ function MetricMini({
     return (
       <Link
         href={href}
-        className="block rounded-xl border border-[#30363d] bg-[#161b22] p-3 transition-transform hover:scale-[1.02]"
-        style={{ borderLeft: `3px solid ${cor ?? "#30363d"}` }}
+        className="block rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3 transition-transform hover:scale-[1.02]"
+        style={{ borderLeft: `3px solid ${cor ?? "#1d3a2c"}` }}
       >
         {inner}
       </Link>
@@ -130,8 +130,8 @@ function MetricMini({
   }
   return (
     <div
-      className="rounded-xl border border-[#30363d] bg-[#161b22] p-3"
-      style={{ borderLeft: `3px solid ${cor ?? "#30363d"}` }}
+      className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3"
+      style={{ borderLeft: `3px solid ${cor ?? "#1d3a2c"}` }}
     >
       {inner}
     </div>
@@ -274,7 +274,7 @@ export function CrmAnalyticsDashboard() {
       subtitle: `KPIs e tendências — ${periodoLabel(periodo)}`,
       actions: (
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg p-0.5" style={{ background: "#21262d" }}>
+          <div className="flex rounded-lg p-0.5" style={{ background: "#16271e" }}>
             {ANALYTICS_PERIODOS.map((p) => (
               <button
                 key={p.value}
@@ -282,7 +282,7 @@ export function CrmAnalyticsDashboard() {
                 onClick={() => setPeriodo(p.value)}
                 className="rounded-md px-3 py-1.5 text-xs font-bold transition-colors"
                 style={{
-                  background: periodo === p.value ? "#30363d" : "transparent",
+                  background: periodo === p.value ? "#1d3a2c" : "transparent",
                   color: periodo === p.value ? "#e6edf3" : "#8b949e",
                 }}
               >
@@ -294,7 +294,7 @@ export function CrmAnalyticsDashboard() {
             type="button"
             onClick={() => void atualizarKpis()}
             disabled={atualizandoKpis || carregando}
-            className="flex items-center gap-1.5 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-1.5 text-xs font-bold text-[#e6edf3] hover:bg-[#30363d] disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-1.5 text-xs font-bold text-[#e6edf3] hover:bg-[#1d3a2c] disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${atualizandoKpis ? "animate-spin" : ""}`} />
             Atualizar KPIs
@@ -311,7 +311,7 @@ export function CrmAnalyticsDashboard() {
       : null;
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0d1117]">
+    <div className="flex min-h-full flex-col bg-[#0a140f]">
       <div className="min-h-0 flex-1 px-3 py-4 sm:px-6 sm:py-6">
         {carregando && !data && (
           <div className="mt-12 text-center text-[#8b949e]">Carregando métricas...</div>
@@ -340,7 +340,7 @@ export function CrmAnalyticsDashboard() {
         )}
 
         {!carregando && !data && !erro && (
-          <div className="mt-12 rounded-xl border border-[#30363d] bg-[#161b22] p-8 text-center">
+          <div className="mt-12 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-8 text-center">
             <p className="font-bold text-[#e6edf3]">Nenhum dado de analytics</p>
             <p className="mt-2 text-sm text-[#8b949e]">
               Reinicie o servidor de desenvolvimento (porta 3001) para carregar o código atualizado.
@@ -348,7 +348,7 @@ export function CrmAnalyticsDashboard() {
             <button
               type="button"
               onClick={() => void carregar()}
-              className="mt-4 rounded-lg bg-[#c9a24a] px-4 py-2 text-xs font-bold text-[#0d1117]"
+              className="mt-4 rounded-lg bg-[#c9a24a] px-4 py-2 text-xs font-bold text-[#0a140f]"
             >
               Tentar novamente
             </button>
@@ -359,7 +359,7 @@ export function CrmAnalyticsDashboard() {
           <div className="space-y-8">
             <SectionTitle>Comercial</SectionTitle>
             {data.kpis.length === 0 ? (
-              <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-8 text-center">
+              <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-8 text-center">
                 <p className="font-bold text-[#e6edf3]">Sem histórico de KPIs neste período</p>
                 <p className="mt-1 text-sm text-[#8b949e]">
                   Use &quot;Atualizar KPIs&quot; para gravar métricas do funil em hub_kpis_resultados.
@@ -367,7 +367,7 @@ export function CrmAnalyticsDashboard() {
                 <button
                   type="button"
                   onClick={() => void atualizarKpis()}
-                  className="mt-4 rounded-lg bg-[#c9a24a] px-4 py-2 text-xs font-bold text-[#0d1117]"
+                  className="mt-4 rounded-lg bg-[#c9a24a] px-4 py-2 text-xs font-bold text-[#0a140f]"
                 >
                   Calcular agora
                 </button>
@@ -381,7 +381,7 @@ export function CrmAnalyticsDashboard() {
             )}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-4 lg:col-span-1">
+              <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4 lg:col-span-1">
                 <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Funil de leads</p>
                 <p className="mb-3 text-[10px] leading-snug text-[#6e7681]">
                   Distribuição actual por estágio (snapshot operacional, não taxa de conversão entre etapas).
@@ -390,7 +390,7 @@ export function CrmAnalyticsDashboard() {
                   items={data.funilLeads.map((f) => ({ label: f.label, count: f.count, color: f.color }))}
                 />
               </div>
-              <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-4 lg:col-span-1">
+              <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4 lg:col-span-1">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#8b949e]">
                   Funil de negócios
                   {mercadoSelecionado ? ` — ${mercadoSelecionado}` : ""}
@@ -405,7 +405,7 @@ export function CrmAnalyticsDashboard() {
                   </div>
                 )}
                 {mercadoSelecionado == null ? (
-                  <p className="rounded-lg border border-dashed border-[#30363d] bg-[#0d1117] px-3 py-6 text-center text-xs text-[#8b949e]">
+                  <p className="rounded-lg border border-dashed border-[#1d3a2c] bg-[#0a140f] px-3 py-6 text-center text-xs text-[#8b949e]">
                     Selecione um mercado para ver o funil de negócios conforme o pipeline PDF.
                   </p>
                 ) : carregandoFunilNeg ? (
@@ -473,7 +473,7 @@ export function CrmAnalyticsDashboard() {
                 <MetricMini label="Campanhas" value={data.marketing.campanhas} cor="#22c55e" href="/crm/trafego" />
               </div>
             ) : (
-              <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-4 text-sm text-[#8b949e]">
+              <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4 text-sm text-[#8b949e]">
                 Windsor.ai não configurado ou sem dados.{" "}
                 <Link href="/crm/trafego" className="font-bold text-[#c9a24a] hover:underline">
                   Ver campanhas
@@ -504,11 +504,11 @@ export function CrmAnalyticsDashboard() {
             </div>
 
             {data.ia.observacoesMl.length > 0 && (
-              <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+              <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
                 <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Observações ML</p>
                 <ul className="space-y-2">
                   {data.ia.observacoesMl.map((o, i) => (
-                    <li key={i} className="border-b border-[#21262d] pb-2 text-sm last:border-0">
+                    <li key={i} className="border-b border-[#16271e] pb-2 text-sm last:border-0">
                       <span className="text-[10px] font-bold uppercase text-[#c9a24a]">{o.tipo}</span>
                       <p className="text-[#e6edf3]">{o.descricao}</p>
                       {o.amostras > 0 && (
@@ -527,7 +527,7 @@ export function CrmAnalyticsDashboard() {
                   {data.alertas.map((a) => (
                     <div
                       key={a.id}
-                      className="flex items-center justify-between rounded-lg border border-[#30363d] bg-[#161b22] px-3 py-2"
+                      className="flex items-center justify-between rounded-lg border border-[#1d3a2c] bg-[#0f1d16] px-3 py-2"
                     >
                       <span className="text-sm text-[#e6edf3]">{a.titulo}</span>
                       <span className="text-[10px] font-bold uppercase text-[#8b949e]">{a.nivel}</span>
@@ -540,10 +540,10 @@ export function CrmAnalyticsDashboard() {
             {data.ultimosResultados.length > 0 && (
               <>
                 <SectionTitle>Histórico de medições</SectionTitle>
-                <div className="overflow-hidden rounded-xl border border-[#30363d]">
+                <div className="overflow-hidden rounded-xl border border-[#1d3a2c]">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-[#161b22] text-left text-[10px] uppercase text-[#8b949e]">
+                      <tr className="bg-[#0f1d16] text-left text-[10px] uppercase text-[#8b949e]">
                         <th className="px-3 py-2">KPI</th>
                         <th className="px-3 py-2">Valor</th>
                         <th className="px-3 py-2">Alerta</th>
@@ -552,7 +552,7 @@ export function CrmAnalyticsDashboard() {
                     </thead>
                     <tbody>
                       {data.ultimosResultados.map((r, i) => (
-                        <tr key={i} className="border-t border-[#21262d] text-[#e6edf3]">
+                        <tr key={i} className="border-t border-[#16271e] text-[#e6edf3]">
                           <td className="px-3 py-2 font-mono text-xs">{r.kpi_slug}</td>
                           <td className="px-3 py-2">{r.valor_medido}</td>
                           <td className="px-3 py-2">{r.nivel_alerta}</td>

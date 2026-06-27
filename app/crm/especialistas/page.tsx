@@ -20,8 +20,8 @@ type Especialista = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: 10, borderRadius: 8, border: "1px solid #30363d",
-  background: "#0d1117", color: "#e6edf3", fontSize: 13,
+  width: "100%", padding: 10, borderRadius: 8, border: "1px solid #1d3a2c",
+  background: "#0a140f", color: "#e6edf3", fontSize: 13,
 };
 
 export default function EspecialistasPage() {
@@ -149,7 +149,7 @@ export default function EspecialistasPage() {
           type="button"
           onClick={() => void copiarLinkConvite()}
           title="Copiar um link para o especialista se cadastrar sozinho (sem login). Fica rastreado como seu convite."
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: linkCopiado ? "#34d399" : "#8b949e", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: linkCopiado ? "#34d399" : "#8b949e", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
         >
           {linkCopiado ? <><Check size={14} strokeWidth={2.5} /> Link copiado!</> : <><Link2 size={14} strokeWidth={2.5} /> Convidar (link)</>}
         </button>
@@ -193,8 +193,8 @@ export default function EspecialistasPage() {
                       onClick={() => toggleEspecialidade(esp)}
                       style={{
                         padding: "7px 12px", borderRadius: 999,
-                        border: `1px solid ${ativo ? "#c9a24a" : "#30363d"}`,
-                        background: ativo ? "rgba(201,162,74,0.15)" : "#0d1117",
+                        border: `1px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                        background: ativo ? "rgba(201,162,74,0.15)" : "#0a140f",
                         color: ativo ? "#e0b86a" : "#8b949e",
                         fontSize: 12, fontWeight: ativo ? 700 : 500, cursor: "pointer",
                       }}
@@ -223,8 +223,8 @@ export default function EspecialistasPage() {
                       onClick={() => setForm((f) => ({ ...f, tem_equipe: opt.val }))}
                       style={{
                         flex: 1, padding: "9px 12px", borderRadius: 8,
-                        border: `1px solid ${ativo ? "#c9a24a" : "#30363d"}`,
-                        background: ativo ? "rgba(201,162,74,0.15)" : "#0d1117",
+                        border: `1px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                        background: ativo ? "rgba(201,162,74,0.15)" : "#0a140f",
                         color: ativo ? "#e0b86a" : "#8b949e",
                         fontSize: 12, fontWeight: 700, cursor: "pointer",
                       }}
@@ -246,7 +246,7 @@ export default function EspecialistasPage() {
               style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvando ? "default" : "pointer", opacity: salvando ? 0.6 : 1 }}>
               {salvando ? "Salvando…" : editId ? "Salvar alterações" : "Salvar especialista"}
             </button>
-            <button type="button" onClick={fecharForm} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
+            <button type="button" onClick={fecharForm} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
           </div>
         </div>
       )}
@@ -254,17 +254,17 @@ export default function EspecialistasPage() {
       {carregando ? (
         <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando…</p>
       ) : lista.length === 0 ? (
-        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #30363d", borderRadius: 12 }}>
+        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #1d3a2c", borderRadius: 12 }}>
           Nenhum especialista cadastrado ainda. Clique em <strong style={{ color: "#c9a24a" }}>Novo especialista</strong>.
         </div>
       ) : (
-        <div style={{ border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: "1px solid #1d3a2c", borderRadius: 12, overflow: "hidden" }}>
           {lista.map((e, i) => (
             <div
               key={e.id}
               onClick={() => void editar(e.id)}
               title="Editar especialista"
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none", cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #16271e" : "none", cursor: "pointer" }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>

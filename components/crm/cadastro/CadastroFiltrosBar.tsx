@@ -3,10 +3,10 @@
 import type { ReactNode } from "react";
 
 const selectCls =
-  "min-h-10 min-w-0 flex-1 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none focus:border-[#c9a24a] sm:flex-none sm:min-w-[9rem]";
+  "min-h-10 min-w-0 flex-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none focus:border-[#c9a24a] sm:flex-none sm:min-w-[9rem]";
 
 const inputCls =
-  "min-h-10 w-full min-w-0 flex-1 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] sm:min-w-[12rem]";
+  "min-h-10 w-full min-w-0 flex-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] sm:min-w-[12rem]";
 
 type SelectOpt = { value: string; label: string };
 
@@ -62,7 +62,7 @@ export function CadastroFiltrosBar({
         <button
           type="button"
           onClick={onLimpar}
-          className="min-h-10 shrink-0 rounded-lg border border-[#30363d] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#484f58] hover:text-white"
+          className="min-h-10 shrink-0 rounded-lg border border-[#1d3a2c] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#484f58] hover:text-white"
         >
           Limpar filtros
         </button>

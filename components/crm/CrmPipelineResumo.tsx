@@ -131,7 +131,7 @@ export function CrmPipelineResumo() {
 
   return (
     <section
-      className="rounded-2xl border border-[#2b3544] bg-gradient-to-b from-[#161b22] to-[#121926] shadow-[0_12px_36px_rgba(0,0,0,0.28)]"
+      className="rounded-2xl border border-[#2b3544] bg-gradient-to-b from-[#0f1d16] to-[#121926] shadow-[0_12px_36px_rgba(0,0,0,0.28)]"
       aria-label="Funil comercial"
     >
       {/* Cabeçalho */}
@@ -146,12 +146,12 @@ export function CrmPipelineResumo() {
           <button
             type="button"
             onClick={() => void carregar()}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#30363d] text-[#8b949e] transition-colors hover:border-[#c9a24a40] hover:text-[#c9a24a]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#1d3a2c] text-[#8b949e] transition-colors hover:border-[#c9a24a40] hover:text-[#c9a24a]"
             title="Atualizar"
           >
             <RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} />
           </button>
-          <div className="inline-flex rounded-lg bg-[#0d1117] p-0.5">
+          <div className="inline-flex rounded-lg bg-[#0a140f] p-0.5">
             <button
               type="button"
               onClick={() => setTab("leads")}
@@ -214,12 +214,12 @@ export function CrmPipelineResumo() {
         {carregando ? (
           <div className="flex justify-center py-12">
             <div
-              className="h-8 w-8 animate-spin rounded-full border-2 border-[#30363d] border-t-[#c9a24a]"
+              className="h-8 w-8 animate-spin rounded-full border-2 border-[#1d3a2c] border-t-[#c9a24a]"
               aria-label="Carregando funil"
             />
           </div>
         ) : tab === "leads" && leadsRows.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[#30363d] bg-[#0d1117] px-6 py-10 text-center">
+          <div className="rounded-xl border border-dashed border-[#1d3a2c] bg-[#0a140f] px-6 py-10 text-center">
             <p className="mb-1 text-sm font-bold text-[#e6edf3]">Nenhum lead no funil ainda</p>
             <p className="mb-4 text-xs text-[#8b949e]">
               Quando chegarem leads (WhatsApp ou cadastro manual), as etapas aparecem aqui.
@@ -227,7 +227,7 @@ export function CrmPipelineResumo() {
             <button
               type="button"
               onClick={() => router.push("/crm/leads?view=kanban")}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#c9a24a] px-4 py-2 text-xs font-bold text-[#0d1117]"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#c9a24a] px-4 py-2 text-xs font-bold text-[#0a140f]"
             >
               Abrir kanban de leads
               <ArrowRight className="h-4 w-4" />
@@ -298,7 +298,7 @@ export function CrmPipelineResumo() {
             </div>
 
             {/* Legenda + outcomes */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#21262d] pt-3">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#16271e] pt-3">
               <p className="m-0 text-[10px] text-[#6e7681]">
                 Setas = % que passou da etapa anterior
               </p>
@@ -327,7 +327,7 @@ export function CrmPipelineResumo() {
             </button>
           </>
         ) : negRows.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[#30363d] bg-[#0d1117] px-6 py-10 text-center">
+          <div className="rounded-xl border border-dashed border-[#1d3a2c] bg-[#0a140f] px-6 py-10 text-center">
             <p className="mb-1 text-sm font-bold text-[#e6edf3]">Nenhum negócio aberto</p>
             <p className="mb-4 text-xs text-[#8b949e]">
               Converta um lead em negócio para acompanhar briefing, match e sit-down.

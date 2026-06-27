@@ -55,8 +55,8 @@ export function CrmSideoverShell({
           maxHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
-          background: "#0d1117",
-          borderLeft: "1px solid #30363d",
+          background: "#0a140f",
+          borderLeft: "1px solid #1d3a2c",
           boxShadow: "-8px 0 32px rgba(0,0,0,0.45)",
         }}
       >
@@ -66,7 +66,7 @@ export function CrmSideoverShell({
             justifyContent: "space-between",
             alignItems: "flex-start",
             padding: "18px 20px 12px",
-            borderBottom: "1px solid #21262d",
+            borderBottom: "1px solid #16271e",
             flexShrink: 0,
           }}
         >
@@ -101,7 +101,7 @@ export function CrmSideoverShell({
             style={{
               flexShrink: 0,
               padding: "14px 20px",
-              borderTop: "1px solid #21262d",
+              borderTop: "1px solid #16271e",
               display: "flex",
               gap: 10,
               justifyContent: "flex-end",

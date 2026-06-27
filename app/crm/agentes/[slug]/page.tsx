@@ -443,7 +443,7 @@ export default function AgentePage() {
 
   if (carregando) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0d1117", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: "#0a140f", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando agente...</p>
       </div>
     );
@@ -451,13 +451,13 @@ export default function AgentePage() {
 
   if (!agente) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0d1117", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div style={{ minHeight: "100vh", background: "#0a140f", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
         <p style={{ color: "#8b949e", fontSize: 13 }}>Agente não encontrado.</p>
         <button
           onClick={() => router.push("/crm/agentes")}
           style={{
             padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-            background: "#161b22", border: "1px solid #30363d", color: "#8b949e", cursor: "pointer",
+            background: "#0f1d16", border: "1px solid #1d3a2c", color: "#8b949e", cursor: "pointer",
           }}
         >
           ← Voltar para agentes
@@ -473,14 +473,14 @@ export default function AgentePage() {
   const chipStyle = (ativo: boolean): React.CSSProperties => ({
     padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700,
     cursor: "pointer",
-    border: `1px solid ${ativo ? "#c9a24a" : "#30363d"}`,
-    background: ativo ? "#c9a24a22" : "#161b22",
+    border: `1px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+    background: ativo ? "#c9a24a22" : "#0f1d16",
     color: ativo ? "#c9a24a" : "#8b949e",
     transition: "all 150ms",
   });
 
   const inputStyle: React.CSSProperties = {
-    background: "#0d1117", border: "1px solid #30363d", color: "#e6edf3",
+    background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3",
     borderRadius: 8, padding: "8px 12px", fontSize: 13, outline: "none",
     width: "100%", boxSizing: "border-box",
   };
@@ -491,7 +491,7 @@ export default function AgentePage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0d1117" }}>
+    <div style={{ minHeight: "100vh", background: "#0a140f" }}>
 
       {/* MODAL ARQUIVAR */}
       {showArquivar && (
@@ -503,7 +503,7 @@ export default function AgentePage() {
           }}
         >
           <div style={{
-            background: "#161b22", border: "1px solid #30363d", borderRadius: 16,
+            background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 16,
             padding: 28, width: "100%", maxWidth: 460,
           }}>
             <h2 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
@@ -533,7 +533,7 @@ export default function AgentePage() {
               rows={3}
               style={{
                 ...inputStyle, resize: "none", marginBottom: 6,
-                border: `1px solid ${motivoArquivamento.length > 0 && motivoArquivamento.trim().length < 10 ? "#ef4444" : "#30363d"}`,
+                border: `1px solid ${motivoArquivamento.length > 0 && motivoArquivamento.trim().length < 10 ? "#ef4444" : "#1d3a2c"}`,
               }}
             />
             {motivoArquivamento.length > 0 && motivoArquivamento.trim().length < 10 && (
@@ -547,7 +547,7 @@ export default function AgentePage() {
                 onClick={() => setShowArquivar(false)}
                 style={{
                   flex: 1, padding: "10px 0", borderRadius: 8,
-                  background: "#21262d", border: "1px solid #30363d",
+                  background: "#16271e", border: "1px solid #1d3a2c",
                   color: "#8b949e", fontSize: 13, fontWeight: 700, cursor: "pointer",
                 }}
               >
@@ -558,7 +558,7 @@ export default function AgentePage() {
                 disabled={arquivando || motivoArquivamento.trim().length < 10}
                 style={{
                   flex: 1, padding: "10px 0", borderRadius: 8,
-                  background: motivoArquivamento.trim().length >= 10 ? "#dc2626" : "#30363d",
+                  background: motivoArquivamento.trim().length >= 10 ? "#dc2626" : "#1d3a2c",
                   border: "none", color: "white", fontSize: 13, fontWeight: 700,
                   cursor: arquivando || motivoArquivamento.trim().length < 10 ? "not-allowed" : "pointer",
                   opacity: arquivando ? 0.6 : 1,
@@ -590,8 +590,8 @@ export default function AgentePage() {
         >
           <div
             style={{
-              background: "#161b22",
-              border: "1px solid #30363d",
+              background: "#0f1d16",
+              border: "1px solid #1d3a2c",
               borderRadius: 16,
               padding: 28,
               width: "100%",
@@ -654,8 +654,8 @@ export default function AgentePage() {
                   flex: 1,
                   padding: "10px 0",
                   borderRadius: 8,
-                  background: "#21262d",
-                  border: "1px solid #30363d",
+                  background: "#16271e",
+                  border: "1px solid #1d3a2c",
                   color: "#8b949e",
                   fontSize: 13,
                   fontWeight: 700,
@@ -698,7 +698,7 @@ export default function AgentePage() {
           }}
         >
           <div style={{
-            background: "#161b22", border: "1px solid #30363d", borderRadius: 16,
+            background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 16,
             padding: 28, width: "100%", maxWidth: 420,
           }}>
             <h2 style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
@@ -713,7 +713,7 @@ export default function AgentePage() {
                 onClick={() => setShowConfirmSalvar(false)}
                 style={{
                   flex: 1, padding: "10px 0", borderRadius: 8,
-                  background: "#21262d", border: "1px solid #30363d",
+                  background: "#16271e", border: "1px solid #1d3a2c",
                   color: "#8b949e", fontSize: 13, fontWeight: 700, cursor: "pointer",
                 }}
               >
@@ -740,8 +740,8 @@ export default function AgentePage() {
       {/* HEADER */}
       <div style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "linear-gradient(180deg, #161b22 0%, #0d1117 100%)",
-        borderBottom: "1px solid #30363d",
+        background: "linear-gradient(180deg, #0f1d16 0%, #0a140f 100%)",
+        borderBottom: "1px solid #1d3a2c",
         boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
         padding: "18px 24px 14px",
       }}>
@@ -755,8 +755,8 @@ export default function AgentePage() {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                border: "1px solid #30363d",
-                background: "#21262d",
+                border: "1px solid #1d3a2c",
+                background: "#16271e",
                 color: "#c9d1d9",
                 cursor: "pointer",
                 display: "flex",
@@ -772,7 +772,7 @@ export default function AgentePage() {
                 width: 56,
                 height: 56,
                 borderRadius: 16,
-                background: `linear-gradient(135deg, ${segCor} 0%, #0d1117 140%)`,
+                background: `linear-gradient(135deg, ${segCor} 0%, #0a140f 140%)`,
                 border: `1px solid ${segCor}55`,
                 display: "flex",
                 alignItems: "center",
@@ -896,7 +896,7 @@ export default function AgentePage() {
           </div>
 
           <div style={{
-            background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 20,
+            background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 20,
             display: "flex", flexDirection: "column", gap: 16,
           }}>
             <h2 style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>
@@ -944,7 +944,7 @@ export default function AgentePage() {
 
         {/* BLOCO: Configurações editáveis */}
         <div style={{
-          background: "#161b22", border: "1px solid #30363d", borderRadius: 12, padding: 20,
+          background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 20,
           display: "flex", flexDirection: "column", gap: 20,
         }}>
           <h2 style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: 0, textTransform: "uppercase", letterSpacing: 1 }}>
@@ -999,8 +999,8 @@ export default function AgentePage() {
                           onClick={() => setValor(i, v)}
                           style={{
                             width: 34, height: 34, borderRadius: "50%", fontSize: 12, fontWeight: 700,
-                            cursor: "pointer", border: `2px solid ${ativo ? "#c9a24a" : "#30363d"}`,
-                            background: ativo ? "#c9a24a" : "#0d1117",
+                            cursor: "pointer", border: `2px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                            background: ativo ? "#c9a24a" : "#0a140f",
                             color: ativo ? "#003b26" : "#8b949e",
                             transition: "all 150ms",
                           }}
@@ -1110,7 +1110,7 @@ export default function AgentePage() {
 
           <div
             style={{
-              borderTop: "1px solid #30363d",
+              borderTop: "1px solid #1d3a2c",
               paddingTop: 18,
             }}
           >
@@ -1197,8 +1197,8 @@ export default function AgentePage() {
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: mistralProvisionar && !syncMistralLoading ? "pointer" : "not-allowed",
-                border: "1px solid #30363d",
-                background: mistralProvisionar ? "#161b22" : "#0d1117",
+                border: "1px solid #1d3a2c",
+                background: mistralProvisionar ? "#0f1d16" : "#0a140f",
                 color: mistralProvisionar ? "#c9a24a" : "#484f58",
               }}
             >
@@ -1248,9 +1248,9 @@ function HeaderActionGroup({ children }: { children: ReactNode }) {
         display: "inline-flex",
         alignItems: "stretch",
         borderRadius: 12,
-        border: "1px solid #30363d",
+        border: "1px solid #1d3a2c",
         overflow: "hidden",
-        background: "#0d1117",
+        background: "#0a140f",
         boxShadow: "0 4px 18px rgba(0,0,0,0.28)",
         flexShrink: 0,
       }}
@@ -1278,7 +1278,7 @@ function HeaderActionButton({
   const palette =
     variant === "ai"
       ? { bg: "#2e106418", hoverBg: "#2e106428", color: "#c4b5fd", divider: "#6d28d944" }
-      : { bg: "#21262d", hoverBg: "#30363d", color: "#c9d1d9", divider: "#30363d" };
+      : { bg: "#16271e", hoverBg: "#1d3a2c", color: "#c9d1d9", divider: "#1d3a2c" };
 
   return (
     <button

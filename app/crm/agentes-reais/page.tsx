@@ -9,11 +9,11 @@ export default function WorkflowsPlaceholderPage() {
       <div
         className="rounded-xl border p-8 text-center"
         style={{
-          background: "#161b22",
-          borderColor: "#30363d",
+          background: "#0f1d16",
+          borderColor: "#1d3a2c",
         }}
       >
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "#21262d" }}>
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "#16271e" }}>
           <GitBranch size={28} strokeWidth={1.5} style={{ color: "#c9a24a" }} aria-hidden />
         </div>
         <h1 className="text-lg font-bold text-white m-0">Copiloto Global</h1>

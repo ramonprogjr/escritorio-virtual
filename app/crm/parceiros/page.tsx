@@ -172,7 +172,7 @@ export default function ParceirosPage() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: "#0d1117",
+        background: "#0a140f",
         minHeight: 0,
       }}
     >

@@ -34,8 +34,8 @@ export function MercadoLeadPicker({ mercados, onToggle, disabled }: Props) {
               onClick={() => onToggle(sigla, !ativo)}
               className="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
               style={{
-                borderColor: ativo ? "#c9a24a" : "#30363d",
-                background: ativo ? "rgba(201,162,74,0.15)" : "#0d1117",
+                borderColor: ativo ? "#c9a24a" : "#1d3a2c",
+                background: ativo ? "rgba(201,162,74,0.15)" : "#0a140f",
                 color: ativo ? "#e0b86a" : "#8b949e",
                 cursor: disabled ? "not-allowed" : "pointer",
               }}

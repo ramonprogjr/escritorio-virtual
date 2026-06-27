@@ -208,8 +208,8 @@ export function PlaybookUploadAnalisePanel({
             }}
             style={{
               borderRadius: 8,
-              border: "1px solid #30363d",
-              background: "#21262d",
+              border: "1px solid #1d3a2c",
+              background: "#16271e",
               color: "#c9a24a",
               fontSize: 12,
               fontWeight: 700,
@@ -242,8 +242,8 @@ export function PlaybookUploadAnalisePanel({
                 width: "100%",
                 height: 8,
                 borderRadius: 999,
-                background: "#21262d",
-                border: "1px solid #30363d",
+                background: "#16271e",
+                border: "1px solid #1d3a2c",
                 overflow: "hidden",
               }}
             >
@@ -278,8 +278,8 @@ export function PlaybookUploadAnalisePanel({
       {conteudoPreview ? (
         <div
           style={{
-            background: "#0d1117",
-            border: "1px solid #30363d",
+            background: "#0a140f",
+            border: "1px solid #1d3a2c",
             borderRadius: 10,
             padding: 12,
           }}
@@ -374,8 +374,8 @@ export function PlaybookUploadAnalisePanel({
               style={{
                 height: 8,
                 borderRadius: 999,
-                background: "#21262d",
-                border: "1px solid #30363d",
+                background: "#16271e",
+                border: "1px solid #1d3a2c",
                 overflow: "hidden",
               }}
             >
@@ -415,8 +415,8 @@ export function PlaybookUploadAnalisePanel({
       {analiseResultado ? (
         <div
           style={{
-            background: "#161b22",
-            border: "1px solid #30363d",
+            background: "#0f1d16",
+            border: "1px solid #1d3a2c",
             borderRadius: 12,
             padding: 16,
             display: "flex",

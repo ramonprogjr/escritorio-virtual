@@ -94,7 +94,7 @@ export function CrmQuickAdd({ role }: { role: string }) {
                 type="button"
                 role="menuitem"
                 onClick={() => go(a.href)}
-                className="flex items-center gap-2.5 rounded-full border border-[#30363d] bg-[#161b22] py-2 pl-3 pr-4 text-sm font-semibold text-[#e6edf3] shadow-lg transition-colors hover:border-[#c9a24a] hover:text-[#e0b86a]"
+                className="flex items-center gap-2.5 rounded-full border border-[#1d3a2c] bg-[#0f1d16] py-2 pl-3 pr-4 text-sm font-semibold text-[#e6edf3] shadow-lg transition-colors hover:border-[#c9a24a] hover:text-[#e0b86a]"
                 style={{ cursor: "pointer" }}
               >
                 <Icon size={16} strokeWidth={1.75} className="text-[#c9a24a]" aria-hidden />

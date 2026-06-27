@@ -56,8 +56,8 @@ export function CrmRastreioBusca() {
               width: "100%",
               padding: "7px 10px 7px 30px",
               borderRadius: 8,
-              border: "1px solid #30363d",
-              background: "#161b22",
+              border: "1px solid #1d3a2c",
+              background: "#0f1d16",
               color: "#e6edf3",
               fontSize: 12,
               boxSizing: "border-box",
@@ -77,8 +77,8 @@ export function CrmRastreioBusca() {
             overflow: "auto",
             padding: 12,
             borderRadius: 10,
-            border: "1px solid #30363d",
-            background: "#0d1117",
+            border: "1px solid #1d3a2c",
+            background: "#0a140f",
             boxShadow: "0 8px 24px #0008",
           }}
         >

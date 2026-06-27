@@ -125,12 +125,12 @@ export default function PrecificacaoPage() {
   const margemEx = custoBrlEx - custoRealBrlEx;
 
   const inputCls =
-    "w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]";
+    "w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]";
   const labelCls = "mb-1 block text-[10px] font-bold uppercase tracking-wide text-[#8b949e]";
 
   if (!myRole && loading) {
     return (
-      <div className="flex min-h-full items-center justify-center bg-[#0d1117] text-sm text-[#8b949e]">
+      <div className="flex min-h-full items-center justify-center bg-[#0a140f] text-sm text-[#8b949e]">
         Carregando…
       </div>
     );
@@ -139,7 +139,7 @@ export default function PrecificacaoPage() {
   if (!isOwner) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-8 text-center">
+        <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-8 text-center">
           <Coins className="mx-auto mb-4 h-8 w-8 text-[#c9a24a]" />
           <h1 className="text-lg font-bold text-[#e6edf3]">Precificação & IA</h1>
           <p className="mt-2 text-sm text-[#8b949e]">Apenas owners podem configurar a precificação.</p>
@@ -149,7 +149,7 @@ export default function PrecificacaoPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0d1117]">
+    <div className="flex min-h-full flex-col bg-[#0a140f]">
       <CrmStickyPageHeader
         title="Precificação & IA"
         description="Configuração de negócios (super-admin): valor do Tijolo, margem, câmbio e preços por modelo."
@@ -157,7 +157,7 @@ export default function PrecificacaoPage() {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6">
         {/* Config global */}
-        <div className="rounded-2xl border border-[#30363d] bg-[#161b22] p-5">
+        <div className="rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-5">
           <h2 className="mb-3 text-sm font-bold text-[#e6edf3]">Moeda & margem</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div>
@@ -219,7 +219,7 @@ export default function PrecificacaoPage() {
         ) : (
           <div className="space-y-2">
             {precos.map((p, idx) => (
-              <div key={p.modelo} className="flex flex-wrap items-end gap-2 rounded-xl border border-[#30363d] bg-[#161b22] p-3">
+              <div key={p.modelo} className="flex flex-wrap items-end gap-2 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3">
                 <div className="min-w-[160px] flex-1">
                   <span className="text-sm font-semibold text-[#e6edf3]">{p.modelo}</span>
                   <span className="ml-2 text-[10px] font-bold uppercase text-[#6e7681]">
@@ -245,7 +245,7 @@ export default function PrecificacaoPage() {
                   type="button"
                   disabled={salvandoModelo === p.modelo}
                   onClick={() => void salvarModelo(p)}
-                  className="min-h-9 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-xs font-bold text-[#e6edf3] disabled:opacity-50"
+                  className="min-h-9 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#e6edf3] disabled:opacity-50"
                 >
                   {salvandoModelo === p.modelo ? "…" : "Salvar"}
                 </button>

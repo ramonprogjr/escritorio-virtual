@@ -21,7 +21,7 @@ export function FilterPills({ pills, active, onChange }: Props) {
             fontSize: 12,
             fontWeight: 700,
             cursor: "pointer",
-            border: active === p.id ? "1px solid #c9a24a" : "1px solid #30363d",
+            border: active === p.id ? "1px solid #c9a24a" : "1px solid #1d3a2c",
             background: active === p.id ? "#c9a24a22" : "transparent",
             color: active === p.id ? "#c9a24a" : "#8b949e",
           }}

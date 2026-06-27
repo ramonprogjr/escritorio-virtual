@@ -210,7 +210,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         <CrmHeaderProvider>
           <CrmShellProvider value={{ sidebarExpanded: false, toggleSidebar: () => {} }}>
             <div
-              className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#0d1117]"
+              className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#0a140f]"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               {children}
@@ -227,23 +227,23 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     <CrmTenantProvider>
     <CrmHeaderProvider>
       <CrmShellProvider value={{ sidebarExpanded, toggleSidebar }}>
-        <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0d1117] md:h-screen md:p-2">
+        <div className="box-border flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0a140f] md:h-screen md:p-2">
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:gap-0">
           <div
             ref={miniSidebarShellRef}
             className="relative z-20 hidden md:flex md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] flex-shrink-0 self-stretch"
           >
         <aside
-          className={`flex h-full flex-col overflow-hidden border-r border-[#2b3544] pt-4 pb-3 transition-[width] duration-200 ease-out md:rounded-l-xl ${
+          className={`flex h-full flex-col overflow-hidden border-r border-[#1d3a2c] pt-4 pb-3 transition-[width] duration-200 ease-out md:rounded-l-xl ${
             sidebarExpanded ? "w-[260px] items-stretch px-2" : "w-14 items-center px-0"
           }`}
-          style={{ background: "#0f1520" }}
+          style={{ background: "#0c1712" }}
         >
           {/* Brand header */}
           <div
             className={`mb-2 flex min-h-0 w-full flex-shrink-0 ${
               sidebarExpanded
-                ? "border-b border-[#2b3544] px-2 pb-3 pt-0.5"
+                ? "border-b border-[#1d3a2c] px-2 pb-3 pt-0.5"
                 : "flex-col items-center justify-center py-1"
             }`}
           >
@@ -262,12 +262,12 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
               onClick={() =>
                 window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))
               }
-              className="mb-2 flex w-full flex-shrink-0 items-center gap-2 rounded-xl border border-[#2b3544] bg-[#0d1117] px-3 py-2 text-xs font-medium text-[#8b949e] transition-colors hover:border-[#c9a24a]/40 hover:text-[#e6edf3]"
+              className="mb-2 flex w-full flex-shrink-0 items-center gap-2 rounded-xl border border-[#1d3a2c] bg-[#0a140f] px-3 py-2 text-xs font-medium text-[#a9c6b6] transition-colors hover:border-[#c9a24a]/40 hover:text-[#e6edf3]"
               title="Buscar / ir para… (Ctrl+K)"
             >
               <Search size={14} strokeWidth={2} aria-hidden />
               <span className="flex-1 text-left">Buscar…</span>
-              <kbd className="rounded border border-[#2b3544] bg-[#161b22] px-1.5 py-0.5 text-[10px] font-bold text-[#8b949e]">
+              <kbd className="rounded border border-[#1d3a2c] bg-[#0c1712] px-1.5 py-0.5 text-[10px] font-bold text-[#a9c6b6]">
                 Ctrl K
               </kbd>
             </button>
@@ -287,8 +287,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                         href={only.href}
                         className={`flex min-h-[40px] w-full flex-shrink-0 items-center gap-2.5 rounded-xl border-l-2 px-3 py-1.5 text-sm font-semibold transition-colors ${
                           active
-                            ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                            : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                            ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                            : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
                         }`}
                       >
                         <NavIcon Icon={group.sectionIcon} expanded />
@@ -311,18 +311,18 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                         type="button"
                         onClick={() => toggleDrawer(group.id)}
                         className={`flex w-full items-center justify-between gap-1 rounded-xl px-2.5 py-1.5 text-left transition-colors ${
-                          open || groupHasActive ? "bg-[#1a2332]" : "hover:bg-[#1a2332]"
+                          open || groupHasActive ? "bg-[#0e2a1e]" : "hover:bg-[#0e2a1e]"
                         }`}
                         style={{ border: "none", cursor: "pointer" }}
                         aria-expanded={open}
                       >
-                        <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.12em] text-[#6e7681]">
+                        <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.12em] text-[#5f8470]">
                           {group.label}
                         </span>
                         <ChevronDown
                           size={12}
                           strokeWidth={2.5}
-                          className={`flex-shrink-0 text-[#6e7681] transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
+                          className={`flex-shrink-0 text-[#5f8470] transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
                           aria-hidden
                         />
                       </button>
@@ -330,7 +330,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                         className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
                       >
                         <div className="overflow-hidden">
-                          <div className="space-y-0.5 rounded-xl border border-[#2b3544]/50 bg-[#0d1117]/60 px-1 py-1">
+                          <div className="space-y-0.5 rounded-xl border border-[#1d3a2c]/50 bg-[#0a140f]/60 px-1 py-1">
                             {getNestedGroupMenu(group.id, group.label, group.items) ? (
                               (() => {
                                 const nestedMenu = getNestedGroupMenu(group.id, group.label, group.items)!;
@@ -351,8 +351,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                       }
                                       className={`flex min-h-[38px] w-full items-center justify-between rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
                                         nestedActive
-                                          ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                          : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                                          ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                          : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
                                       }`}
                                     >
                                       <span className="flex items-center gap-2.5">
@@ -380,8 +380,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                                 href={item.href}
                                                 className={`relative flex min-h-[36px] w-full items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                                                   active
-                                                    ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                                    : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                                                    ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                                    : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
                                                 }`}
                                               >
                                                 <NavIcon Icon={item.icon} expanded />
@@ -404,8 +404,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                       href={item.href}
                                       className={`relative flex min-h-[38px] w-full items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                                         active
-                                          ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                          : `border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]${item.extra ? " pr-10" : ""}`
+                                          ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                          : `border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]${item.extra ? " pr-10" : ""}`
                                       }`}
                                     >
                                       <NavIcon Icon={item.icon} expanded />
@@ -450,8 +450,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                         title={group.label}
                         className={`relative mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${
                           groupHasActive
-                            ? "bg-[#1a2332] text-[#c9a24a]"
-                            : "text-[#484f58] hover:bg-[#1a2332]/60 hover:text-[#8b949e]"
+                            ? "bg-[#0e2a1e] text-[#c9a24a]"
+                            : "text-[#5f8470] hover:bg-[#0e2a1e]/60 hover:text-[#a9c6b6]"
                         }`}
                       >
                         {groupHasActive && (
@@ -472,8 +472,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                       onClick={() => setCollapsedFlyoutId(prev => (prev === group.id ? null : group.id))}
                       className={`relative mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${
                         flyoutOpen || groupHasActive
-                          ? "bg-[#1a2332] text-[#c9a24a]"
-                          : "text-[#484f58] hover:bg-[#1a2332]/60 hover:text-[#8b949e]"
+                          ? "bg-[#0e2a1e] text-[#c9a24a]"
+                          : "text-[#5f8470] hover:bg-[#0e2a1e]/60 hover:text-[#a9c6b6]"
                       }`}
                       style={{ border: "none", cursor: "pointer" }}
                       title={group.label}
@@ -497,7 +497,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
           <div
             className={`relative z-30 mt-auto flex flex-shrink-0 border-t pt-2 pb-1 ${sidebarExpanded ? "w-full px-1" : "flex-col items-center"}`}
-            style={{ borderColor: "#2b3544" }}
+            style={{ borderColor: "#1d3a2c" }}
           >
             <CrmSessionFooter expanded={sidebarExpanded} />
           </div>
@@ -512,24 +512,24 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                   ref={miniFlyoutRef}
                   role="dialog"
                   aria-label={group.label}
-                  className="pointer-events-auto absolute z-[60] flex max-h-[min(72vh,calc(100%-4.75rem))] w-60 flex-col overflow-hidden rounded-2xl border border-[#2b3544] shadow-2xl"
+                  className="pointer-events-auto absolute z-[60] flex max-h-[min(72vh,calc(100%-4.75rem))] w-60 flex-col overflow-hidden rounded-2xl border border-[#1d3a2c] shadow-2xl"
                   style={{
                     left: "100%",
                     top: "3.75rem",
                     marginLeft: "0.35rem",
-                    background: "#0f1520",
+                    background: "#0c1712",
                     boxShadow: "0 16px 48px rgba(0,0,0,0.55)",
                   }}
                 >
                   <div
-                    className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-[#2b3544] bg-[#121926] px-3 py-2.5"
+                    className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-[#1d3a2c] bg-[#0c1712] px-3 py-2.5"
                   >
-                    <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b949e]">
+                    <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.12em] text-[#a9c6b6]">
                       {group.label}
                     </span>
                     <button
                       type="button"
-                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl border border-[#2b3544] bg-[#1a2332] transition-colors hover:bg-[#1a2332]/80"
+                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl border border-[#1d3a2c] bg-[#0e2a1e] transition-colors hover:bg-[#0e2a1e]/80"
                       style={{ color: "#8b949e", cursor: "pointer" }}
                       aria-label="Fechar"
                       onClick={() => setCollapsedFlyoutId(null)}
@@ -559,8 +559,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                 }
                                 className={`flex min-h-[38px] w-full items-center justify-between rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
                                   nestedActive
-                                    ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                    : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                                    ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                    : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
                                 }`}
                               >
                                 <span className="flex items-center gap-2.5">
@@ -589,8 +589,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                         onClick={() => setCollapsedFlyoutId(null)}
                                         className={`relative flex min-h-[36px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                                           active
-                                            ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                            : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                                            ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                            : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
                                         }`}
                                       >
                                         <NavIcon Icon={item.icon} expanded />
@@ -613,8 +613,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                 onClick={() => setCollapsedFlyoutId(null)}
                                 className={`relative flex min-h-[38px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                                   active
-                                    ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                    : `border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]${item.extra ? " pr-10" : ""}`
+                                    ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                    : `border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]${item.extra ? " pr-10" : ""}`
                                 }`}
                               >
                                 <NavIcon Icon={item.icon} expanded />
@@ -646,12 +646,12 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           : null}
       </div>
 
-      <div className="relative z-[12] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] md:self-stretch md:rounded-r-xl md:bg-[#0d1117]">
+      <div className="relative z-[12] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] md:self-stretch md:rounded-r-xl md:bg-[#0a140f]">
         <div
-          className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2 md:hidden sticky top-0 z-30 backdrop-blur-md supports-[backdrop-filter]:bg-[#161b22]/90"
+          className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2 md:hidden sticky top-0 z-30 backdrop-blur-md supports-[backdrop-filter]:bg-[#0c1712]/90"
           style={{
             background: "rgba(22, 27, 34, 0.96)",
-            borderColor: "var(--obra-borda, #30363d)",
+            borderColor: "var(--obra-borda, #1d3a2c)",
             paddingTop: "max(0.5rem, env(safe-area-inset-top))",
           }}
         >
@@ -662,9 +662,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             }
             className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-xl"
             style={{
-              background: "var(--obra-dark-3, #21262d)",
+              background: "var(--obra-dark-3, #16271e)",
               color: "var(--obra-texto, #e6edf3)",
-              border: "1px solid var(--obra-borda, #30363d)",
+              border: "1px solid var(--obra-borda, #1d3a2c)",
               cursor: "pointer",
             }}
             aria-label="Voltar"
@@ -674,12 +674,12 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             </svg>
           </button>
           <div className="min-w-0 flex-1">
-            <Obra10BrandHeader size="sm" subtitle="CRM" titleClassName="!text-[11px]" subtitleClassName="!text-[8px] !text-[#8b949e]" />
+            <Obra10BrandHeader size="sm" subtitle="CRM" titleClassName="!text-[11px]" subtitleClassName="!text-[8px] !text-[#a9c6b6]" />
           </div>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#2b3544] bg-[#121926] text-[#e6edf3] transition-colors hover:border-[#3d4f65] hover:bg-[#1a2332]"
+            className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#1d3a2c] bg-[#0c1712] text-[#e6edf3] transition-colors hover:border-[#3d4f65] hover:bg-[#0e2a1e]"
             style={{ cursor: "pointer" }}
             aria-expanded={mobileMenuOpen}
             aria-label="Abrir menu do CRM"
@@ -716,35 +716,35 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
       >
         <button
           type="button"
-          className="absolute inset-0 m-0 cursor-default border-0 bg-[#0d1117]/85 p-0 backdrop-blur-sm"
+          className="absolute inset-0 m-0 cursor-default border-0 bg-[#0a140f]/85 p-0 backdrop-blur-sm"
           style={{ WebkitTapHighlightColor: "transparent" }}
           aria-label="Fechar menu"
           onClick={() => setMobileMenuOpen(false)}
         />
         <div
-          className={`relative flex h-full w-[min(100%,20rem)] max-w-[85vw] flex-col border-r border-[#2b3544] transition-transform duration-[250ms] ease-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`relative flex h-full w-[min(100%,20rem)] max-w-[85vw] flex-col border-r border-[#1d3a2c] transition-transform duration-[250ms] ease-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
           style={{
-            background: "#0f1520",
+            background: "#0c1712",
             boxShadow: "4px 0 40px rgba(0,0,0,0.6), inset -1px 0 0 rgba(255,255,255,0.04)",
             paddingTop: "env(safe-area-inset-top, 0px)",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
-          <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-[#2b3544] bg-[#121926]/90 px-4 py-3.5">
+          <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-[#1d3a2c] bg-[#0c1712]/90 px-4 py-3.5">
             <div className="min-w-0 flex-1">
               <Obra10BrandHeader size="sm" subtitle="CRM" />
             </div>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-[#2b3544] bg-[#1a2332] text-[#8b949e] transition-colors hover:border-[#3d4f65] hover:text-[#e6edf3]"
+              className="flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-[#1d3a2c] bg-[#0e2a1e] text-[#a9c6b6] transition-colors hover:border-[#3d4f65] hover:text-[#e6edf3]"
               style={{ cursor: "pointer" }}
               aria-label="Fechar"
             >
               <X size={20} strokeWidth={2} aria-hidden />
             </button>
           </div>
-          <div className="flex-shrink-0 border-b border-[#2b3544] px-3 py-3">
+          <div className="flex-shrink-0 border-b border-[#1d3a2c] px-3 py-3">
             <CrmSessionFooter variant="drawer" onNavigate={() => setMobileMenuOpen(false)} />
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto py-2" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -761,7 +761,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                       className={`flex min-h-[44px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
                         active
                           ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
-                          : "border-transparent text-[#8b949e] hover:bg-[#1a2332] hover:text-[#c7d5e0]"
+                          : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e] hover:text-[#c7d5e0]"
                       }`}
                     >
                       <NavIcon Icon={group.sectionIcon} expanded />
@@ -777,16 +777,16 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => toggleDrawer(group.id)}
                     className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors ${
-                      open || groupHasActive ? "bg-[#1a2332]" : "hover:bg-[#1a2332]/40"
+                      open || groupHasActive ? "bg-[#0e2a1e]" : "hover:bg-[#0e2a1e]/40"
                     }`}
                     style={{ border: "none", cursor: "pointer" }}
                     aria-expanded={open}
                   >
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#484f58]">{group.label}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5f8470]">{group.label}</span>
                     <ChevronDown
                       size={12}
                       strokeWidth={2.5}
-                      className={`flex-shrink-0 text-[#484f58] transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
+                      className={`flex-shrink-0 text-[#5f8470] transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
                       aria-hidden
                     />
                   </button>
@@ -813,8 +813,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                   }
                                   className={`flex min-h-[38px] w-full items-center justify-between rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
                                     nestedActive
-                                      ? "border-[#c9a24a] bg-[#1a2332] text-[#c9a24a]"
-                                      : "border-transparent text-[#8b949e] hover:bg-[#1a2332]/80 hover:text-[#e6edf3]"
+                                      ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
+                                      : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
                                   }`}
                                 >
                                   <span className="flex items-center gap-2.5">
@@ -844,7 +844,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                           className={`flex min-h-[36px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                                             active
                                               ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
-                                              : "border-transparent text-[#8b949e] hover:bg-[#1a2332] hover:text-[#c7d5e0]"
+                                              : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e] hover:text-[#c7d5e0]"
                                           }`}
                                         >
                                           <NavIcon Icon={item.icon} expanded />
@@ -868,7 +868,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                   className={`flex min-h-[38px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
                                     active
                                       ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
-                                      : `border-transparent text-[#8b949e] hover:bg-[#1a2332] hover:text-[#c7d5e0]${item.extra ? " pr-12" : ""}`
+                                      : `border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e] hover:text-[#c7d5e0]${item.extra ? " pr-12" : ""}`
                                   }`}
                                 >
                                   <NavIcon Icon={item.icon} expanded />

@@ -33,7 +33,7 @@ const BAR: CSSProperties = {
   background: "rgba(13, 17, 23, 0.94)",
   backdropFilter: "blur(10px)",
   WebkitBackdropFilter: "blur(10px)",
-  borderBottom: "1px solid #30363d",
+  borderBottom: "1px solid #1d3a2c",
   boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
 };
 

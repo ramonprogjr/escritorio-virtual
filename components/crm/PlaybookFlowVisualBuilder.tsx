@@ -308,8 +308,8 @@ export function PlaybookFlowVisualBuilder({
               disabled={disabled}
               onClick={() => setSelectedStepId(step.id)}
               style={{
-                border: `1px solid ${isActive ? "#388bfd66" : "#30363d"}`,
-                background: isActive ? "#1f6feb22" : "#161b22",
+                border: `1px solid ${isActive ? "#388bfd66" : "#1d3a2c"}`,
+                background: isActive ? "#1f6feb22" : "#0f1d16",
                 color: isActive ? "#9ecbff" : "#c9d1d9",
                 borderRadius: 10,
                 minWidth: 170,
@@ -330,7 +330,7 @@ export function PlaybookFlowVisualBuilder({
       </div>
 
       {selectedStep ? (
-        <div style={{ border: "1px solid #30363d", borderRadius: 10, padding: 12, display: "grid", gap: 10 }}>
+        <div style={{ border: "1px solid #1d3a2c", borderRadius: 10, padding: 12, display: "grid", gap: 10 }}>
           <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr auto" }}>
             <label style={smallLabelStyle}>
               ID
@@ -607,7 +607,7 @@ function MenuStepEditor({
         {step.options.map((opt, idx) => (
           <div
             key={`${opt.id}-${idx}`}
-            style={{ border: "1px solid #30363d", borderRadius: 8, padding: 8, display: "grid", gap: 6 }}
+            style={{ border: "1px solid #1d3a2c", borderRadius: 8, padding: 8, display: "grid", gap: 6 }}
           >
             <div style={{ display: "grid", gap: 6, gridTemplateColumns: "1fr 1fr 1fr auto" }}>
               <input
@@ -678,9 +678,9 @@ function MenuStepEditor({
 }
 
 const panelStyle: CSSProperties = {
-  border: "1px solid #30363d",
+  border: "1px solid #1d3a2c",
   borderRadius: 10,
-  background: "#0d1117",
+  background: "#0a140f",
   padding: 12,
   display: "grid",
   gap: 10,
@@ -702,9 +702,9 @@ const smallLabelStyle: CSSProperties = {
 };
 
 const inputStyle: CSSProperties = {
-  border: "1px solid #30363d",
+  border: "1px solid #1d3a2c",
   borderRadius: 8,
-  background: "#161b22",
+  background: "#0f1d16",
   color: "#e6edf3",
   fontSize: 11,
   padding: "7px 9px",
@@ -726,9 +726,9 @@ const smallBtnStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: 6,
-  border: "1px solid #30363d",
+  border: "1px solid #1d3a2c",
   borderRadius: 8,
-  background: "#21262d",
+  background: "#16271e",
   color: "#c9d1d9",
   padding: "6px 8px",
   fontSize: 10,

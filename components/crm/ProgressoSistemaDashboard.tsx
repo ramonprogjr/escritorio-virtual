@@ -61,7 +61,7 @@ function StatusBadge({ status }: { status: ProgressoStatus }) {
 
 function KpiCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: string }) {
   return (
-    <div className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+    <div className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
       <p className="text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">{label}</p>
       <p className="mt-1 text-3xl font-bold" style={{ color: accent ?? "#e6edf3" }}>
         {value}
@@ -77,7 +77,7 @@ function ItemRow({ item }: { item: ProgressoItemMerged }) {
   const failedChecks = merged.verificacao?.filter((c) => !c.ok) ?? [];
   return (
     <tr
-      className="border-t border-[#30363d] hover:bg-[#1c2128]"
+      className="border-t border-[#1d3a2c] hover:bg-[#0f1d16]"
       style={highlight ? { borderLeft: "2px solid #c9a24a55" } : undefined}
     >
       <td className="px-3 py-2.5 align-top">
@@ -131,7 +131,7 @@ function ProximoPassoCard({ item }: { item: ProgressoItem }) {
   return (
     <div
       className="rounded-lg border px-3 py-2.5"
-      style={{ borderColor: "#30363d", background: "#0d1117" }}
+      style={{ borderColor: "#1d3a2c", background: "#0a140f" }}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="text-[13px] font-medium text-[#e6edf3]">{item.titulo}</p>
@@ -176,7 +176,7 @@ function FaseDetalhePanel({
   return (
     <div
       className="mt-3 rounded-xl border p-4"
-      style={{ borderColor: "#c9a24a55", background: "#0d1117" }}
+      style={{ borderColor: "#c9a24a55", background: "#0a140f" }}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -189,7 +189,7 @@ function FaseDetalhePanel({
           type="button"
           onClick={onFechar}
           className="rounded-lg border px-3 py-1.5 text-xs text-[#8b949e] hover:text-[#e6edf3]"
-          style={{ borderColor: "#30363d" }}
+          style={{ borderColor: "#1d3a2c" }}
         >
           Fechar
         </button>
@@ -235,7 +235,7 @@ function FaseDetalhePanel({
               </thead>
               <tbody>
                 {abertos.map((item) => (
-                  <tr key={item.id} className="border-t border-[#30363d]">
+                  <tr key={item.id} className="border-t border-[#1d3a2c]">
                     <td className="px-2 py-2 align-top text-[#e6edf3]">{item.titulo}</td>
                     <td className="px-2 py-2 align-top">
                       <StatusBadge status={item.status} />
@@ -386,7 +386,7 @@ function RelatorioDoDiaSection() {
   return (
     <section
       className="rounded-xl border p-4"
-      style={{ borderColor: "#c9a24a44", background: "#161b22" }}
+      style={{ borderColor: "#c9a24a44", background: "#0f1d16" }}
     >
       <h2 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a]">Relatório do dia</h2>
       <p className="mt-1 text-xs text-[#8b949e]">
@@ -401,14 +401,14 @@ function RelatorioDoDiaSection() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className="rounded-lg border px-3 py-2 text-sm text-[#e6edf3]"
-            style={{ borderColor: "#30363d", background: "#0d1117" }}
+            style={{ borderColor: "#1d3a2c", background: "#0a140f" }}
           />
         </label>
         <button
           type="button"
           onClick={() => setDate(ontemIsoLocal())}
           className="rounded-lg border px-3 py-2 text-xs text-[#8b949e] hover:border-[#c9a24a55]"
-          style={{ borderColor: "#30363d" }}
+          style={{ borderColor: "#1d3a2c" }}
         >
           Ontem
         </button>
@@ -416,7 +416,7 @@ function RelatorioDoDiaSection() {
           type="button"
           disabled={loading}
           onClick={() => void baixarPdf()}
-          className="rounded-lg px-4 py-2 text-xs font-bold text-[#0d1117] disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-xs font-bold text-[#0a140f] disabled:opacity-50"
           style={{ background: "#c9a24a" }}
         >
           {loading ? "A gerar…" : "Gerar PDF"}
@@ -426,7 +426,7 @@ function RelatorioDoDiaSection() {
           disabled={loading}
           onClick={() => void carregarPreview()}
           className="rounded-lg border px-4 py-2 text-xs font-medium text-[#e6edf3] hover:border-[#c9a24a55] disabled:opacity-50"
-          style={{ borderColor: "#30363d", background: "#0d1117" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f" }}
         >
           Pré-visualizar JSON
         </button>
@@ -435,7 +435,7 @@ function RelatorioDoDiaSection() {
           target="_blank"
           rel="noopener noreferrer"
           className="rounded-lg border px-4 py-2 text-xs text-[#3fb950] hover:border-[#22c55e55]"
-          style={{ borderColor: "#30363d" }}
+          style={{ borderColor: "#1d3a2c" }}
         >
           WhatsApp Nice
         </a>
@@ -444,7 +444,7 @@ function RelatorioDoDiaSection() {
       {preview ? (
         <pre
           className="mt-3 max-h-64 overflow-auto rounded-lg border p-3 text-[10px] text-[#8b949e]"
-          style={{ borderColor: "#30363d", background: "#0d1117" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f" }}
         >
           {JSON.stringify(preview, null, 2)}
         </pre>
@@ -554,7 +554,7 @@ export function ProgressoSistemaDashboard() {
 
       <section
         className="rounded-xl border px-4 py-3"
-        style={{ borderColor: "#30363d", background: "#161b22" }}
+        style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}
       >
         <h2 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a]">Como ler este painel</h2>
         <ul className="mt-2 space-y-1 text-xs text-[#8b949e]">
@@ -593,7 +593,7 @@ export function ProgressoSistemaDashboard() {
       </div>
 
       {proximos.length > 0 ? (
-        <section className="rounded-xl border p-4" style={{ borderColor: "#c9a24a44", background: "#161b22" }}>
+        <section className="rounded-xl border p-4" style={{ borderColor: "#c9a24a44", background: "#0f1d16" }}>
           <h2 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a]">
             Próximos passos (P0 em aberto) — {proximos.length}
           </h2>
@@ -609,7 +609,7 @@ export function ProgressoSistemaDashboard() {
         </section>
       ) : null}
 
-      <section className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+      <section className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Cadeia de valor (PDF)</h2>
         <div className="flex flex-wrap items-center gap-1">
           {CADEIA_VALOR.map((elo, idx) => {
@@ -621,7 +621,7 @@ export function ProgressoSistemaDashboard() {
                   type="button"
                   onClick={() => abrirBloco(elo.id)}
                   className="rounded-lg border px-3 py-2 text-left transition hover:border-[#c9a24a55]"
-                  style={{ borderColor: "#30363d", background: "#0d1117", minWidth: 100 }}
+                  style={{ borderColor: "#1d3a2c", background: "#0a140f", minWidth: 100 }}
                 >
                   <p className="text-[11px] font-bold text-[#e6edf3]">{elo.label}</p>
                   <p className="text-[10px] text-[#6e7681]">{elo.sub}</p>
@@ -640,7 +640,7 @@ export function ProgressoSistemaDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+      <section className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Funil de leads — 8 etapas (PDF)</h2>
         <div className="flex flex-wrap gap-1.5">
           {funilLead.map((etapa) => {
@@ -660,7 +660,7 @@ export function ProgressoSistemaDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+      <section className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Funis de negócio — 8 mercados (PDF)</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {mercados.map((m) => {
@@ -669,7 +669,7 @@ export function ProgressoSistemaDashboard() {
               <div
                 key={m.label}
                 className="rounded-lg border px-2.5 py-2"
-                style={{ borderColor: c.border, background: "#0d1117" }}
+                style={{ borderColor: c.border, background: "#0a140f" }}
               >
                 <p className="truncate text-[11px] font-medium text-[#e6edf3]">{m.label}</p>
                 <div className="mt-1.5 flex items-center justify-between gap-1">
@@ -682,7 +682,7 @@ export function ProgressoSistemaDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+      <section className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Cronograma por fase</h2>
         <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-6">
           {PROGRESSO_FASES.map((f) => {
@@ -697,8 +697,8 @@ export function ProgressoSistemaDashboard() {
                 onClick={() => toggleFase(f.id)}
                 className="rounded-lg border px-3 py-2 text-left transition hover:border-[#c9a24a55]"
                 style={{
-                  borderColor: ativo ? "#c9a24a" : "#30363d",
-                  background: "#0d1117",
+                  borderColor: ativo ? "#c9a24a" : "#1d3a2c",
+                  background: "#0a140f",
                   boxShadow: ativo ? "0 0 0 1px #c9a24a44" : undefined,
                 }}
               >
@@ -708,7 +708,7 @@ export function ProgressoSistemaDashboard() {
                 </div>
                 <p className="mt-0.5 text-[10px] text-[#6e7681]">{f.periodo}</p>
                 <p className="mt-2 text-lg font-bold text-[#e6edf3]">{pct}%</p>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#21262d]">
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#16271e]">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -735,7 +735,7 @@ export function ProgressoSistemaDashboard() {
         ) : null}
       </section>
 
-      <section className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+      <section className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Progresso por área</h2>
         <div className="space-y-3">
           {stats.byBloco.map((b) => (
@@ -751,7 +751,7 @@ export function ProgressoSistemaDashboard() {
                   {b.pct}% · {b.total} itens
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#21262d]">
+              <div className="h-2 overflow-hidden rounded-full bg-[#16271e]">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -765,7 +765,7 @@ export function ProgressoSistemaDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border p-4" style={{ borderColor: "#30363d", background: "#161b22" }}>
+      <section className="rounded-xl border p-4" style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[#8b949e]">Checklist deploy</h2>
           <span className="text-xs text-[#8b949e]">
@@ -794,7 +794,7 @@ export function ProgressoSistemaDashboard() {
                     : undefined;
                 const checked = autoOk ?? row.producao;
                 return (
-                  <tr key={row.id} className="border-t border-[#30363d]">
+                  <tr key={row.id} className="border-t border-[#1d3a2c]">
                     <td className="px-2 py-2 text-[#e6edf3]">
                       {row.label}
                       {isBlocker && !checked ? (
@@ -823,13 +823,13 @@ export function ProgressoSistemaDashboard() {
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar requisito…"
           className="min-w-[200px] flex-1 rounded-lg border px-3 py-2 text-sm"
-          style={{ borderColor: "#30363d", background: "#0d1117", color: "#e6edf3" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f", color: "#e6edf3" }}
         />
         <select
           value={filtroStatus}
           onChange={(e) => setFiltroStatus(e.target.value as ProgressoStatus | "")}
           className="rounded-lg border px-2 py-2 text-xs"
-          style={{ borderColor: "#30363d", background: "#0d1117", color: "#e6edf3" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f", color: "#e6edf3" }}
         >
           <option value="">Todos status</option>
           <option value="ok">OK</option>
@@ -840,7 +840,7 @@ export function ProgressoSistemaDashboard() {
           value={filtroFase}
           onChange={(e) => setFiltroFase(e.target.value as ProgressoFase | "")}
           className="rounded-lg border px-2 py-2 text-xs"
-          style={{ borderColor: "#30363d", background: "#0d1117", color: "#e6edf3" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f", color: "#e6edf3" }}
         >
           <option value="">Todas fases</option>
           {PROGRESSO_FASES.map((f) => (
@@ -853,7 +853,7 @@ export function ProgressoSistemaDashboard() {
           value={filtroPrioridade}
           onChange={(e) => setFiltroPrioridade(e.target.value as ProgressoPrioridade | "")}
           className="rounded-lg border px-2 py-2 text-xs"
-          style={{ borderColor: "#30363d", background: "#0d1117", color: "#e6edf3" }}
+          style={{ borderColor: "#1d3a2c", background: "#0a140f", color: "#e6edf3" }}
         >
           <option value="">Todas prioridades</option>
           <option value="P0">P0</option>
@@ -864,7 +864,7 @@ export function ProgressoSistemaDashboard() {
           type="button"
           onClick={expandirTodos}
           className="rounded-lg border px-3 py-2 text-xs text-[#8b949e] hover:text-[#e6edf3]"
-          style={{ borderColor: "#30363d" }}
+          style={{ borderColor: "#1d3a2c" }}
         >
           Expandir tudo
         </button>
@@ -872,7 +872,7 @@ export function ProgressoSistemaDashboard() {
           type="button"
           onClick={recolherTodos}
           className="rounded-lg border px-3 py-2 text-xs text-[#8b949e] hover:text-[#e6edf3]"
-          style={{ borderColor: "#30363d" }}
+          style={{ borderColor: "#1d3a2c" }}
         >
           Recolher tudo
         </button>
@@ -894,7 +894,7 @@ export function ProgressoSistemaDashboard() {
             }}
             id={`bloco-${bloco.id}`}
             className="overflow-hidden rounded-xl border scroll-mt-4"
-            style={{ borderColor: "#30363d", background: "#161b22" }}
+            style={{ borderColor: "#1d3a2c", background: "#0f1d16" }}
           >
             <button
               type="button"
@@ -912,7 +912,7 @@ export function ProgressoSistemaDashboard() {
               </div>
             </button>
             {aberto ? (
-              <div className="overflow-x-auto border-t border-[#30363d]">
+              <div className="overflow-x-auto border-t border-[#1d3a2c]">
                 <table className="w-full min-w-[900px] text-left">
                   <thead>
                     <tr className="text-[10px] uppercase tracking-wider text-[#6e7681]">
@@ -941,7 +941,7 @@ export function ProgressoSistemaDashboard() {
         <p className="text-center text-sm text-[#8b949e]">Nenhum item corresponde aos filtros.</p>
       ) : null}
 
-      <footer className="border-t border-[#30363d] pt-4 text-center text-[10px] text-[#6e7681]">
+      <footer className="border-t border-[#1d3a2c] pt-4 text-center text-[10px] text-[#6e7681]">
         Hub Obra10+ · Status automático via <code className="text-[#8b949e]">npm run verify:progresso</code> no deploy ·
         Matriz em <code className="text-[#8b949e]">lib/crm/progresso-sistema-data.ts</code>
       </footer>

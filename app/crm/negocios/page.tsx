@@ -263,12 +263,12 @@ export default function NegociosPage() {
       actions: (
         <>
           {botaoNovoNegocio}
-          <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
+          <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5 min-[480px]:w-auto">
             <button
               type="button"
               onClick={() => setView("kanban")}
               className={`min-h-11 flex-1 rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${
-                view === "kanban" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
+                view === "kanban" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
               }`}
             >
               Kanban
@@ -277,7 +277,7 @@ export default function NegociosPage() {
               type="button"
               onClick={() => setView("lista")}
               className={`min-h-11 flex-1 rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${
-                view === "lista" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
+                view === "lista" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
               }`}
             >
               Lista
@@ -287,12 +287,12 @@ export default function NegociosPage() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por título ou código..."
-            className="w-full min-h-11 min-w-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-52"
+            className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-52"
           />
           <select
             value={etapa}
             onChange={(e) => setEtapa(e.target.value)}
-            className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
+            className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
           >
             <option value="">Todas as etapas</option>
             {etapasKanban.map((item) => (
@@ -304,7 +304,7 @@ export default function NegociosPage() {
           <button
             type="button"
             onClick={() => setPipelineConfigOpen(true)}
-            className="min-h-11 shrink-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
+            className="min-h-11 shrink-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
           >
             Pipeline
           </button>
@@ -317,12 +317,12 @@ export default function NegociosPage() {
   const headerControls = (
     <>
       {botaoNovoNegocio}
-      <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
+      <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5 min-[480px]:w-auto">
         <button
           type="button"
           onClick={() => setView("kanban")}
           className={`min-h-11 flex-1 rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${
-            view === "kanban" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
+            view === "kanban" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
           }`}
         >
           Kanban
@@ -331,7 +331,7 @@ export default function NegociosPage() {
           type="button"
           onClick={() => setView("lista")}
           className={`min-h-11 flex-1 rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${
-            view === "lista" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
+            view === "lista" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"
           }`}
         >
           Lista
@@ -341,12 +341,12 @@ export default function NegociosPage() {
         value={busca}
         onChange={(e) => setBusca(e.target.value)}
         placeholder="Buscar por título ou código..."
-        className="w-full min-h-11 min-w-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-52"
+        className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-52"
       />
       <select
         value={etapa}
         onChange={(e) => setEtapa(e.target.value)}
-        className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
+        className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
       >
         <option value="">Todas as etapas</option>
         {etapasKanban.map((item) => (
@@ -358,7 +358,7 @@ export default function NegociosPage() {
       <button
         type="button"
         onClick={() => setPipelineConfigOpen(true)}
-        className="min-h-11 shrink-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
+        className="min-h-11 shrink-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
       >
         Pipeline
       </button>
@@ -371,7 +371,7 @@ export default function NegociosPage() {
     ) : null;
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0d1117]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0a140f]">
       <NegocioFormDrawer
         open={drawerAberto}
         onClose={() => setDrawerAberto(false)}
@@ -403,7 +403,7 @@ export default function NegociosPage() {
             aria-label="Fechar"
             onClick={() => setMoverAlvo(null)}
           />
-          <div className="relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-[#30363d] bg-[#161b22] p-4 sm:rounded-2xl">
+          <div className="relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4 sm:rounded-2xl">
             <div className="mb-1 flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <h2 className="truncate text-sm font-bold text-[#e6edf3]">Mover etapa</h2>
@@ -412,7 +412,7 @@ export default function NegociosPage() {
               <button
                 type="button"
                 onClick={() => setMoverAlvo(null)}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#21262d] text-[#8b949e]"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#16271e] text-[#8b949e]"
                 aria-label="Fechar"
               >
                 ✕
@@ -433,8 +433,8 @@ export default function NegociosPage() {
                     }}
                     className="flex w-full min-h-12 items-center gap-3 rounded-xl border px-3 text-left text-sm font-semibold transition-colors disabled:opacity-50"
                     style={{
-                      borderColor: atual ? est.color : "#30363d",
-                      background: atual ? est.color + "1A" : "#0d1117",
+                      borderColor: atual ? est.color : "#1d3a2c",
+                      background: atual ? est.color + "1A" : "#0a140f",
                       color: atual ? est.color : "#e6edf3",
                       cursor: atual ? "default" : "pointer",
                     }}
@@ -459,7 +459,7 @@ export default function NegociosPage() {
       {pipelineTabs}
 
       {isMobile && (
-        <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#30363d] bg-[#161b22] px-3 py-3">
+        <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3">
           <div>
             <h1 className="text-base font-bold text-[#e6edf3]">Negócios</h1>
             <p className="text-[11px] text-[#8b949e]">
@@ -470,14 +470,14 @@ export default function NegociosPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-px bg-[#30363d] sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px bg-[#1d3a2c] sm:grid-cols-4">
         {[
           { label: "Negócios Hoje", value: String(negociosHoje), cor: "#F97316" },
           { label: "Qualificados", value: String(qualificadosCount), cor: "#06B6D4" },
           { label: "Negociando", value: String(negociandoCount), cor: "#F59E0B" },
           { label: "Pipeline Total", value: moeda(pipelineTotal), cor: "#22C55E" },
         ].map((m) => (
-          <div key={m.label} className="bg-[#161b22] px-3 py-2.5 sm:px-5">
+          <div key={m.label} className="bg-[#0f1d16] px-3 py-2.5 sm:px-5">
             <p className="mb-0.5 text-xs text-[#8b949e]">{m.label}</p>
             <p className="text-base font-black sm:text-lg" style={{ color: m.cor }}>
               {m.value}
@@ -536,7 +536,7 @@ export default function NegociosPage() {
                   </div>
 
                   <div
-                    className="flex-1 space-y-2 overflow-y-auto rounded-b-xl border border-t-0 border-[#30363d] bg-[#161b22]/60 p-2 transition-colors"
+                    className="flex-1 space-y-2 overflow-y-auto rounded-b-xl border border-t-0 border-[#1d3a2c] bg-[#0f1d16]/60 p-2 transition-colors"
                     style={{
                       minHeight: 80,
                       backgroundColor: dragOver === est.id ? est.color + "12" : undefined,
@@ -594,7 +594,7 @@ export default function NegociosPage() {
                       <button
                         type="button"
                         onClick={() => router.push(`/crm/negocios/${negocio.id}`)}
-                        className="flex w-full min-h-14 flex-col gap-2 rounded-xl border border-[#30363d] bg-[#161b22] p-3 text-left"
+                        className="flex w-full min-h-14 flex-col gap-2 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3 text-left"
                         style={{
                           borderLeftWidth: 3,
                           borderLeftColor: ETAPA_COR[negocio.etapa] || "#6b7280",
@@ -633,7 +633,7 @@ export default function NegociosPage() {
               </ul>
             ) : (
               <table className="w-full text-sm">
-                <thead className="sticky top-0 border-b border-[#30363d] bg-[#161b22]">
+                <thead className="sticky top-0 border-b border-[#1d3a2c] bg-[#0f1d16]">
                   <tr>
                     {["Título", "Mercado", "Etapa", "Status", "Valor", "Previsão", "Atualizado", ""].map(
                       (h) => (
@@ -659,7 +659,7 @@ export default function NegociosPage() {
                       <tr
                         key={negocio.id}
                         onClick={() => router.push(`/crm/negocios/${negocio.id}`)}
-                        className="cursor-pointer border-b border-[#30363d]/50 transition-colors hover:bg-[#161b22]/60"
+                        className="cursor-pointer border-b border-[#1d3a2c]/50 transition-colors hover:bg-[#0f1d16]/60"
                       >
                         <td className="px-4 py-3">
                           <p className="font-bold text-white">{negocio.titulo}</p>
@@ -728,7 +728,7 @@ export default function NegociosPage() {
                 <button
                   onClick={() => void carregarLista(offset, true)}
                   disabled={carregandoMais}
-                  className="rounded-lg border border-[#30363d] bg-[#161b22] px-5 py-2 text-sm font-semibold text-[#8b949e]"
+                  className="rounded-lg border border-[#1d3a2c] bg-[#0f1d16] px-5 py-2 text-sm font-semibold text-[#8b949e]"
                 >
                   {carregandoMais ? "Carregando..." : `Carregar mais (${total - negocios.length} restantes)`}
                 </button>

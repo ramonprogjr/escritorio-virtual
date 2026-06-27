@@ -82,7 +82,7 @@ function descreverEvento(e: EventoRede): string {
 const ORIGENS = ["", "whatsapp", "meta", "google", "indicacao", "manual", "super_cadastro"];
 const MERCADOS = ["", "IMB", "ARQ", "ENG", "SRV", "RFM", "MRC", "PRO", "FOR"];
 const inputStyle: React.CSSProperties = {
-  padding: 9, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13,
+  padding: 9, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13,
 };
 const label = (s: string | null) => (s && s.trim() ? s : "qualquer");
 
@@ -246,7 +246,7 @@ export default function DistribuicaoPage() {
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
       {/* Auditoria da rede — KPIs do hub_eventos (C.1, base da cobrança IA) */}
       {metricas && (
-        <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
+        <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #1d3a2c", background: "#0a140f" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 12px", gap: 12 }}>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
               Auditoria da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· KPIs em tempo real</span>
@@ -287,7 +287,7 @@ export default function DistribuicaoPage() {
             </ul>
           )}
           {metricas.fornecedores.length > 0 && (
-            <div style={{ marginTop: 16, borderTop: "1px solid #21262d", paddingTop: 14 }}>
+            <div style={{ marginTop: 16, borderTop: "1px solid #16271e", paddingTop: 14 }}>
               <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "#8b949e", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Desempenho por fornecedor{" "}
                 <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>· aderência decide quem recebe mais leads</span>
@@ -298,7 +298,7 @@ export default function DistribuicaoPage() {
                   const stLabel = f.status_financeiro === "bloqueado" ? "bloqueado" : f.status_financeiro === "pendente" ? "pendente" : "em dia";
                   const stCor = f.status_financeiro === "bloqueado" ? "#f85149" : f.status_financeiro === "pendente" ? "#e3b341" : "#3fb950";
                   return (
-                    <div key={f.fornecedor_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: "1px solid #21262d", background: "#0b0f14" }}>
+                    <div key={f.fornecedor_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: "1px solid #16271e", background: "#0b0f14" }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#e6edf3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {f.nome ?? "Fornecedor"}
@@ -311,7 +311,7 @@ export default function DistribuicaoPage() {
                       </div>
                       <div style={{ width: 88, textAlign: "right" }}>
                         <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: corA, lineHeight: 1 }}>{f.aderencia}</p>
-                        <div style={{ height: 4, borderRadius: 2, background: "#21262d", overflow: "hidden", marginTop: 3 }}>
+                        <div style={{ height: 4, borderRadius: 2, background: "#16271e", overflow: "hidden", marginTop: 3 }}>
                           <div style={{ width: `${f.aderencia}%`, height: "100%", background: corA }} />
                         </div>
                         <p style={{ margin: "2px 0 0", fontSize: 9, color: "#6e7681", textTransform: "uppercase" }}>aderência</p>
@@ -338,7 +338,7 @@ export default function DistribuicaoPage() {
       )}
 
       {/* Atividade da rede — gestão completa do Hub (lê hub_eventos) */}
-      <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#0d1117" }}>
+      <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #1d3a2c", background: "#0a140f" }}>
         <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
           Atividade da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· controle total do Hub</span>
         </p>
@@ -422,13 +422,13 @@ export default function DistribuicaoPage() {
       {carregando ? (
         <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando…</p>
       ) : lista.length === 0 ? (
-        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #30363d", borderRadius: 12 }}>
+        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #1d3a2c", borderRadius: 12 }}>
           Nenhuma regra ainda — o roteamento usa a heurística padrão. Adicione a 1ª regra acima.
         </div>
       ) : (
-        <div style={{ border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: "1px solid #1d3a2c", borderRadius: 12, overflow: "hidden" }}>
           {lista.map((r, i) => (
-            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none", opacity: r.ativo ? 1 : 0.5 }}>
+            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #16271e" : "none", opacity: r.ativo ? 1 : 0.5 }}>
               <span style={{ fontSize: 11, color: "#6e7681", width: 28 }}>#{r.prioridade}</span>
               <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
                 <span style={{ color: "#8b949e" }}>se </span>
@@ -438,7 +438,7 @@ export default function DistribuicaoPage() {
                 <span style={{ color: "#c9a24a" }}> → {r.destino_tipo}: {r.destino_valor}</span>
               </div>
               <button type="button" onClick={() => void toggle(r)}
-                style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #30363d", background: "transparent", color: r.ativo ? "#34d399" : "#8b949e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #1d3a2c", background: "transparent", color: r.ativo ? "#34d399" : "#8b949e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 {r.ativo ? "ativa" : "inativa"}
               </button>
               <button type="button" onClick={() => void excluir(r.id)} title="Excluir"

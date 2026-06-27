@@ -70,10 +70,10 @@ const ORIGEM_LABEL: Record<string, string> = {
   formulario: "Formulário", indicacao: "Indicação", outro: "Outro",
 };
 
-/** MANIFEST: verde #003b26, dourado #c9a24a, fundo #0d1117 */
+/** MANIFEST: verde #003b26, dourado #c9a24a, fundo #0a140f */
 const C = {
-  bg: "bg-[#0d1117]",
-  bgAlt: "bg-[#0a0e14]",
+  bg: "bg-[#0a140f]",
+  bgAlt: "bg-[#0a140f]",
   border: "border-white/[0.08]",
   gold: "text-[#c9a24a]",
   green: "bg-[#003b26]",
@@ -708,7 +708,7 @@ function AtendimentoContent() {
       </div>
 
       {/* ÁREA DO CHAT */}
-      <div className={`flex min-w-0 flex-1 flex-col overflow-hidden bg-[#0a0e14] ${isMobile && !leadSel ? "hidden" : ""}`}>
+      <div className={`flex min-w-0 flex-1 flex-col overflow-hidden bg-[#0a140f] ${isMobile && !leadSel ? "hidden" : ""}`}>
         {!leadSel ? (
           <div className="flex-1 flex items-center justify-center px-6">
             <div className="text-center max-w-sm">
@@ -819,13 +819,13 @@ function AtendimentoContent() {
               )}
               {carregandoMensagens && mensagens.length === 0 && !mensagensLoadError && (
                 <div className="flex flex-col items-center justify-center h-32 gap-2">
-                  <div className="w-5 h-5 border-2 border-zinc-600 border-t-[#c9a24a] rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#1d3a2c] border-t-[#c9a24a] rounded-full animate-spin" />
                   <span className="text-zinc-600 text-xs">A carregar mensagens…</span>
                 </div>
               )}
               {!carregandoMensagens && !mensagensLoadError && mensagens.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-40 gap-3 text-center px-6">
-                  <div className="w-10 h-10 rounded-full bg-zinc-800/60 border border-white/[0.07] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#0f1d16]/60 border border-white/[0.07] flex items-center justify-center">
                     <MessageSquare size={18} strokeWidth={1.5} className="text-zinc-600" />
                   </div>
                   <div>
@@ -854,7 +854,7 @@ function AtendimentoContent() {
                 }
 
                 const THEME = {
-                  lead:   { avatar: "bg-zinc-700 text-zinc-100",       label: "text-zinc-500", bubble: "bg-[#1e2128] text-zinc-100 border border-white/[0.07]",       tail: "rounded-tl-[4px]" },
+                  lead:   { avatar: "bg-[#16271e] text-zinc-100",       label: "text-zinc-500", bubble: "bg-[#1e2128] text-zinc-100 border border-white/[0.07]",       tail: "rounded-tl-[4px]" },
                   ia:     { avatar: "bg-[#003b26] text-emerald-300 border border-emerald-500/30", label: "text-emerald-400", bubble: "bg-[#003b26]/80 text-emerald-50 border border-emerald-500/20",  tail: "rounded-tr-[4px]" },
                   voce:   { avatar: "bg-[#c9a24a]/20 text-[#c9a24a] border border-[#c9a24a]/35", label: "text-[#c9a24a]",   bubble: "bg-[#2a1f08]/80 text-[#f4e8c9] border border-[#c9a24a]/25",   tail: "rounded-tr-[4px]" },
                   humano: { avatar: "bg-green-900/60 text-green-300 border border-green-600/30", label: "text-green-400",   bubble: "bg-[#0e1f0e]/80 text-zinc-100 border border-green-600/20",     tail: "rounded-tr-[4px]" },
@@ -1084,7 +1084,7 @@ function AtendimentoContent() {
             style={{
               position: "fixed", top: 0, right: 0, bottom: 0,
               width: "min(420px, 100vw)", zIndex: 60,
-              background: "#0a0e14", borderLeft: "1px solid rgba(255,255,255,0.08)",
+              background: "#0a140f", borderLeft: "1px solid rgba(255,255,255,0.08)",
               boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
               display: "flex", flexDirection: "column", minHeight: 0,
             }}

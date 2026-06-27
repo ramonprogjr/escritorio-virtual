@@ -46,7 +46,7 @@ export function CrmLeadsEntradaPeriodo({ pontos, periodo }: Props) {
   const max = Math.max(1, ...exibir.map((p) => p.count));
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-[#30363d] bg-[#161b22] p-3">
+    <div className="flex h-full flex-col rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3">
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wider text-[#8b949e]">Entrada de leads</p>
@@ -58,15 +58,15 @@ export function CrmLeadsEntradaPeriodo({ pontos, periodo }: Props) {
       </div>
 
       <div className="mb-2 grid grid-cols-3 gap-1 text-center">
-        <div className="rounded-md bg-[#0d1117] px-1 py-1.5">
+        <div className="rounded-md bg-[#0a140f] px-1 py-1.5">
           <p className="text-[9px] text-[#6e7681]">Total</p>
           <p className="text-sm font-black tabular-nums text-[#e6edf3]">{total}</p>
         </div>
-        <div className="rounded-md bg-[#0d1117] px-1 py-1.5">
+        <div className="rounded-md bg-[#0a140f] px-1 py-1.5">
           <p className="text-[9px] text-[#6e7681]">{porSemana ? "Média/sem." : "Média/dia"}</p>
           <p className="text-sm font-black tabular-nums text-[#c9a24a]">{media}</p>
         </div>
-        <div className="rounded-md bg-[#0d1117] px-1 py-1.5">
+        <div className="rounded-md bg-[#0a140f] px-1 py-1.5">
           <p className="text-[9px] text-[#6e7681]">Pico</p>
           <p className="text-sm font-black tabular-nums text-[#e6edf3]">
             {pico.count}

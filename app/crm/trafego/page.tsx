@@ -68,7 +68,7 @@ export default function TrafegoPage() {
   ];
 
   const periodoControls = (
-    <div className="flex rounded-lg p-0.5" style={{ background: "#21262d" }}>
+    <div className="flex rounded-lg p-0.5" style={{ background: "#16271e" }}>
       {PERIODOS.map((p) => (
         <button
           key={p.value}
@@ -76,7 +76,7 @@ export default function TrafegoPage() {
           onClick={() => setPeriodo(p.value)}
           className="min-h-11 flex-1 rounded-md px-3 py-2 text-xs font-bold transition-colors md:min-h-0 md:flex-none md:py-1.5"
           style={{
-            background: periodo === p.value ? "#30363d" : "transparent",
+            background: periodo === p.value ? "#1d3a2c" : "transparent",
             color: periodo === p.value ? "#e6edf3" : "#8b949e",
           }}
         >
@@ -96,17 +96,17 @@ export default function TrafegoPage() {
   }, [pathname, setSlot, periodo, isMobile]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:h-screen" style={{ background: "#0d1117" }}>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:h-screen" style={{ background: "#0a140f" }}>
       {isMobile && (
-        <div className="shrink-0 space-y-2 border-b border-[#30363d] px-3 py-3">
+        <div className="shrink-0 space-y-2 border-b border-[#1d3a2c] px-3 py-3">
           <h1 className="text-base font-bold text-[#e6edf3]">Marketing</h1>
           {periodoControls}
         </div>
       )}
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-px flex-shrink-0 md:grid-cols-4" style={{ background: "#21262d" }}>
+      <div className="grid grid-cols-2 gap-px flex-shrink-0 md:grid-cols-4" style={{ background: "#16271e" }}>
         {kpis.map(k => (
-          <div key={k.label} className="px-5 py-3" style={{ background: "#0d1117" }}>
+          <div key={k.label} className="px-5 py-3" style={{ background: "#0a140f" }}>
             <p className="text-xs mb-0.5" style={{ color: "#8b949e" }}>{k.label}</p>
             <p className="font-black text-lg" style={{ color: loading ? "#484f58" : k.cor }}>{loading ? "—" : k.value}</p>
           </div>
@@ -117,7 +117,7 @@ export default function TrafegoPage() {
       <div className="flex-1 overflow-y-auto p-5">
         {loading && (
           <div className="flex items-center justify-center h-48">
-            <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: "#30363d", borderTopColor: "#c9a24a" }} />
+            <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: "#1d3a2c", borderTopColor: "#c9a24a" }} />
           </div>
         )}
 
@@ -132,7 +132,7 @@ export default function TrafegoPage() {
         )}
 
         {!loading && !erro && campanhas.length === 0 && (
-          <div className="rounded-xl p-8 text-center" style={{ background: "#161b22", border: "1px solid #30363d" }}>
+          <div className="rounded-xl p-8 text-center" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
             <p className="text-4xl mb-3">📡</p>
             <p className="font-bold mb-1" style={{ color: "#e6edf3" }}>Nenhuma campanha encontrada</p>
             <p className="text-xs" style={{ color: "#8b949e" }}>Conecte suas contas de anúncios no Windsor.ai</p>
@@ -147,7 +147,7 @@ export default function TrafegoPage() {
             {campanhas.map((c, i) => (
               <li
                 key={i}
-                className="rounded-xl border border-[#30363d] bg-[#161b22] p-4"
+                className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4"
               >
                 <p className="mb-2 truncate text-sm font-bold text-[#e6edf3]">{c.campaign_name}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -162,9 +162,9 @@ export default function TrafegoPage() {
         )}
 
         {!loading && !erro && campanhas.length > 0 && !isMobile && (
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #30363d" }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1d3a2c" }}>
             <table className="w-full text-sm">
-              <thead style={{ background: "#161b22" }}>
+              <thead style={{ background: "#0f1d16" }}>
                 <tr>
                   {["Campanha", "Gasto", "Cliques", "Impressões", "CTR", "CPC", "Conversões"].map(h => (
                     <th key={h} className="text-left text-xs font-bold uppercase tracking-wide px-4 py-3" style={{ color: "#8b949e" }}>{h}</th>
@@ -173,7 +173,7 @@ export default function TrafegoPage() {
               </thead>
               <tbody>
                 {campanhas.map((c, i) => (
-                  <tr key={i} style={{ borderTop: "1px solid #21262d" }}>
+                  <tr key={i} style={{ borderTop: "1px solid #16271e" }}>
                     <td className="px-4 py-3">
                       <p className="font-bold text-xs truncate max-w-xs" style={{ color: "#e6edf3" }}>{c.campaign_name}</p>
                     </td>

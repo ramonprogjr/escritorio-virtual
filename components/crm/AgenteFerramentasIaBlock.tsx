@@ -70,7 +70,7 @@ function ToggleSwitch({
         borderRadius: 999,
         border: "none",
         cursor: disabled ? "not-allowed" : "pointer",
-        background: checked ? "linear-gradient(180deg, #3fb950 0%, #2ea043 100%)" : "#21262d",
+        background: checked ? "linear-gradient(180deg, #3fb950 0%, #2ea043 100%)" : "#16271e",
         boxShadow: checked ? "inset 0 1px 0 rgba(255,255,255,0.12)" : "inset 0 1px 0 rgba(0,0,0,0.2)",
         position: "relative",
         flexShrink: 0,
@@ -154,8 +154,8 @@ export function AgenteFerramentasIaBlock({
     gap: 12,
     padding: "12px 14px",
     borderRadius: 12,
-    border: "1px solid #30363d",
-    background: "#161b22",
+    border: "1px solid #1d3a2c",
+    background: "#0f1d16",
   };
 
   return (
@@ -164,8 +164,8 @@ export function AgenteFerramentasIaBlock({
         marginTop: modoCompacto ? 0 : 12,
         padding: modoCompacto ? 0 : 14,
         borderRadius: 12,
-        border: modoCompacto ? undefined : "1px solid #30363d",
-        background: modoCompacto ? undefined : "#0d1117",
+        border: modoCompacto ? undefined : "1px solid #1d3a2c",
+        background: modoCompacto ? undefined : "#0a140f",
       }}
     >
       {!modoCompacto ? (
@@ -242,13 +242,13 @@ export function AgenteFerramentasIaBlock({
         </div>
       ) : null}
 
-      <div style={{ ...rowBase, marginBottom: 10, borderColor: motorHabilitado ? "#388bfd55" : "#30363d" }}>
+      <div style={{ ...rowBase, marginBottom: 10, borderColor: motorHabilitado ? "#388bfd55" : "#1d3a2c" }}>
         <div
           style={{
             width: 40,
             height: 40,
             borderRadius: 10,
-            background: motorHabilitado ? "rgba(56,139,253,0.15)" : "#21262d",
+            background: motorHabilitado ? "rgba(56,139,253,0.15)" : "#16271e",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -280,13 +280,13 @@ export function AgenteFerramentasIaBlock({
         </div>
       </div>
 
-      <div style={{ ...rowBase, marginBottom: 16, borderColor: mistralSyncHabilitado ? "#a371f755" : "#30363d" }}>
+      <div style={{ ...rowBase, marginBottom: 16, borderColor: mistralSyncHabilitado ? "#a371f755" : "#1d3a2c" }}>
         <div
           style={{
             width: 40,
             height: 40,
             borderRadius: 10,
-            background: mistralSyncHabilitado ? "rgba(163,113,247,0.12)" : "#21262d",
+            background: mistralSyncHabilitado ? "rgba(163,113,247,0.12)" : "#16271e",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -362,8 +362,8 @@ export function AgenteFerramentasIaBlock({
                           key={tool.id}
                           style={{
                             ...rowBase,
-                            borderColor: ligado ? "#388bfd44" : "#30363d",
-                            background: ligado ? "rgba(56,139,253,0.06)" : "#161b22",
+                            borderColor: ligado ? "#388bfd44" : "#1d3a2c",
+                            background: ligado ? "rgba(56,139,253,0.06)" : "#0f1d16",
                             alignItems: "flex-start",
                           }}
                         >
@@ -372,7 +372,7 @@ export function AgenteFerramentasIaBlock({
                               width: 42,
                               height: 42,
                               borderRadius: 10,
-                              background: ligado ? "rgba(56,139,253,0.18)" : "#21262d",
+                              background: ligado ? "rgba(56,139,253,0.18)" : "#16271e",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -472,8 +472,8 @@ export function AgenteFerramentasIaBlock({
                         padding: "12px 14px",
                         borderRadius: 12,
                         border: "1px solid",
-                        borderColor: ligado ? "rgba(201,162,74,0.35)" : "#30363d",
-                        background: ligado ? "rgba(201,162,74,0.07)" : "#161b22",
+                        borderColor: ligado ? "rgba(201,162,74,0.35)" : "#1d3a2c",
+                        background: ligado ? "rgba(201,162,74,0.07)" : "#0f1d16",
                       }}
                     >
                       <div
@@ -481,7 +481,7 @@ export function AgenteFerramentasIaBlock({
                           width: 42,
                           height: 42,
                           borderRadius: 10,
-                          background: ligado ? "rgba(201,162,74,0.2)" : "#21262d",
+                          background: ligado ? "rgba(201,162,74,0.2)" : "#16271e",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -587,8 +587,8 @@ export function AgenteFerramentasIaBlock({
             marginTop: 14,
             padding: "10px 12px",
             borderRadius: 10,
-            border: "1px solid #30363d",
-            background: "#161b22",
+            border: "1px solid #1d3a2c",
+            background: "#0f1d16",
           }}
         >
           <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 6px" }}>

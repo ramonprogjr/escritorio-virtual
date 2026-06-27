@@ -56,11 +56,11 @@ export function CrmAcaoAgora({
   if (loading) {
     return (
       <div className="mb-6 animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-5">
-        <div className="h-4 w-32 rounded bg-[#21262d]" />
+        <div className="h-4 w-32 rounded bg-[#16271e]" />
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="h-16 rounded-xl bg-[#21262d]" />
-          <div className="h-16 rounded-xl bg-[#21262d]" />
-          <div className="h-16 rounded-xl bg-[#21262d]" />
+          <div className="h-16 rounded-xl bg-[#16271e]" />
+          <div className="h-16 rounded-xl bg-[#16271e]" />
+          <div className="h-16 rounded-xl bg-[#16271e]" />
         </div>
       </div>
     );
@@ -80,7 +80,7 @@ export function CrmAcaoAgora({
   }
 
   return (
-    <section className="mb-6 rounded-2xl border border-[#c9a24a55] bg-gradient-to-br from-[#1a1508] via-[#161b22] to-[#0f1520] p-4 shadow-[0_12px_36px_rgba(0,0,0,0.28)] sm:p-5">
+    <section className="mb-6 rounded-2xl border border-[#c9a24a55] bg-gradient-to-br from-[#1a1508] via-[#0f1d16] to-[#0f1520] p-4 shadow-[0_12px_36px_rgba(0,0,0,0.28)] sm:p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c9a24a]">Ação agora</p>
         <span className="rounded-full border border-[#c9a24a44] bg-[#c9a24a14] px-2 py-0.5 text-[10px] font-bold text-[#c9a24a]">
@@ -92,7 +92,7 @@ export function CrmAcaoAgora({
           <Link
             key={item.label}
             href={item.href}
-            className="flex min-w-0 items-center gap-3 rounded-xl border border-[#2b3544] bg-[#0d1117]/80 px-3.5 py-3 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#c9a24a66]"
+            className="flex min-w-0 items-center gap-3 rounded-xl border border-[#2b3544] bg-[#0a140f]/80 px-3.5 py-3 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#c9a24a66]"
             style={{ borderLeftColor: item.cor, borderLeftWidth: 3 }}
           >
             <span

@@ -74,7 +74,7 @@ export default function CreditosPage() {
   const temSaldoPositivo = (saldo ?? 0) > 0;
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0d1117]">
+    <div className="flex min-h-full flex-col bg-[#0a140f]">
       <CrmStickyPageHeader
         title="Carteira de Tijolos"
         description="Tijolos 🧱 — a moeda de IA do Obra10+. Cada ação da IA consome Tijolos."
@@ -82,7 +82,7 @@ export default function CreditosPage() {
           <button
             type="button"
             onClick={() => void carregar()}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#30363d] bg-[#161b22] px-3 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#0f1d16] px-3 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
           >
             <RefreshCw className="h-4 w-4" />
             Atualizar
@@ -101,7 +101,7 @@ export default function CreditosPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div
             className="rounded-2xl border p-5"
-            style={{ borderColor: "#c9a24a55", background: "linear-gradient(135deg,#161b22,#1a1505)" }}
+            style={{ borderColor: "#c9a24a55", background: "linear-gradient(135deg,#0f1d16,#1a1505)" }}
           >
             <div className="mb-1 flex items-center gap-2">
               <Layers className="h-4 w-4" style={{ color: "#c9a24a" }} />
@@ -122,7 +122,7 @@ export default function CreditosPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-[#30363d] bg-[#161b22] p-5">
+          <div className="rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-5">
             <div className="mb-1 flex items-center gap-2">
               <Layers className="h-4 w-4 text-[#8b949e]" />
               <span className="text-[11px] font-bold uppercase tracking-wide text-[#8b949e]">Consumido (recente)</span>
@@ -140,7 +140,7 @@ export default function CreditosPage() {
         {loading ? (
           <p className="text-sm text-[#8b949e]">Carregando…</p>
         ) : consumo.length === 0 ? (
-          <p className="rounded-xl border border-[#30363d] bg-[#161b22] px-4 py-8 text-center text-sm text-[#8b949e]">
+          <p className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] px-4 py-8 text-center text-sm text-[#8b949e]">
             Nenhum consumo ainda. Assim que a IA gerar algo (atendimento, relatório, cronograma…), aparece aqui.
           </p>
         ) : (
@@ -148,7 +148,7 @@ export default function CreditosPage() {
             {consumo.map((c, i) => (
               <li
                 key={i}
-                className="flex items-center justify-between gap-3 rounded-xl border border-[#30363d] bg-[#161b22] px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] px-4 py-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[#e6edf3]">{labelOrigem(c.origem)}</p>

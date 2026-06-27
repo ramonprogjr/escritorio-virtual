@@ -175,7 +175,7 @@ export default function EmpresaDetalhePage() {
       <div
         style={{
           minHeight: "100%",
-          background: "#0d1117",
+          background: "#0a140f",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -188,7 +188,7 @@ export default function EmpresaDetalhePage() {
 
   if (!empresa) {
     return (
-      <div style={{ minHeight: "100%", background: "#0d1117", padding: 24 }}>
+      <div style={{ minHeight: "100%", background: "#0a140f", padding: 24 }}>
         <button
           type="button"
           onClick={() => router.push("/crm/empresas")}
@@ -220,14 +220,14 @@ export default function EmpresaDetalhePage() {
     .join(" · ");
 
   return (
-    <div style={{ minHeight: "100%", background: "#0d1117" }}>
+    <div style={{ minHeight: "100%", background: "#0a140f" }}>
       <div
         style={{
           position: "sticky",
           top: 0,
           zIndex: 10,
-          background: "#161b22",
-          borderBottom: "1px solid #30363d",
+          background: "#0f1d16",
+          borderBottom: "1px solid #1d3a2c",
           padding: "14px 20px",
         }}
       >
@@ -250,9 +250,9 @@ export default function EmpresaDetalhePage() {
           <div style={{ flex: 1, minWidth: 200 }}>
             {editando ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <input value={empresa.razao_social} onChange={(e) => setEmpresa((x) => (x ? { ...x, razao_social: e.target.value } : x))} placeholder="Razão social" style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }} />
-                <input value={empresa.nome_fantasia ?? ""} onChange={(e) => setEmpresa((x) => (x ? { ...x, nome_fantasia: e.target.value } : x))} placeholder="Nome fantasia" style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }} />
-                <input value={empresa.cnpj ?? ""} onChange={(e) => setEmpresa((x) => (x ? { ...x, cnpj: e.target.value } : x))} placeholder="CNPJ" style={{ padding: 8, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }} />
+                <input value={empresa.razao_social} onChange={(e) => setEmpresa((x) => (x ? { ...x, razao_social: e.target.value } : x))} placeholder="Razão social" style={{ padding: 8, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }} />
+                <input value={empresa.nome_fantasia ?? ""} onChange={(e) => setEmpresa((x) => (x ? { ...x, nome_fantasia: e.target.value } : x))} placeholder="Nome fantasia" style={{ padding: 8, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }} />
+                <input value={empresa.cnpj ?? ""} onChange={(e) => setEmpresa((x) => (x ? { ...x, cnpj: e.target.value } : x))} placeholder="CNPJ" style={{ padding: 8, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }} />
                 <button type="button" disabled={salvandoEdicao} onClick={() => void salvarEdicao()} style={{ padding: "8px 12px", borderRadius: 8, background: "#c9a24a", color: "#003b26", border: "none", fontWeight: 700, cursor: "pointer" }}>{salvandoEdicao ? "Salvando…" : "Guardar"}</button>
               </div>
             ) : (
@@ -271,7 +271,7 @@ export default function EmpresaDetalhePage() {
             )}
           </div>
           {!editando && (
-            <button type="button" onClick={() => setEditando(true)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #30363d", background: "#21262d", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button type="button" onClick={() => setEditando(true)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #1d3a2c", background: "#16271e", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               Editar
             </button>
           )}
@@ -296,7 +296,7 @@ export default function EmpresaDetalhePage() {
               style={{
                 padding: "8px 14px",
                 borderRadius: 8,
-                border: "1px solid #30363d",
+                border: "1px solid #1d3a2c",
                 background: acessoAtivo ? "transparent" : "#003b26",
                 color: acessoAtivo ? "#8b949e" : "#c9a24a",
                 fontSize: 12,
@@ -356,8 +356,8 @@ export default function EmpresaDetalhePage() {
                 style={{
                   padding: 16,
                   borderRadius: 10,
-                  border: "1px solid #30363d",
-                  background: "#161b22",
+                  border: "1px solid #1d3a2c",
+                  background: "#0f1d16",
                   display: "flex",
                   flexDirection: "column",
                   gap: 12,

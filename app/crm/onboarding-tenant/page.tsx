@@ -47,7 +47,7 @@ export default function OnboardingTenantPage() {
   }, []);
 
   return (
-    <div className="mx-auto min-h-full max-w-2xl bg-[#0d1117] px-4 py-8 text-[#e6edf3]">
+    <div className="mx-auto min-h-full max-w-2xl bg-[#0a140f] px-4 py-8 text-[#e6edf3]">
       <h1 className="text-xl font-bold">Onboarding do tenant</h1>
       <p className="mt-1 text-sm text-[#8b949e]">
         Checklist vivo para colocar o CRM Obra10+ em produção no seu escritório.
@@ -59,12 +59,12 @@ export default function OnboardingTenantPage() {
         <p className="mt-8 text-sm text-[#ff7b72]">{data.error}</p>
       ) : (
         <>
-          <div className="mt-6 rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+          <div className="mt-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-bold">Progresso</span>
               <span className="text-sm tabular-nums text-[#c9a24a]">{data?.progress ?? 0}%</span>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#21262d]">
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#16271e]">
               <div
                 className="h-full rounded-full bg-[#c9a24a] transition-all"
                 style={{ width: `${data?.progress ?? 0}%` }}
@@ -80,7 +80,7 @@ export default function OnboardingTenantPage() {
             {(data?.steps ?? []).map((step, i) => (
               <li
                 key={step.id}
-                className="flex gap-3 rounded-xl border border-[#30363d] bg-[#161b22] p-4"
+                className="flex gap-3 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4"
               >
                 {step.ok ? (
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-[#3fb950]" />

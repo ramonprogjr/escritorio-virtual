@@ -29,7 +29,7 @@ const ORIGEM_LABEL: Record<string, string> = {
 const ORIGEM_OPCOES = LEAD_ORIGENS.map((o) => ({ value: o, label: ORIGEM_LABEL[o] || o }));
 
 const inputCls =
-  "w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a]";
+  "w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a]";
 
 const labelCls = "mb-1 block text-xs font-semibold text-[#8b949e]";
 
@@ -170,7 +170,7 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
             type="button"
             onClick={onClose}
             disabled={salvando}
-            className="min-h-10 rounded-lg border border-[#30363d] px-4 py-2 text-sm font-semibold text-[#8b949e] hover:text-white disabled:opacity-50"
+            className="min-h-10 rounded-lg border border-[#1d3a2c] px-4 py-2 text-sm font-semibold text-[#8b949e] hover:text-white disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -178,7 +178,7 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
             type="button"
             onClick={() => void salvar()}
             disabled={salvando}
-            className="min-h-10 rounded-lg px-5 py-2 text-sm font-bold text-[#0d1117] disabled:opacity-50"
+            className="min-h-10 rounded-lg px-5 py-2 text-sm font-bold text-[#0a140f] disabled:opacity-50"
             style={{ background: salvando ? "#6e7681" : "#c9a24a" }}
           >
             {salvando ? "Salvando…" : "Criar lead"}
@@ -233,7 +233,7 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
           type="button"
           onClick={() => setDetalhes((v) => !v)}
           aria-expanded={detalhes}
-          className="flex items-center gap-2 self-start rounded-lg border border-[#30363d] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#c9a24a] hover:text-[#e6edf3]"
+          className="flex items-center gap-2 self-start rounded-lg border border-[#1d3a2c] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#c9a24a] hover:text-[#e6edf3]"
         >
           {detalhes ? (
             <>
@@ -247,7 +247,7 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
         </button>
 
         {detalhes && (
-          <div className="flex flex-col gap-5 border-t border-[#21262d] pt-5">
+          <div className="flex flex-col gap-5 border-t border-[#16271e] pt-5">
             <section>
               <SmartField
                 label="Tipo de interesse"

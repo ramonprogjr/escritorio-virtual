@@ -44,7 +44,7 @@ export default function TarefasComerciaisPage() {
   }, [carregar]);
 
   return (
-    <div style={{ minHeight: "100%", background: "#0d1117", color: "#e6edf3" }}>
+    <div style={{ minHeight: "100%", background: "#0a140f", color: "#e6edf3" }}>
       <CrmStickyPageHeader
         title="Tarefas comerciais"
         description="Próximas ações ligadas a leads e negócios (PDF Pt.14)"
@@ -66,7 +66,7 @@ export default function TarefasComerciaisPage() {
                 key={t.id}
                 style={{
                   padding: "14px 0",
-                  borderBottom: "1px solid #30363d",
+                  borderBottom: "1px solid #1d3a2c",
                 }}
               >
                 <p style={{ margin: 0, fontWeight: 700 }}>{t.titulo}</p>

@@ -104,8 +104,8 @@ export function NotificacoesSino() {
       </button>
 
       {aberto && (
-        <div className="absolute right-0 top-11 z-50 max-h-[440px] w-[340px] overflow-hidden rounded-xl border border-[#30363d] bg-[#0d1117] shadow-2xl">
-          <div className="flex items-center justify-between border-b border-[#21262d] px-4 py-3">
+        <div className="absolute right-0 top-11 z-50 max-h-[440px] w-[340px] overflow-hidden rounded-xl border border-[#1d3a2c] bg-[#0a140f] shadow-2xl">
+          <div className="flex items-center justify-between border-b border-[#16271e] px-4 py-3">
             <span className="text-sm font-bold text-[#e6edf3]">Notificações</span>
             {naoLidas > 0 && (
               <button
@@ -128,7 +128,7 @@ export function NotificacoesSino() {
                     key={n.id}
                     type="button"
                     onClick={() => irPara(n)}
-                    className={`flex w-full items-start gap-3 border-b border-[#161b22] px-4 py-3 text-left transition-colors hover:bg-[#161b22] cursor-pointer ${novo ? "bg-[#c9a24a0a]" : ""}`}
+                    className={`flex w-full items-start gap-3 border-b border-[#0f1d16] px-4 py-3 text-left transition-colors hover:bg-[#0f1d16] cursor-pointer ${novo ? "bg-[#c9a24a0a]" : ""}`}
                   >
                     <span
                       className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full"

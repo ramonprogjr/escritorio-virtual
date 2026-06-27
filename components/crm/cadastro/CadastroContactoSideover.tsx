@@ -65,8 +65,8 @@ const INPUT: React.CSSProperties = {
   width: "100%",
   padding: "10px 12px",
   borderRadius: 8,
-  border: "1px solid #30363d",
-  background: "#161b22",
+  border: "1px solid #1d3a2c",
+  background: "#0f1d16",
   color: "#e6edf3",
   fontSize: 13,
   boxSizing: "border-box",
@@ -329,8 +329,8 @@ export function CadastroContactoSideover({
             gap: 6,
             padding: "10px 16px",
             borderRadius: 8,
-            border: "1px solid #30363d",
-            background: "#21262d",
+            border: "1px solid #1d3a2c",
+            background: "#16271e",
             color: "#e6edf3",
             cursor: "pointer",
             fontWeight: 600,
@@ -367,7 +367,7 @@ export function CadastroContactoSideover({
               style={{
                 padding: "10px 16px",
                 borderRadius: 8,
-                border: "1px solid #30363d",
+                border: "1px solid #1d3a2c",
                 background: "transparent",
                 color: "#8b949e",
                 cursor: "pointer",
@@ -402,7 +402,7 @@ export function CadastroContactoSideover({
           style={{
             padding: "10px 16px",
             borderRadius: 8,
-            border: "1px solid #30363d",
+            border: "1px solid #1d3a2c",
             background: "transparent",
             color: "#8b949e",
             cursor: "pointer",
@@ -650,8 +650,8 @@ export function CadastroContactoSideover({
                       minWidth: 0,
                       padding: "10px 12px",
                       borderRadius: 8,
-                      border: "1px solid #30363d",
-                      background: "#0d1117",
+                      border: "1px solid #1d3a2c",
+                      background: "#0a140f",
                       color: "#e6edf3",
                       fontSize: 13,
                     }}
@@ -684,7 +684,7 @@ export function CadastroContactoSideover({
                     {registros.map((a) => (
                       <li
                         key={String(a.id)}
-                        style={{ border: "1px solid #30363d", borderRadius: 10, padding: "10px 12px", background: "#0d1117" }}
+                        style={{ border: "1px solid #1d3a2c", borderRadius: 10, padding: "10px 12px", background: "#0a140f" }}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                           <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#8b949e" }}>
@@ -839,8 +839,8 @@ export function CadastroRowActions({
     width: 32,
     height: 32,
     borderRadius: 8,
-    border: "1px solid #30363d",
-    background: "#21262d",
+    border: "1px solid #1d3a2c",
+    background: "#16271e",
     color: "#c9a24a",
     cursor: "pointer",
     marginLeft: 4,

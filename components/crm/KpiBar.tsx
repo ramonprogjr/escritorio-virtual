@@ -11,8 +11,8 @@ export function KpiBar({ kpis }: Props) {
         <div
           key={i}
           style={{
-            background: "#161b22",
-            border: "1px solid #30363d",
+            background: "#0f1d16",
+            border: "1px solid #1d3a2c",
             borderRadius: 10,
             padding: "10px 16px",
             minWidth: 80,

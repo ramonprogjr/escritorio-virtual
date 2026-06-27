@@ -63,7 +63,7 @@ function PedidosPageInner() {
   }
 
   return (
-    <div className="min-h-full bg-[#0d1117] p-4 sm:p-6">
+    <div className="min-h-full bg-[#0a140f] p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-[#e6edf3]">Pedidos de material</h1>
@@ -84,7 +84,7 @@ function PedidosPageInner() {
       ) : (
         <ul className="space-y-2">
           {pedidos.map((p) => (
-            <li key={p.id} className="rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+            <li key={p.id} className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
               <p className="font-bold text-[#e6edf3]">{p.descricao}</p>
               <p className="text-xs text-[#8b949e]">{p.codigo}</p>
               {p.obra_id && (
@@ -95,7 +95,7 @@ function PedidosPageInner() {
               <select
                 value={p.status}
                 onChange={(e) => void mudarStatus(p.id, e.target.value)}
-                className="mt-2 block min-h-9 rounded-lg border border-[#30363d] bg-[#21262d] px-2 text-xs text-[#e6edf3]"
+                className="mt-2 block min-h-9 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-xs text-[#e6edf3]"
               >
                 {STATUS_OPTS.map((s) => (
                   <option key={s} value={s}>
@@ -110,22 +110,22 @@ function PedidosPageInner() {
 
       {modal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+          <div className="w-full max-w-md rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
             <h2 className="text-sm font-bold">Novo pedido</h2>
             <textarea
               placeholder="Descrição *"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
-              className="mt-3 w-full min-h-20 rounded-lg border border-[#30363d] bg-[#21262d] p-3 text-sm text-[#e6edf3]"
+              className="mt-3 w-full min-h-20 rounded-lg border border-[#1d3a2c] bg-[#16271e] p-3 text-sm text-[#e6edf3]"
             />
             <input
               placeholder="ID da obra (opcional)"
               value={obraId}
               onChange={(e) => setObraId(e.target.value)}
-              className="mt-2 w-full min-h-10 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]"
+              className="mt-2 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
             />
             <div className="mt-4 flex gap-2">
-              <button type="button" onClick={() => setModal(false)} className="flex-1 min-h-10 rounded-lg bg-[#21262d] text-xs">
+              <button type="button" onClick={() => setModal(false)} className="flex-1 min-h-10 rounded-lg bg-[#16271e] text-xs">
                 Cancelar
               </button>
               <button

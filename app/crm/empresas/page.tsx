@@ -121,7 +121,7 @@ export default function EmpresasPage() {
 
   if (!myRole && loading) {
     return (
-      <div className="flex min-h-full items-center justify-center bg-[#0d1117] text-sm text-[#8b949e]">
+      <div className="flex min-h-full items-center justify-center bg-[#0a140f] text-sm text-[#8b949e]">
         Carregando…
       </div>
     );
@@ -130,7 +130,7 @@ export default function EmpresasPage() {
   if (!isOwner) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-8 text-center">
+        <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-8 text-center">
           <Building2 className="mx-auto mb-4 h-8 w-8 text-[#c9a24a]" />
           <h1 className="text-lg font-bold text-[#e6edf3]">Escritórios</h1>
           <p className="mt-2 text-sm text-[#8b949e]">Apenas owners podem criar escritórios.</p>
@@ -140,7 +140,7 @@ export default function EmpresasPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-[#0d1117]">
+    <div className="flex min-h-full flex-col bg-[#0a140f]">
       <CrmStickyPageHeader
         title="Escritórios"
         description="Escritórios Obra10+ — cada escritório com seus admins e colaboradores próprios."
@@ -168,9 +168,9 @@ export default function EmpresasPage() {
         ) : tenants.length === 0 ? (
           <p className="text-sm text-[#8b949e]">Nenhum escritório. Crie o primeiro.</p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-[#30363d]">
+          <div className="overflow-hidden rounded-xl border border-[#1d3a2c]">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#161b22] text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+              <thead className="bg-[#0f1d16] text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
                 <tr>
                   <th className="px-3 py-2">Nome</th>
                   <th className="px-3 py-2">Slug</th>
@@ -178,9 +178,9 @@ export default function EmpresasPage() {
                   <th className="px-3 py-2 text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#21262d]">
+              <tbody className="divide-y divide-[#16271e]">
                 {tenants.map((t) => (
-                  <tr key={t.id} className="bg-[#0d1117] text-[#e6edf3]">
+                  <tr key={t.id} className="bg-[#0a140f] text-[#e6edf3]">
                     <td className="px-3 py-2.5 font-medium">{t.nome_exibicao}</td>
                     <td className="px-3 py-2.5 text-xs text-[#8b949e]">{t.slug}</td>
                     <td className="px-3 py-2.5 text-xs">
@@ -216,10 +216,10 @@ export default function EmpresasPage() {
       {modal && (
         <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-center md:p-4">
           <button type="button" className="absolute inset-0 bg-black/60" aria-label="Fechar" onClick={() => setModal(false)} />
-          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-[#30363d] bg-[#161b22] p-4 sm:rounded-2xl">
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4 sm:rounded-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-bold text-[#e6edf3]">Novo escritório</h2>
-              <button type="button" onClick={() => setModal(false)} className="rounded-lg bg-[#21262d] p-2">
+              <button type="button" onClick={() => setModal(false)} className="rounded-lg bg-[#16271e] p-2">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -234,11 +234,11 @@ export default function EmpresasPage() {
                 <input
                   value={form.nome_exibicao}
                   onChange={(e) => setForm((f) => ({ ...f, nome_exibicao: e.target.value }))}
-                  className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]"
+                  className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
                   placeholder="Construtora Exemplo Ltda"
                 />
               </div>
-              <div className="border-t border-[#30363d] pt-3">
+              <div className="border-t border-[#1d3a2c] pt-3">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
                   Primeiro admin (opcional)
                 </p>
@@ -247,13 +247,13 @@ export default function EmpresasPage() {
                   placeholder="E-mail do admin"
                   value={form.admin_email}
                   onChange={(e) => setForm((f) => ({ ...f, admin_email: e.target.value }))}
-                  className="mb-2 w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]"
+                  className="mb-2 w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
                 />
                 <input
                   placeholder="Nome do admin"
                   value={form.admin_name}
                   onChange={(e) => setForm((f) => ({ ...f, admin_name: e.target.value }))}
-                  className="mb-2 w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]"
+                  className="mb-2 w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
                 />
                 <CrmPermissaoSelect
                   actorRole={myRole}

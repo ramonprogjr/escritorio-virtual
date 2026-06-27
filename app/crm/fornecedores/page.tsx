@@ -26,8 +26,8 @@ const STATUS_LABEL: Record<string, { txt: string; cor: string }> = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: 10, borderRadius: 8, border: "1px solid #30363d",
-  background: "#0d1117", color: "#e6edf3", fontSize: 13,
+  width: "100%", padding: 10, borderRadius: 8, border: "1px solid #1d3a2c",
+  background: "#0a140f", color: "#e6edf3", fontSize: 13,
 };
 
 export default function FornecedoresPage() {
@@ -136,7 +136,7 @@ export default function FornecedoresPage() {
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             {(["PJ", "PF"] as const).map((t) => (
               <button key={t} type="button" onClick={() => setForm((f) => ({ ...f, tipo_pessoa: t }))}
-                style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #30363d", background: form.tipo_pessoa === t ? "#003b26" : "transparent", color: form.tipo_pessoa === t ? "#c9a24a" : "#8b949e", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #1d3a2c", background: form.tipo_pessoa === t ? "#003b26" : "transparent", color: form.tipo_pessoa === t ? "#c9a24a" : "#8b949e", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                 {t === "PJ" ? "Pessoa Jurídica" : "Pessoa Física"}
               </button>
             ))}
@@ -159,7 +159,7 @@ export default function FornecedoresPage() {
               style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvando ? "default" : "pointer", opacity: salvando ? 0.6 : 1 }}>
               {salvando ? "Salvando…" : editId ? "Salvar alterações" : "Salvar fornecedor"}
             </button>
-            <button type="button" onClick={fecharForm} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
+            <button type="button" onClick={fecharForm} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}>Cancelar</button>
           </div>
         </div>
       )}
@@ -167,11 +167,11 @@ export default function FornecedoresPage() {
       {carregando ? (
         <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando…</p>
       ) : lista.length === 0 ? (
-        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #30363d", borderRadius: 12 }}>
+        <div style={{ padding: 32, textAlign: "center", color: "#8b949e", border: "1px dashed #1d3a2c", borderRadius: 12 }}>
           Nenhum fornecedor cadastrado ainda. Clique em <strong style={{ color: "#c9a24a" }}>Novo fornecedor</strong>.
         </div>
       ) : (
-        <div style={{ border: "1px solid #30363d", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: "1px solid #1d3a2c", borderRadius: 12, overflow: "hidden" }}>
           {lista.map((f, i) => {
             const st = STATUS_LABEL[String(f.status_acesso ?? "pendente")] ?? STATUS_LABEL.pendente;
             return (
@@ -179,7 +179,7 @@ export default function FornecedoresPage() {
                 key={f.id}
                 onClick={() => void editar(f.id)}
                 title="Editar fornecedor"
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #21262d" : "none", cursor: "pointer" }}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: i ? "1px solid #16271e" : "none", cursor: "pointer" }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{f.nome}</p>

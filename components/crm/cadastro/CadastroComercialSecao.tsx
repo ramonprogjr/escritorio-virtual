@@ -20,7 +20,7 @@ import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
 import type { SuperCadastroInput } from "@/lib/crm/super-cadastro-form";
 
 const OB = {
-  borda: "#30363d",
+  borda: "#1d3a2c",
   texto: "#e6edf3",
   texto2: "#8b949e",
   dourado: "#c9a24a",
@@ -33,7 +33,7 @@ const ROW_BASE: CSSProperties = {
   padding: "12px 14px",
   borderRadius: 12,
   border: `1px solid ${OB.borda}`,
-  background: "#161b22",
+  background: "#0f1d16",
 };
 
 const MERCADO_ICON: Record<string, LucideIcon> = {
@@ -52,7 +52,7 @@ const INPUT: CSSProperties = {
   padding: "11px 13px",
   borderRadius: 10,
   border: `1px solid ${OB.borda}`,
-  background: "#161b22",
+  background: "#0f1d16",
   color: OB.texto,
   fontSize: 14,
   boxSizing: "border-box",
@@ -112,7 +112,7 @@ function OpcaoToggleCard({
       style={{
         ...ROW_BASE,
         borderColor: ativo ? "rgba(201, 162, 74, 0.45)" : OB.borda,
-        background: ativo ? "rgba(201, 162, 74, 0.06)" : "#161b22",
+        background: ativo ? "rgba(201, 162, 74, 0.06)" : "#0f1d16",
       }}
     >
       <div
@@ -120,7 +120,7 @@ function OpcaoToggleCard({
           width: 42,
           height: 42,
           borderRadius: 10,
-          background: ativo ? "rgba(201, 162, 74, 0.18)" : "#21262d",
+          background: ativo ? "rgba(201, 162, 74, 0.18)" : "#16271e",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -323,7 +323,7 @@ export function CadastroComercialSecao({
         style={{
           padding: 12,
           borderRadius: 10,
-          background: "#161b22",
+          background: "#0f1d16",
           border: `1px solid ${OB.borda}`,
           fontSize: 12,
           color: OB.texto2,

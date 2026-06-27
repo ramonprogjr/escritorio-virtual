@@ -511,25 +511,25 @@ export default function LeadsPage() {
       actions: (
         <>
           {botaoNovoLead}
-          <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
+          <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5 min-[480px]:w-auto">
             <button
               type="button"
               onClick={() => setView("caixa")}
-              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
             >
               Caixa
             </button>
             <button
               type="button"
               onClick={() => setView("kanban")}
-              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
             >
               Kanban
             </button>
             <button
               type="button"
               onClick={() => setView("lista")}
-              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
             >
               Lista
             </button>
@@ -538,12 +538,12 @@ export default function LeadsPage() {
             value={busca}
             onChange={e => setBusca(e.target.value)}
             placeholder="Buscar lead..."
-            className="w-full min-h-11 min-w-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
+            className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
           />
           <select
             value={filtroEstagio}
             onChange={e => setFiltroEstagio(e.target.value)}
-            className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
+            className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
           >
             <option value="">Todos os estágios</option>
             {estagiosKanban.map(e => (
@@ -555,7 +555,7 @@ export default function LeadsPage() {
           <button
             type="button"
             onClick={() => setPipelineConfigOpen(true)}
-            className="min-h-11 shrink-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
+            className="min-h-11 shrink-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
             title="Configurar pipeline"
           >
             Pipeline
@@ -569,25 +569,25 @@ export default function LeadsPage() {
   const headerControls = (
     <>
       {botaoNovoLead}
-      <div className="inline-flex w-full rounded-lg bg-[#21262d] p-0.5 min-[480px]:w-auto">
+      <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5 min-[480px]:w-auto">
         <button
           type="button"
           onClick={() => setView("caixa")}
-          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
         >
           Caixa
         </button>
         <button
           type="button"
           onClick={() => setView("kanban")}
-          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
         >
           Kanban
         </button>
         <button
           type="button"
           onClick={() => setView("lista")}
-          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#30363d] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
         >
           Lista
         </button>
@@ -596,12 +596,12 @@ export default function LeadsPage() {
         value={busca}
         onChange={e => setBusca(e.target.value)}
         placeholder="Buscar lead..."
-        className="w-full min-h-11 min-w-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
+        className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
       />
       <select
         value={filtroEstagio}
         onChange={e => setFiltroEstagio(e.target.value)}
-        className="w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
+        className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
       >
         <option value="">Todos os estágios</option>
         {estagiosKanban.map(e => (
@@ -613,7 +613,7 @@ export default function LeadsPage() {
       <button
         type="button"
         onClick={() => setPipelineConfigOpen(true)}
-        className="min-h-11 shrink-0 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
+        className="min-h-11 shrink-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
       >
         Pipeline
       </button>
@@ -629,7 +629,7 @@ export default function LeadsPage() {
   ) : null;
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0d1117]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0a140f]">
 
       {sucessoLead && (
         <div
@@ -655,7 +655,7 @@ export default function LeadsPage() {
       {pipelineTabs}
 
       {isMobile && (
-        <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#30363d] bg-[#161b22] px-3 py-3">
+        <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3">
           <div>
             <h1 className="text-base font-bold text-[#e6edf3]">{pipelineAtivo?.nome || "Leads"}</h1>
             <p className="text-[11px] text-[#8b949e]">{leadsDoPipeline.length} leads · tempo real</p>
@@ -665,14 +665,14 @@ export default function LeadsPage() {
       )}
 
       {/* ─── METRICS ─── */}
-      <div className="grid grid-cols-2 gap-px sm:grid-cols-4 flex-shrink-0 bg-[#30363d]">
+      <div className="grid grid-cols-2 gap-px sm:grid-cols-4 flex-shrink-0 bg-[#1d3a2c]">
         {[
           { label: "Leads Hoje", value: String(leadsDoPipeline.filter(l => new Date(l.criado_em).toDateString() === hoje).length), cor: "#F97316" },
           { label: "Sem Resposta +24h", value: String(semResposta), cor: semResposta > 0 ? "#EF4444" : "#22C55E" },
           { label: "Em Risco +1h", value: emRisco > 0 ? moeda(emRisco) : "—", cor: emRisco > 0 ? "#EAB308" : "#6B7280" },
           { label: "Pipeline Total", value: moeda(pipeline), cor: "#22C55E" },
         ].map(m => (
-          <div key={m.label} className="bg-[#161b22] px-3 py-2.5 sm:px-5">
+          <div key={m.label} className="bg-[#0f1d16] px-3 py-2.5 sm:px-5">
             <p className="mb-0.5 text-xs text-[#8b949e]">{m.label}</p>
             <p className="text-base font-black sm:text-lg" style={{ color: m.cor }}>{m.value}</p>
           </div>
@@ -724,7 +724,7 @@ export default function LeadsPage() {
                       return (
                         <div
                           key={lead.id}
-                          className="flex flex-col rounded-xl border border-[#30363d] bg-[#161b22] p-3 transition-colors hover:border-[#484f58]"
+                          className="flex flex-col rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3 transition-colors hover:border-[#484f58]"
                           style={{ borderLeftWidth: 3, borderLeftColor: borderColor(lead.atualizado_em) }}
                         >
                           <button
@@ -793,14 +793,14 @@ export default function LeadsPage() {
                               type="button"
                               onClick={() => void converterNegocio(lead)}
                               disabled={convertendoNegocio}
-                              className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-[#30363d] py-1.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 disabled:opacity-40"
+                              className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] py-1.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 disabled:opacity-40"
                             >
                               Negócio
                             </button>
                             <button
                               type="button"
                               onClick={() => router.push(`/crm/leads/${lead.id}`)}
-                              className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#30363d] px-2.5 py-1.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
+                              className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] px-2.5 py-1.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
                             >
                               Ficha
                             </button>
@@ -812,7 +812,7 @@ export default function LeadsPage() {
                       <button
                         type="button"
                         onClick={() => setVerTodos((v) => ({ ...v, [lane.key]: true }))}
-                        className="cursor-pointer rounded-xl border border-dashed border-[#30363d] py-2.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 sm:col-span-2 lg:col-span-3"
+                        className="cursor-pointer rounded-xl border border-dashed border-[#1d3a2c] py-2.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 sm:col-span-2 lg:col-span-3"
                       >
                         +{restantes} pendentes — ver todos
                       </button>
@@ -820,7 +820,7 @@ export default function LeadsPage() {
                       <button
                         type="button"
                         onClick={() => setVerTodos((v) => ({ ...v, [lane.key]: false }))}
-                        className="cursor-pointer rounded-xl border border-dashed border-[#30363d] py-2.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3] sm:col-span-2 lg:col-span-3"
+                        className="cursor-pointer rounded-xl border border-dashed border-[#1d3a2c] py-2.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3] sm:col-span-2 lg:col-span-3"
                       >
                         ver menos
                       </button>
@@ -858,7 +858,7 @@ export default function LeadsPage() {
                     {total > 0 && <p className="text-xs mt-0.5 font-bold" style={{ color: est.color }}>{moeda(total)}</p>}
                   </div>
                   {/* Cards */}
-                  <div className="flex-1 space-y-2 overflow-y-auto rounded-b-xl border border-t-0 border-[#30363d] bg-[#161b22]/60 p-2 transition-colors"
+                  <div className="flex-1 space-y-2 overflow-y-auto rounded-b-xl border border-t-0 border-[#1d3a2c] bg-[#0f1d16]/60 p-2 transition-colors"
                     style={{ minHeight: 80, backgroundColor: dragOver === est.id ? est.color + "12" : undefined }}
                     onDragOver={e => { e.preventDefault(); setDragOver(est.id); }}
                     onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null); }}
@@ -906,7 +906,7 @@ export default function LeadsPage() {
                       <button
                         type="button"
                         onClick={() => abrirDetalhe(lead)}
-                        className="flex w-full min-h-14 flex-col gap-2 rounded-xl border border-[#30363d] bg-[#161b22] p-3 text-left"
+                        className="flex w-full min-h-14 flex-col gap-2 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3 text-left"
                         style={{ borderLeftWidth: 3, borderLeftColor: borderColor(lead.atualizado_em) }}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -945,7 +945,7 @@ export default function LeadsPage() {
               </ul>
             ) : (
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-[#161b22] border-b border-[#30363d]">
+              <thead className="sticky top-0 bg-[#0f1d16] border-b border-[#1d3a2c]">
                 <tr>
                   {["Nome", "Origem", "Estágio", "Valor", "Score", "Agente", "Atualizado", ""].map(h => (
                     <th key={h} className="text-left text-xs text-[#8b949e] font-bold uppercase tracking-wide px-4 py-3">{h}</th>
@@ -957,7 +957,7 @@ export default function LeadsPage() {
                   const est = estagiosKanban.find((e) => e.id === estagioParaColunaKanban(lead.estagio));
                   return (
                     <tr key={lead.id} onClick={() => router.push(`/crm/leads/${lead.id}`)}
-                      className="border-b border-[#30363d]/60 hover:bg-[#161b22]/60 cursor-pointer transition-colors">
+                      className="border-b border-[#1d3a2c]/60 hover:bg-[#0f1d16]/60 cursor-pointer transition-colors">
                       <td className="px-4 py-3">
                         <p className="text-[#e6edf3] font-bold">{lead.nome}</p>
                         {(lead.codigo || lead._pessoa_codigo) && (
@@ -985,7 +985,7 @@ export default function LeadsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-12 h-1.5 bg-[#30363d] rounded-full overflow-hidden">
+                          <div className="w-12 h-1.5 bg-[#1d3a2c] rounded-full overflow-hidden">
                             <div className="h-full bg-[#c9a24a] rounded-full" style={{ width: `${lead.score}%` }} />
                           </div>
                           <span className="text-[#8b949e] text-xs">{lead.score}</span>
@@ -1013,10 +1013,10 @@ export default function LeadsPage() {
           {!isMobile && (
             <div className="flex-1 bg-black/50" onClick={() => { setDetalhe(null); setConfirmandoPerda(false); }} />
           )}
-          <div className={`flex h-full flex-col overflow-hidden border-[#30363d] bg-[#161b22] shadow-2xl ${isMobile ? "w-full" : "w-[520px] border-l"}`}>
+          <div className={`flex h-full flex-col overflow-hidden border-[#1d3a2c] bg-[#0f1d16] shadow-2xl ${isMobile ? "w-full" : "w-[520px] border-l"}`}>
 
             {/* Header */}
-            <div className="px-5 py-4 border-b border-gray-800 flex-shrink-0">
+            <div className="px-5 py-4 border-b border-[#1d3a2c] flex-shrink-0">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-white font-black text-lg truncate">{detalhe.nome}</h2>
@@ -1050,7 +1050,7 @@ export default function LeadsPage() {
             </div>
 
             {/* Quick actions */}
-            <div className="flex gap-2 px-5 py-3 border-b border-[#30363d] flex-shrink-0 overflow-x-auto">
+            <div className="flex gap-2 px-5 py-3 border-b border-[#1d3a2c] flex-shrink-0 overflow-x-auto">
               {[
                 { label: "Ligar", Icon: Phone, action: () => { if (detalhe?.telefone) window.open(`tel:${detalhe.telefone}`); } },
                 { label: "Encaminhar", Icon: Share2, action: () => setEncaminharLead(detalhe) },
@@ -1060,7 +1060,7 @@ export default function LeadsPage() {
                 { label: "Spam", Icon: Ban, action: () => { setPerdaComoSpam(true); setConfirmandoPerda(true); } },
               ].map(a => (
                 <button key={a.label} onClick={a.action}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-[#30363d] text-[#8b949e] hover:text-[#e6edf3] hover:border-[#484f58] flex items-center gap-1.5 flex-shrink-0 transition-colors">
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[#1d3a2c] text-[#8b949e] hover:text-[#e6edf3] hover:border-[#484f58] flex items-center gap-1.5 flex-shrink-0 transition-colors">
                   <a.Icon size={13} strokeWidth={2} aria-hidden />
                   {a.label}
                 </button>
@@ -1068,7 +1068,7 @@ export default function LeadsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-800 flex-shrink-0">
+            <div className="flex border-b border-[#1d3a2c] flex-shrink-0">
               {(["info", "timeline", "notas", "memorias"] as const).map(t => (
                 <button key={t} onClick={() => setTabDetalhe(t)}
                   className={`flex-1 py-2.5 text-xs font-bold transition-colors ${tabDetalhe === t ? "text-[#c9a24a] border-b-2 border-[#c9a24a]" : "text-gray-500 hover:text-white"}`}>
@@ -1091,7 +1091,7 @@ export default function LeadsPage() {
                       { label: "Responsável", value: detalhe.humano_responsavel || "—" },
                       { label: "Criado", value: new Date(detalhe.criado_em).toLocaleDateString("pt-BR") },
                     ].map(item => (
-                      <div key={item.label} className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                      <div key={item.label} className="bg-[#0f1d16] rounded-xl p-3 border border-[#1d3a2c]">
                         <p className="text-gray-500 text-xs font-bold uppercase mb-1">{item.label}</p>
                         <p className="text-white text-sm font-bold truncate">{item.value}</p>
                       </div>
@@ -1106,7 +1106,7 @@ export default function LeadsPage() {
                   {detalhe.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {detalhe.tags.map(tag => (
-                        <span key={tag} className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded-full border border-gray-700">{tag}</span>
+                        <span key={tag} className="text-xs bg-[#0f1d16] text-gray-400 px-2 py-1 rounded-full border border-[#1d3a2c]">{tag}</span>
                       ))}
                     </div>
                   )}
@@ -1122,10 +1122,10 @@ export default function LeadsPage() {
                         {atividades.map((a, i) => (
                           <div key={a.id} className="flex gap-3 pb-4">
                             <div className="flex flex-col items-center flex-shrink-0">
-                              <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-sm">
+                              <div className="w-8 h-8 rounded-full bg-[#0f1d16] border border-[#1d3a2c] flex items-center justify-center text-sm">
                                 {ATIVIDADE_ICON[a.tipo] || "•"}
                               </div>
-                              {i < atividades.length - 1 && <div className="w-px flex-1 bg-gray-800 mt-1" />}
+                              {i < atividades.length - 1 && <div className="w-px flex-1 bg-[#0f1d16] mt-1" />}
                             </div>
                             <div className="pt-1 flex-1 min-w-0">
                               <p className="text-white text-sm leading-snug">{a.descricao}</p>
@@ -1149,7 +1149,7 @@ export default function LeadsPage() {
                     <textarea value={novaNota} onChange={e => setNovaNota(e.target.value)}
                       placeholder="Escreva uma nota..."
                       rows={3}
-                      className="w-full bg-gray-800 text-white text-sm rounded-xl p-3 border border-gray-700 focus:border-[#c9a24a] outline-none resize-none placeholder:text-gray-600" />
+                      className="w-full bg-[#0f1d16] text-white text-sm rounded-xl p-3 border border-[#1d3a2c] focus:border-[#c9a24a] outline-none resize-none placeholder:text-gray-600" />
                     <button onClick={adicionarNota} disabled={!novaNota.trim()}
                       className="w-full mt-2 bg-[#c9a24a] hover:bg-[#e0b86a] disabled:opacity-40 text-white text-sm py-2 rounded-xl font-bold transition-colors">
                       + Adicionar Nota
@@ -1158,7 +1158,7 @@ export default function LeadsPage() {
                   {notas.length === 0
                     ? <p className="text-gray-600 text-sm text-center py-4">Nenhuma nota ainda</p>
                     : notas.map(n => (
-                      <div key={n.id} className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                      <div key={n.id} className="bg-[#0f1d16] rounded-xl p-3 border border-[#1d3a2c]">
                         <p className="text-white text-sm leading-relaxed">{n.conteudo}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-gray-600 text-xs">{n.criado_por}</span>
@@ -1177,7 +1177,7 @@ export default function LeadsPage() {
                     : (
                       <div className="space-y-2">
                         {memorias.map(m => (
-                          <div key={m.id} className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                          <div key={m.id} className="bg-[#0f1d16] rounded-xl p-3 border border-[#1d3a2c]">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[#c9a24a] text-xs font-bold uppercase">{m.chave}</span>
                               <span className="text-gray-600 text-xs">{Math.round(m.confianca * 100)}% confiança</span>
@@ -1219,7 +1219,7 @@ export default function LeadsPage() {
                   />
                 )}
                 <div className="flex gap-2">
-                  <button onClick={() => { setConfirmandoPerda(false); setPerdaComoSpam(false); }} className="flex-1 bg-gray-800 text-gray-400 text-sm py-2 rounded-lg font-bold hover:text-white transition-colors">Cancelar</button>
+                  <button onClick={() => { setConfirmandoPerda(false); setPerdaComoSpam(false); }} className="flex-1 bg-[#0f1d16] text-gray-400 text-sm py-2 rounded-lg font-bold hover:text-white transition-colors">Cancelar</button>
                   <button
                     onClick={() => void marcarPerdido()}
                     disabled={!motivoPerda.trim() || (motivoPerda === "outro" && !motivoPerdaOutro.trim())}

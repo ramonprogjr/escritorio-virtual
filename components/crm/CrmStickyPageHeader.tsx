@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { CrmHeaderActionsRow } from "@/components/crm/CrmHeaderActionsRow";
 
 const HEADER_SURFACE =
-  "sticky top-0 z-20 flex-shrink-0 border-b border-[#30363d]/90 bg-[#161b22]/95 backdrop-blur-md supports-[backdrop-filter]:bg-[#161b22]/88 shadow-[inset_0_-1px_0_0_rgba(201,162,74,0.12)]";
+  "sticky top-0 z-20 flex-shrink-0 border-b border-[#1d3a2c]/90 bg-[#0c1712]/95 backdrop-blur-md supports-[backdrop-filter]:bg-[#0c1712]/88 shadow-[inset_0_-1px_0_0_rgba(201,162,74,0.18)]";
 
 type CrmStickyPageHeaderProps = {
   title: ReactNode;

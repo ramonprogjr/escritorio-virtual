@@ -86,7 +86,7 @@ export function SmartField({
           {confianca ? <ConfidenceBadge nivel={confianca.nivel} origem={confianca.origem} /> : null}
           {voz ? (
             <span
-              className="inline-flex items-center gap-1 rounded-full border border-[#30363d] px-1.5 py-0.5 text-[10px] font-semibold text-[#484f58]"
+              className="inline-flex items-center gap-1 rounded-full border border-[#1d3a2c] px-1.5 py-0.5 text-[10px] font-semibold text-[#484f58]"
               title="Preenchimento por voz (Talk-and-Go) em breve"
             >
               <Mic size={10} strokeWidth={2} aria-hidden />
@@ -102,7 +102,7 @@ export function SmartField({
             const sel = o.value === value;
             const cor = sel
               ? "bg-[#c9a24a] text-[#003b26] border-[#c9a24a]"
-              : "bg-transparent text-[#e6edf3] border-[#30363d] hover:border-[#8b949e]";
+              : "bg-transparent text-[#e6edf3] border-[#1d3a2c] hover:border-[#8b949e]";
             return (
               <button
                 key={o.value}
@@ -131,7 +131,7 @@ export function SmartField({
           placeholder={placeholder}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full min-h-10 rounded-lg border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#e6edf3] outline-none transition-colors placeholder:text-[#484f58] focus:border-[#c9a24a] disabled:opacity-50"
+          className="w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2 text-sm text-[#e6edf3] outline-none transition-colors placeholder:text-[#484f58] focus:border-[#c9a24a] disabled:opacity-50"
         />
       )}
 

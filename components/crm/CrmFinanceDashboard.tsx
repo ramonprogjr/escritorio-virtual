@@ -21,9 +21,9 @@ function CrmFinanceAcaoAgora({
 
   if (dash.loading) {
     return (
-      <div className="mb-4 animate-pulse rounded-xl border border-[#30363d] bg-[#161b22] p-4">
-        <div className="h-4 w-28 rounded bg-[#21262d]" />
-        <div className="mt-3 h-10 rounded-lg bg-[#21262d]" />
+      <div className="mb-4 animate-pulse rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
+        <div className="h-4 w-28 rounded bg-[#16271e]" />
+        <div className="mt-3 h-10 rounded-lg bg-[#16271e]" />
       </div>
     );
   }
@@ -38,14 +38,14 @@ function CrmFinanceAcaoAgora({
   }
 
   return (
-    <div className="mb-4 rounded-xl border border-[#c9a24a44] bg-[#161b22] p-3 sm:p-4">
+    <div className="mb-4 rounded-xl border border-[#c9a24a44] bg-[#0f1d16] p-3 sm:p-4">
       <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#c9a24a]">Ação agora</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {dash.acao.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 transition-colors hover:border-[#c9a24a55]"
+            className="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 transition-colors hover:border-[#c9a24a55]"
           >
             <span className="text-xs font-semibold text-[#e6edf3]">
               {item.label}
@@ -83,7 +83,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
   const [modalNovo, setModalNovo] = useState(false);
 
   return (
-    <div className="relative min-h-0 bg-[#0d1117] p-3 pb-20 sm:pb-6 sm:p-6">
+    <div className="relative min-h-0 bg-[#0a140f] p-3 pb-20 sm:pb-6 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Wallet className="h-5 w-5 text-[#c9a24a]" aria-hidden />
@@ -104,20 +104,20 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
           <button
             type="button"
             onClick={() => exportarCsv("financeiro")}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3]"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3]"
           >
             <Download className="h-4 w-4" aria-hidden />
             Exportar CSV
           </button>
           <Link
             href="/crm/financeiro/pagar"
-            className="min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:border-[#c9a24a55]"
+            className="min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:border-[#c9a24a55]"
           >
             Contas a pagar
           </Link>
           <Link
             href="/crm/financeiro/receber"
-            className="min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:border-[#c9a24a55]"
+            className="min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:border-[#c9a24a55]"
           >
             Contas a receber
           </Link>
@@ -212,9 +212,9 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
       </div>
 
       <CrmSectionTitle>Aprovações financeiras</CrmSectionTitle>
-      <div className="mb-6 rounded-xl border border-[#30363d] bg-[#161b22] p-3 sm:p-4">
+      <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3 sm:p-4">
         {dash.loading ? (
-          <div className="h-16 animate-pulse rounded-lg bg-[#21262d]" />
+          <div className="h-16 animate-pulse rounded-lg bg-[#16271e]" />
         ) : dash.aprovacoes.length === 0 ? (
           <p className="text-sm text-[#8b949e]">Nenhuma aprovação financeira pendente.</p>
         ) : (
@@ -223,7 +223,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
               <li key={a.id}>
                 <Link
                   href="/crm/aprovacoes?tipo=financeiro"
-                  className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-2 hover:border-[#c9a24a44]"
+                  className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 hover:border-[#c9a24a44]"
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     <AlertCircle className="h-4 w-4 shrink-0 text-[#f85149]" />
@@ -249,15 +249,15 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
       </div>
 
       <CrmSectionTitle>Próximos vencimentos</CrmSectionTitle>
-      <div className="rounded-xl border border-[#30363d] bg-[#161b22] overflow-hidden">
+      <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] overflow-hidden">
         {dash.loading ? (
           <div className="p-4">
-            <div className="h-20 animate-pulse rounded-lg bg-[#21262d]" />
+            <div className="h-20 animate-pulse rounded-lg bg-[#16271e]" />
           </div>
         ) : dash.proximosVencimentos.length === 0 ? (
           <p className="p-4 text-sm text-[#8b949e]">Sem lançamentos pendentes com vencimento.</p>
         ) : (
-          <ul className="divide-y divide-[#21262d]">
+          <ul className="divide-y divide-[#16271e]">
             {dash.proximosVencimentos.map((l) => {
               const href =
                 l.tipo === "pagar"
@@ -268,7 +268,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
                 <li key={`${l.tipo}-${l.id}`}>
                   <Link
                     href={href}
-                    className="flex min-h-12 items-center justify-between gap-2 px-3 py-2.5 hover:bg-[#21262d]"
+                    className="flex min-h-12 items-center justify-between gap-2 px-3 py-2.5 hover:bg-[#16271e]"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-xs font-bold text-[#e6edf3]">{l.descricao}</p>
@@ -296,7 +296,7 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
             })}
           </ul>
         )}
-        <div className="flex items-center gap-2 border-t border-[#21262d] px-3 py-2 text-[10px] text-[#6e7681]">
+        <div className="flex items-center gap-2 border-t border-[#16271e] px-3 py-2 text-[10px] text-[#6e7681]">
           <TrendingUp className="h-3.5 w-3.5" aria-hidden />
           Valores projetados; confirme no banco antes de pagar ou receber.
         </div>

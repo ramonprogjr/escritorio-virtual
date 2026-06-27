@@ -32,7 +32,7 @@ export function CadastroFichaTabs({ active, onChange, children }: Props) {
           gap: 4,
           flexWrap: "wrap",
           marginBottom: 20,
-          borderBottom: "1px solid #30363d",
+          borderBottom: "1px solid #1d3a2c",
           paddingBottom: 0,
         }}
       >

@@ -74,7 +74,7 @@ async function signOutAndRedirect(
 
 const AVATAR_RING =
   "linear-gradient(135deg, #c9a24a 0%, #e0c068 40%, #5a9e7a 70%, #003b26 100%)";
-const AVATAR_INNER = "linear-gradient(145deg, #1c2a1e 0%, #0d1117 100%)";
+const AVATAR_INNER = "linear-gradient(145deg, #1c2a1e 0%, #0a140f 100%)";
 const AVATAR_SHADOW = "0 0 0 1px rgba(201,162,74,0.30), 0 4px 12px rgba(0,0,0,0.55)";
 
 function Avatar({ initials, email, size }: { initials: string; email: string; size: number }) {

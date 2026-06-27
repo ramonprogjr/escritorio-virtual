@@ -48,7 +48,7 @@ export default function ObrasPage() {
   }
 
   return (
-    <div style={{ padding: 24, background: "#0d1117", minHeight: "100%" }}>
+    <div style={{ padding: 24, background: "#0a140f", minHeight: "100%" }}>
       <h1 style={{ margin: "0 0 16px", color: "#e6edf3" }}>Obras</h1>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
@@ -60,8 +60,8 @@ export default function ObrasPage() {
             flex: 1,
             padding: "10px 12px",
             borderRadius: 8,
-            border: "1px solid #30363d",
-            background: "#161b22",
+            border: "1px solid #1d3a2c",
+            background: "#0f1d16",
             color: "#e6edf3",
           }}
         />
@@ -97,8 +97,8 @@ export default function ObrasPage() {
                 display: "block",
                 padding: 14,
                 borderRadius: 10,
-                border: "1px solid #30363d",
-                background: "#161b22",
+                border: "1px solid #1d3a2c",
+                background: "#0f1d16",
                 textDecoration: "none",
                 color: "#e6edf3",
               }}

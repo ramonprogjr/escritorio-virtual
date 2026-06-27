@@ -52,7 +52,7 @@ function ProjetosPageInner() {
   }
 
   return (
-    <div className="min-h-full bg-[#0d1117] p-4 sm:p-6">
+    <div className="min-h-full bg-[#0a140f] p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div>
           <h1 className="text-lg font-bold text-[#e6edf3]">Projetos</h1>
@@ -75,7 +75,7 @@ function ProjetosPageInner() {
           {projetos.map((p) => (
             <li
               key={p.id}
-              className="rounded-xl border border-[#30363d] bg-[#161b22] p-4"
+              className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4"
             >
               <p className="font-bold text-[#e6edf3]">{p.titulo}</p>
               <p className="text-xs text-[#8b949e]">
@@ -103,22 +103,22 @@ function ProjetosPageInner() {
 
       {modal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl border border-[#30363d] bg-[#161b22] p-4">
+          <div className="w-full max-w-md rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
             <h2 className="text-sm font-bold text-[#e6edf3]">Novo projeto</h2>
             <input
               placeholder="Título *"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              className="mt-3 w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]"
+              className="mt-3 w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
             />
             <input
               placeholder="ID do negócio (opcional)"
               value={negocioId}
               onChange={(e) => setNegocioId(e.target.value)}
-              className="mt-2 w-full min-h-11 rounded-lg border border-[#30363d] bg-[#21262d] px-3 text-sm text-[#e6edf3]"
+              className="mt-2 w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
             />
             <div className="mt-4 flex gap-2">
-              <button type="button" onClick={() => setModal(false)} className="flex-1 min-h-10 rounded-lg bg-[#21262d] text-xs text-[#8b949e]">
+              <button type="button" onClick={() => setModal(false)} className="flex-1 min-h-10 rounded-lg bg-[#16271e] text-xs text-[#8b949e]">
                 Cancelar
               </button>
               <button

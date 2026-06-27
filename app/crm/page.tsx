@@ -39,7 +39,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/crm/analytics"
-            className="flex items-center gap-1.5 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-1.5 text-xs font-bold text-[#e6edf3] transition-colors hover:border-[#c9a24a55] hover:text-[#c9a24a]"
+            className="flex items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-1.5 text-xs font-bold text-[#e6edf3] transition-colors hover:border-[#c9a24a55] hover:text-[#c9a24a]"
           >
             <BarChart3 className="h-3.5 w-3.5" />
             Ver tendências
@@ -55,7 +55,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => router.push("/crm/parceiros/novo")}
-            className="rounded-lg border border-[#30363d] px-3 py-1.5 text-xs font-bold text-[#8b949e] hover:text-[#c9a24a] hover:bg-[#21262d]"
+            className="rounded-lg border border-[#1d3a2c] px-3 py-1.5 text-xs font-bold text-[#8b949e] hover:text-[#c9a24a] hover:bg-[#16271e]"
           >
             + Parceiro
           </button>
@@ -124,7 +124,7 @@ export default function DashboardPage() {
 
   return (
     <div
-      className={`bg-[#0d1117] ${isMobile ? "min-h-0 px-3 pb-6 pt-1" : "min-h-screen px-4 py-5 sm:px-6 sm:py-6"}`}
+      className={`bg-[#0a140f] ${isMobile ? "min-h-0 px-3 pb-6 pt-1" : "min-h-screen px-4 py-5 sm:px-6 sm:py-6"}`}
     >
       <div className="mx-auto w-full max-w-[1400px] space-y-6">
         {isMobile && (
@@ -135,7 +135,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/crm/analytics"
-              className="flex min-h-10 items-center gap-1.5 rounded-xl border border-[#30363d] bg-[#21262d] px-3 text-xs font-bold text-[#c9a24a]"
+              className="flex min-h-10 items-center gap-1.5 rounded-xl border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#c9a24a]"
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Tendências

@@ -132,7 +132,7 @@ export function CadastroPremiumSideover({
               gap: 10,
               justifyContent: "flex-end",
               flexWrap: "wrap",
-              background: "#0d1117",
+              background: "#0a140f",
             }}
           >
             {footer}

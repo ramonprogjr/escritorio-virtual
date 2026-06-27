@@ -12,7 +12,7 @@ html, body {
     height: 100dvh;
     max-height: 100dvh;
     overflow: hidden;
-    background-color: #0d1117;
+    background-color: #0a140f;
   }
 }
 
@@ -44,10 +44,10 @@ html, body {
   --brand-line: rgba(18, 56, 43, 0.12);
   --brand-shadow: 0 8px 32px rgba(0, 40, 26, 0.10);
   /* Dark premium tokens */
-  --obra-dark: #0d1117;
-  --obra-dark-2: #161b22;
-  --obra-dark-3: #21262d;
-  --obra-dark-4: #30363d;
+  --obra-dark: #0a140f;
+  --obra-dark-2: #0f1d16;
+  --obra-dark-3: #16271e;
+  --obra-dark-4: #1d3a2c;
   --obra-verde: #003b26;
   --obra-verde-light: #005c3d;
   --obra-verde-glow: rgba(0, 59, 38, 0.3);
@@ -60,8 +60,8 @@ html, body {
   --obra-texto: #e6edf3;
   --obra-texto-2: #8b949e;
   --obra-texto-3: #484f58;
-  --obra-borda: #30363d;
-  --obra-borda-2: #21262d;
+  --obra-borda: #1d3a2c;
+  --obra-borda-2: #16271e;
   /* Barras de rolagem — alinhadas ao sideover / DecisionPanel (global) */
   /* Scrollbar visível: o usuário precisa PERCEBER que a tela rola.
      Antes era 3px transparente — conteúdo abaixo da dobra passava despercebido. */
@@ -72,14 +72,14 @@ html, body {
 }
 
 body {
-  background-color: #0a0a0a;
+  background-color: #0a140f;
   color: var(--foreground);
   font-family: var(--font-poppins, system-ui, sans-serif);
 }
 
 .office-desktop-bg {
   /* Substituído por <img> com aspectRatio 1672/941 em app/office/page.tsx */
-  background-color: #0a0a0a;
+  background-color: #0a140f;
 }
 
 :focus-visible {
@@ -421,8 +421,8 @@ body {
 
 .fft-panel {
   position: relative;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: #0f1d16;
+  border: 1px solid #1d3a2c;
   border-radius: 12px;
 }
 
@@ -454,7 +454,7 @@ body {
   background:
     radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 92, 61, 0.18) 0%, transparent 55%),
     radial-gradient(ellipse 60% 40% at 90% 20%, rgba(201, 162, 74, 0.1) 0%, transparent 50%),
-    linear-gradient(180deg, #0d1117 0%, #0a0e14 100%);
+    linear-gradient(180deg, #0a140f 0%, #0a0e14 100%);
 }
 
 .hub-landing-bg::after {
@@ -495,12 +495,12 @@ body {
 
 .hub-scroll-fade::before {
   left: 0;
-  background: linear-gradient(90deg, var(--obra-dark, #0d1117) 0%, transparent 100%);
+  background: linear-gradient(90deg, var(--obra-dark, #0a140f) 0%, transparent 100%);
 }
 
 .hub-scroll-fade::after {
   right: 0;
-  background: linear-gradient(270deg, var(--obra-dark, #0d1117) 0%, transparent 100%);
+  background: linear-gradient(270deg, var(--obra-dark, #0a140f) 0%, transparent 100%);
 }
 
 @media (min-width: 768px) {

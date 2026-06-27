@@ -26,7 +26,7 @@ export function FunilOperacionalChart({ items }: Props) {
             >
               {item.label}
             </span>
-            <div className="relative h-6 min-w-0 flex-1 overflow-hidden rounded-md bg-[#21262d]">
+            <div className="relative h-6 min-w-0 flex-1 overflow-hidden rounded-md bg-[#16271e]">
               {item.count > 0 && (
                 <div
                   className="h-full rounded-md transition-all duration-700"

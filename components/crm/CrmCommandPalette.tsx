@@ -97,7 +97,7 @@ export function CrmCommandPalette({ groups }: { groups: CrmNavGroup[] }) {
         type="button"
         aria-label="Fechar"
         onClick={() => setOpen(false)}
-        className="absolute inset-0 cursor-default border-0 bg-[#0d1117]/80 p-0 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default border-0 bg-[#0a140f]/80 p-0 backdrop-blur-sm"
       />
       <div
         className="relative z-10 flex w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-[#2b3544]"
@@ -117,7 +117,7 @@ export function CrmCommandPalette({ groups }: { groups: CrmNavGroup[] }) {
             aria-label="Buscar destino"
             className="w-full bg-transparent text-[15px] text-[#e6edf3] placeholder:text-[#6e7681] focus:outline-none"
           />
-          <kbd className="shrink-0 rounded-md border border-[#2b3544] bg-[#161b22] px-1.5 py-0.5 text-[10px] font-bold text-[#8b949e]">
+          <kbd className="shrink-0 rounded-md border border-[#2b3544] bg-[#0f1d16] px-1.5 py-0.5 text-[10px] font-bold text-[#8b949e]">
             ESC
           </kbd>
         </div>

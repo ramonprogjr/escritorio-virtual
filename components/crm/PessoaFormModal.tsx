@@ -42,9 +42,9 @@ const INPUT: React.CSSProperties = {
 
   borderRadius: 10,
 
-  border: "1px solid #30363d",
+  border: "1px solid #1d3a2c",
 
-  background: "#161b22",
+  background: "#0f1d16",
 
   color: "#e6edf3",
 
@@ -78,7 +78,7 @@ const SECTION: React.CSSProperties = {
 
   paddingTop: 14,
 
-  borderTop: "1px solid #21262d",
+  borderTop: "1px solid #16271e",
 
 };
 
@@ -510,8 +510,8 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
           maxHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
-          background: "#0d1117",
-          borderLeft: "1px solid #30363d",
+          background: "#0a140f",
+          borderLeft: "1px solid #1d3a2c",
           boxShadow: "0 16px 48px rgba(0,0,0,0.45)",
         }}
       >
@@ -521,7 +521,7 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
             justifyContent: "space-between",
             alignItems: "flex-start",
             padding: "18px 20px 12px",
-            borderBottom: "1px solid #21262d",
+            borderBottom: "1px solid #16271e",
             flexShrink: 0,
           }}
         >
@@ -613,9 +613,9 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
 
                   borderRadius: 10,
 
-                  border: active ? "1px solid #c9a24a66" : "1px solid #30363d",
+                  border: active ? "1px solid #c9a24a66" : "1px solid #1d3a2c",
 
-                  background: active ? "#c9a24a18" : "#161b22",
+                  background: active ? "#c9a24a18" : "#0f1d16",
 
                   color: active ? "#c9a24a" : "#8b949e",
 
@@ -705,7 +705,7 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
 
               style={{
                 ...INPUT,
-                borderColor: docErro ? "#ef444466" : docOk ? "#22c55e66" : "#30363d",
+                borderColor: docErro ? "#ef444466" : docOk ? "#22c55e66" : "#1d3a2c",
               }}
 
               inputMode="numeric"
@@ -1006,7 +1006,7 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
           style={{
             flexShrink: 0,
             padding: "12px 20px 18px",
-            borderTop: "1px solid #21262d",
+            borderTop: "1px solid #16271e",
             display: "flex",
             flexDirection: "column",
             gap: 10,
@@ -1032,7 +1032,7 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
 
                 borderRadius: 10,
 
-                border: "1px solid #30363d",
+                border: "1px solid #1d3a2c",
 
                 background: "transparent",
 
@@ -1070,7 +1070,7 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
 
                 border: "none",
 
-                background: loading ? "#30363d" : "#003b26",
+                background: loading ? "#1d3a2c" : "#003b26",
 
                 color: loading ? "#8b949e" : "#c9a24a",
 

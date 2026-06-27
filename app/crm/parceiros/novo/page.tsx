@@ -18,7 +18,7 @@ export default function NovoParceiroRedirect() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0d1117",
+        background: "#0a140f",
         color: "#8b949e",
         fontSize: 14,
       }}

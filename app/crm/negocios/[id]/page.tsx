@@ -326,7 +326,7 @@ export default function NegocioDetalhePage() {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
         <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>{negocio.titulo}</h1>
-        <button type="button" onClick={() => setEditando((e) => !e)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #30363d", background: "#21262d", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        <button type="button" onClick={() => setEditando((e) => !e)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #1d3a2c", background: "#16271e", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
           {editando ? "Cancelar" : "Editar"}
         </button>
         <button type="button" onClick={() => void arquivar()} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #f8514944", background: "transparent", color: "#f85149", fontSize: 12, cursor: "pointer" }}>
@@ -346,8 +346,8 @@ export default function NegocioDetalhePage() {
             marginTop: 16,
             padding: 14,
             borderRadius: 10,
-            border: "1px solid #30363d",
-            background: "#161b22",
+            border: "1px solid #1d3a2c",
+            background: "#0f1d16",
           }}
         >
           <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700 }}>Motivo da perda (obrigatório)</p>
@@ -358,8 +358,8 @@ export default function NegocioDetalhePage() {
               width: "100%",
               padding: 10,
               borderRadius: 8,
-              border: "1px solid #30363d",
-              background: "#0d1117",
+              border: "1px solid #1d3a2c",
+              background: "#0a140f",
               color: "#e6edf3",
               marginBottom: 8,
             }}
@@ -372,7 +372,7 @@ export default function NegocioDetalhePage() {
             ))}
           </select>
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={() => setMotivoPendente(null)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #30363d", background: "transparent", color: "#8b949e", cursor: "pointer" }}>
+            <button type="button" onClick={() => setMotivoPendente(null)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: "#8b949e", cursor: "pointer" }}>
               Cancelar
             </button>
             <button type="button" onClick={() => void confirmarMotivoPerda()} style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, cursor: "pointer" }}>
@@ -389,10 +389,10 @@ export default function NegocioDetalhePage() {
       ) : null}
 
       {editando && (
-        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: "1px solid #30363d", background: "#161b22" }}>
-          <input value={form.titulo} onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))} placeholder="Título" style={{ width: "100%", marginBottom: 8, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }} />
-          <textarea value={form.descricao} onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Descrição" style={{ width: "100%", marginBottom: 8, minHeight: 80, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }} />
-          <input value={form.valor_estimado} onChange={(e) => setForm((f) => ({ ...f, valor_estimado: e.target.value }))} placeholder="Valor estimado" type="number" style={{ width: "100%", marginBottom: 8, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3" }} />
+        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: "1px solid #1d3a2c", background: "#0f1d16" }}>
+          <input value={form.titulo} onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))} placeholder="Título" style={{ width: "100%", marginBottom: 8, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }} />
+          <textarea value={form.descricao} onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Descrição" style={{ width: "100%", marginBottom: 8, minHeight: 80, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }} />
+          <input value={form.valor_estimado} onChange={(e) => setForm((f) => ({ ...f, valor_estimado: e.target.value }))} placeholder="Valor estimado" type="number" style={{ width: "100%", marginBottom: 8, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3" }} />
           <button type="button" disabled={salvando} onClick={() => void salvarEdicao()} style={{ padding: "10px 16px", borderRadius: 8, background: "#c9a24a", color: "#003b26", border: "none", fontWeight: 700, cursor: "pointer" }}>
             {salvando ? "Salvando…" : "Guardar"}
           </button>
@@ -452,7 +452,7 @@ export default function NegocioDetalhePage() {
                   style={{
                     padding: "8px 14px",
                     borderRadius: 8,
-                    border: "1px solid #30363d",
+                    border: "1px solid #1d3a2c",
                     background: "transparent",
                     color: "#8b949e",
                     fontSize: 12,
@@ -498,7 +498,7 @@ export default function NegocioDetalhePage() {
       )}
 
       {/* Pessoa vinculada (editável) */}
-      <div style={{ marginTop: 16, padding: 14, borderRadius: 10, border: "1px solid #30363d", background: "#161b22" }}>
+      <div style={{ marginTop: 16, padding: 14, borderRadius: 10, border: "1px solid #1d3a2c", background: "#0f1d16" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <p style={{ margin: 0, fontSize: 11, color: "#8b949e", flex: 1 }}>PESSOA / DECISOR</p>
           <button type="button" onClick={() => setPickerAberto((o) => !o)}
@@ -527,13 +527,13 @@ export default function NegocioDetalhePage() {
               onChange={(e) => void buscarPessoas(e.target.value)}
               placeholder="Buscar por nome, telefone ou código…"
               autoFocus
-              style={{ width: "100%", padding: 9, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13 }}
+              style={{ width: "100%", padding: 9, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13 }}
             />
             {resultadosPessoa.length > 0 ? (
-              <div style={{ marginTop: 6, border: "1px solid #30363d", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ marginTop: 6, border: "1px solid #1d3a2c", borderRadius: 8, overflow: "hidden" }}>
                 {resultadosPessoa.map((p, i) => (
                   <button key={p.id} type="button" onClick={() => void definirPessoa(p)}
-                    style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", border: "none", borderTop: i ? "1px solid #21262d" : "none", background: "transparent", color: "#e6edf3", fontSize: 13, cursor: "pointer" }}>
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", border: "none", borderTop: i ? "1px solid #16271e" : "none", background: "transparent", color: "#e6edf3", fontSize: 13, cursor: "pointer" }}>
                     {p.nome}
                     {p.codigo ? <span style={{ color: "#8b949e", fontFamily: "monospace", fontSize: 11 }}> · {p.codigo}</span> : null}
                   </button>
@@ -556,8 +556,8 @@ export default function NegocioDetalhePage() {
             style={{
               padding: "8px 14px",
               borderRadius: 8,
-              border: "1px solid #30363d",
-              background: negocio.etapa === e ? "#003b26" : "#161b22",
+              border: "1px solid #1d3a2c",
+              background: negocio.etapa === e ? "#003b26" : "#0f1d16",
               color: negocio.etapa === e ? "#c9a24a" : "#e6edf3",
               cursor: "pointer",
               fontSize: 12,
@@ -579,7 +579,7 @@ export default function NegocioDetalhePage() {
           onChange={(e) => { setProximaAcao(e.target.value); setAcaoStatus(""); }}
           onBlur={() => void salvarProximaAcao()}
           placeholder="O que fazer a seguir? (salva automaticamente ao sair do campo)"
-          style={{ width: "100%", marginTop: 6, minHeight: 56, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13 }}
+          style={{ width: "100%", marginTop: 6, minHeight: 56, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13 }}
         />
       </div>
 
@@ -590,7 +590,7 @@ export default function NegocioDetalhePage() {
           onChange={(e) => setNovaNota(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") void registrarNota(); }}
           placeholder="Registrar uma nota…"
-          style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #30363d", background: "#0d1117", color: "#e6edf3", fontSize: 13 }}
+          style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13 }}
         />
         <button type="button" disabled={salvandoNota || !novaNota.trim()} onClick={() => void registrarNota()}
           style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvandoNota || !novaNota.trim() ? "default" : "pointer", opacity: salvandoNota || !novaNota.trim() ? 0.6 : 1 }}>
@@ -606,7 +606,7 @@ export default function NegocioDetalhePage() {
               key={a.id}
               style={{
                 padding: "10px 0",
-                borderBottom: "1px solid #21262d",
+                borderBottom: "1px solid #16271e",
                 fontSize: 13,
               }}
             >

@@ -396,7 +396,7 @@ export default function CadastroPage() {
           style={{
             background: "transparent",
             color: "#8b949e",
-            border: "1px solid #30363d",
+            border: "1px solid #1d3a2c",
             borderRadius: 8,
             padding: "10px 16px",
             fontSize: 13,
@@ -644,7 +644,7 @@ export default function CadastroPage() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: "#0d1117",
+        background: "#0a140f",
         minHeight: 0,
       }}
     >

@@ -39,9 +39,9 @@ export function CrmLeadsParados() {
   if (loading) {
     return (
       <div className="h-full animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-4">
-        <div className="mb-3 h-4 w-40 rounded bg-[#21262d]" />
+        <div className="mb-3 h-4 w-40 rounded bg-[#16271e]" />
         {[1, 2, 3].map((i) => (
-          <div key={i} className="mb-2 h-10 rounded-xl bg-[#21262d]" />
+          <div key={i} className="mb-2 h-10 rounded-xl bg-[#16271e]" />
         ))}
       </div>
     );
@@ -61,7 +61,7 @@ export function CrmLeadsParados() {
         </h2>
         <Link
           href="/crm/leads"
-          className="rounded-lg border border-[#30363d] px-2 py-1 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a55]"
+          className="rounded-lg border border-[#1d3a2c] px-2 py-1 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a55]"
         >
           Ver todos
         </Link>

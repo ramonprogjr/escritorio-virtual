@@ -53,7 +53,7 @@ export function CrmConfirmDialog({
         style={{
           maxWidth: 440,
           width: "100%",
-          background: "#161b22",
+          background: "#0f1d16",
           borderWidth: 1,
           borderStyle: "solid",
           borderColor: danger ? "rgba(179, 38, 30, 0.45)" : "rgba(201, 162, 74, 0.35)",
@@ -93,7 +93,7 @@ export function CrmConfirmDialog({
             padding: "12px 20px 18px",
             borderTopWidth: 1,
             borderTopStyle: "solid",
-            borderTopColor: "#30363d",
+            borderTopColor: "#1d3a2c",
           }}
         >
           <button
@@ -109,8 +109,8 @@ export function CrmConfirmDialog({
               opacity: loading ? 0.6 : 1,
               borderWidth: 1,
               borderStyle: "solid",
-              borderColor: "#30363d",
-              background: "#21262d",
+              borderColor: "#1d3a2c",
+              background: "#16271e",
               color: "#8b949e",
             }}
           >
