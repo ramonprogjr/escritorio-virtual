@@ -1,7 +1,37 @@
 {
-  "geradoEm": "2026-06-27T19:25:26.384Z",
+  "geradoEm": "2026-06-27T19:36:47.048Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "9f0fa4dda84080a44e920a7eaa3d2302a2d14b2b",
+      "hashCurto": "9f0fa4d",
+      "mensagem": "Fase 4 — agente sabe o setor + ferramentas/tarefas recomendadas",
+      "mensagemRaw": "feat(agentes): Fase 4 — agente sabe o setor + ferramentas/tarefas recomendadas",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:36:37.000Z",
+      "hora": "16:36",
+      "arquivos": [
+        "components/crm/AgenteNovoWizard.tsx",
+        "lib/hub/agente-setor.test.ts",
+        "lib/hub/agente-setor.ts",
+        "lib/hub/tarefas-setor-catalogo.ts"
+      ],
+      "areas": {
+        "components/crm": 1,
+        "lib/hub": 3
+      }
+    },
+    {
+      "hash": "0e894c5ce8ecdb908d4dfbdf7dbf7571670a4ef2",
+      "hashCurto": "0e894c5",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:26:14.000Z",
+      "hora": "16:26",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "244f29b2418ef92df6047846ceae827c895e4e29",
       "hashCurto": "244f29b",
