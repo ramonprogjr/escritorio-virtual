@@ -2,6 +2,15 @@
 
 > Auditoria técnica (mapa do código real) + proposta de funcionamento, telas, botões e opções. 27/jun/2026. Conecta com [[visao-ia-first-comando-multimodal]] (rails+IA, presets) e [[creditos-ia-metering-visao]] (Tijolos).
 
+## ✅ VERIFICAÇÃO (27/jun, pós-execução) — o sistema estava MAIS pronto que o audit dizia
+Fui ao código confirmar (o mapa do explorador superestimou os gaps):
+- **#1 matriz 5×5** — FEITO (substituiu o 5^5).
+- **#2 modelo Econômico×Turbo** — FEITO (engine `selecionarModelo` usa `modelo_alto_valor` por valor do lead) **+ #2b** passo Modelo no wizard.
+- **#4 RAG no engine** — **JÁ ESTAVA FEITO** (verificado): `prompt-builder.ts` CAMADA 2.5 chama `buscarTrechosRag` (embedding Mistral + RPC `match_hub_agente_rag_chunks`) e injeta os trechos no system prompt. Indexação no upload (`indexarDocumentoRag`) também pronta. → "ler documento e responder" funciona p/ docs com TEXTO; **planta/desenho precisa de VISÃO (Claude) = V4 multimodal**, capacidade separada.
+- **#3 playbook/preset de tarefa em banco** — **JÁ ESTAVA FEITO**: os **cargos** (`hub_cargos_catalogo`) SÃO os presets em banco, **owner-criáveis pela tela** (`CrmCargosCatalogDrawer` montado em `/crm/agentes`, `POST /api/hub/cargos` faz insert) + "sugerir cargo por IA". Conversational flow custom via markdown playbook (flow-parse/flow-engine).
+
+**Conclusão:** "criar agente por tarefa com preset (comportamento/conduta/processo) + RAG + ferramentas + modelo" **já é possível de ponta a ponta**. Único enhancement aberto (deferido, não-bloqueador): **construtor VISUAL de fluxo** (no-code, sem markdown). Os exemplos do dono (Google Ads, contratos, financeiro) são todos construíveis hoje.
+
 ## A tese do dono (validada)
 "A IA opera o sistema, mas criamos **agentes para tarefas específicas** com **presets** (comportamento, conduta, processo pré-fixados). Ex.: agente que atende uma campanha do Google; agente de contratos; agente de financeiro. Isso **economiza tokens** e é mais eficiente."
 
