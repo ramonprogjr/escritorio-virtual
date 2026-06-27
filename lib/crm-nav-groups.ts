@@ -84,6 +84,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     sectionIcon: Briefcase,
     items: [
       { href: "/crm/leads", label: "Leads", icon: Users, minRole: "atendente" },
+      { href: "/crm/distribuicao", label: "Distribuição de leads", icon: Route, minRole: "gestor" },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase, minRole: "comercial" },
       { href: "/crm/cadastro", label: "Cadastros", icon: User, minRole: "comercial" },
       { href: "/crm/atendimento", label: "Atendimento", icon: MessageSquare, minRole: "atendente" },
@@ -118,7 +119,6 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       { href: "/crm/parceiros", label: "Parceiros", icon: Handshake, minRole: "comercial" },
       { href: "/crm/fornecedores", label: "Fornecedores", icon: Truck, minRole: "comercial" },
       { href: "/crm/especialistas", label: "Especialistas", icon: HardHat, minRole: "comercial" },
-      { href: "/crm/distribuicao", label: "Distribuição de leads", icon: Route, minRole: "gestor" },
     ],
   },
   {

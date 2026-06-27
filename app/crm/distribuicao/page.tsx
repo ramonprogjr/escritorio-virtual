@@ -99,6 +99,7 @@ export default function DistribuicaoPage() {
   const [form, setForm] = useState({
     origem: "", mercado: "", uf: "", destino_tipo: "agente", destino_valor: "", prioridade: "100",
   });
+  const [regrasAbertas, setRegrasAbertas] = useState(false);
   const [destinos, setDestinos] = useState<{
     agentes: { value: string; label: string }[];
     parceiros: { value: string; label: string }[];
@@ -372,8 +373,13 @@ export default function DistribuicaoPage() {
 
       {/* Regras de roteamento (config avançada) */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #c9a24a44", background: "#003b2622" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>Regras de roteamento automático</p>
-        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#8b949e", lineHeight: 1.5 }}>
+        <button type="button" onClick={() => setRegrasAbertas((v) => !v)} style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 8, background: "transparent", border: "none", cursor: "pointer", padding: 0 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>⚙ Regras de roteamento automático</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#8b949e" }}>{regrasAbertas ? "▲ fechar" : "▼ configurar"}</span>
+        </button>
+        {regrasAbertas && (
+          <>
+        <p style={{ margin: "12px 0 12px", fontSize: 12, color: "#8b949e", lineHeight: 1.5 }}>
           O lead que casa com a 1ª regra ativa (por prioridade) vai direto ao destino. Sem regra, vale a heurística padrão.
           Deixe um campo em <strong style={{ color: "#c9a24a" }}>branco (qualquer)</strong> para não filtrar por ele.
         </p>
@@ -416,6 +422,8 @@ export default function DistribuicaoPage() {
           style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, border: "none", background: "#c9a24a", color: "#003b26", fontWeight: 700, fontSize: 12, cursor: salvando ? "default" : "pointer", opacity: salvando ? 0.6 : 1 }}>
           <Plus size={14} strokeWidth={2.5} /> {salvando ? "Salvando…" : "Adicionar regra"}
         </button>
+          </>
+        )}
       </div>
 
       {/* Lista */}
