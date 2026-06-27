@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, UserPlus } from "lucide-react";
+import { BarChart3, ClipboardList, UserPlus } from "lucide-react";
 import { CrmAcaoAgora } from "@/components/crm/CrmAcaoAgora";
 import { CrmAlertasStrip } from "@/components/crm/CrmAlertasStrip";
 import { CrmLeadsParados } from "@/components/crm/CrmLeadsParados";
@@ -42,7 +42,14 @@ export default function DashboardPage() {
             className="flex items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-1.5 text-xs font-bold text-[#e6edf3] transition-colors hover:border-[#c9a24a55] hover:text-[#c9a24a]"
           >
             <BarChart3 className="h-3.5 w-3.5" />
-            Ver tendências
+            Analytics
+          </Link>
+          <Link
+            href="/crm/relatorios"
+            className="flex items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-1.5 text-xs font-bold text-[#e6edf3] transition-colors hover:border-[#c9a24a55] hover:text-[#c9a24a]"
+          >
+            <ClipboardList className="h-3.5 w-3.5" />
+            Relatórios
           </Link>
           <button
             type="button"
@@ -109,12 +116,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const dataHoje = new Date().toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-
   return (
     <div
       className={`bg-[#0a140f] ${isMobile ? "min-h-0 px-3 pb-6 pt-1" : "min-h-screen px-4 py-5 sm:px-6 sm:py-6"}`}
@@ -122,17 +123,25 @@ export default function DashboardPage() {
       <div className="mx-auto w-full max-w-[1400px] space-y-6">
         {isMobile && (
           <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#2b3544] bg-[#121926] px-3.5 py-3">
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-[#e6edf3]">Dashboard</h1>
-              <p className="text-xs capitalize text-[#8b949e]">{dataHoje}</p>
+            <h1 className="text-lg font-bold tracking-tight text-[#e6edf3]">Dashboard</h1>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/crm/analytics"
+                aria-label="Analytics"
+                className="flex min-h-10 items-center gap-1.5 rounded-xl border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#c9a24a]"
+              >
+                <BarChart3 className="h-3.5 w-3.5" />
+                Analytics
+              </Link>
+              <Link
+                href="/crm/relatorios"
+                aria-label="Relatórios"
+                className="flex min-h-10 items-center gap-1.5 rounded-xl border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#c9a24a]"
+              >
+                <ClipboardList className="h-3.5 w-3.5" />
+                Relatórios
+              </Link>
             </div>
-            <Link
-              href="/crm/analytics"
-              className="flex min-h-10 items-center gap-1.5 rounded-xl border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#c9a24a]"
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-              Tendências
-            </Link>
           </div>
         )}
 

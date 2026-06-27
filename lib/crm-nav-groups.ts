@@ -70,9 +70,9 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     label: "Visão Geral",
     sectionIcon: LayoutDashboard,
     items: [
+      // Analytics e Relatórios saíram do menu — agora são botões dentro do Dashboard
+      // (Dashboard vira o hub de informação; menu lateral mais enxuto).
       { href: "/crm", label: "Dashboard", icon: LayoutDashboard, minRole: "financeiro" },
-      { href: "/crm/analytics", label: "Analytics", icon: LineChart, minRole: "financeiro" },
-      { href: "/crm/relatorios", label: "Relatórios", icon: ClipboardList, minRole: "financeiro" },
     ],
   },
   {
