@@ -1,7 +1,36 @@
 {
-  "geradoEm": "2026-06-27T19:46:09.492Z",
+  "geradoEm": "2026-06-27T19:52:41.548Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "5c2e137c7c10041334989cdb48dca799817f96a1",
+      "hashCurto": "5c2e137",
+      "mensagem": "Fase 5 — envio provider-agnóstico (UAZAPI como 1 adapter)",
+      "mensagemRaw": "feat(whatsapp): Fase 5 — envio provider-agnóstico (UAZAPI como 1 adapter)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:52:34.000Z",
+      "hora": "16:52",
+      "arquivos": [
+        ".env.example",
+        "lib/whatsapp/adapters/uazapi-adapter.ts",
+        "lib/whatsapp/whatsapp-provider.ts",
+        "lib/whatsapp/whatsapp-send.ts"
+      ],
+      "areas": {
+        "outros": 4
+      }
+    },
+    {
+      "hash": "1a3ff6da9c71ec8cdc8c2c400ae8c9ae8af2b986",
+      "hashCurto": "1a3ff6d",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T19:47:03.000Z",
+      "hora": "16:47",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "53cf7e41d085f9a579fc2a59882f27df6d3e9498",
       "hashCurto": "53cf7e4",
