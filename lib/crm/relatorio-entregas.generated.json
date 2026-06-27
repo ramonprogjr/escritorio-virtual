@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-27T17:34:42.221Z",
+  "geradoEm": "2026-06-27T17:41:39.258Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "fabe431f39b051f9723f713e9815b2c0c202d0ec",
+      "hashCurto": "fabe431",
+      "mensagem": "botão 'Editar' explícito no card do agente",
+      "mensagemRaw": "fix(agentes): botão 'Editar' explícito no card do agente",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:41:12.000Z",
+      "hora": "14:41",
+      "arquivos": [
+        "app/crm/agentes/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "44e2877b810460d92af945929fb83aeab38f0942",
+      "hashCurto": "44e2877",
+      "mensagem": "artefatos de progresso",
+      "mensagemRaw": "chore(build): artefatos de progresso",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:36:54.000Z",
+      "hora": "14:36",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "416ec08106df3925c38eccae2bfb056c85118d56",
       "hashCurto": "416ec08",
