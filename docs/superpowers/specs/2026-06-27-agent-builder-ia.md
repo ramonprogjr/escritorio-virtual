@@ -39,6 +39,8 @@ Hoje, criar o playbook de um agente exige escolher cargo do catálogo OU subir u
 8. **"Confirmar e publicar"** → valida, salva, invalida cache; a Mari já usa no próximo atendimento. *(Fase 2: PDF/DOCX; Fase 3: áudio.)*
 
 ## Fases
+> **Status (27/jun): Fases 1, 2 e 3 ENTREGUES e deployadas** (texto + PDF/DOCX + áudio). Geração ao vivo validada por fiação; depende de `MISTRAL_API_KEY` (prod). Falta Fase 4 (instrumentação). Detalhe na memória [[agent-builder-ia-fase1]].
+
 - **Fase 1 — MVP (texto → playbook + regras):** NOVOS `lib/playbook/gerar-fluxo-ia.ts` (2 fases: narrativa temp~0.4 → JSON do fluxo temp~0.2; system prompt com o schema comentado + mini-exemplo de 6 steps/4 kinds), `app/api/hub/agentes/[slug]/playbook/gerar-por-ia/route.ts` (espelha `cargos/sugerir`; service-role; checa agente↔tenant; devolve {markdown, flowDefinition, regras, analise, avisos} SEM persistir), `gerar-fluxo-ia.test.ts`. Pipeline parse→validate→**auto-fix** (2 tentativas, 2ª em Claude)→fallback template. UI aditiva (aba "Gerar com IA"). Publicar via PUT `/playbook/conteudo` existente. registrarConsumoIA por fase. **Risco médio.**
 - **Fase 2 — PDF/DOCX:** endpoint aceita pdfBase64 → `extrairTextoDocumentoRag` → mesmo motor. **Risco baixo.**
 - **Fase 3 — Áudio:** subir ao Storage → URL pública → `mistralTranscreverAudioUrl` → confirmar transcrição → mesmo motor. Anti-SSRF (validar domínio). **Risco alto.**

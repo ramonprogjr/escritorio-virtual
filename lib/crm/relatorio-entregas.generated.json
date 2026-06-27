@@ -1,7 +1,54 @@
 {
-  "geradoEm": "2026-06-27T16:28:41.985Z",
+  "geradoEm": "2026-06-27T17:13:36.029Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "c845501b145d8fe82433a61516278e6b591ae4de",
+      "hashCurto": "c845501",
+      "mensagem": "Fase 3 — gerar playbook por ÁUDIO (gravar ou enviar)",
+      "mensagemRaw": "feat(agent-builder): Fase 3 — gerar playbook por ÁUDIO (gravar ou enviar)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:13:10.000Z",
+      "hora": "14:13",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/playbook/gerar-por-ia/route.ts",
+        "components/crm/AgenteBuilderIaPanel.tsx",
+        "lib/whatsapp/mistral-transcribe-audio.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9b7f968cf39b798a0eba7c80872df74b8d05d7cf",
+      "hashCurto": "9b7f968",
+      "mensagem": "Fase 2 — gerar playbook a partir de PDF/DOCX/TXT",
+      "mensagemRaw": "feat(agent-builder): Fase 2 — gerar playbook a partir de PDF/DOCX/TXT",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T17:00:25.000Z",
+      "hora": "14:00",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/playbook/gerar-por-ia/route.ts",
+        "components/crm/AgenteBuilderIaPanel.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "a3c8a3e357c5900627aa8f8b6572270c9221aedd",
+      "hashCurto": "a3c8a3e",
+      "mensagem": "regenera artefatos de progresso (verify:progresso)",
+      "mensagemRaw": "chore(build): regenera artefatos de progresso (verify:progresso)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T16:31:58.000Z",
+      "hora": "13:31",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "6604df871f2974dcc5df43763fc3f9dc71748668",
       "hashCurto": "6604df8",
