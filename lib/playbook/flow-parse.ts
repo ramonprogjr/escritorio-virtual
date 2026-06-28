@@ -115,7 +115,7 @@ export function parsePlaybookFlowFromMarkdown(markdown: string): ParsePlaybookFl
           taggedFenceCount > 1
             ? `Foram encontrados ${taggedFenceCount} blocos de fluxo — remova duplicatas e deixe apenas um fence válido.`
             : "Revise vírgulas, aspas duplas e chaves do bloco fenced.",
-          "Tipos suportados no fluxo: message, menu, input, complete (não use condition, trigger, validation no JSON).",
+          "Tipos suportados no fluxo: message, menu, input, complete, send_document, send_audio (não use condition, trigger, validation no JSON).",
         ],
       };
     }

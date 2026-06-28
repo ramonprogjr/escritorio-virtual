@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import type { Node } from "@xyflow/react";
 import {
   CheckCircle,
@@ -9,12 +9,19 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Paperclip,
+  Mic,
+  FileText,
+  Loader2,
+  SplitSquareVertical,
+  ListChecks,
   X,
 } from "lucide-react";
 import type { FlowMenuOption, FlowVisualNodeData } from "./types";
 import type {
   PlaybookFlowInputType,
   PlaybookFlowJourney,
+  PlaybookFlowMedia,
   PlaybookFlowMenuFormat,
 } from "@/lib/playbook/flow-definition-types";
 
@@ -22,10 +29,12 @@ type FlowNodeEditorSideoverProps = {
   selectedNode: Node<FlowVisualNodeData>;
   allNodeIds: string[];
   entryStepId: string;
+  agenteSlug?: string;
   onSetEntryStepId: (stepId: string) => void;
   onRenameNodeId: (oldId: string, nextId: string) => void;
   onUpdateNode: (nodeId: string, updates: Partial<FlowVisualNodeData>) => void;
   onRemoveMenuOption: (nodeId: string, optionId: string) => void;
+  onConvertToMenu?: (nodeId: string) => void;
   onDeleteNode: (nodeId: string) => void;
   onClose: () => void;
 };
@@ -35,6 +44,8 @@ const KIND_COLOR: Record<string, string> = {
   input: "#e3b341",
   menu: "#c9a24a",
   complete: "#3fb950",
+  send_document: "#c9a24a",
+  send_audio: "#2f6f4f",
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -42,6 +53,8 @@ const KIND_LABEL: Record<string, string> = {
   input: "Entrada",
   menu: "Menu",
   complete: "Conclusao",
+  send_document: "Documento",
+  send_audio: "Áudio",
 };
 
 const KIND_ICON: Record<string, React.ComponentType<{ size: number; strokeWidth: number }>> = {
@@ -49,16 +62,20 @@ const KIND_ICON: Record<string, React.ComponentType<{ size: number; strokeWidth:
   input: Pencil,
   menu: ClipboardList,
   complete: CheckCircle,
+  send_document: Paperclip,
+  send_audio: Mic,
 };
 
 export function FlowNodeEditorSideover({
   selectedNode,
   allNodeIds,
   entryStepId,
+  agenteSlug,
   onSetEntryStepId,
   onRenameNodeId,
   onUpdateNode,
   onRemoveMenuOption,
+  onConvertToMenu,
   onDeleteNode,
   onClose,
 }: FlowNodeEditorSideoverProps) {
@@ -106,7 +123,11 @@ export function FlowNodeEditorSideover({
         ? "Prompt da entrada"
         : data.kind === "complete"
           ? "Mensagem de conclusao"
-          : "Mensagem";
+          : data.kind === "send_document"
+            ? "Legenda do documento (opcional)"
+            : data.kind === "send_audio"
+              ? "Observação interna (não enviada)"
+              : "Mensagem";
 
   return (
     <>
@@ -259,6 +280,61 @@ export function FlowNodeEditorSideover({
             </>
           )}
 
+          {/* PDF / Documento: anexar em mensagens ou no card de documento */}
+          {(data.kind === "message" || data.kind === "send_document") && (
+            <MediaAttachField
+              kind="document"
+              accent={accent}
+              media={data.media}
+              agenteSlug={agenteSlug}
+              onChange={(media) => update({ media })}
+            />
+          )}
+
+          {/* Áudio: anexar em mensagens ou no card de áudio */}
+          {(data.kind === "message" || data.kind === "send_audio") && (
+            <MediaAttachField
+              kind="audio"
+              accent={accent}
+              media={data.media}
+              agenteSlug={agenteSlug}
+              onChange={(media) => update({ media })}
+            />
+          )}
+
+          {/* Separar em bolhas (apenas mensagem) */}
+          {data.kind === "message" && (
+            <FieldRow label="Separar em bolhas">
+              <button
+                type="button"
+                onClick={() => update({ split: !data.split })}
+                style={{
+                  ...toggleButtonStyle,
+                  ...(data.split ? toggleButtonActiveStyle : {}),
+                }}
+                title="Quebra o texto em mensagens separadas (parágrafos divididos por linha em branco)"
+              >
+                <SplitSquareVertical size={13} strokeWidth={2.2} />
+                {data.split ? "Dividindo em bolhas (cada parágrafo = 1 mensagem)" : "Enviar em bolhas separadas"}
+              </button>
+            </FieldRow>
+          )}
+
+          {/* Transformar mensagem em múltipla escolha */}
+          {data.kind === "message" && onConvertToMenu && (
+            <FieldRow label="Múltipla escolha">
+              <button
+                type="button"
+                onClick={() => onConvertToMenu(id)}
+                style={convertButtonStyle}
+                title="Converte esta mensagem em um menu de opções, mantendo o texto como pergunta"
+              >
+                <ListChecks size={13} strokeWidth={2.2} />
+                Transformar em múltipla escolha
+              </button>
+            </FieldRow>
+          )}
+
           <datalist id="flow-existing-node-ids">
             {allNodeIds.map((nodeId) => (
               <option key={nodeId} value={nodeId} />
@@ -283,6 +359,132 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
       <label style={fieldLabelStyle}>{label}</label>
       {children}
     </div>
+  );
+}
+
+const ACCEPT_BY_KIND: Record<"document" | "audio", string> = {
+  document: ".pdf,application/pdf",
+  audio: ".ogg,.mp3,.m4a,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a",
+};
+
+const LABEL_BY_KIND: Record<"document" | "audio", string> = {
+  document: "PDF / Documento",
+  audio: "Áudio",
+};
+
+type MediaUploadResponse = {
+  ok?: boolean;
+  media?: PlaybookFlowMedia;
+  error?: string;
+};
+
+/**
+ * Anexa PDF/áudio via upload server-side (bucket `playbook-media`).
+ * Tolerante: sem agenteSlug ou bucket ausente → mensagem amigável, não quebra a UI.
+ */
+function MediaAttachField({
+  kind,
+  accent,
+  media,
+  agenteSlug,
+  onChange,
+}: {
+  kind: "document" | "audio";
+  accent: string;
+  media?: PlaybookFlowMedia;
+  agenteSlug?: string;
+  onChange: (media: PlaybookFlowMedia | undefined) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [erro, setErro] = useState("");
+
+  // Mostra o anexo só quando o tipo bate com este campo (PDF não aparece no campo de áudio).
+  const matchesKind =
+    media && (kind === "audio" ? media.type === "audio" : media.type !== "audio");
+
+  async function handleFile(file: File) {
+    setErro("");
+    if (!agenteSlug) {
+      setErro("Salve o agente antes de anexar arquivos.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("kind", kind === "audio" ? "audio" : "document");
+      const res = await fetch(
+        `/api/hub/agentes/${encodeURIComponent(agenteSlug)}/playbook-media`,
+        { method: "POST", body: form }
+      );
+      const data = (await res.json().catch(() => ({}))) as MediaUploadResponse;
+      if (!res.ok || !data.ok || !data.media?.url) {
+        setErro(data.error || "Não foi possível enviar o arquivo agora.");
+        return;
+      }
+      onChange(data.media);
+    } catch {
+      setErro("Falha de rede ao enviar o arquivo.");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  const Icon = kind === "audio" ? Mic : FileText;
+  const fileLabel = matchesKind
+    ? media?.file_name?.trim() || media?.url.split("/").pop() || "Arquivo anexado"
+    : "";
+
+  return (
+    <FieldRow label={LABEL_BY_KIND[kind]}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPT_BY_KIND[kind]}
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void handleFile(file);
+        }}
+      />
+      {matchesKind ? (
+        <div style={mediaAttachedStyle}>
+          <span style={{ ...mediaAttachedIcon, color: accent }}>
+            <Icon size={13} strokeWidth={2.2} />
+          </span>
+          <span style={mediaAttachedName} title={media?.url}>
+            {fileLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => onChange(undefined)}
+            style={mediaRemoveStyle}
+            title="Remover anexo"
+          >
+            <Trash2 size={11} strokeWidth={2.1} />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          style={{ ...mediaPickButtonStyle, opacity: busy ? 0.7 : 1 }}
+        >
+          {busy ? (
+            <Loader2 size={13} strokeWidth={2.2} className="animate-spin" />
+          ) : kind === "audio" ? (
+            <Mic size={13} strokeWidth={2.2} />
+          ) : (
+            <Paperclip size={13} strokeWidth={2.2} />
+          )}
+          {busy ? "Enviando…" : kind === "audio" ? "Selecionar áudio" : "Anexar PDF"}
+        </button>
+      )}
+      {erro && <p style={mediaErroStyle}>{erro}</p>}
+    </FieldRow>
   );
 }
 
@@ -543,4 +745,104 @@ const selectStyle: CSSProperties = {
   outline: "none",
   width: "100%",
   boxSizing: "border-box",
+};
+
+const mediaPickButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 7,
+  border: "1px dashed #c9a24a",
+  borderRadius: 9,
+  background: "#211a0d",
+  color: "#f0d8a0",
+  padding: "9px 10px",
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+  width: "100%",
+};
+
+const mediaAttachedStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  border: "1px solid #4d3c12",
+  borderRadius: 9,
+  background: "#0f1d16",
+  padding: "8px 10px",
+};
+
+const mediaAttachedIcon: CSSProperties = {
+  display: "inline-flex",
+  flexShrink: 0,
+};
+
+const mediaAttachedName: CSSProperties = {
+  flex: 1,
+  fontSize: 12,
+  color: "#e2e8f0",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const mediaRemoveStyle: CSSProperties = {
+  width: 24,
+  height: 24,
+  borderRadius: 7,
+  border: "1px solid #ef444488",
+  background: "#2a1313",
+  color: "#fca5a5",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 0,
+  flexShrink: 0,
+};
+
+const mediaErroStyle: CSSProperties = {
+  margin: "2px 0 0",
+  fontSize: 10.5,
+  color: "#ff9a8a",
+  lineHeight: 1.4,
+};
+
+const toggleButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 7,
+  border: "1px solid #2a3545",
+  borderRadius: 9,
+  background: "#0f1d16",
+  color: "#cbd5e1",
+  padding: "9px 10px",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
+  width: "100%",
+  textAlign: "left",
+};
+
+const toggleButtonActiveStyle: CSSProperties = {
+  borderColor: "#2f6f4f",
+  background: "#10231a",
+  color: "#9fd3bf",
+};
+
+const convertButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 7,
+  border: "1px solid #c9a24a",
+  borderRadius: 9,
+  background: "#211a0d",
+  color: "#f0d8a0",
+  padding: "9px 10px",
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+  width: "100%",
 };

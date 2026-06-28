@@ -1,7 +1,30 @@
 {
-  "geradoEm": "2026-06-28T17:37:36.835Z",
+  "geradoEm": "2026-06-28T18:16:18.792Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "5721d6fe81c863651c484e00e72c40c6e7d2b8c8",
+      "hashCurto": "5721d6f",
+      "mensagem": "reativa editor visual de fluxo do playbook (flag prod + marca + estado-vazio IA)",
+      "mensagemRaw": "feat(fluxo): reativa editor visual de fluxo do playbook (flag prod + marca + estado-vazio IA)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T17:38:37.000Z",
+      "hora": "14:38",
+      "arquivos": [
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/playbook-flow-visual/FlowCanvas.tsx",
+        "components/crm/playbook-flow-visual/FlowCustomNodes.tsx",
+        "components/crm/playbook-flow-visual/FlowNodeEditorSideover.tsx",
+        "components/crm/playbook-flow-visual/FlowNodeInspector.tsx",
+        "components/crm/playbook-flow-visual/FlowNodePalette.tsx",
+        "docs/superpowers/specs/2026-06-28-editor-fluxo-visual-playbook.md",
+        "render.yaml"
+      ],
+      "areas": {
+        "components/crm": 6,
+        "outros": 2
+      }
+    },
     {
       "hash": "240ecd83c376010079ff39f1c217db91cd3f4073",
       "hashCurto": "240ecd8",

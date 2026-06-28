@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   executeFlowEngine,
   formatMenuOpcoesTexto,
@@ -6,6 +6,10 @@ import {
   resolveMenuChoiceId,
   type FlowEngineDefinition,
 } from "./flow-engine";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const MENU_CHOICES = [
   { id: "m2_50_100", label: "De 50 a 100 m2" },
@@ -85,6 +89,148 @@ describe("executeFlowEngine send_text", () => {
     expect(sendText).toHaveBeenCalledTimes(2);
     expect(sendText.mock.calls[0][0]).toBe("Olá\n\nSou a Mari");
     expect(sendText.mock.calls[1][0]).toBe("Seu nome?");
+  });
+
+  it("envia em bolhas separadas quando split=true (quebra por \\n\\n)", async () => {
+    vi.stubEnv("FLOW_SPLIT_BUBBLE_DELAY_MS", "0");
+    const sendText = vi.fn(async () => {});
+    const definition: FlowEngineDefinition = {
+      start_step: "a",
+      steps: {
+        a: {
+          id: "a",
+          type: "send_text",
+          text: "Primeira bolha\n\nSegunda bolha\n\nTerceira bolha",
+          split: true,
+          next_step: "fim",
+        },
+        fim: { id: "fim", type: "complete" },
+      },
+    };
+
+    await executeFlowEngine(
+      definition,
+      { step: null, answers: {}, mensagem: "oi", tipoMidia: "texto" },
+      {
+        sendText,
+        sendMenu: async () => ({ ok: true }),
+        resolveChoiceId: () => null,
+        persistState: async () => {},
+      }
+    );
+
+    expect(sendText).toHaveBeenCalledTimes(3);
+    expect(sendText.mock.calls[0][0]).toBe("Primeira bolha");
+    expect(sendText.mock.calls[1][0]).toBe("Segunda bolha");
+    expect(sendText.mock.calls[2][0]).toBe("Terceira bolha");
+  });
+
+  it("não concatena um step split com vizinhos sem split", async () => {
+    vi.stubEnv("FLOW_SPLIT_BUBBLE_DELAY_MS", "0");
+    const sendText = vi.fn(async () => {});
+    const definition: FlowEngineDefinition = {
+      start_step: "a",
+      steps: {
+        a: { id: "a", type: "send_text", text: "Intro", next_step: "b" },
+        b: { id: "b", type: "send_text", text: "Bolha 1\n\nBolha 2", split: true, next_step: "c" },
+        c: { id: "c", type: "send_text", text: "Fecho", next_step: "fim" },
+        fim: { id: "fim", type: "complete" },
+      },
+    };
+
+    await executeFlowEngine(
+      definition,
+      { step: null, answers: {}, mensagem: "oi", tipoMidia: "texto" },
+      {
+        sendText,
+        sendMenu: async () => ({ ok: true }),
+        resolveChoiceId: () => null,
+        persistState: async () => {},
+      }
+    );
+
+    // Intro (concat) | Bolha 1 | Bolha 2 | Fecho (concat) = 4 envios
+    expect(sendText).toHaveBeenCalledTimes(4);
+    expect(sendText.mock.calls[0][0]).toBe("Intro");
+    expect(sendText.mock.calls[1][0]).toBe("Bolha 1");
+    expect(sendText.mock.calls[2][0]).toBe("Bolha 2");
+    expect(sendText.mock.calls[3][0]).toBe("Fecho");
+  });
+});
+
+describe("executeFlowEngine send_media", () => {
+  it("chama sendMedia com o tipo/url do passo e segue para next_step", async () => {
+    const sendText = vi.fn(async () => {});
+    const sendMedia = vi.fn(async () => ({ ok: true }));
+    const definition: FlowEngineDefinition = {
+      start_step: "doc",
+      steps: {
+        doc: {
+          id: "doc",
+          type: "send_media",
+          media_type: "document",
+          file: "https://exemplo.com/contrato.pdf",
+          caption: "Segue o contrato",
+          file_name: "Contrato.pdf",
+          next_step: "fim",
+        },
+        fim: { id: "fim", type: "complete", text: "Pronto!" },
+      },
+    };
+
+    await executeFlowEngine(
+      definition,
+      { step: null, answers: {}, mensagem: "oi", tipoMidia: "texto" },
+      {
+        sendText,
+        sendMedia,
+        sendMenu: async () => ({ ok: true }),
+        resolveChoiceId: () => null,
+        persistState: async () => {},
+      }
+    );
+
+    expect(sendMedia).toHaveBeenCalledTimes(1);
+    expect(sendMedia.mock.calls[0][0]).toMatchObject({
+      mediaType: "document",
+      file: "https://exemplo.com/contrato.pdf",
+      caption: "Segue o contrato",
+      fileName: "Contrato.pdf",
+    });
+    // chegou ao complete e enviou o texto final
+    expect(sendText).toHaveBeenCalledWith("Pronto!");
+  });
+
+  it("não derruba o fluxo quando o adapter não suporta mídia (envia a legenda como texto)", async () => {
+    const sendText = vi.fn(async () => {});
+    const definition: FlowEngineDefinition = {
+      start_step: "doc",
+      steps: {
+        doc: {
+          id: "doc",
+          type: "send_media",
+          media_type: "document",
+          file: "https://exemplo.com/x.pdf",
+          caption: "Veja o anexo",
+        },
+        fim: { id: "fim", type: "complete" },
+      },
+    };
+
+    const result = await executeFlowEngine(
+      definition,
+      { step: null, answers: {}, mensagem: "oi", tipoMidia: "texto" },
+      {
+        sendText,
+        // sem sendMedia
+        sendMenu: async () => ({ ok: true }),
+        resolveChoiceId: () => null,
+        persistState: async () => {},
+      }
+    );
+
+    expect(result.handled).toBe(true);
+    expect(sendText).toHaveBeenCalledWith("Veja o anexo");
   });
 });
 

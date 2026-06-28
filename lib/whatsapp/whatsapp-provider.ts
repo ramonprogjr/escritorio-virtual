@@ -9,11 +9,18 @@
  * IMPORTANTE: a assinatura e o retorno de `sendText` são IDÊNTICOS aos da função
  * `uazapiSendText` já existente — o adapter só encaminha. Zero mudança de comportamento.
  */
-import type { UazapiSendTextResult } from "@/lib/whatsapp/uazapi-send";
+import type {
+  UazapiSendTextResult,
+  UazapiSendMediaResult,
+  UazapiSendMediaOptions,
+  UazapiMediaType,
+} from "@/lib/whatsapp/uazapi-send";
 import { uazapiAdapter } from "@/lib/whatsapp/adapters/uazapi-adapter";
 
 /** Resultado de envio de texto — mesmo shape já usado pelo provedor UAZAPI. */
 export type WhatsappSendTextProviderResult = UazapiSendTextResult;
+/** Resultado de envio de mídia — mesmo shape do envio de texto. */
+export type WhatsappSendMediaProviderResult = UazapiSendMediaResult;
 
 export interface WhatsappProvider {
   /** Identificador técnico do provedor (ex.: "uazapi"). */
@@ -27,6 +34,17 @@ export interface WhatsappProvider {
     text: string,
     instanceToken?: string | null
   ): Promise<WhatsappSendTextProviderResult>;
+  /**
+   * Envia mídia (documento/áudio/imagem) por URL pública ou base64.
+   * Opcional na interface: provedores sem suporte podem omitir.
+   */
+  sendMedia?(
+    numero: string,
+    type: UazapiMediaType,
+    file: string,
+    opts?: UazapiSendMediaOptions,
+    instanceToken?: string | null
+  ): Promise<WhatsappSendMediaProviderResult>;
 }
 
 /**

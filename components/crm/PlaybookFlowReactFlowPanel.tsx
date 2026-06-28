@@ -257,6 +257,7 @@ export function PlaybookFlowReactFlowPanel({
         <FlowCanvas
           key={mountKey}
           initialDefinition={definition}
+          agenteSlug={agenteSlug}
           onChange={handleChange}
           onDirty={onCanvasDirty}
         />

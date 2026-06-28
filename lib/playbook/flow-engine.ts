@@ -7,10 +7,14 @@ export type FlowEngineResult =
 export type FlowEngineStepType =
   | "await_name"
   | "send_text"
+  | "send_media"
   | "menu"
   | "ask_text"
   | "branch_imob_sub"
   | "complete";
+
+/** Tipo de mídia de saída no runtime (alinhado à UAZAPI /send/media). */
+export type FlowEngineMediaType = "document" | "audio" | "image";
 
 type BaseStep = {
   id: string;
@@ -28,6 +32,21 @@ export type FlowAwaitNameStep = BaseStep & {
 export type FlowSendTextStep = BaseStep & {
   type: "send_text";
   text: string;
+  next_step?: string;
+  /**
+   * Quando true, este texto NÃO é concatenado com vizinhos: é enviado como
+   * bolha(s) separada(s) — split por linhas em branco (\n\n) — com pequeno delay.
+   */
+  split?: boolean;
+};
+
+export type FlowSendMediaStep = BaseStep & {
+  type: "send_media";
+  media_type: FlowEngineMediaType;
+  /** URL pública (ou base64) do arquivo. */
+  file: string;
+  caption?: string;
+  file_name?: string;
   next_step?: string;
 };
 
@@ -85,6 +104,7 @@ export type FlowCompleteStep = BaseStep & {
 export type FlowEngineStep =
   | FlowAwaitNameStep
   | FlowSendTextStep
+  | FlowSendMediaStep
   | FlowMenuStep
   | FlowAskTextStep
   | FlowBranchImobSubStep
@@ -110,8 +130,41 @@ export type FlowEnginePersistPatch = {
   complete?: boolean;
 };
 
+/**
+ * Delay padrão (ms) entre bolhas separadas — humaniza o ritmo das mensagens.
+ * Pode ser sobrescrito por `FLOW_SPLIT_BUBBLE_DELAY_MS` (ex.: 0 em testes).
+ */
+export const FLOW_SPLIT_BUBBLE_DELAY_MS = 800;
+
+function resolveSplitBubbleDelayMs(): number {
+  const raw = process.env.FLOW_SPLIT_BUBBLE_DELAY_MS;
+  if (raw !== undefined && raw !== "") {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+  }
+  return FLOW_SPLIT_BUBBLE_DELAY_MS;
+}
+
+/** Separa um texto em bolhas por linha(s) em branco; ignora vazios. */
+export function splitTextIntoBubbles(text: string): string[] {
+  return String(text ?? "")
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 export type FlowEngineAdapter = {
   sendText: (text: string) => Promise<void>;
+  /**
+   * Envia mídia (documento/áudio/imagem). Opcional: adapters sem suporte
+   * simplesmente não recebem passos send_media (o motor tolera a ausência).
+   */
+  sendMedia?: (args: {
+    mediaType: FlowEngineMediaType;
+    file: string;
+    caption?: string;
+    fileName?: string;
+  }) => Promise<{ ok: boolean; erro?: string }>;
   sendMenu: (args: {
     text: string;
     menuType: "list" | "button" | "text";
@@ -234,6 +287,12 @@ export function resolveMenuChoiceId(
 
 const MAX_AUTO_TRANSITIONS = 12;
 
+/** Pausa não-bloqueante entre bolhas (pulada em ambiente de teste via delay 0). */
+function delayBubble(ms: number): Promise<void> {
+  if (!(ms > 0)) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** Monta prompt com opções numeradas (estilo POP Mari no WhatsApp). */
 export function formatMenuOpcoesTexto(prompt: string, choices: FlowMenuChoice[]): string {
   const header = prompt.trim();
@@ -268,7 +327,17 @@ export async function executeFlowEngine(
 
     switch (step.type) {
       case "send_text": {
-        const parts: string[] = [];
+        // Bolhas a enviar, na ordem. Um step com `split` produz N bolhas (split por \n\n);
+        // steps SEM split consecutivos são concatenados num único envio (comportamento atual).
+        const bubbles: string[] = [];
+        let pendingConcat: string[] = [];
+        const flushConcat = () => {
+          if (pendingConcat.length) {
+            bubbles.push(pendingConcat.join("\n\n"));
+            pendingConcat = [];
+          }
+        };
+
         let walk: string | undefined = currentStepId;
         let landedStepId: string | undefined;
         while (walk) {
@@ -277,7 +346,16 @@ export async function executeFlowEngine(
             landedStepId = walk;
             break;
           }
-          if (st.text.trim()) parts.push(st.text.trim());
+          const trimmed = st.text.trim();
+          if (st.split) {
+            // Fecha o bloco concatenado anterior e emite cada parte como bolha própria.
+            flushConcat();
+            for (const part of splitTextIntoBubbles(st.text)) {
+              bubbles.push(part);
+            }
+          } else if (trimmed) {
+            pendingConcat.push(trimmed);
+          }
           if (!st.next_step) {
             currentStepId = walk;
             walk = undefined;
@@ -286,8 +364,12 @@ export async function executeFlowEngine(
           walk = st.next_step;
           currentStepId = walk;
         }
-        if (parts.length) {
-          await adapter.sendText(parts.join("\n\n"));
+        flushConcat();
+
+        const bubbleDelayMs = resolveSplitBubbleDelayMs();
+        for (let i = 0; i < bubbles.length; i += 1) {
+          if (i > 0) await delayBubble(bubbleDelayMs);
+          await adapter.sendText(bubbles[i]);
         }
 
         if (landedStepId) {
@@ -296,6 +378,43 @@ export async function executeFlowEngine(
             currentStepId = landedStepId;
             continue;
           }
+        }
+
+        await adapter.persistState({
+          step: currentStepId,
+          answers,
+          active: true,
+          complete: false,
+        });
+        return { handled: true, skipIa: true, step: currentStepId };
+      }
+
+      case "send_media": {
+        if (typeof adapter.sendMedia === "function" && step.file.trim()) {
+          const out = await adapter.sendMedia({
+            mediaType: step.media_type,
+            file: step.file.trim(),
+            caption: step.caption?.trim() || undefined,
+            fileName: step.file_name?.trim() || undefined,
+          });
+          if (!out.ok && step.caption?.trim()) {
+            // Tolerância: se a mídia falhar mas houver legenda, ao menos manda o texto.
+            await adapter.sendText(step.caption.trim());
+          }
+        } else if (step.caption?.trim()) {
+          // Adapter sem suporte a mídia: não derruba o fluxo, envia a legenda como texto.
+          await adapter.sendText(step.caption.trim());
+        }
+
+        if (step.next_step && definition.steps[step.next_step]) {
+          await adapter.persistState({
+            step: step.next_step,
+            answers,
+            active: true,
+            complete: false,
+          });
+          currentStepId = step.next_step;
+          continue;
         }
 
         await adapter.persistState({

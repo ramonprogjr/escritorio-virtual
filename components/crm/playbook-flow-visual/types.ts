@@ -7,9 +7,13 @@ import type {
   PlaybookFlowStep,
   PlaybookFlowStepKind,
   PlaybookFlowMenuFormat,
+  PlaybookFlowMedia,
 } from "@/lib/playbook/flow-definition-types";
 
-export type FlowNodeKind = Extract<PlaybookFlowStepKind, "message" | "input" | "menu" | "complete">;
+export type FlowNodeKind = Extract<
+  PlaybookFlowStepKind,
+  "message" | "input" | "menu" | "complete" | "send_document" | "send_audio"
+>;
 
 export type FlowMenuOption = {
   id: string;
@@ -29,6 +33,10 @@ export type FlowVisualNodeData = Record<string, unknown> & {
   menuFormat?: PlaybookFlowMenuFormat;
   /** Step id for stable reference */
   stepId?: string;
+  /** Mídia anexada (message → PDF/áudio; send_document/send_audio sempre). */
+  media?: PlaybookFlowMedia;
+  /** Apenas message: enviar em bolhas separadas (split por \n\n). */
+  split?: boolean;
 };
 
 export type FlowCanvasSnapshot = {
@@ -42,6 +50,8 @@ const DEFAULT_CONTENT: Record<FlowNodeKind, string> = {
   input: "Pergunta para captar um dado do lead.",
   menu: "Escolha uma opção para continuar.",
   complete: "Fluxo concluído.",
+  send_document: "Enviar um documento (PDF) ao lead.",
+  send_audio: "Enviar um áudio ao lead.",
 };
 
 export function summarizeNodeContent(content: string, max = 64): string {
@@ -72,6 +82,21 @@ export function toVisualNodeData(step: PlaybookFlowStep): FlowVisualNodeData {
       content: step.message,
       journey: step.journey,
       stepId: step.id,
+      media: step.media,
+      split: step.split,
+    };
+  }
+  if (step.kind === "send_document" || step.kind === "send_audio") {
+    return {
+      kind: step.kind,
+      title: step.title,
+      content:
+        step.kind === "send_document"
+          ? step.message ?? step.media.caption ?? step.media.file_name ?? "Documento"
+          : "Áudio",
+      journey: step.journey,
+      stepId: step.id,
+      media: step.media,
     };
   }
   if (step.kind === "input") {

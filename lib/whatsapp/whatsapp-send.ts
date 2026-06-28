@@ -1,8 +1,11 @@
 import { getWhatsappProvider } from "@/lib/whatsapp/whatsapp-provider";
+import type { UazapiMediaType, UazapiSendMediaOptions } from "@/lib/whatsapp/uazapi-send";
 
 export type WhatsappSendTextResult =
   | { ok: true; status: number; body?: unknown; provider: "uazapi" }
   | { ok: false; status?: number; body?: unknown; error: string; provider?: "uazapi" };
+
+export type WhatsappSendMediaResult = WhatsappSendTextResult;
 
 export function whatsappProvider(): "uazapi" | null {
   if (!process.env.UAZAPI_BASE_URL?.trim()) return null;
@@ -40,4 +43,43 @@ export async function whatsappSendText(
     ok: false,
     error: "WhatsApp não configurado: defina UAZAPI_BASE_URL e token da instância",
   };
+}
+
+/**
+ * Envia mídia (documento/áudio/imagem) por URL pública via provedor de WhatsApp.
+ * Tolerante: provedor sem suporte a mídia retorna erro amigável (não derruba o runtime).
+ */
+export async function whatsappSendMedia(
+  numero: string,
+  type: UazapiMediaType,
+  file: string,
+  opts?: UazapiSendMediaOptions & { instanceToken?: string | null }
+): Promise<WhatsappSendMediaResult> {
+  const provider = whatsappProvider();
+  if (provider !== "uazapi") {
+    return {
+      ok: false,
+      error: "WhatsApp não configurado: defina UAZAPI_BASE_URL e token da instância",
+    };
+  }
+  if (!whatsappConfigured({ instanceToken: opts?.instanceToken })) {
+    return {
+      ok: false,
+      error:
+        "WhatsApp não configurado: defina UAZAPI_BASE_URL e token da instância (agente ligado à UAZAPI ou UAZAPI_INSTANCE_TOKEN)",
+    };
+  }
+  const impl = getWhatsappProvider();
+  if (typeof impl.sendMedia !== "function") {
+    return { ok: false, error: "Provedor de WhatsApp atual não suporta envio de mídia." };
+  }
+  const r = await impl.sendMedia(
+    numero,
+    type,
+    file,
+    { caption: opts?.caption, docName: opts?.docName, delayMs: opts?.delayMs },
+    opts?.instanceToken ?? undefined
+  );
+  if (r.ok) return { ok: true, status: r.status, body: r.body, provider: "uazapi" };
+  return { ok: false, status: r.status, body: r.body, error: r.error, provider: "uazapi" };
 }

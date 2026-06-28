@@ -74,9 +74,10 @@ function makeDefaultStep(kind: PlaybookFlowStep["kind"], id: string): PlaybookFl
       next: "",
     };
   }
+  // Este construtor textual cria apenas os 4 tipos clássicos; demais caem em complete.
   return {
     id,
-    kind,
+    kind: "complete",
     title: "Conclusão",
     complete: { type: "complete", summary: "Encaminhar para atendimento." },
   };

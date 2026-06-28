@@ -154,6 +154,35 @@ function validateStepInternalSemantics(step: PlaybookFlowStep, errors: string[])
       errors.push(`Step "${step.id}" (${step.kind}) exige bloco complete.`);
     }
   }
+
+  if (step.kind === "send_document" || step.kind === "send_audio") {
+    validateMediaStep(step, errors);
+  }
+}
+
+const MEDIA_KINDS = new Set(["audio", "document", "image"]);
+
+function validateMediaStep(step: PlaybookFlowStep, errors: string[]) {
+  if (step.kind !== "send_document" && step.kind !== "send_audio") return;
+  const media = (step as { media?: unknown }).media;
+  if (!isRecord(media)) {
+    errors.push(`Step "${step.id}" (${step.kind}) exige bloco media com type e url.`);
+    return;
+  }
+  const type = typeof media.type === "string" ? media.type : "";
+  const url = typeof media.url === "string" ? media.url.trim() : "";
+  if (!MEDIA_KINDS.has(type)) {
+    errors.push(`Step "${step.id}" (${step.kind}) media.type inválido: "${type}".`);
+  }
+  if (!url) {
+    errors.push(`Step "${step.id}" (${step.kind}) media.url é obrigatório.`);
+  }
+  if (step.kind === "send_document" && type && type !== "document" && type !== "image") {
+    errors.push(`Step "${step.id}" (send_document) media.type deve ser "document" ou "image".`);
+  }
+  if (step.kind === "send_audio" && type && type !== "audio") {
+    errors.push(`Step "${step.id}" (send_audio) media.type deve ser "audio".`);
+  }
 }
 
 export function validatePlaybookFlowDefinition(
@@ -201,7 +230,7 @@ export function validatePlaybookFlowDefinition(
     }
     stepIds.add(id);
 
-    if (!["message", "menu", "input", "complete"].includes(kind)) {
+    if (!["message", "menu", "input", "complete", "send_document", "send_audio"].includes(kind)) {
       errors.push(`Step "${id}" possui kind inválido: "${kind}".`);
       continue;
     }

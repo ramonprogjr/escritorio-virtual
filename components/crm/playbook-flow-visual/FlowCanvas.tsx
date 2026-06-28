@@ -25,6 +25,8 @@ import {
   LocateFixed,
   MessageSquare,
   PencilLine,
+  Paperclip,
+  Mic,
 } from "lucide-react";
 import "@xyflow/react/dist/style.css";
 import type {
@@ -264,7 +266,13 @@ function buildInitialEdges(def?: PlaybookFlowDefinition): Edge[] {
   const edges: Edge[] = [];
 
   for (const step of def.steps) {
-    if ((step.kind === "message" || step.kind === "input") && step.next) {
+    if (
+      (step.kind === "message" ||
+        step.kind === "input" ||
+        step.kind === "send_document" ||
+        step.kind === "send_audio") &&
+      step.next
+    ) {
       edges.push({
         id: `${step.id}__${step.next}`,
         source: step.id,
@@ -431,6 +439,23 @@ function toDefinition(
           journey: (node.data.journey as PlaybookFlowJourney | undefined) ?? undefined,
           message: node.data.content,
           next: firstTarget,
+          ...(node.data.media ? { media: node.data.media } : {}),
+          ...(node.data.split ? { split: true } : {}),
+        };
+      }
+      if (node.data.kind === "send_document" || node.data.kind === "send_audio") {
+        const media = node.data.media ?? {
+          type: node.data.kind === "send_audio" ? ("audio" as const) : ("document" as const),
+          url: "",
+        };
+        return {
+          id: node.id,
+          kind: node.data.kind,
+          title,
+          journey: (node.data.journey as PlaybookFlowJourney | undefined) ?? undefined,
+          media,
+          ...(node.data.kind === "send_document" ? { message: node.data.content } : {}),
+          next: firstTarget,
         };
       }
       if (node.data.kind === "input") {
@@ -481,9 +506,11 @@ type FlowCanvasProps = {
   onChange?: (snapshot: FlowCanvasSnapshot, nodes: Array<Node<FlowVisualNodeData>>, edges: Edge[]) => void;
   /** Dispara em qualquer alteração semântica aplicada ao markdown do fluxo. */
   onDirty?: () => void;
+  /** Slug do agente — usado no upload de mídia (PDF/áudio) do inspector. */
+  agenteSlug?: string;
 };
 
-function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChange, onDirty }: FlowCanvasProps) {
+function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChange, onDirty, agenteSlug }: FlowCanvasProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rfInstance = useRef<any>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -655,6 +682,37 @@ function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChan
     );
   }, []);
 
+  const handleConvertToMenu = useCallback((nodeId: string) => {
+    hasSemanticChangesRef.current = true;
+    setNodes((cur) =>
+      cur.map((node) => {
+        if (node.id !== nodeId || node.data.kind !== "message") return node;
+        const prompt = node.data.content?.trim() || "Escolha uma opção:";
+        return {
+          ...node,
+          type: "menu",
+          data: {
+            ...node.data,
+            kind: "menu",
+            content: prompt,
+            field: String(node.data.field ?? node.id).trim() || node.id,
+            menuFormat: node.data.menuFormat ?? "list",
+            menuOptions:
+              Array.isArray(node.data.menuOptions) && node.data.menuOptions.length
+                ? node.data.menuOptions
+                : [
+                    { id: "opcao_1", label: "Opção 1" },
+                    { id: "opcao_2", label: "Opção 2" },
+                  ],
+            // Mídia/split não fazem sentido em menu — limpamos para não vazar no JSON.
+            media: undefined,
+            split: undefined,
+          },
+        };
+      })
+    );
+  }, []);
+
   const handleSetEntryStepId = useCallback((stepId: string) => {
     if (!nodes.some((node) => node.id === stepId)) return;
     hasSemanticChangesRef.current = true;
@@ -785,6 +843,14 @@ function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChan
               <List size={13} strokeWidth={2.2} />
               Menu
             </button>
+            <button type="button" style={toolbarButtonStyle} onClick={() => handleAddNode("send_document")}>
+              <Paperclip size={13} strokeWidth={2.2} />
+              PDF
+            </button>
+            <button type="button" style={toolbarButtonStyle} onClick={() => handleAddNode("send_audio")}>
+              <Mic size={13} strokeWidth={2.2} />
+              Áudio
+            </button>
             <button type="button" style={toolbarButtonStyle} onClick={() => handleAddNode("complete")}>
               <CheckCircle2 size={13} strokeWidth={2.2} />
               Fim
@@ -870,10 +936,12 @@ function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChan
                 selectedNode={selectedNode}
                 allNodeIds={nodes.map((node) => node.id)}
                 entryStepId={entryStepId}
+                agenteSlug={agenteSlug}
                 onSetEntryStepId={handleSetEntryStepId}
                 onRenameNodeId={handleRenameNodeId}
                 onUpdateNode={handleUpdateNode}
                 onRemoveMenuOption={handleRemoveMenuOption}
+                onConvertToMenu={handleConvertToMenu}
                 onDeleteNode={handleDeleteNode}
                 onClose={() => setSelectedNodeId(null)}
               />

@@ -11,7 +11,7 @@ import {
   mensagemEhSaudacaoSimples,
   mensagemPedeMenuOuOpcoes,
 } from "@/lib/whatsapp/menu-triagem-uazapi";
-import { whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
+import { whatsappSendText, whatsappSendMedia } from "@/lib/whatsapp/whatsapp-send";
 import {
   executeFlowEngine,
   type FlowEngineDefinition,
@@ -240,6 +240,37 @@ function convertStructuredFlowToEngine(definition: PlaybookFlowDefinition): Flow
         id: stepId,
         type: "send_text",
         text: step.message.trim(),
+        next_step: nextStep,
+        ...(step.split ? { split: true } : {}),
+      };
+      // Mídia anexada à mensagem (PDF/áudio/imagem) vira um passo send_media encadeado.
+      if (step.media && typeof step.media.url === "string" && step.media.url.trim()) {
+        const mediaStepId = makeSyntheticCompleteStepId(stepId, "media");
+        const mediaNext = (steps[stepId] as { next_step?: string }).next_step;
+        (steps[stepId] as { next_step?: string }).next_step = mediaStepId;
+        syntheticCompleteSteps[mediaStepId] = {
+          id: mediaStepId,
+          type: "send_media",
+          media_type: step.media.type === "audio" ? "audio" : step.media.type === "image" ? "image" : "document",
+          file: step.media.url.trim(),
+          caption: step.media.caption?.trim() || undefined,
+          file_name: step.media.file_name?.trim() || undefined,
+          next_step: mediaNext,
+        };
+      }
+      continue;
+    }
+
+    if (step.kind === "send_document" || step.kind === "send_audio") {
+      const nextStep =
+        typeof step.next === "string" && step.next.trim() ? step.next.trim() : undefined;
+      steps[stepId] = {
+        id: stepId,
+        type: "send_media",
+        media_type: step.kind === "send_audio" ? "audio" : step.media.type === "image" ? "image" : "document",
+        file: step.media.url.trim(),
+        caption: step.kind === "send_document" ? step.message?.trim() || step.media.caption?.trim() || undefined : undefined,
+        file_name: step.media.file_name?.trim() || undefined,
         next_step: nextStep,
       };
       continue;
@@ -1537,6 +1568,36 @@ async function processarPlaybookMariaInboundDynamic(params: {
             metadata: { feito_por: "playbook_dynamic" },
           });
         } catch { /* opcional */ }
+      },
+      sendMedia: async ({ mediaType, file, caption, fileName }) => {
+        const out = await whatsappSendMedia(params.telefone, mediaType, file, {
+          caption,
+          docName: fileName,
+          instanceToken: params.instanceToken,
+        });
+        if (out.ok) {
+          const resumo =
+            mediaType === "audio"
+              ? "[áudio]"
+              : mediaType === "image"
+                ? `[imagem]${caption ? ` ${caption}` : ""}`
+                : `[documento${fileName ? `: ${fileName}` : ""}]${caption ? ` ${caption}` : ""}`;
+          try {
+            await params.supabase.from("hub_fila_mensagens").insert({
+              lead_id: params.leadId,
+              agente_id: params.agenteSlug,
+              remetente_numero: params.telefone,
+              canal: "whatsapp",
+              direcao: "saida",
+              conteudo: resumo,
+              status: "enviado",
+              resposta_enviada: true,
+              enviada_em: new Date().toISOString(),
+              metadata: { feito_por: "playbook_dynamic_media", media_type: mediaType },
+            });
+          } catch { /* opcional */ }
+        }
+        return { ok: out.ok, erro: out.ok ? undefined : out.error };
       },
       sendMenu: async ({ text, menuType, choices, listButton }) => {
         if (menuType === "text") {

@@ -17,6 +17,10 @@ import {
   Plus,
   Check,
   Pencil,
+  Paperclip,
+  Mic,
+  FileText,
+  SplitSquareVertical,
   X,
 } from "lucide-react";
 import type { FlowMenuOption, FlowNodeKind, FlowVisualNodeData } from "./types";
@@ -88,6 +92,25 @@ const KIND_THEME: Record<FlowNodeKind, KindTheme> = {
     label: "Conclusão",
     Icon: CheckCircle,
   },
+  // Documento → dourado (anexo). Áudio → verde claro (voz).
+  send_document: {
+    border: "#c9a24a",
+    headerBg: "#211a0d",
+    headerText: "#f0d8a0",
+    badgeBg: "#4d3c12",
+    badgeText: "#f5e3b0",
+    label: "Documento",
+    Icon: Paperclip,
+  },
+  send_audio: {
+    border: "#2f6f4f",
+    headerBg: "#10231a",
+    headerText: "#9fd3bf",
+    badgeBg: "#0f3d29",
+    badgeText: "#bfe8cf",
+    label: "Áudio",
+    Icon: Mic,
+  },
 };
 
 // ─── Inline edit hook ────────────────────────────────────────────────────────
@@ -134,7 +157,34 @@ type BaseCardProps = {
   children?: React.ReactNode;
   showTargetHandle?: boolean;
   showSourceHandle?: boolean;
+  /** Mídia anexada (clipe/microfone + nome do arquivo). */
+  media?: FlowVisualNodeData["media"];
+  /** Indica "dividir em bolhas". */
+  split?: boolean;
 };
+
+function MediaChip({ media }: { media: NonNullable<FlowVisualNodeData["media"]> }) {
+  const isAudio = media.type === "audio";
+  const Icon = isAudio ? Mic : media.type === "image" ? FileText : Paperclip;
+  const label = isAudio
+    ? media.file_name?.trim() || "Áudio anexado"
+    : media.file_name?.trim() || media.url.split("/").pop() || "Arquivo anexado";
+  return (
+    <span style={mediaChipStyle} title={media.url}>
+      <Icon size={11} strokeWidth={2.2} />
+      <span style={mediaChipLabel}>{label}</span>
+    </span>
+  );
+}
+
+function SplitChip() {
+  return (
+    <span style={splitChipStyle} title="Esta mensagem será enviada em bolhas separadas">
+      <SplitSquareVertical size={11} strokeWidth={2.2} />
+      Dividir em bolhas
+    </span>
+  );
+}
 
 function BaseCard({
   id,
@@ -146,6 +196,8 @@ function BaseCard({
   children,
   showTargetHandle = true,
   showSourceHandle = true,
+  media,
+  split,
 }: BaseCardProps) {
   const { onUpdate, onDelete } = useContext(FlowNodeCallbacksContext);
   const [hovered, setHovered] = useState(false);
@@ -234,6 +286,13 @@ function BaseCard({
           </p>
         )}
 
+        {(media || split) && (
+          <div style={chipsRow}>
+            {media ? <MediaChip media={media} /> : null}
+            {split ? <SplitChip /> : null}
+          </div>
+        )}
+
         {children}
         <p style={legendText}>Clique para editar · X para remover</p>
       </div>
@@ -267,7 +326,22 @@ function BaseCard({
 export function MessageNode({ id, data, selected, isConnectable }: NodeProps<Node<FlowVisualNodeData>>) {
   return (
     <BaseCard id={id} kind="message" title={data.title} content={data.content}
-      selected={selected} isConnectable={isConnectable} />
+      selected={selected} isConnectable={isConnectable}
+      media={data.media} split={data.split} />
+  );
+}
+
+export function SendDocumentNode({ id, data, selected, isConnectable }: NodeProps<Node<FlowVisualNodeData>>) {
+  return (
+    <BaseCard id={id} kind="send_document" title={data.title} content={data.content}
+      selected={selected} isConnectable={isConnectable} media={data.media} />
+  );
+}
+
+export function SendAudioNode({ id, data, selected, isConnectable }: NodeProps<Node<FlowVisualNodeData>>) {
+  return (
+    <BaseCard id={id} kind="send_audio" title={data.title} content={data.content}
+      selected={selected} isConnectable={isConnectable} media={data.media} />
   );
 }
 
@@ -383,6 +457,8 @@ export const FLOW_NODE_TYPES = {
   input: InputNode,
   menu: MenuNode,
   complete: CompleteNode,
+  send_document: SendDocumentNode,
+  send_audio: SendAudioNode,
 };
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -487,6 +563,46 @@ const legendText: CSSProperties = {
   color: "#6e7c74",
   letterSpacing: 0.2,
   lineHeight: 1.35,
+};
+
+const chipsRow: CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 6,
+};
+
+const mediaChipStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  maxWidth: "100%",
+  background: "#211a0d",
+  border: "1px solid #4d3c12",
+  color: "#f0d8a0",
+  borderRadius: 7,
+  padding: "4px 8px",
+  fontSize: 10.5,
+  fontWeight: 600,
+};
+
+const mediaChipLabel: CSSProperties = {
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  maxWidth: 200,
+};
+
+const splitChipStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  background: "#10231a",
+  border: "1px solid #1d3a2c",
+  color: "#9fd3bf",
+  borderRadius: 7,
+  padding: "4px 8px",
+  fontSize: 10.5,
+  fontWeight: 600,
 };
 
 const contentDisplay: CSSProperties = {
