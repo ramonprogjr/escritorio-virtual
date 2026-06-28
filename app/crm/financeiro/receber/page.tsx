@@ -6,6 +6,7 @@ import { Download, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { FinanceiroContasList } from "@/components/crm/FinanceiroContasList";
 import { FinanceiroNovoLancamentoModal } from "@/components/crm/FinanceiroNovoLancamentoModal";
+import { toast } from "@/components/crm/toast";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import {
@@ -113,15 +114,19 @@ function ContasReceberInner() {
               onClick={() => {
                 fetch("/api/crm/relatorios/export?entidade=contas_receber", { headers: internalApiHeaders() })
                   .then(async (res) => {
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                      toast.error("Não foi possível exportar.");
+                      return;
+                    }
                     const blob = await res.blob();
                     const a = document.createElement("a");
                     a.href = URL.createObjectURL(blob);
                     a.download = `obra10-contas-receber-${new Date().toISOString().slice(0, 10)}.csv`;
                     a.click();
                     URL.revokeObjectURL(a.href);
+                    toast.success("Exportado");
                   })
-                  .catch(() => {});
+                  .catch(() => toast.error("Não foi possível exportar."));
               }}
               className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-xs font-bold text-[#8b949e]"
             >

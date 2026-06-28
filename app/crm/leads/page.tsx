@@ -198,7 +198,7 @@ export default function LeadsPage() {
   const [confirmandoPerda, setConfirmandoPerda] = useState(false);
   const [perdaComoSpam, setPerdaComoSpam] = useState(false);
   const [encaminharLead, setEncaminharLead] = useState<Lead | null>(null);
-  const [convertendoNegocio, setConvertendoNegocio] = useState(false);
+  const [convertendoIds, setConvertendoIds] = useState<Set<string>>(new Set());
   const [leadDragId, setLeadDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [leadRapidoOpen, setLeadRapidoOpen] = useState(false);
@@ -393,7 +393,8 @@ export default function LeadsPage() {
   }
 
   async function converterNegocio(lead: Lead) {
-    setConvertendoNegocio(true);
+    if (convertendoIds.has(lead.id)) return;
+    setConvertendoIds((prev) => new Set(prev).add(lead.id));
     const res = await fetch(`/api/crm/leads/${encodeURIComponent(lead.id)}/converter-negocio`, {
       method: "POST",
       credentials: "include",
@@ -401,7 +402,11 @@ export default function LeadsPage() {
       body: JSON.stringify({}),
     });
     const json = await res.json().catch(() => ({}));
-    setConvertendoNegocio(false);
+    setConvertendoIds((prev) => {
+      const next = new Set(prev);
+      next.delete(lead.id);
+      return next;
+    });
     if (!res.ok) {
       mostrarErroAcao(typeof json?.error === "string" ? json.error : "Não foi possível criar o negócio.");
       return;
@@ -799,10 +804,10 @@ export default function LeadsPage() {
                             <button
                               type="button"
                               onClick={() => void converterNegocio(lead)}
-                              disabled={convertendoNegocio}
+                              disabled={convertendoIds.has(lead.id)}
                               className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] py-1.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 disabled:opacity-40"
                             >
-                              Negócio
+                              {convertendoIds.has(lead.id) ? "Criando…" : "Negócio"}
                             </button>
                             <button
                               type="button"
@@ -1000,7 +1005,7 @@ export default function LeadsPage() {
                       </td>
                       <td className="px-4 py-3 text-[#8b949e] text-xs">{lead.agente_responsavel || "—"}</td>
                       <td className="px-4 py-3 text-[#484f58] text-xs">{tempo(lead.atualizado_em)}</td>
-                      <td className="px-4 py-3"><button className="text-[#c9a24a] hover:text-[#e0b86a] text-xs">Ver →</button></td>
+                      <td className="px-4 py-3"><button type="button" onClick={(e) => { e.stopPropagation(); router.push(`/crm/leads/${lead.id}`); }} className="text-[#c9a24a] hover:text-[#e0b86a] text-xs">Ver →</button></td>
                     </tr>
                   );
                 })}

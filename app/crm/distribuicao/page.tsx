@@ -97,6 +97,8 @@ export default function DistribuicaoPage() {
   const [confirmar, setConfirmar] = useState<
     { tipo: "liberar" | "cobrar"; id: string; nome: string; motivo: string | null } | null
   >(null);
+  const [confirmarExcluir, setConfirmarExcluir] = useState<Regra | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
   const [auditorMsg, setAuditorMsg] = useState<string | null>(null);
   const [auditorRodando, setAuditorRodando] = useState(false);
   const [carregando, setCarregando] = useState(true);
@@ -178,18 +180,41 @@ export default function DistribuicaoPage() {
   }
 
   async function toggle(r: Regra) {
-    await fetch(`/api/crm/distribuicao/regras/${r.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-      body: JSON.stringify({ ativo: !r.ativo }),
-    });
-    void carregar();
+    try {
+      const res = await fetch(`/api/crm/distribuicao/regras/${r.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ ativo: !r.ativo }),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(json.error || "Não foi possível alterar a regra.");
+        return;
+      }
+      toast.success(r.ativo ? "Regra desativada." : "Regra ativada.");
+      void carregar();
+    } catch {
+      toast.error("Falha de rede ao alterar a regra.");
+    }
   }
 
   async function excluir(id: string) {
-    if (!confirm("Excluir esta regra de distribuição?")) return;
-    await fetch(`/api/crm/distribuicao/regras/${id}`, { method: "DELETE", headers: internalApiHeaders() });
-    void carregar();
+    setExcluindo(true);
+    try {
+      const res = await fetch(`/api/crm/distribuicao/regras/${id}`, { method: "DELETE", headers: internalApiHeaders() });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(json.error || "Não foi possível excluir a regra.");
+        return;
+      }
+      setConfirmarExcluir(null);
+      toast.success("Regra excluída.");
+      void carregar();
+    } catch {
+      toast.error("Falha de rede ao excluir.");
+    } finally {
+      setExcluindo(false);
+    }
   }
 
   async function liberarFornecedor(fornecedorId: string, nome: string) {
@@ -472,7 +497,7 @@ export default function DistribuicaoPage() {
                 style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #1d3a2c", background: "transparent", color: r.ativo ? "#34d399" : "#8b949e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 {r.ativo ? "ativa" : "inativa"}
               </button>
-              <button type="button" onClick={() => void excluir(r.id)} title="Excluir"
+              <button type="button" onClick={() => setConfirmarExcluir(r)} title="Excluir"
                 style={{ padding: 6, borderRadius: 8, border: "1px solid #f8514944", background: "transparent", color: "#f85149", cursor: "pointer", display: "flex" }}>
                 <Trash2 size={14} aria-hidden />
               </button>
@@ -506,6 +531,30 @@ export default function DistribuicaoPage() {
             receber leads?
           </>
         )}
+      </CrmConfirmDialog>
+
+      <CrmConfirmDialog
+        open={confirmarExcluir !== null}
+        title="Excluir regra de distribuição?"
+        confirmLabel="Excluir"
+        danger
+        loading={excluindo}
+        onCancel={() => setConfirmarExcluir(null)}
+        onConfirm={() => {
+          if (confirmarExcluir) void excluir(confirmarExcluir.id);
+        }}
+      >
+        {confirmarExcluir ? (
+          <>
+            Remover a regra{" "}
+            <strong style={{ color: "#e6edf3" }}>
+              {label(confirmarExcluir.origem)} · {label(confirmarExcluir.mercado)} · {label(confirmarExcluir.uf)}
+            </strong>{" "}
+            → {confirmarExcluir.destino_tipo}
+            {confirmarExcluir.destino_valor ? `: ${confirmarExcluir.destino_valor}` : ""}? O roteamento
+            volta a usar as demais regras (ou a heurística padrão).
+          </>
+        ) : null}
       </CrmConfirmDialog>
     </div>
   );

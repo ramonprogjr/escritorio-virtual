@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowRight, CheckCircle2, Download, Plus, TrendingUp, Wallet } from "lucide-react";
 import { FinanceiroNovoLancamentoModal } from "@/components/crm/FinanceiroNovoLancamentoModal";
+import { toast } from "@/components/crm/toast";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmMetricCard, CrmSectionTitle } from "@/components/crm/CrmMetricCard";
 import { moedaPipeline } from "@/lib/crm/pipeline-funil";
@@ -65,15 +66,19 @@ function exportarCsv(entidade: string) {
   const url = `/api/crm/relatorios/export?entidade=${encodeURIComponent(entidade)}`;
   fetch(url, { headers: internalApiHeaders() })
     .then(async (res) => {
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error("Não foi possível exportar.");
+        return;
+      }
       const blob = await res.blob();
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `obra10-${entidade}-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(a.href);
+      toast.success("Exportado");
     })
-    .catch(() => {});
+    .catch(() => toast.error("Não foi possível exportar."));
 }
 
 export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {

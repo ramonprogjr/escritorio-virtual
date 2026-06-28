@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { EmptyState } from "@/components/crm/EmptyState";
 
@@ -15,8 +15,10 @@ type Obra = {
   estado: string | null;
 };
 
-export default function ObrasPage() {
+function ObrasPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const negocioId = searchParams.get("negocio_id");
   const [obras, setObras] = useState<Obra[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [titulo, setTitulo] = useState("");
@@ -50,6 +52,32 @@ export default function ObrasPage() {
   return (
     <div style={{ padding: 24, background: "#0a140f", minHeight: "100%" }}>
       <h1 style={{ margin: "0 0 16px", color: "#e6edf3" }}>Obras</h1>
+
+      {negocioId ? (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 16,
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid #c9a24a44",
+            background: "#003b2622",
+          }}
+        >
+          <span style={{ fontSize: 13, color: "#e6edf3" }}>
+            Obras a partir de um negócio.
+          </span>
+          <Link
+            href={`/crm/negocios/${negocioId}`}
+            style={{ fontSize: 12, fontWeight: 700, color: "#c9a24a" }}
+          >
+            ← Voltar ao negócio
+          </Link>
+        </div>
+      ) : null}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
         <input
@@ -115,5 +143,19 @@ export default function ObrasPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ObrasPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ padding: 24, background: "#0a140f", minHeight: "100%", color: "#8b949e" }}>
+          Carregando...
+        </div>
+      }
+    >
+      <ObrasPageInner />
+    </Suspense>
   );
 }

@@ -681,7 +681,7 @@ export default function NegociosPage() {
                             className="rounded-full px-2 py-1 text-xs font-bold"
                             style={{ backgroundColor: etapaCor + "20", color: etapaCor }}
                           >
-                            {negocio.etapa}
+                            {etapasKanban.find((e) => e.id === negocio.etapa)?.label ?? negocio.etapa}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -707,7 +707,16 @@ export default function NegociosPage() {
                           {tempo(negocio.criado_em)}
                         </td>
                         <td className="px-4 py-3">
-                          <button className="text-xs text-[#c9a24a] hover:text-[#e0b86a]">Ver →</button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/crm/negocios/${negocio.id}`);
+                            }}
+                            className="text-xs text-[#c9a24a] hover:text-[#e0b86a]"
+                          >
+                            Ver →
+                          </button>
                         </td>
                       </tr>
                     );

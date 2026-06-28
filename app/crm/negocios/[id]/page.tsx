@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
+import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { FinanceiroNovoLancamentoModal } from "@/components/crm/FinanceiroNovoLancamentoModal";
 import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
@@ -139,6 +140,8 @@ export default function NegocioDetalhePage() {
   // no caminho do dinheiro). O backend já é a fonte da verdade (anti-duplicação + índice
   // único parcial), este estado só dá o feedback visual de que a conta já foi lançada.
   const [recebivelGerado, setRecebivelGerado] = useState(false);
+  const [confirmandoArquivar, setConfirmandoArquivar] = useState(false);
+  const [arquivando, setArquivando] = useState(false);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -219,13 +222,26 @@ export default function NegocioDetalhePage() {
   }
 
   async function arquivar() {
-    if (!confirm("Arquivar este negócio (status cancelado)?")) return;
-    await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-      body: JSON.stringify({ status: "cancelado" }),
-    });
-    void carregar();
+    setArquivando(true);
+    try {
+      const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ status: "cancelado" }),
+      });
+      if (res.ok) {
+        setConfirmandoArquivar(false);
+        toast.success("Negócio arquivado");
+        void carregar();
+      } else {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(json.error || "Não foi possível arquivar o negócio");
+      }
+    } catch {
+      toast.error("Erro de rede ao arquivar o negócio");
+    } finally {
+      setArquivando(false);
+    }
   }
 
   /** Grava próxima ação (texto + data). Reaproveitada por salvar, reagendar e concluir. */
@@ -454,7 +470,7 @@ export default function NegocioDetalhePage() {
         <button type="button" onClick={() => setEditando((e) => !e)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #1d3a2c", background: "#16271e", color: "#c9a24a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
           {editando ? "Cancelar" : "Editar"}
         </button>
-        <button type="button" onClick={() => void arquivar()} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #f8514944", background: "transparent", color: "#f85149", fontSize: 12, cursor: "pointer" }}>
+        <button type="button" onClick={() => setConfirmandoArquivar(true)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #f8514944", background: "transparent", color: "#f85149", fontSize: 12, cursor: "pointer" }}>
           Arquivar
         </button>
       </div>
@@ -526,7 +542,7 @@ export default function NegocioDetalhePage() {
 
       <div style={{ marginTop: 16, display: "flex", gap: 12, fontSize: 12 }}>
         <Link href={`/crm/projetos?negocio_id=${negocio.id}`} style={{ color: "#c9a24a", fontWeight: 700 }}>Projetos</Link>
-        <Link href="/crm/obras" style={{ color: "#8b949e" }}>Obras</Link>
+        <Link href={`/crm/obras?negocio_id=${negocio.id}`} style={{ color: "#8b949e" }}>Obras</Link>
       </div>
 
       {(negocio.status === "fechado_ganho" || negocio.etapa === "ganho") &&
@@ -1009,6 +1025,19 @@ export default function NegocioDetalhePage() {
           negocioId: negocio.id,
         }}
       />
+
+      <CrmConfirmDialog
+        open={confirmandoArquivar}
+        title="Arquivar este negócio?"
+        confirmLabel="Arquivar"
+        danger
+        loading={arquivando}
+        onCancel={() => setConfirmandoArquivar(false)}
+        onConfirm={() => void arquivar()}
+      >
+        O negócio passa para o status <strong style={{ color: "#e6edf3" }}>cancelado</strong> e sai do
+        pipeline ativo. Você pode reabri-lo depois mudando a etapa.
+      </CrmConfirmDialog>
     </div>
   );
 }

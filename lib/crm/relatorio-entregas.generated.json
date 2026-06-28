@@ -1,7 +1,28 @@
 {
-  "geradoEm": "2026-06-28T19:23:37.825Z",
+  "geradoEm": "2026-06-28T19:37:52.905Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "3b209b98cd6ddda0c123d8caa7643a06d10fb1bf",
+      "hashCurto": "3b209b9",
+      "mensagem": "coerencia + fim da fachada na jornada de agentes/fluxo (auditoria #4)",
+      "mensagemRaw": "fix(jornada IA): coerencia + fim da fachada na jornada de agentes/fluxo (auditoria #4)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T19:24:09.000Z",
+      "hora": "16:24",
+      "arquivos": [
+        "components/crm/AgenteBuilderIaPanel.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/playbook-flow-visual/FlowGuiadoView.tsx",
+        "lib/playbook/gerar-fluxo-ia.ts",
+        "lib/playbook/playbook-flow-markdown.ts"
+      ],
+      "areas": {
+        "components/crm": 4,
+        "outros": 2
+      }
+    },
     {
       "hash": "998d5d9561ee6057c132dde7aacf9fe76d1cc303",
       "hashCurto": "998d5d9",
