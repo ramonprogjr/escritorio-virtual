@@ -23,10 +23,75 @@ type NegocioDetalhe = {
   valor_fechado: number | null;
   motivo_perda: string | null;
   proxima_acao: string | null;
+  proxima_acao_em: string | null;
   lead_id: string | null;
   pessoa_id: string | null;
   criado_em: string | null;
 };
+
+type FaixaAcao = "atrasada" | "hoje" | "futura" | "sem_data";
+
+/** Início do dia local em ms — base para classificar vencimento. */
+function inicioDoDia(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function classificarAcao(dataIso: string | null): FaixaAcao {
+  if (!dataIso) return "sem_data";
+  const t = new Date(dataIso).getTime();
+  if (Number.isNaN(t)) return "sem_data";
+  const hoje0 = inicioDoDia(new Date());
+  const amanha0 = hoje0 + 86_400_000;
+  if (t < hoje0) return "atrasada";
+  if (t < amanha0) return "hoje";
+  return "futura";
+}
+
+/** Cor da faixa: atrasada=vermelho, hoje=dourado, futura=verde-água, sem data=neutro. */
+const COR_ACAO: Record<FaixaAcao, string> = {
+  atrasada: "#f85149",
+  hoje: "#c9a24a",
+  futura: "#2f9e8f",
+  sem_data: "#8b949e",
+};
+
+/** Texto humano do "quando". */
+function quandoAcao(dataIso: string | null): string {
+  if (!dataIso) return "sem data";
+  const data = new Date(dataIso);
+  if (Number.isNaN(data.getTime())) return "sem data";
+  const hoje0 = inicioDoDia(new Date());
+  const alvo0 = inicioDoDia(data);
+  const dias = Math.round((alvo0 - hoje0) / 86_400_000);
+  if (dias === 0) return "hoje";
+  if (dias === 1) return "amanhã";
+  if (dias === -1) return "ontem";
+  if (dias < 0) return `há ${Math.abs(dias)} dias`;
+  if (dias < 7) return `em ${dias} dias`;
+  return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+/** ISO (yyyy-mm-dd) de hoje + N dias, para os atalhos de agenda. */
+function isoDiaRelativo(dias: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Converte o valor do <input type="date"> (yyyy-mm-dd) em timestamptz (meio-dia local). */
+function dateInputParaIso(valor: string): string | null {
+  if (!valor) return null;
+  const d = new Date(`${valor}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** Extrai yyyy-mm-dd de um timestamptz, para preencher o <input type="date">. */
+function isoParaDateInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 type TimelineItem = {
   id: string;
@@ -59,7 +124,9 @@ export default function NegocioDetalhePage() {
   const [derivando, setDerivando] = useState(false);
   const [derivadoMsg, setDerivadoMsg] = useState<string | null>(null);
   const [proximaAcao, setProximaAcao] = useState("");
+  const [proximaAcaoEm, setProximaAcaoEm] = useState("");
   const [acaoStatus, setAcaoStatus] = useState<"" | "salvando" | "salvo">("");
+  const [editandoAcao, setEditandoAcao] = useState(false);
   const [novaNota, setNovaNota] = useState("");
   const [salvandoNota, setSalvandoNota] = useState(false);
   const [pessoaVinc, setPessoaVinc] = useState<PessoaMini | null>(null);
@@ -94,7 +161,9 @@ export default function NegocioDetalhePage() {
           valor_estimado: n.valor_estimado != null ? String(n.valor_estimado) : "",
         });
         setProximaAcao(n.proxima_acao ?? "");
+        setProximaAcaoEm(isoParaDateInput(n.proxima_acao_em ?? null));
         setAcaoStatus("");
+        setEditandoAcao(false);
       }
       setTimeline(json.timeline ?? []);
       setLeadNome(json.lead?.nome ?? null);
@@ -153,20 +222,70 @@ export default function NegocioDetalhePage() {
     void carregar();
   }
 
-  /** Auto-save da próxima ação (ao sair do campo). */
-  async function salvarProximaAcao() {
-    if ((negocio?.proxima_acao ?? "") === proximaAcao.trim()) return;
+  /** Grava próxima ação (texto + data). Reaproveitada por salvar, reagendar e concluir. */
+  async function patchProximaAcao(payload: { proxima_acao: string | null; proxima_acao_em: string | null }) {
     setAcaoStatus("salvando");
     try {
       const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-        body: JSON.stringify({ proxima_acao: proximaAcao.trim() || null }),
+        body: JSON.stringify(payload),
       });
-      setAcaoStatus(res.ok ? "salvo" : "");
-      if (res.ok) setNegocio((n) => (n ? { ...n, proxima_acao: proximaAcao.trim() || null } : n));
+      if (res.ok) {
+        setAcaoStatus("salvo");
+        setNegocio((n) =>
+          n ? { ...n, proxima_acao: payload.proxima_acao, proxima_acao_em: payload.proxima_acao_em } : n
+        );
+        return true;
+      }
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      setAcaoStatus("");
+      toast.error(json.error || "Não foi possível salvar a próxima ação");
+      return false;
     } catch {
       setAcaoStatus("");
+      toast.error("Erro de rede ao salvar a próxima ação");
+      return false;
+    }
+  }
+
+  /** Salvar a próxima ação definida no formulário (texto + data). */
+  async function salvarAcao() {
+    const texto = proximaAcao.trim();
+    if (!texto) {
+      toast.error("Escreva o que fazer a seguir.");
+      return;
+    }
+    const ok = await patchProximaAcao({
+      proxima_acao: texto,
+      proxima_acao_em: dateInputParaIso(proximaAcaoEm),
+    });
+    if (ok) {
+      setEditandoAcao(false);
+      toast.success("Próxima ação definida");
+    }
+  }
+
+  /** Reagendar em 1 toque: mantém o texto e troca só a data. */
+  async function reagendarAcao(novaDataIso: string | null) {
+    const ok = await patchProximaAcao({
+      proxima_acao: (negocio?.proxima_acao ?? proximaAcao).trim() || null,
+      proxima_acao_em: novaDataIso,
+    });
+    if (ok) {
+      setProximaAcaoEm(isoParaDateInput(novaDataIso));
+      toast.success(novaDataIso ? "Reagendada" : "Data removida");
+    }
+  }
+
+  /** Concluir: dá baixa na ação (limpa texto e data). */
+  async function concluirAcao() {
+    const ok = await patchProximaAcao({ proxima_acao: null, proxima_acao_em: null });
+    if (ok) {
+      setProximaAcao("");
+      setProximaAcaoEm("");
+      setEditandoAcao(false);
+      toast.success("Ação concluída");
     }
   }
 
@@ -568,20 +687,244 @@ export default function NegocioDetalhePage() {
         ))}
       </div>
 
-      <div style={{ marginTop: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <p style={{ fontSize: 11, color: "#8b949e", margin: 0 }}>PRÓXIMA AÇÃO</p>
-          {acaoStatus === "salvando" ? <span style={{ fontSize: 11, color: "#8b949e" }}>salvando…</span> : null}
-          {acaoStatus === "salvo" ? <span style={{ fontSize: 11, color: "#34d399" }}>salvo ✓</span> : null}
-        </div>
-        <textarea
-          value={proximaAcao}
-          onChange={(e) => { setProximaAcao(e.target.value); setAcaoStatus(""); }}
-          onBlur={() => void salvarProximaAcao()}
-          placeholder="O que fazer a seguir? (salva automaticamente ao sair do campo)"
-          style={{ width: "100%", marginTop: 6, minHeight: 56, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13 }}
-        />
-      </div>
+      {(() => {
+        const acaoSalva = (negocio.proxima_acao ?? "").trim();
+        const faixa = classificarAcao(negocio.proxima_acao_em ?? null);
+        const cor = COR_ACAO[faixa];
+        const temAcao = acaoSalva.length > 0;
+        const mostrarForm = editandoAcao || !temAcao;
+
+        return (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <p style={{ fontSize: 11, color: "#8b949e", margin: 0 }}>PRÓXIMA AÇÃO</p>
+              {acaoStatus === "salvando" ? <span style={{ fontSize: 11, color: "#8b949e" }}>salvando…</span> : null}
+              {acaoStatus === "salvo" ? <span style={{ fontSize: 11, color: "#34d399" }}>salvo ✓</span> : null}
+            </div>
+
+            {/* ── Estado COM ação definida: Click-and-Go (Concluir / Reagendar / Editar) ── */}
+            {temAcao && !mostrarForm ? (
+              <div
+                style={{
+                  marginTop: 8,
+                  borderRadius: 12,
+                  border: "1px solid #1d3a2c",
+                  borderLeft: `3px solid ${cor}`,
+                  background: "#0f1d16",
+                  padding: 14,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <p style={{ margin: 0, flex: 1, fontSize: 14, lineHeight: 1.4, color: "#e6edf3" }}>{acaoSalva}</p>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      borderRadius: 999,
+                      padding: "3px 9px",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      background: `${cor}22`,
+                      color: cor,
+                    }}
+                  >
+                    {faixa === "atrasada" ? "⚠ " : ""}
+                    {quandoAcao(negocio.proxima_acao_em ?? null)}
+                  </span>
+                </div>
+
+                <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    type="button"
+                    disabled={acaoStatus === "salvando"}
+                    onClick={() => void concluirAcao()}
+                    style={{
+                      minHeight: 38,
+                      padding: "8px 14px",
+                      borderRadius: 8,
+                      border: "1px solid #2f9e8f66",
+                      background: "#2f9e8f1f",
+                      color: "#2f9e8f",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: acaoStatus === "salvando" ? "default" : "pointer",
+                    }}
+                  >
+                    ✓ Concluir
+                  </button>
+                  <button
+                    type="button"
+                    disabled={acaoStatus === "salvando"}
+                    onClick={() => void reagendarAcao(dateInputParaIso(isoDiaRelativo(1)))}
+                    style={{
+                      minHeight: 38,
+                      padding: "8px 14px",
+                      borderRadius: 8,
+                      border: "1px solid #1d3a2c",
+                      background: "#16271e",
+                      color: "#e6edf3",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: acaoStatus === "salvando" ? "default" : "pointer",
+                    }}
+                  >
+                    Adiar p/ amanhã
+                  </button>
+                  <button
+                    type="button"
+                    disabled={acaoStatus === "salvando"}
+                    onClick={() => void reagendarAcao(dateInputParaIso(isoDiaRelativo(7)))}
+                    style={{
+                      minHeight: 38,
+                      padding: "8px 14px",
+                      borderRadius: 8,
+                      border: "1px solid #1d3a2c",
+                      background: "#16271e",
+                      color: "#e6edf3",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: acaoStatus === "salvando" ? "default" : "pointer",
+                    }}
+                  >
+                    +7 dias
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProximaAcao(acaoSalva);
+                      setProximaAcaoEm(isoParaDateInput(negocio.proxima_acao_em ?? null));
+                      setEditandoAcao(true);
+                      setAcaoStatus("");
+                    }}
+                    style={{
+                      minHeight: 38,
+                      padding: "8px 14px",
+                      borderRadius: 8,
+                      border: "1px solid #1d3a2c",
+                      background: "transparent",
+                      color: "#c9a24a",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Editar / reagendar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ── Estado SEM ação (ou editando): definir o quê + quando ── */
+              <div
+                style={{
+                  marginTop: 8,
+                  borderRadius: 12,
+                  border: "1px solid #1d3a2c",
+                  background: "#0f1d16",
+                  padding: 14,
+                }}
+              >
+                <textarea
+                  value={proximaAcao}
+                  onChange={(e) => { setProximaAcao(e.target.value); setAcaoStatus(""); }}
+                  placeholder="O que fazer a seguir? Ex.: ligar para confirmar a proposta"
+                  style={{ width: "100%", minHeight: 56, padding: 10, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13 }}
+                />
+
+                <p style={{ margin: "12px 0 6px", fontSize: 11, color: "#8b949e" }}>QUANDO</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {[
+                    { label: "Hoje", dias: 0 },
+                    { label: "Amanhã", dias: 1 },
+                    { label: "+3 dias", dias: 3 },
+                    { label: "+7 dias", dias: 7 },
+                  ].map((opt) => {
+                    const iso = isoDiaRelativo(opt.dias);
+                    const ativo = proximaAcaoEm === iso;
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => { setProximaAcaoEm(iso); setAcaoStatus(""); }}
+                        style={{
+                          minHeight: 36,
+                          padding: "7px 12px",
+                          borderRadius: 8,
+                          border: `1px solid ${ativo ? "#c9a24a" : "#1d3a2c"}`,
+                          background: ativo ? "#c9a24a22" : "#16271e",
+                          color: ativo ? "#c9a24a" : "#e6edf3",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                  <input
+                    type="date"
+                    value={proximaAcaoEm}
+                    onChange={(e) => { setProximaAcaoEm(e.target.value); setAcaoStatus(""); }}
+                    style={{
+                      minHeight: 36,
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #1d3a2c",
+                      background: "#0a140f",
+                      color: "#e6edf3",
+                      fontSize: 12,
+                    }}
+                  />
+                  {proximaAcaoEm ? (
+                    <button
+                      type="button"
+                      onClick={() => { setProximaAcaoEm(""); setAcaoStatus(""); }}
+                      style={{ minHeight: 36, padding: "7px 10px", borderRadius: 8, border: "none", background: "transparent", color: "#8b949e", fontSize: 12, cursor: "pointer" }}
+                    >
+                      sem data
+                    </button>
+                  ) : null}
+                </div>
+
+                <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    disabled={acaoStatus === "salvando" || !proximaAcao.trim()}
+                    onClick={() => void salvarAcao()}
+                    style={{
+                      minHeight: 40,
+                      padding: "10px 18px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: "#c9a24a",
+                      color: "#003b26",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: acaoStatus === "salvando" || !proximaAcao.trim() ? "default" : "pointer",
+                      opacity: acaoStatus === "salvando" || !proximaAcao.trim() ? 0.6 : 1,
+                    }}
+                  >
+                    {acaoStatus === "salvando" ? "Salvando…" : temAcao ? "Atualizar ação" : "Definir ação"}
+                  </button>
+                  {editandoAcao ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditandoAcao(false);
+                        setProximaAcao(negocio.proxima_acao ?? "");
+                        setProximaAcaoEm(isoParaDateInput(negocio.proxima_acao_em ?? null));
+                        setAcaoStatus("");
+                      }}
+                      style={{ minHeight: 40, padding: "10px 16px", borderRadius: 8, border: "1px solid #1d3a2c", background: "transparent", color: "#8b949e", fontSize: 13, cursor: "pointer" }}
+                    >
+                      Cancelar
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <h2 style={{ marginTop: 32, fontSize: 16 }}>Timeline</h2>
       <div style={{ display: "flex", gap: 8, margin: "8px 0" }}>

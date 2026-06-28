@@ -38,7 +38,28 @@ export type NegocioKanbanCardData = {
   data_previsao_fechamento: string | null;
   criado_em: string | null;
   proxima_acao?: string | null;
+  proxima_acao_em?: string | null;
 };
+
+/** Faixa de vencimento da próxima ação → cor (atrasada/hoje/futura/sem data). */
+function faixaAcaoCor(dataIso: string | null | undefined): { cor: string; quando: string } {
+  if (!dataIso) return { cor: "#94a3b8", quando: "" };
+  const alvo = new Date(dataIso);
+  if (Number.isNaN(alvo.getTime())) return { cor: "#94a3b8", quando: "" };
+  const hoje0 = new Date();
+  const base = new Date(hoje0.getFullYear(), hoje0.getMonth(), hoje0.getDate()).getTime();
+  const alvo0 = new Date(alvo.getFullYear(), alvo.getMonth(), alvo.getDate()).getTime();
+  const dias = Math.round((alvo0 - base) / 86_400_000);
+  const quando =
+    dias === 0 ? "hoje"
+    : dias === 1 ? "amanhã"
+    : dias === -1 ? "ontem"
+    : dias < 0 ? `há ${Math.abs(dias)}d`
+    : dias < 7 ? `em ${dias}d`
+    : alvo.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  const cor = dias < 0 ? "#f85149" : dias === 0 ? "#c9a24a" : "#2f9e8f";
+  return { cor, quando };
+}
 
 function moeda(v: number | null) {
   if (!v) return "—";
@@ -228,34 +249,55 @@ export function NegocioKanbanCard({
           ]}
         />
 
-        {negocio.proxima_acao?.trim() ? (
-          <div
-            style={{
-              marginTop: 8,
-              borderRadius: 10,
-              border: "1px solid rgba(56, 74, 102, 0.38)",
-              background: "rgba(9, 14, 22, 0.58)",
-              padding: "7px 9px",
-            }}
-            title={negocio.proxima_acao}
-          >
-            <p style={{ margin: 0, color: "#94a3b8", fontSize: 10, fontWeight: 600 }}>Próxima ação</p>
-            <p
+        {negocio.proxima_acao?.trim() ? (() => {
+          const { cor, quando } = faixaAcaoCor(negocio.proxima_acao_em);
+          return (
+            <div
               style={{
-                margin: "3px 0 0",
-                color: "#c8d4e6",
-                fontSize: 11,
-                lineHeight: 1.35,
-                display: "-webkit-box",
-                overflow: "hidden",
-                WebkitBoxOrient: "vertical",
-                WebkitLineClamp: 2,
+                marginTop: 8,
+                borderRadius: 10,
+                border: "1px solid rgba(56, 74, 102, 0.38)",
+                borderLeft: `3px solid ${cor}`,
+                background: "rgba(9, 14, 22, 0.58)",
+                padding: "7px 9px",
               }}
+              title={negocio.proxima_acao}
             >
-              {negocio.proxima_acao.replace(/\s+/g, " ").trim()}
-            </p>
-          </div>
-        ) : null}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <p style={{ margin: 0, flex: 1, color: "#94a3b8", fontSize: 10, fontWeight: 600 }}>Próxima ação</p>
+                {quando ? (
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      borderRadius: 999,
+                      padding: "1px 7px",
+                      fontSize: 9,
+                      fontWeight: 700,
+                      background: `${cor}22`,
+                      color: cor,
+                    }}
+                  >
+                    {quando}
+                  </span>
+                ) : null}
+              </div>
+              <p
+                style={{
+                  margin: "3px 0 0",
+                  color: "#c8d4e6",
+                  fontSize: 11,
+                  lineHeight: 1.35,
+                  display: "-webkit-box",
+                  overflow: "hidden",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                }}
+              >
+                {negocio.proxima_acao.replace(/\s+/g, " ").trim()}
+              </p>
+            </div>
+          );
+        })() : null}
       </AgenteSideoverEntityCard>
     </div>
   );

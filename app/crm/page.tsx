@@ -4,9 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, ClipboardList, UserPlus } from "lucide-react";
-import { CrmAcaoAgora } from "@/components/crm/CrmAcaoAgora";
-import { CrmAlertasStrip } from "@/components/crm/CrmAlertasStrip";
-import { CrmLeadsParados } from "@/components/crm/CrmLeadsParados";
+import { CrmOQuePrecisaDeVoce } from "@/components/crm/CrmOQuePrecisaDeVoce";
 import { CrmEquipeResumo } from "@/components/crm/CrmEquipeResumo";
 import { CrmMetricCard, CrmSectionTitle } from "@/components/crm/CrmMetricCard";
 import { CrmOperacaoResumo } from "@/components/crm/CrmOperacaoResumo";
@@ -68,7 +66,36 @@ export default function DashboardPage() {
   const receita =
     m.receitaPotencial > 0 ? moedaPipeline(m.receitaPotencial) : "R$0";
 
-  const hoje = [
+  // Visão comercial enxuta — KPIs essenciais num só grid (sem duplicar o painel acionável)
+  const visaoComercial = [
+    {
+      label: "Receita potencial",
+      valor: receita,
+      sub: "pipeline em aberto",
+      cor: "#c9a24a",
+      rota: "/crm/leads",
+    },
+    {
+      label: "Taxa qualificação",
+      valor: `${m.taxaQualificacao}%`,
+      sub: "do total de leads",
+      cor: "#34d399",
+      rota: "/crm/leads",
+    },
+    {
+      label: "Taxa encaminhamento",
+      valor: `${m.taxaEncaminhamento}%`,
+      sub: "leads encaminhados",
+      cor: "#f59e0b",
+      rota: "/crm/parceiros",
+    },
+    {
+      label: "Parceiros ativos",
+      valor: m.parceirosAtivos,
+      sub: "homologados",
+      cor: "#4db3c4",
+      rota: "/crm/parceiros",
+    },
     {
       label: "Encaminhamentos hoje",
       valor: m.encaminhamentosHoje,
@@ -82,37 +109,6 @@ export default function DashboardPage() {
       sub: "agentes no hub",
       cor: "#4db3c4",
       rota: "/crm/agentes",
-    },
-  ];
-
-  const saude = [
-    {
-      label: "Taxa qualificação",
-      valor: `${m.taxaQualificacao}%`,
-      sub: "do total de leads",
-      cor: "#34d399",
-      rota: "/crm/leads",
-    },
-    {
-      label: "Taxa encaminhamento",
-      valor: `${m.taxaEncaminhamento}%`,
-      sub: "leads com encaminhamento",
-      cor: "#f59e0b",
-      rota: "/crm/parceiros",
-    },
-    {
-      label: "Parceiros ativos",
-      valor: m.parceirosAtivos,
-      sub: "homologados",
-      cor: "#4db3c4",
-      rota: "/crm/parceiros",
-    },
-    {
-      label: "Receita potencial",
-      valor: receita,
-      sub: "pipeline em aberto",
-      cor: "#c9a24a",
-      rota: "/crm/leads",
     },
   ];
 
@@ -161,10 +157,13 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Acionável primeiro — o que exige decisão/ação agora (UX §5) */}
-        <CrmAcaoAgora m={m} loading={m.loading} indisponivel={!!dash.erro && !dash.carregado} />
-        <CrmAlertasStrip alertas={dash.alertas} loading={dash.loading} />
-        <CrmLeadsParados />
+        {/* Painel único acionável — o que exige decisão/ação agora (UX §5) */}
+        <CrmOQuePrecisaDeVoce
+          m={m}
+          alertas={dash.alertas}
+          loading={m.loading}
+          indisponivel={!!dash.erro && !dash.carregado}
+        />
 
         {/* Visão geral da operação */}
         <CrmPipelineResumo />
@@ -175,26 +174,9 @@ export default function DashboardPage() {
         </div>
 
         <div>
-          <CrmSectionTitle>Hoje</CrmSectionTitle>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-            {hoje.map((c) => (
-              <CrmMetricCard
-                key={c.label}
-                label={c.label}
-                valor={c.valor}
-                sub={c.sub}
-                cor={c.cor}
-                loading={m.loading}
-                onClick={() => router.push(c.rota)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <CrmSectionTitle>Saúde comercial</CrmSectionTitle>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {saude.map((c) => (
+          <CrmSectionTitle>Visão comercial</CrmSectionTitle>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {visaoComercial.map((c) => (
               <CrmMetricCard
                 key={c.label}
                 label={c.label}

@@ -1,40 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
-import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { useLeadsParados } from "@/hooks/useLeadsParados";
 
-type LeadParado = {
-  id: string;
-  codigo: string | null;
-  nome: string | null;
-  estagio: string | null;
-  dias_parado: number | null;
-};
-
-/** rf-alerta-parado — leads sem próxima ação (parados). Busca a própria rota read-only. */
+/** rf-alerta-parado — leads sem próxima ação (parados). Reusa o hook compartilhado. */
 export function CrmLeadsParados() {
-  const [leads, setLeads] = useState<LeadParado[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let vivo = true;
-    void (async () => {
-      try {
-        const res = await fetch("/api/crm/alertas/parados?limit=8", {
-          headers: internalApiHeaders(),
-        });
-        const json = (await res.json().catch(() => ({}))) as { data?: LeadParado[] };
-        if (vivo && res.ok) setLeads(json.data ?? []);
-      } finally {
-        if (vivo) setLoading(false);
-      }
-    })();
-    return () => {
-      vivo = false;
-    };
-  }, []);
+  const { leads, loading } = useLeadsParados(8);
 
   if (loading) {
     return (

@@ -304,26 +304,36 @@ export async function GET(request: NextRequest) {
   const pipelineId = searchParams.get("pipeline_id") || "";
   const offset = parseInt(searchParams.get("offset") || "0");
   const limit = 20;
+  const tenantId = g.ctx.tenantId;
 
-  let query = supabase
-    .from("hub_negocios")
-    .select(
-      "id, codigo, titulo, prefixo_mercado, status, etapa, valor_estimado, valor_fechado, data_previsao_fechamento, pipeline_id, criado_em",
-      { count: "exact" }
-    )
-    .or(tenantScopeOrFilter(g.ctx.tenantId))
-    .order("criado_em", { ascending: false })
-    .range(offset, offset + limit - 1);
+  // `proxima_acao_em` é aditiva (migração 20260629120000): se ausente, recai no select base.
+  const construirQuery = (selectStr: string) => {
+    let query = supabase
+      .from("hub_negocios")
+      .select(selectStr, { count: "exact" })
+      .or(tenantScopeOrFilter(tenantId))
+      .order("criado_em", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (status) query = query.eq("status", status);
-  if (etapa) query = query.eq("etapa", etapa);
-  if (prefixo) query = query.eq("prefixo_mercado", prefixo);
-  if (pipelineId) query = query.eq("pipeline_id", pipelineId);
-  if (busca) {
-    query = query.or(`titulo.ilike.%${busca}%,codigo.ilike.%${busca}%`);
+    if (status) query = query.eq("status", status);
+    if (etapa) query = query.eq("etapa", etapa);
+    if (prefixo) query = query.eq("prefixo_mercado", prefixo);
+    if (pipelineId) query = query.eq("pipeline_id", pipelineId);
+    if (busca) {
+      query = query.or(`titulo.ilike.%${busca}%,codigo.ilike.%${busca}%`);
+    }
+    return query;
+  };
+
+  const LIST_SELECT =
+    "id, codigo, titulo, prefixo_mercado, status, etapa, valor_estimado, valor_fechado, data_previsao_fechamento, pipeline_id, criado_em, proxima_acao, proxima_acao_em";
+  const LIST_SELECT_LEGACY =
+    "id, codigo, titulo, prefixo_mercado, status, etapa, valor_estimado, valor_fechado, data_previsao_fechamento, pipeline_id, criado_em, proxima_acao";
+
+  let { data, error, count } = await construirQuery(LIST_SELECT);
+  if (error && isMissingPgColumn(error, "proxima_acao_em")) {
+    ({ data, error, count } = await construirQuery(LIST_SELECT_LEGACY));
   }
-
-  const { data, error, count } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

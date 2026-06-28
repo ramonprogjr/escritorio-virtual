@@ -3,11 +3,17 @@ import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { isMissingPgColumn } from "@/lib/tenant-default";
 import { derivarEntregaDoNegocio, type DerivarEntregaResult } from "@/lib/crm/derivar-entrega";
 
 type Params = { params: Promise<{ id: string }> };
 
+// `proxima_acao_em` é aditiva (migração 20260629120000). Se o banco ainda não a tiver,
+// caímos para o SELECT sem essa coluna — a tela funciona sem a data até a migração rodar.
 const NEGOCIO_SELECT =
+  "id, codigo, titulo, descricao, tipo, prefixo_mercado, lead_id, pessoa_id, empresa_id, pipeline_id, valor_estimado, valor_fechado, percentual_comissao, status, etapa, motivo_perda, proxima_acao, proxima_acao_em, data_previsao_fechamento, data_fechamento, tenant_id, criado_em, atualizado_em";
+
+const NEGOCIO_SELECT_LEGACY =
   "id, codigo, titulo, descricao, tipo, prefixo_mercado, lead_id, pessoa_id, empresa_id, pipeline_id, valor_estimado, valor_fechado, percentual_comissao, status, etapa, motivo_perda, proxima_acao, data_previsao_fechamento, data_fechamento, tenant_id, criado_em, atualizado_em";
 
 export async function GET(request: NextRequest, { params }: Params) {
@@ -20,7 +26,15 @@ export async function GET(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const supabase = crmDb();
 
-  const { data: negocio, error } = await supabase.from("hub_negocios").select(NEGOCIO_SELECT).eq("id", id).maybeSingle();
+  let { data: negocio, error } = await supabase.from("hub_negocios").select(NEGOCIO_SELECT).eq("id", id).maybeSingle();
+  // Banco sem a coluna aditiva proxima_acao_em → reconsulta sem ela (degrada sem quebrar).
+  if (error && isMissingPgColumn(error, "proxima_acao_em")) {
+    ({ data: negocio, error } = await supabase
+      .from("hub_negocios")
+      .select(NEGOCIO_SELECT_LEGACY)
+      .eq("id", id)
+      .maybeSingle());
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!negocio) return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
   if (negocio.tenant_id && negocio.tenant_id !== g.ctx.tenantId) {
@@ -65,11 +79,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const supabase = crmDb();
   const tenantId = g.ctx.tenantId;
 
-  const { data: atual, error: fetchErr } = await supabase
+  let { data: atual, error: fetchErr } = await supabase
     .from("hub_negocios")
     .select(NEGOCIO_SELECT)
     .eq("id", id)
     .maybeSingle();
+  let proximaAcaoEmSuportada = true;
+  if (fetchErr && isMissingPgColumn(fetchErr, "proxima_acao_em")) {
+    proximaAcaoEmSuportada = false;
+    ({ data: atual, error: fetchErr } = await supabase
+      .from("hub_negocios")
+      .select(NEGOCIO_SELECT_LEGACY)
+      .eq("id", id)
+      .maybeSingle());
+  }
 
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 });
   if (!atual) return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
@@ -122,6 +145,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     "etapa",
     "motivo_perda",
     "proxima_acao",
+    "proxima_acao_em",
     "data_previsao_fechamento",
     "data_fechamento",
   ] as const;
@@ -133,8 +157,33 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const etapaAnterior = String(atual.etapa ?? "");
 
-  const { data, error } = await supabase.from("hub_negocios").update(patch).eq("id", id).select(NEGOCIO_SELECT).single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Se o banco ainda não tem proxima_acao_em, não envia essa coluna e usa o SELECT legado.
+  if (!proximaAcaoEmSuportada) delete patch.proxima_acao_em;
+
+  // Banco sem a coluna aditiva proxima_acao_em → não tenta gravar essa coluna.
+  if (!proximaAcaoEmSuportada) delete patch.proxima_acao_em;
+
+  // Atualiza e lê de volta com o SELECT base (literal → tipagem estável do parser).
+  // A coluna aditiva é refletida no cliente de forma otimista; o retorno usa o SELECT legado.
+  let { data, error } = await supabase
+    .from("hub_negocios")
+    .update(patch)
+    .eq("id", id)
+    .select(NEGOCIO_SELECT_LEGACY)
+    .single();
+  if (error && isMissingPgColumn(error, "proxima_acao_em")) {
+    // Defesa extra: se ainda assim o banco reclamar da coluna, remove e refaz.
+    delete patch.proxima_acao_em;
+    ({ data, error } = await supabase
+      .from("hub_negocios")
+      .update(patch)
+      .eq("id", id)
+      .select(NEGOCIO_SELECT_LEGACY)
+      .single());
+  }
+  if (error || !data) {
+    return NextResponse.json({ error: error?.message || "Falha ao atualizar negócio." }, { status: 500 });
+  }
 
   if (body.etapa && String(body.etapa) !== etapaAnterior) {
     await supabase.from("hub_atividades").insert({
@@ -172,5 +221,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     }
   }
 
-  return NextResponse.json({ data, entrega });
+  // O SELECT de retorno é o legado (tipagem estável); reanexa proxima_acao_em quando suportada,
+  // para o cliente receber a data atualizada/gravada sem nova consulta.
+  const dataOut =
+    proximaAcaoEmSuportada && "proxima_acao_em" in patch
+      ? { ...data, proxima_acao_em: patch.proxima_acao_em ?? null }
+      : data;
+
+  return NextResponse.json({ data: dataOut, entrega });
 }
