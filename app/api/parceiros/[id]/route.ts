@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import {
-  defaultTenantId,
   isMissingPgColumn,
-  tenantIdFromRequest,
   tenantScopeOrFilter,
 } from "@/lib/tenant-default";
 import { MERCADOS_PREFIXO } from "@/lib/crm/negocio-cadastro";
@@ -110,7 +108,9 @@ export async function PATCH(
   const { campos } = parsed;
 
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  // Tenant SEMPRE da sessão autenticada (g.ctx), NUNCA do header x-tenant-id (forjável).
+  // Espelha o GET irmão; fecha o vetor de um gestor editar parceiro de outro tenant.
+  const tenantId = g.ctx.tenantId;
 
   // Update com escopo de tenant: id + (tenant atual / legado / null). Fallback sem
   // o filtro `.or` se a coluna tenant_id ainda não existir no schema.

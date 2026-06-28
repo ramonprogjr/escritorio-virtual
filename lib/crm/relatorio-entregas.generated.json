@@ -1,7 +1,44 @@
 {
-  "geradoEm": "2026-06-28T18:16:18.792Z",
+  "geradoEm": "2026-06-28T18:36:09.470Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "dc6f574dd52b926baebf1f161b864f3626537460",
+      "hashCurto": "dc6f574",
+      "mensagem": "atomos de mensagem — separacao (bolhas) + PDF + audio + virar multipla escolha",
+      "mensagemRaw": "feat(fluxo): atomos de mensagem — separacao (bolhas) + PDF + audio + virar multipla escolha",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T18:18:27.000Z",
+      "hora": "15:18",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/playbook-media/route.ts",
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/PlaybookFlowVisualBuilder.tsx",
+        "components/crm/playbook-flow-visual/FlowCanvas.tsx",
+        "components/crm/playbook-flow-visual/FlowCustomNodes.tsx",
+        "components/crm/playbook-flow-visual/FlowNodeEditorSideover.tsx",
+        "components/crm/playbook-flow-visual/types.ts",
+        "lib/playbook/flow-definition-types.ts",
+        "lib/playbook/flow-engine.test.ts",
+        "lib/playbook/flow-engine.ts",
+        "lib/playbook/flow-parse.ts",
+        "lib/playbook/flow-validate-media.test.ts",
+        "lib/playbook/flow-validate.ts",
+        "lib/whatsapp/adapters/uazapi-adapter.ts",
+        "lib/whatsapp/playbook-flow-maria-compile.test.ts",
+        "lib/whatsapp/playbook-flow-maria.ts",
+        "lib/whatsapp/uazapi-send.ts",
+        "lib/whatsapp/whatsapp-provider.ts",
+        "lib/whatsapp/whatsapp-send.ts",
+        "supabase/migrations/20260628150000_playbook_media_storage.sql"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 6,
+        "outros": 12,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "5721d6fe81c863651c484e00e72c40c6e7d2b8c8",
       "hashCurto": "5721d6f",

@@ -3,13 +3,32 @@
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { AlertTriangle, CheckCircle2, Loader2, Save, Sparkles, Workflow } from "lucide-react";
+import { AlertTriangle, CheckCircle2, LayoutList, Loader2, Save, Sparkles, Workflow } from "lucide-react";
 import { parsePlaybookFlowFromMarkdown } from "@/lib/playbook/flow-parse";
 import { upsertPlaybookFlowBlockInMarkdown } from "@/lib/playbook/playbook-flow-markdown";
 import { emitFlowVisualTelemetry } from "@/lib/playbook/flow-visual-telemetry";
 import { validatePlaybookFlowDefinition } from "@/lib/playbook/flow-validate";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import type { FlowCanvasSnapshot } from "@/components/crm/playbook-flow-visual/types";
+import { FlowGuiadoView } from "@/components/crm/playbook-flow-visual/FlowGuiadoView";
+import type { PlaybookFlowDefinition } from "@/lib/playbook/flow-definition-types";
+
+/** Modos de edição do fluxo: lista guiada (padrão) vs canvas livre (avançado). */
+type FlowEditorMode = "simples" | "avancado";
+
+/** Em telas estreitas a visão guiada é a única que funciona bem (o canvas não). */
+function useIsNarrowViewport(breakpoint = 768): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const apply = () => setNarrow(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [breakpoint]);
+  return narrow;
+}
 
 /**
  * Reconhece falhas de geração por falta de chave de IA e devolve uma mensagem amigável
@@ -75,6 +94,12 @@ export function PlaybookFlowReactFlowPanel({
   const lastCanvasMarkdownRef = useRef<string>(markdown);
   const [mountKey, setMountKey] = useState(0);
 
+  // Modo de edição: "simples" (visão guiada — PADRÃO) ou "avancado" (canvas livre).
+  const isNarrow = useIsNarrowViewport();
+  const [mode, setMode] = useState<FlowEditorMode>("simples");
+  // Em telas estreitas, o canvas não funciona bem → força a visão guiada.
+  const effectiveMode: FlowEditorMode = isNarrow ? "simples" : mode;
+
   // Estado-vazio: gerar o fluxo com IA a partir do próprio texto do playbook.
   const [gerando, setGerando] = useState(false);
   const [erroGeracao, setErroGeracao] = useState("");
@@ -135,6 +160,22 @@ export function PlaybookFlowReactFlowPanel({
       metadata: {
         source: "react_flow_canvas",
         steps_count: snapshot.nodeCount,
+      },
+    });
+  }
+
+  // Persistência da VISÃO GUIADA — mesmo caminho do canvas (regrava só o bloco JSON).
+  function handleGuidedChange(nextDefinition: PlaybookFlowDefinition) {
+    const next = upsertPlaybookFlowBlockInMarkdown(markdown, nextDefinition);
+    lastCanvasMarkdownRef.current = next;
+    onMarkdownChange(next);
+    onCanvasDirty?.();
+    void emitFlowVisualTelemetry({
+      event: "playbook.flow_visual.markdown_applied",
+      agente_slug: agenteSlug,
+      metadata: {
+        source: "guided_view",
+        steps_count: nextDefinition.steps.length,
       },
     });
   }
@@ -206,6 +247,34 @@ export function PlaybookFlowReactFlowPanel({
             id: <code style={metaCode}>{definition.id}</code>
           </span>
         )}
+
+        {/* Toggle Simples / Avançado — Simples (visão guiada) é o padrão.
+            Em telas estreitas o canvas não funciona bem, então escondemos a opção. */}
+        {!isNarrow && (
+          <div style={modeToggleWrap} role="group" aria-label="Modo de edição do fluxo">
+            <button
+              type="button"
+              onClick={() => setMode("simples")}
+              style={{ ...modeToggleBtn, ...(effectiveMode === "simples" ? modeToggleBtnActive : {}) }}
+              title="Lista de passos grandes — a IA cria, você ajusta"
+              aria-pressed={effectiveMode === "simples"}
+            >
+              <LayoutList size={12} strokeWidth={2.3} />
+              Simples
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("avancado")}
+              style={{ ...modeToggleBtn, ...(effectiveMode === "avancado" ? modeToggleBtnActive : {}) }}
+              title="Canvas livre (arrastar e conectar)"
+              aria-pressed={effectiveMode === "avancado"}
+            >
+              <Workflow size={12} strokeWidth={2.3} />
+              Avançado
+            </button>
+          </div>
+        )}
+
         <span style={{ marginLeft: "auto" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, marginRight: 8 }}>
             {onSaveDraft ? (
@@ -252,16 +321,25 @@ export function PlaybookFlowReactFlowPanel({
         </span>
       </div>
 
-      {/* Canvas */}
-      <div style={canvasWrapper}>
-        <FlowCanvas
-          key={mountKey}
-          initialDefinition={definition}
+      {/* Visão guiada (Simples — PADRÃO) ou canvas livre (Avançado) */}
+      {effectiveMode === "simples" ? (
+        <FlowGuiadoView
+          definition={definition}
           agenteSlug={agenteSlug}
-          onChange={handleChange}
-          onDirty={onCanvasDirty}
+          disabled={disabled}
+          onChange={handleGuidedChange}
         />
-      </div>
+      ) : (
+        <div style={canvasWrapper}>
+          <FlowCanvas
+            key={mountKey}
+            initialDefinition={definition}
+            agenteSlug={agenteSlug}
+            onChange={handleChange}
+            onDirty={onCanvasDirty}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -310,6 +388,35 @@ const validationBadge: CSSProperties = {
   border: "1px solid",
   borderRadius: 20,
   padding: "2px 8px",
+};
+
+const modeToggleWrap: CSSProperties = {
+  display: "inline-flex",
+  gap: 3,
+  padding: 3,
+  background: "#0a140f",
+  border: "1px solid #1d3a2c",
+  borderRadius: 10,
+};
+
+const modeToggleBtn: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  border: "none",
+  background: "transparent",
+  color: "#8b949e",
+  borderRadius: 7,
+  padding: "4px 10px",
+  fontSize: 11.5,
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const modeToggleBtnActive: CSSProperties = {
+  background: "#10231a",
+  color: "#9fd3bf",
+  boxShadow: "inset 0 0 0 1px #2f6f4f",
 };
 
 const saveButtonStyle: CSSProperties = {
