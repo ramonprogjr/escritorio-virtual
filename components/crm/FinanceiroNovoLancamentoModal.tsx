@@ -5,11 +5,24 @@ import { X } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import type { TipoConta } from "@/lib/crm/finance-contas";
 
+/** Pré-preenchimento opcional (ex.: gerar recebível a partir de um negócio ganho). */
+export type LancamentoPrefill = {
+  descricao?: string;
+  valor?: string | number;
+  vencimento?: string;
+  /** Quem deve / origem — só exibido como contexto, não vira campo editável. */
+  clienteNome?: string;
+  /** Vínculo com o negócio de origem (gravado best-effort no recebível). */
+  negocioId?: string;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
   onCriado: () => void;
   tipoInicial?: TipoConta;
+  /** Quando presente, abre o form já preenchido (confirmar/ajustar e salvar). */
+  prefill?: LancamentoPrefill;
 };
 
 export function FinanceiroNovoLancamentoModal({
@@ -17,6 +30,7 @@ export function FinanceiroNovoLancamentoModal({
   onClose,
   onCriado,
   tipoInicial = "pagar",
+  prefill,
 }: Props) {
   const [tipo, setTipo] = useState<TipoConta>(tipoInicial);
   const [descricao, setDescricao] = useState("");
@@ -26,8 +40,15 @@ export function FinanceiroNovoLancamentoModal({
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    if (open) setTipo(tipoInicial);
-  }, [open, tipoInicial]);
+    if (!open) return;
+    setTipo(tipoInicial);
+    setDescricao(prefill?.descricao ?? "");
+    setValor(prefill?.valor != null ? String(prefill.valor) : "");
+    setVencimento(prefill?.vencimento ?? "");
+    setErro("");
+    // Reabrir com outro prefill deve refletir os novos valores.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tipoInicial, prefill?.descricao, prefill?.valor, prefill?.vencimento]);
 
   if (!open) return null;
 
@@ -43,6 +64,8 @@ export function FinanceiroNovoLancamentoModal({
           descricao: descricao.trim(),
           valor,
           vencimento: vencimento || null,
+          // Só faz sentido vincular negócio em recebível.
+          negocio_id: tipo === "receber" ? prefill?.negocioId ?? null : null,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -91,6 +114,17 @@ export function FinanceiroNovoLancamentoModal({
         </div>
 
         <div className="space-y-4 overflow-y-auto p-4">
+          {prefill?.clienteNome && (
+            <div className="rounded-lg border border-[#c9a24a44] bg-[#003b2622] px-3 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+                Quem deve
+              </p>
+              <p className="mt-0.5 truncate text-sm font-bold text-[#c9a24a]">
+                {prefill.clienteNome}
+              </p>
+            </div>
+          )}
+
           <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5">
             {(["pagar", "receber"] as const).map((t) => (
               <button

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
+import { FinanceiroNovoLancamentoModal } from "@/components/crm/FinanceiroNovoLancamentoModal";
 import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
@@ -133,6 +134,7 @@ export default function NegocioDetalhePage() {
   const [pickerAberto, setPickerAberto] = useState(false);
   const [buscaPessoa, setBuscaPessoa] = useState("");
   const [resultadosPessoa, setResultadosPessoa] = useState<PessoaMini[]>([]);
+  const [modalReceber, setModalReceber] = useState(false);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -584,6 +586,30 @@ export default function NegocioDetalhePage() {
                   <span style={{ fontSize: 12, color: "#34d399" }}>{derivadoMsg}</span>
                 ) : null}
               </div>
+
+              {/* Cadeia venda → financeiro: gera o recebível já pré-preenchido. */}
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1d3a2c" }}>
+                <p style={{ margin: "0 0 8px", fontSize: 12, color: "#8b949e" }}>
+                  Lançar o valor deste negócio no financeiro (você confirma/ajusta antes de salvar).
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setModalReceber(true)}
+                  style={{
+                    minHeight: 40,
+                    padding: "9px 16px",
+                    borderRadius: 8,
+                    border: "1px solid #c9a24a",
+                    background: "transparent",
+                    color: "#c9a24a",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  + Gerar conta a receber
+                </button>
+              </div>
             </div>
           );
         })()}
@@ -961,6 +987,21 @@ export default function NegocioDetalhePage() {
           ))
         )}
       </ul>
+
+      <FinanceiroNovoLancamentoModal
+        open={modalReceber}
+        onClose={() => setModalReceber(false)}
+        onCriado={() => {
+          toast.success("Conta a receber gerada");
+        }}
+        tipoInicial="receber"
+        prefill={{
+          descricao: [negocio.titulo, negocio.codigo].filter(Boolean).join(" · "),
+          valor: negocio.valor_fechado ?? negocio.valor_estimado ?? undefined,
+          clienteNome: pessoaVinc?.nome ?? leadNome ?? undefined,
+          negocioId: negocio.id,
+        }}
+      />
     </div>
   );
 }

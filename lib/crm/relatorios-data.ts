@@ -40,31 +40,57 @@ type QueryOutcome = {
   aviso?: string;
 };
 
-/** Relatórios: sem filtro tenant_id; tenta selects alternativos se coluna em falta. */
+/**
+ * Relatórios: SEMPRE filtra por tenant_id (defesa-em-profundidade — o client de
+ * export usa service-role e contorna RLS, então o escopo precisa estar na query).
+ * Tenta selects alternativos se alguma coluna em falta. Tolerante a bases legadas
+ * sem a coluna tenant_id: nesse caso refaz a consulta SEM o filtro (best-effort).
+ */
 async function selectSimple(
   supabase: SupabaseClient,
   table: string,
   selectCandidates: string[],
-  order: { column: string; ascending: boolean; nullsFirst?: boolean }
+  order: { column: string; ascending: boolean; nullsFirst?: boolean },
+  tenantId: string
 ): Promise<QueryOutcome> {
   let lastError: PostgrestError | null = null;
 
   for (const select of selectCandidates) {
-    const { data, error } = await supabase
+    // 1ª tentativa: COM filtro de tenant (caminho normal e seguro).
+    const scoped = await supabase
       .from(table)
       .select(select)
+      .eq("tenant_id", tenantId)
       .order(order.column, {
         ascending: order.ascending,
         nullsFirst: order.nullsFirst ?? false,
       })
       .limit(LIMIT);
 
-    if (!error) {
-      return { rows: (data ?? []) as unknown as Record<string, unknown>[] };
+    if (!scoped.error) {
+      return { rows: (scoped.data ?? []) as unknown as Record<string, unknown>[] };
     }
 
-    lastError = error;
-    if (!isMissingPgColumn(error)) break;
+    // Base legada sem a coluna tenant_id: cai para consulta sem o filtro.
+    if (isMissingPgColumn(scoped.error) && /tenant_id/i.test(errorText(scoped.error))) {
+      const unscoped = await supabase
+        .from(table)
+        .select(select)
+        .order(order.column, {
+          ascending: order.ascending,
+          nullsFirst: order.nullsFirst ?? false,
+        })
+        .limit(LIMIT);
+      if (!unscoped.error) {
+        return { rows: (unscoped.data ?? []) as unknown as Record<string, unknown>[] };
+      }
+      lastError = unscoped.error;
+      if (!isMissingPgColumn(unscoped.error)) break;
+      continue;
+    }
+
+    lastError = scoped.error;
+    if (!isMissingPgColumn(scoped.error)) break;
   }
 
   if (!lastError) {
@@ -84,7 +110,7 @@ async function selectSimple(
 export async function carregarRelatorio(
   supabase: SupabaseClient,
   entidade: RelatorioEntidade,
-  _tenantId: string
+  tenantId: string
 ): Promise<RelatorioDataset> {
   if (entidade === "leads") {
     const out = await selectSimple(
@@ -94,7 +120,8 @@ export async function carregarRelatorio(
         "codigo, nome, telefone, email, origem, estagio, valor_estimado, criado_em",
         "nome, telefone, email, origem, estagio, valor_estimado, criado_em",
       ],
-      { column: "criado_em", ascending: false }
+      { column: "criado_em", ascending: false },
+      tenantId
     );
     if (out.error) throw new Error(out.error);
     const headers = [
@@ -118,7 +145,8 @@ export async function carregarRelatorio(
         "codigo, titulo, prefixo_mercado, etapa, status, valor_estimado, criado_em",
         "codigo, titulo, etapa, status, valor_estimado, criado_em",
       ],
-      { column: "criado_em", ascending: false }
+      { column: "criado_em", ascending: false },
+      tenantId
     );
     if (out.error) throw new Error(out.error);
     const headers = ["codigo", "titulo", "prefixo_mercado", "etapa", "status", "valor_estimado", "criado_em"];
@@ -134,7 +162,8 @@ export async function carregarRelatorio(
         "razao_social, nome_fantasia, cnpj, segmento, criado_em",
         "razao_social, nome_fantasia, cnpj, criado_em",
       ],
-      { column: "criado_em", ascending: false }
+      { column: "criado_em", ascending: false },
+      tenantId
     );
     if (out.error) throw new Error(out.error);
     const headers = out.rows[0]
@@ -148,7 +177,8 @@ export async function carregarRelatorio(
       supabase,
       "hub_imoveis",
       ["codigo, titulo, tipo, status, valor, cidade, estado, criado_em"],
-      { column: "criado_em", ascending: false }
+      { column: "criado_em", ascending: false },
+      tenantId
     );
     if (out.error) throw new Error(out.error);
     const headers = ["codigo", "titulo", "tipo", "status", "valor", "cidade", "estado", "criado_em"];
@@ -160,7 +190,8 @@ export async function carregarRelatorio(
       supabase,
       "hub_contas_pagar",
       ["descricao, valor, vencimento, status, criado_em"],
-      { column: "vencimento", ascending: true, nullsFirst: false }
+      { column: "vencimento", ascending: true, nullsFirst: false },
+      tenantId
     );
     if (out.error) throw new Error(out.error);
     const headers = ["descricao", "valor", "vencimento", "status", "criado_em"];
@@ -172,7 +203,8 @@ export async function carregarRelatorio(
       supabase,
       "hub_contas_receber",
       ["descricao, valor, vencimento, status, criado_em"],
-      { column: "vencimento", ascending: true, nullsFirst: false }
+      { column: "vencimento", ascending: true, nullsFirst: false },
+      tenantId
     );
     if (out.error) throw new Error(out.error);
     const headers = ["descricao", "valor", "vencimento", "status", "criado_em"];
@@ -186,13 +218,15 @@ export async function carregarRelatorio(
         supabase,
         "hub_contas_pagar",
         ["descricao, valor, vencimento, status, criado_em"],
-        { column: "vencimento", ascending: true, nullsFirst: false }
+        { column: "vencimento", ascending: true, nullsFirst: false },
+        tenantId
       ),
       selectSimple(
         supabase,
         "hub_contas_receber",
         ["descricao, valor, vencimento, status, criado_em"],
-        { column: "vencimento", ascending: true, nullsFirst: false }
+        { column: "vencimento", ascending: true, nullsFirst: false },
+        tenantId
       ),
     ]);
 

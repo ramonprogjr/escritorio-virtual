@@ -33,14 +33,43 @@ function ContasReceberInner() {
       .from("hub_contas_receber")
       .select("*")
       .order("vencimento", { ascending: true, nullsFirst: false });
+
+    const linhas = (data ?? []).map((c) => ({
+      id: String(c.id),
+      descricao: String(c.descricao ?? ""),
+      valor: Number(c.valor ?? 0),
+      vencimento: c.vencimento != null ? String(c.vencimento) : null,
+      status: String(c.status ?? "pendente"),
+      criado_em: c.criado_em != null ? String(c.criado_em) : undefined,
+      negocio_id:
+        c != null && typeof c === "object" && "negocio_id" in c && c.negocio_id != null
+          ? String(c.negocio_id)
+          : null,
+    }));
+
+    // "Quem deve": resolve o título do negócio vinculado (best-effort; tolerante a
+    // base sem a coluna negocio_id ou sem permissão de leitura nos negócios).
+    const ids = Array.from(new Set(linhas.map((l) => l.negocio_id).filter(Boolean))) as string[];
+    let mapaOrigem: Record<string, string> = {};
+    if (ids.length > 0) {
+      const { data: negs } = await supabase
+        .from("hub_negocios")
+        .select("id, titulo, codigo")
+        .in("id", ids);
+      if (Array.isArray(negs)) {
+        mapaOrigem = Object.fromEntries(
+          negs.map((n) => [
+            String(n.id),
+            String(n.titulo ?? n.codigo ?? "").trim(),
+          ])
+        );
+      }
+    }
+
     setContas(
-      (data ?? []).map((c) => ({
-        id: String(c.id),
-        descricao: String(c.descricao ?? ""),
-        valor: Number(c.valor ?? 0),
-        vencimento: c.vencimento != null ? String(c.vencimento) : null,
-        status: String(c.status ?? "pendente"),
-        criado_em: c.criado_em != null ? String(c.criado_em) : undefined,
+      linhas.map((l) => ({
+        ...l,
+        origem: l.negocio_id ? mapaOrigem[l.negocio_id] || null : null,
       }))
     );
     setCarregando(false);

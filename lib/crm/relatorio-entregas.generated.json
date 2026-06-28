@@ -1,7 +1,26 @@
 {
-  "geradoEm": "2026-06-28T14:23:32.293Z",
+  "geradoEm": "2026-06-28T14:32:01.241Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "1b73c5ea9885b76861b78c2b8bcced94890c0b37",
+      "hashCurto": "1b73c5e",
+      "mensagem": "esconde plataforma/secrets do fornecedor comum (perfil)",
+      "mensagemRaw": "feat(F5): esconde plataforma/secrets do fornecedor comum (perfil)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T14:24:11.000Z",
+      "hora": "11:24",
+      "arquivos": [
+        "app/crm/configuracoes/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/precificacao/page.tsx",
+        "hooks/useCrmRole.ts"
+      ],
+      "areas": {
+        "app/crm": 3,
+        "outros": 1
+      }
+    },
     {
       "hash": "c4f81861d2bce82b48eabe0ab54d3cb031390730",
       "hashCurto": "c4f8186",

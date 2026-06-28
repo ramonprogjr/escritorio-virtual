@@ -110,6 +110,11 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-[#e6edf3]">{c.descricao}</p>
+                {tipo === "receber" && c.origem && (
+                  <p className="mt-0.5 truncate text-xs font-semibold text-[#c9a24a]">
+                    {c.origem}
+                  </p>
+                )}
                 <p className="mt-1 text-lg font-black tabular-nums text-[#e6edf3]">
                   {moedaFinanceiroExata(c.valor)}
                 </p>

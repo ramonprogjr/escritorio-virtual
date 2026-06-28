@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-06-28T14:23:33.747Z",
+  "geradoEm": "2026-06-28T14:32:02.748Z",
   "ambiente": "local",
   "itens": {
     "ent-lead": {
@@ -1239,16 +1239,16 @@
       "oQueFalta": "Módulo comissões previstas/pagas"
     },
     "po-fin-entidade": {
-      "status": "gap",
+      "status": "ok",
       "checks": [
         {
           "id": "grep-fin-tab",
-          "ok": false,
-          "detail": "padrão não encontrado em app/crm/negocios/[id]/page.tsx",
+          "ok": true,
+          "detail": "encontrado em app/crm/negocios/[id]/page.tsx",
           "required": false
         }
       ],
-      "oQueFalta": "Abas financeiro nas fichas"
+      "oQueFalta": "—"
     },
     "ix-ia-preenche": {
       "status": "ok",

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
-import { tenantIdFromRequest } from "@/lib/tenant-default";
+import { isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {
   const configErr = crmConfigError();
@@ -15,6 +17,7 @@ export async function POST(request: NextRequest) {
     descricao?: string;
     valor?: number | string;
     vencimento?: string | null;
+    negocio_id?: string | null;
   };
 
   const tipo = body.tipo?.trim();
@@ -40,7 +43,7 @@ export async function POST(request: NextRequest) {
   const tenantId = tenantIdFromRequest(request.headers) || auth.ctx.tenantId;
   const supabase = crmDb();
 
-  const row = {
+  const row: Record<string, unknown> = {
     descricao,
     valor,
     vencimento,
@@ -49,8 +52,23 @@ export async function POST(request: NextRequest) {
     atualizado_em: new Date().toISOString(),
   };
 
+  // Vínculo opcional com o negócio de origem (só recebíveis). Gravação best-effort:
+  // se a coluna negocio_id ainda não existir na base, salva sem o vínculo.
+  const negocioId =
+    tipo === "receber" && typeof body.negocio_id === "string" && UUID_RE.test(body.negocio_id)
+      ? body.negocio_id
+      : null;
+  if (negocioId) row.negocio_id = negocioId;
+
   const table = tipo === "pagar" ? "hub_contas_pagar" : "hub_contas_receber";
-  const { data, error } = await supabase.from(table).insert(row).select("id").single();
+
+  let { data, error } = await supabase.from(table).insert(row).select("id").single();
+
+  // Base ainda sem a coluna negocio_id: reinsere sem o vínculo (não perde o lançamento).
+  if (error && negocioId && isMissingPgColumn(error)) {
+    delete row.negocio_id;
+    ({ data, error } = await supabase.from(table).insert(row).select("id").single());
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

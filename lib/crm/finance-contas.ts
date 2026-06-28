@@ -7,6 +7,10 @@ export type ContaFinanceira = {
   vencimento: string | null;
   status: string;
   criado_em?: string;
+  /** Negócio de origem do recebível (rastreio). */
+  negocio_id?: string | null;
+  /** Nome de "quem deve" (cliente/negócio vinculado), para exibir no card. */
+  origem?: string | null;
 };
 
 export function hojeLocalISO(): string {
