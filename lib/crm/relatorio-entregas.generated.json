@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-28T00:06:21.101Z",
+  "geradoEm": "2026-06-28T00:40:35.983Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "d4b1d1581d2fb18f07ab55e1545ce541eb3a9724",
+      "hashCurto": "d4b1d15",
+      "mensagem": "reagrupa criação de agente de 8 passos para 3 (UX — 'intimida')",
+      "mensagemRaw": "feat(wizard): reagrupa criação de agente de 8 passos para 3 (UX — 'intimida')",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T00:40:26.000Z",
+      "hora": "21:40",
+      "arquivos": [
+        "components/crm/AgenteNovoWizard.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "e66a062384d1bc52a8f4236f305312548279d057",
+      "hashCurto": "e66a062",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T00:08:47.000Z",
+      "hora": "21:08",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "e73a78e64606963412629a907b6ffa247ee162ad",
       "hashCurto": "e73a78e",
