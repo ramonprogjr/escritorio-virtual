@@ -21,6 +21,7 @@ import {
   crmGlassCardSurface,
 } from "@/lib/crm-glass-card";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
+import { EntitySelect, type EntitySelectOption } from "@/components/crm/EntitySelect";
 import { CrmBotRingAvatar } from "@/components/crm/CrmBotRingAvatar";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import {
@@ -217,7 +218,13 @@ export default function CiclosPage() {
   const [followupHubError, setFollowupHubError] = useState<string | null>(null);
   const [previewMercado, setPreviewMercado] = useState("geral");
   const [agentesHub, setAgentesHub] = useState<
-    Array<{ agente_slug: string; modo_operacao?: unknown; ciclo_execucao_padrao?: unknown }>
+    Array<{
+      agente_slug: string;
+      nome?: unknown;
+      cargo?: unknown;
+      modo_operacao?: unknown;
+      ciclo_execucao_padrao?: unknown;
+    }>
   >([]);
 
   function aplicarConfigNoForm(cfg: Record<string, unknown> | undefined) {
@@ -411,6 +418,22 @@ export default function CiclosPage() {
     [fNome, extraConfig]
   );
   const mostrarBlocoFollowup = followupAvancadoForcado || followupHeuristica;
+
+  // Opções do seletor de agente: mostra NOME (cargo como subtítulo), salva o slug por baixo.
+  // Se o slug atual não estiver na lista (agente antigo/arquivado), injeta uma opção
+  // para não perder a seleção ao editar um ciclo existente.
+  const agenteOpts: EntitySelectOption[] = useMemo(() => {
+    const opts = agentesHub.map((a) => {
+      const nome = typeof a.nome === "string" && a.nome.trim() ? a.nome.trim() : a.agente_slug;
+      const cargo = typeof a.cargo === "string" && a.cargo.trim() ? a.cargo.trim() : "";
+      return { value: a.agente_slug, label: nome, sub: cargo || undefined };
+    });
+    const slug = fAgenteSlug.trim();
+    if (slug && !opts.some((o) => o.value === slug)) {
+      opts.unshift({ value: slug, label: slug, sub: "Agente fora da lista atual" });
+    }
+    return opts;
+  }, [agentesHub, fAgenteSlug]);
 
   const modoOperacaoDrawer = useMemo((): ModoOperacaoAgente | null => {
     const slug = fAgenteSlug.trim();
@@ -1447,13 +1470,15 @@ export default function CiclosPage() {
                 ) : (
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs mb-1 block" style={{ color: "#8b949e" }}>Agente slug</span>
-                  <input
+                  <span className="text-xs mb-1 block" style={{ color: "#8b949e" }}>Agente</span>
+                  <EntitySelect
                     value={fAgenteSlug}
-                    onChange={(e) => setFAgenteSlug(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm"
-                    style={{ background: "#0f1d16", border: "1px solid #1d3a2c", color: "#e6edf3" }}
-                    placeholder="ex.: gerente_atendimento"
+                    onChange={setFAgenteSlug}
+                    options={agenteOpts}
+                    loading={formLoading}
+                    placeholder="Selecionar agente…"
+                    searchPlaceholder="Buscar agente por nome…"
+                    emptyLabel="Nenhum agente cadastrado ainda. Crie um agente primeiro."
                   />
                 </label>
                 {agenteSomenteCanalWa && (

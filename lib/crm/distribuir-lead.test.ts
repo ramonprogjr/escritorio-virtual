@@ -45,6 +45,15 @@ describe("listarCandidatosParceiro — scoring e ranking (IA-first)", () => {
   });
 });
 
+describe("fila de distribuição — top-3 do motor (sem LLM)", () => {
+  it("limita a 3 candidatos rankeados (contrato da Fila de distribuição)", async () => {
+    const out = await listarCandidatosParceiro(mockSupabase([B, A, C, D]), { ...INPUT, limite: 3 });
+    expect(out.map((c) => c.parceiro_id)).toEqual(["A", "B", "C"]); // D cortado, top-3 ordenado
+    expect(out[0].score).toBeGreaterThanOrEqual(out[1].score);
+    expect(out[1].score).toBeGreaterThanOrEqual(out[2].score);
+  });
+});
+
 describe("melhorCandidatoParceiro", () => {
   it("retorna o de maior score", async () => {
     const best = await melhorCandidatoParceiro(mockSupabase([B, A, C]), INPUT);

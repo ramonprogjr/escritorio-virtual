@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     cidade: body.cidade || null,
     estado: body.estado || body.regiao || null,
     status_acesso: body.status_acesso || "pendente",
+    recebe_leads: body.recebe_leads === true,
     tenant_id: tenantId,
   };
 

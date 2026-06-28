@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { EmptyState } from "@/components/crm/EmptyState";
+import { EntitySelect, type EntitySelectOption } from "@/components/crm/EntitySelect";
 
 type Pedido = {
   id: string;
@@ -14,6 +15,15 @@ type Pedido = {
   status: string;
   obra_id: string | null;
   valor_estimado: number | null;
+};
+
+type ObraOpt = {
+  id: string;
+  codigo: string | null;
+  titulo: string;
+  status: string | null;
+  cidade: string | null;
+  estado: string | null;
 };
 
 const STATUS_OPTS = ["rascunho", "cotando", "aprovado", "entregue", "cancelado"];
@@ -26,6 +36,9 @@ function PedidosPageInner() {
   const [descricao, setDescricao] = useState("");
   const [obraId, setObraId] = useState(obraIdParam);
   const [salvando, setSalvando] = useState(false);
+  const [obras, setObras] = useState<ObraOpt[]>([]);
+  const [obrasLoading, setObrasLoading] = useState(true);
+  const [obrasErro, setObrasErro] = useState<string | null>(null);
 
   const carregar = useCallback(() => {
     const q = obraIdParam ? `?obra_id=${encodeURIComponent(obraIdParam)}` : "";
@@ -38,6 +51,42 @@ function PedidosPageInner() {
     setObraId(obraIdParam);
     carregar();
   }, [carregar, obraIdParam]);
+
+  // Carrega obras p/ o seletor (escolher por nome, salvar o id por baixo).
+  useEffect(() => {
+    let cancel = false;
+    setObrasLoading(true);
+    setObrasErro(null);
+    fetch("/api/crm/obras", { headers: internalApiHeaders() })
+      .then((r) => r.json())
+      .then((d: { data?: ObraOpt[]; error?: string }) => {
+        if (cancel) return;
+        if (d.error) {
+          setObrasErro(d.error);
+          setObras([]);
+        } else {
+          setObras(Array.isArray(d.data) ? d.data : []);
+        }
+      })
+      .catch((e) => {
+        if (!cancel) {
+          setObrasErro(e instanceof Error ? e.message : "Falha ao carregar obras.");
+          setObras([]);
+        }
+      })
+      .finally(() => {
+        if (!cancel) setObrasLoading(false);
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
+  const obraOpts: EntitySelectOption[] = obras.map((o) => ({
+    value: o.id,
+    label: o.titulo || o.codigo || "Obra sem título",
+    sub: [o.codigo, [o.cidade, o.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ") || undefined,
+  }));
 
   async function criar() {
     if (!descricao.trim()) return;
@@ -118,12 +167,20 @@ function PedidosPageInner() {
               onChange={(e) => setDescricao(e.target.value)}
               className="mt-3 w-full min-h-20 rounded-lg border border-[#1d3a2c] bg-[#16271e] p-3 text-sm text-[#e6edf3]"
             />
-            <input
-              placeholder="ID da obra (opcional)"
-              value={obraId}
-              onChange={(e) => setObraId(e.target.value)}
-              className="mt-2 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]"
-            />
+            <div className="mt-2">
+              <span className="mb-1 block text-xs text-[#8b949e]">Obra (opcional)</span>
+              <EntitySelect
+                value={obraId}
+                onChange={setObraId}
+                options={obraOpts}
+                loading={obrasLoading}
+                erro={obrasErro}
+                clearable
+                placeholder="Selecionar obra…"
+                searchPlaceholder="Buscar obra por nome ou código…"
+                emptyLabel="Nenhuma obra cadastrada ainda."
+              />
+            </div>
             <div className="mt-4 flex gap-2">
               <button type="button" onClick={() => setModal(false)} className="flex-1 min-h-10 rounded-lg bg-[#16271e] text-xs">
                 Cancelar

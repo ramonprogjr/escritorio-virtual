@@ -6,6 +6,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { useCrmHeaderSlotConfig } from "@/hooks/useCrmHeaderSlotConfig";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
+import { FilaDistribuicao } from "@/components/crm/FilaDistribuicao";
 import { toast } from "@/components/crm/toast";
 
 type Regra = {
@@ -264,6 +265,9 @@ export default function DistribuicaoPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
+      {/* Fila de distribuição — JOB da tela: distribuir leads com a sugestão do motor (ADITIVO no topo) */}
+      <FilaDistribuicao onDistribuido={() => void carregar()} />
+
       {/* Auditoria da rede — KPIs do hub_eventos (C.1, base da cobrança IA) */}
       {metricas && (
         <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #1d3a2c", background: "#0a140f" }}>
