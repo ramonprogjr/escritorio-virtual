@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { listarCandidatosParceiro, melhorCandidatoParceiro } from "./distribuir-lead";
 import { DEFAULT_OBRA10_TENANT_ID, tenantScopeOrFilter } from "@/lib/tenant-default";
 
@@ -106,5 +106,167 @@ describe("melhorCandidatoParceiro", () => {
   });
   it("sem candidatos → null", async () => {
     expect(await melhorCandidatoParceiro(mockSupabase([D]), INPUT)).toBeNull();
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// MOTOR_FONTE — flag reversível (parceiros = default; fornecedores atrás da flag)
+// ──────────────────────────────────────────────────────────────────────────
+
+type RespostaTabela = { data: unknown[] | null; error?: unknown };
+
+/**
+ * Mock que responde por TABELA (hub_parceiros vs hub_fornecedores) e registra
+ * tudo: tabelas consultadas (`from`) e filtros de tenant (`.or`). Cada `from(t)`
+ * devolve uma query encadeável cujo `.limit()` resolve com a resposta de `t`.
+ */
+function mockSupabasePorTabela(porTabela: Record<string, RespostaTabela>) {
+  const tabelasConsultadas: string[] = [];
+  const orFiltros: string[] = [];
+  const supabase = {
+    from(tabela: string) {
+      tabelasConsultadas.push(tabela);
+      const resp = porTabela[tabela] ?? { data: [], error: null };
+      const q: Record<string, unknown> = {};
+      for (const m of ["select", "eq"]) q[m] = () => q;
+      q.or = (filtro: string) => {
+        orFiltros.push(filtro);
+        return q;
+      };
+      q.limit = () => Promise.resolve({ data: resp.data, error: resp.error ?? null });
+      return q;
+    },
+  } as unknown as Parameters<typeof listarCandidatosParceiro>[0];
+  return { supabase, tabelasConsultadas, orFiltros };
+}
+
+// Fornecedor espelho de A, mas com a coluna `mercado_principal` (não `mercado`) —
+// prova o mapeamento mercado_principal → mercado dentro do motor.
+const FORN_A = {
+  id: "FA",
+  nome: "Forn A",
+  telefone: "9",
+  mercado_principal: "ARQ",
+  especialidade: null,
+  cidade: "São Paulo",
+  estado: "SP",
+  status: "homologado",
+  recebe_leads: true,
+  total_leads_recebidos: 0,
+  status_financeiro: "em_dia",
+};
+
+afterEach(() => {
+  delete process.env.MOTOR_FONTE;
+});
+
+describe("MOTOR_FONTE — fonte do motor (default parceiros, zero regressão)", () => {
+  it("ausente → lê hub_parceiros (comportamento atual intacto)", async () => {
+    delete process.env.MOTOR_FONTE;
+    const { supabase, tabelasConsultadas } = mockSupabasePorTabela({
+      hub_parceiros: { data: [A] },
+      hub_fornecedores: { data: [FORN_A] },
+    });
+    const out = await listarCandidatosParceiro(supabase, INPUT);
+
+    expect(tabelasConsultadas).toEqual(["hub_parceiros"]); // fornecedores nem é tocado
+    expect(out.map((c) => c.parceiro_id)).toEqual(["A"]);
+    expect(out[0].score).toBe(100);
+  });
+
+  it("='parceiros' explícito → lê hub_parceiros", async () => {
+    process.env.MOTOR_FONTE = "parceiros";
+    const { supabase, tabelasConsultadas } = mockSupabasePorTabela({
+      hub_parceiros: { data: [A] },
+    });
+    const out = await listarCandidatosParceiro(supabase, INPUT);
+    expect(tabelasConsultadas).toEqual(["hub_parceiros"]);
+    expect(out.map((c) => c.parceiro_id)).toEqual(["A"]);
+  });
+
+  it("='fornecedores' → lê hub_fornecedores e mapeia mercado_principal → mercado", async () => {
+    process.env.MOTOR_FONTE = "fornecedores";
+    const { supabase, tabelasConsultadas } = mockSupabasePorTabela({
+      hub_fornecedores: { data: [FORN_A] },
+      hub_parceiros: { data: [A] },
+    });
+    const out = await listarCandidatosParceiro(supabase, INPUT);
+
+    expect(tabelasConsultadas).toEqual(["hub_fornecedores"]); // não cai pra parceiros
+    expect(out.map((c) => c.parceiro_id)).toEqual(["FA"]);
+    // mercado_principal "ARQ" foi casado como `mercado` (mesma cidade + carga 0 + homologado).
+    expect(out[0].score).toBe(100);
+    expect(out[0].motivo).toContain("mercado ARQ");
+  });
+
+  it("='FORNECEDORES' (caixa alta) também ativa a fonte fornecedores", async () => {
+    process.env.MOTOR_FONTE = "FORNECEDORES";
+    const { supabase, tabelasConsultadas } = mockSupabasePorTabela({
+      hub_fornecedores: { data: [FORN_A] },
+    });
+    const out = await listarCandidatosParceiro(supabase, INPUT);
+    expect(tabelasConsultadas).toEqual(["hub_fornecedores"]);
+    expect(out.map((c) => c.parceiro_id)).toEqual(["FA"]);
+  });
+});
+
+describe("MOTOR_FONTE — fallback fornecedores → parceiros (resiliência)", () => {
+  it("fornecedores VAZIO → cai para hub_parceiros", async () => {
+    process.env.MOTOR_FONTE = "fornecedores";
+    const { supabase, tabelasConsultadas } = mockSupabasePorTabela({
+      hub_fornecedores: { data: [] },
+      hub_parceiros: { data: [A] },
+    });
+    const out = await listarCandidatosParceiro(supabase, INPUT);
+
+    expect(tabelasConsultadas).toEqual(["hub_fornecedores", "hub_parceiros"]);
+    expect(out.map((c) => c.parceiro_id)).toEqual(["A"]); // veio do fallback
+  });
+
+  it("fornecedores ERRO → cai para hub_parceiros", async () => {
+    process.env.MOTOR_FONTE = "fornecedores";
+    const { supabase, tabelasConsultadas } = mockSupabasePorTabela({
+      hub_fornecedores: { data: null, error: { message: "boom" } },
+      hub_parceiros: { data: [A] },
+    });
+    const out = await listarCandidatosParceiro(supabase, INPUT);
+
+    expect(tabelasConsultadas).toEqual(["hub_fornecedores", "hub_parceiros"]);
+    expect(out.map((c) => c.parceiro_id)).toEqual(["A"]);
+  });
+
+  it("fornecedores E parceiros vazios → [] (sem candidatos)", async () => {
+    process.env.MOTOR_FONTE = "fornecedores";
+    const { supabase } = mockSupabasePorTabela({
+      hub_fornecedores: { data: [] },
+      hub_parceiros: { data: [] },
+    });
+    expect(await listarCandidatosParceiro(supabase, INPUT)).toEqual([]);
+  });
+});
+
+describe("MOTOR_FONTE — escopo de tenant aplicado nas DUAS fontes", () => {
+  it("fornecedores: aplica o filtro de tenant (mesma barreira do parceiros)", async () => {
+    process.env.MOTOR_FONTE = "fornecedores";
+    const { supabase, orFiltros } = mockSupabasePorTabela({
+      hub_fornecedores: { data: [FORN_A] },
+    });
+    await listarCandidatosParceiro(supabase, INPUT); // sem tenant_id → tenant padrão
+
+    expect(orFiltros).toContain(tenantScopeOrFilter(DEFAULT_OBRA10_TENANT_ID));
+  });
+
+  it("fallback fornecedores→parceiros aplica o filtro de tenant nas DUAS leituras", async () => {
+    process.env.MOTOR_FONTE = "fornecedores";
+    const outroTenant = "11111111-1111-4111-8111-111111111111";
+    const { supabase, orFiltros } = mockSupabasePorTabela({
+      hub_fornecedores: { data: [] }, // força o fallback
+      hub_parceiros: { data: [A] },
+    });
+    await listarCandidatosParceiro(supabase, { ...INPUT, tenant_id: outroTenant });
+
+    // O escopo do tenant pedido tem de aparecer nas duas consultas.
+    expect(orFiltros).toHaveLength(2);
+    expect(orFiltros.every((f) => f === tenantScopeOrFilter(outroTenant))).toBe(true);
   });
 });

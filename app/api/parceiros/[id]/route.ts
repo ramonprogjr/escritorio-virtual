@@ -8,6 +8,7 @@ import {
   tenantScopeOrFilter,
 } from "@/lib/tenant-default";
 import { MERCADOS_PREFIXO } from "@/lib/crm/negocio-cadastro";
+import { parceiroParaFornecedor } from "@/lib/crm/parceiro-fornecedor-map";
 
 function db() {
   return createClient(
@@ -113,12 +114,19 @@ export async function PATCH(
 
   // Update com escopo de tenant: id + (tenant atual / legado / null). Fallback sem
   // o filtro `.or` se a coluna tenant_id ainda não existir no schema.
+  // Campos extras (telefone/geo/carga/financeiro/tenant) alimentam o espelho
+  // hub_fornecedores no sync best-effort abaixo. A resposta da API segue
+  // retornando id/nome/mercado/recebe_leads/status (campos extras só agregam).
   const runUpdate = (withTenantFilter: boolean) => {
     let query = supabase.from("hub_parceiros").update(campos).eq("id", id);
     if (withTenantFilter) {
       query = query.or(tenantScopeOrFilter(tenantId));
     }
-    return query.select("id, nome, mercado, recebe_leads, status").maybeSingle();
+    return query
+      .select(
+        "id, nome, telefone, mercado, especialidade, cidade, estado, recebe_leads, status, total_leads_recebidos, status_financeiro, tenant_id"
+      )
+      .maybeSingle();
   };
 
   let { data, error } = await runUpdate(true);
@@ -150,5 +158,92 @@ export async function PATCH(
       () => undefined
     );
 
+  // Espelho parceiro → fornecedor (BEST-EFFORT). Mantém hub_fornecedores em sincronia
+  // quando o gestor edita o parceiro, para o motor (atrás da flag MOTOR_FONTE) nunca
+  // ler dados stale. NUNCA derruba o PATCH: qualquer falha aqui é só logada.
+  await sincronizarEspelhoFornecedor(supabase, data, tenantId);
+
   return NextResponse.json({ parceiro: data });
+}
+
+/** Linha do parceiro retornada pelo update (campos usados pelo espelho). */
+type ParceiroAtualizado = {
+  id?: unknown;
+  nome?: unknown;
+  telefone?: unknown;
+  mercado?: unknown;
+  especialidade?: unknown;
+  cidade?: unknown;
+  estado?: unknown;
+  recebe_leads?: unknown;
+  status?: unknown;
+  total_leads_recebidos?: unknown;
+  status_financeiro?: unknown;
+  tenant_id?: unknown;
+};
+
+/**
+ * UPSERT best-effort em hub_fornecedores a partir do parceiro recém-atualizado.
+ *
+ * Usa o contrato PURO `parceiroParaFornecedor` para derivar mercados[]/mercado_principal
+ * e status_acesso (menor privilégio: só `homologado` → `aprovado`). Mapeia o shape do
+ * contrato para as colunas reais de hub_fornecedores. `id`/`origem_parceiro_id` recebem
+ * o id do parceiro (idempotente: re-editar o mesmo parceiro atualiza a mesma linha).
+ *
+ * Best-effort por design — encapsulado em try/catch; falha aqui jamais derruba o PATCH.
+ */
+async function sincronizarEspelhoFornecedor(
+  supabase: ReturnType<typeof db>,
+  parceiro: ParceiroAtualizado | null,
+  tenantId: string
+): Promise<void> {
+  try {
+    if (!parceiro?.id) return;
+
+    const mercadoStr =
+      typeof parceiro.mercado === "string" && parceiro.mercado.trim()
+        ? parceiro.mercado.trim()
+        : null;
+    const statusStr = typeof parceiro.status === "string" ? parceiro.status : null;
+
+    const derivado = parceiroParaFornecedor({ mercado: mercadoStr, status: statusStr });
+
+    const row = {
+      id: String(parceiro.id),
+      origem_parceiro_id: String(parceiro.id),
+      tenant_id:
+        (typeof parceiro.tenant_id === "string" && parceiro.tenant_id) || tenantId,
+      nome: typeof parceiro.nome === "string" ? parceiro.nome : "",
+      telefone: typeof parceiro.telefone === "string" ? parceiro.telefone : null,
+      especialidade:
+        typeof parceiro.especialidade === "string" ? parceiro.especialidade : null,
+      cidade: typeof parceiro.cidade === "string" ? parceiro.cidade : null,
+      estado: typeof parceiro.estado === "string" ? parceiro.estado : null,
+      // mercados é JSONB; supabase-js serializa o array nativamente.
+      mercados: derivado.mercados,
+      mercado_principal: derivado.mercado_principal,
+      // status = espelho do parceiro (o motor filtra por status='homologado');
+      // status_acesso = porta de homologação (menor privilégio do contrato puro).
+      status: derivado.status,
+      status_acesso: derivado.status_acesso,
+      recebe_leads: parceiro.recebe_leads === true,
+      total_leads_recebidos:
+        typeof parceiro.total_leads_recebidos === "number"
+          ? parceiro.total_leads_recebidos
+          : null,
+      status_financeiro:
+        typeof parceiro.status_financeiro === "string"
+          ? parceiro.status_financeiro
+          : null,
+    };
+
+    const { error } = await supabase
+      .from("hub_fornecedores")
+      .upsert(row, { onConflict: "id" });
+    if (error) {
+      console.warn("[parceiros PATCH] sync espelho hub_fornecedores falhou:", error.message);
+    }
+  } catch (e) {
+    console.warn("[parceiros PATCH] sync espelho hub_fornecedores exceção:", e);
+  }
 }

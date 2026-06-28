@@ -1,7 +1,22 @@
 {
-  "geradoEm": "2026-06-28T16:03:16.874Z",
+  "geradoEm": "2026-06-28T16:21:26.665Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "bd027c9c78701da2da8ea7bd6065a306de3e8a42",
+      "hashCurto": "bd027c9",
+      "mensagem": "KPI 'Sem Resposta' parava de mentir — exclui encaminhados + KPI 'Encaminhados'",
+      "mensagemRaw": "fix(leads): KPI 'Sem Resposta' parava de mentir — exclui encaminhados + KPI 'Encaminhados'",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T16:03:58.000Z",
+      "hora": "13:03",
+      "arquivos": [
+        "app/crm/leads/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
     {
       "hash": "feff1a06c1b55ff26fd62aba76e68e1104993a94",
       "hashCurto": "feff1a0",
