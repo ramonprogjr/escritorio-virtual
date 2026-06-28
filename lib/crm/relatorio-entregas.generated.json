@@ -1,7 +1,45 @@
 {
-  "geradoEm": "2026-06-28T01:57:40.268Z",
+  "geradoEm": "2026-06-28T02:12:11.444Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "30ecfd739a90ab4ff4df679336445e9b6717f60b",
+      "hashCurto": "30ecfd7",
+      "mensagem": "IA-first onde o motor ja existe — fila de Distribuicao + Fornecedores no motor + fim do UUID digitado",
+      "mensagemRaw": "feat(F3): IA-first onde o motor ja existe — fila de Distribuicao + Fornecedores no motor + fim do UUID digitado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T02:12:03.000Z",
+      "hora": "23:12",
+      "arquivos": [
+        "app/api/crm/distribuicao/fila/route.ts",
+        "app/api/crm/fornecedores/route.ts",
+        "app/crm/ciclos/page.tsx",
+        "app/crm/distribuicao/page.tsx",
+        "app/crm/fornecedores/page.tsx",
+        "app/crm/pedidos/page.tsx",
+        "app/crm/projetos/page.tsx",
+        "components/crm/EntitySelect.tsx",
+        "components/crm/FilaDistribuicao.tsx",
+        "lib/crm/distribuir-lead.test.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 5,
+        "components/crm": 2,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "11d6dece3530304afa5b34df63eb143f0a6ab7e3",
+      "hashCurto": "11d6dec",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T01:58:29.000Z",
+      "hora": "22:58",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "8494ba67aeeab53fee8abf2d501e455acfc1fa75",
       "hashCurto": "8494ba6",
