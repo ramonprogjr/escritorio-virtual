@@ -294,7 +294,11 @@ async function executarFerramentaHubBuiltin(
     case "hub_crm_criar_cadastro": {
       const nome = typeof args.nome === "string" ? args.nome.trim() : "";
       const telefoneArg = typeof args.telefone === "string" ? args.telefone.trim() : "";
-      const telefone = telefoneArg || telSessao;
+      // SEGURANÇA (auditoria 28/jun): em atendimento WhatsApp o cadastro é SEMPRE do lead da sessão
+      // — não aceita telefone arbitrário por prompt injection (defesa em profundidade; a tool já vem
+      // desligada no merge WhatsApp por padrão). Fora do canal, o telefone do arg vale.
+      const telefone =
+        ctx.modoOperacao === "canal_whatsapp" ? telSessao : telefoneArg || telSessao;
       if (!nome) return JSON.stringify({ erro: "nome_obrigatorio" });
       if (!telefone || telefone.length < 10) {
         return JSON.stringify({ erro: "telefone_obrigatorio" });
@@ -408,8 +412,15 @@ async function executarFerramentaHubBuiltin(
         });
       }
 
+      // SEGURANÇA (auditoria 28/jun): em atendimento WhatsApp IGNORA numero_destino — o menu vai
+      // SEMPRE para o telefone do lead da sessão. Impede um cliente injetar "manda menu pro +55X"
+      // e usar o número/token do escritório para spam/phishing a terceiros. Override só fora do canal.
       const overrideNum =
-        typeof args.numero_destino === "string" ? args.numero_destino.replace(/\D/g, "") : "";
+        ctx.modoOperacao === "canal_whatsapp"
+          ? ""
+          : typeof args.numero_destino === "string"
+            ? args.numero_destino.replace(/\D/g, "")
+            : "";
       let number = overrideNum;
       if (!number) {
         const { data: leadRow, error: el } = await supabase

@@ -1,7 +1,28 @@
 {
-  "geradoEm": "2026-06-28T18:36:09.470Z",
+  "geradoEm": "2026-06-28T18:43:58.837Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "8a1dfc8cb6fe4d88c0bdbdd06120dcbe8cb3521d",
+      "hashCurto": "8a1dfc8",
+      "mensagem": "fix(seg)+feat(fluxo): PATCH parceiro usa tenant da sessao + visao guiada simples do fluxo",
+      "mensagemRaw": "fix(seg)+feat(fluxo): PATCH parceiro usa tenant da sessao + visao guiada simples do fluxo",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T18:36:41.000Z",
+      "hora": "15:36",
+      "arquivos": [
+        "app/api/parceiros/[id]/route.ts",
+        "components/crm/PlaybookFlowReactFlowPanel.tsx",
+        "components/crm/playbook-flow-visual/FlowGuiadoView.tsx",
+        "lib/playbook/flow-guided-edit.test.ts",
+        "lib/playbook/flow-guided-edit.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "components/crm": 2,
+        "outros": 2
+      }
+    },
     {
       "hash": "dc6f574dd52b926baebf1f161b864f3626537460",
       "hashCurto": "dc6f574",
