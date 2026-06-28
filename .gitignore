@@ -54,3 +54,12 @@ next-env.d.ts
 
 # local server logs (não versionar)
 dev.log
+
+# temporários de build/scratch e screenshots de QA
+.tmp_*
+*.tmp.log
+/crit-*.png
+/f4-*.png
+/v-*.png
+/wizard-modo*.png
+/editor-*.png
