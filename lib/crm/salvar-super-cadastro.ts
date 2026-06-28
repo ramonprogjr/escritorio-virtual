@@ -25,7 +25,13 @@ import { enriquecerLeadComPipeline } from "@/lib/crm/resolve-pipeline";
 import { metadataRoutingLead } from "@/lib/crm/lead-routing-rules";
 import { resolverDestinoLead } from "@/lib/crm/lead-routing-config";
 import { criarVinculoPessoaEmpresa } from "@/lib/crm/pessoa-empresa-vinculo";
-import { isMissingPgColumn, isTenantFkError } from "@/lib/tenant-default";
+import { isMissingPgColumn, isTenantFkError, tenantScopeOrFilter } from "@/lib/tenant-default";
+
+/** Violação de UNIQUE (documento/telefone/cnpj já existe) — corrida que passou pelo SELECT. */
+function isUniqueViolation(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  return (err as { code?: string }).code === "23505";
+}
 
 export type SalvarSuperCadastroResult =
   | {
@@ -217,6 +223,7 @@ export async function salvarSuperCadastro(
 ): Promise<SalvarSuperCadastroResult> {
   const pessoaPayload = payloadParaPessoa(data, opts.opencnpjSnapshot);
   const tel = resolverTelefoneCadastro(pessoaPayload.telefone);
+  const tenantScope = tenantScopeOrFilter(opts.tenantId);
 
   const [{ data: dupTel }, dupDoc] = await Promise.all([
     tel
@@ -224,18 +231,20 @@ export async function salvarSuperCadastro(
           .from("hub_pessoas")
           .select("id, nome, codigo")
           .eq("telefone", tel)
+          .or(tenantScope)
           .maybeSingle()
       : Promise.resolve({ data: null }),
     pessoaPayload.documento
-      ? buscarPessoaPorDocumento(supabase, data.tipo_pessoa, pessoaPayload.documento)
+      ? buscarPessoaPorDocumento(supabase, data.tipo_pessoa, pessoaPayload.documento, opts.tenantId)
       : Promise.resolve(null),
   ]);
 
+  // 409 NÃO expõe nome/código de outro registo (pode ser de outro tenant em base legada).
   if (dupTel) {
     return {
       ok: false,
       status: 409,
-      error: `Telefone já cadastrado para ${dupTel.nome} (${dupTel.codigo || "sem código"}).`,
+      error: "Telefone já cadastrado neste escritório.",
     };
   }
 
@@ -244,7 +253,7 @@ export async function salvarSuperCadastro(
     return {
       ok: false,
       status: 409,
-      error: `${label} já cadastrado para ${dupDoc.nome} (${dupDoc.codigo || "sem código"}).`,
+      error: `${label} já cadastrado neste escritório.`,
     };
   }
 
@@ -286,6 +295,15 @@ export async function salvarSuperCadastro(
 
   const insPessoa = await opts.insertHubPessoa(rowPessoa, opts.tenantId);
   if (insPessoa.error || !insPessoa.data?.id) {
+    // Corrida que passou pelo SELECT: o UNIQUE (documento/telefone) bateu no insert.
+    // Devolve 409 sem vazar dados de outro registo (mensagem genérica).
+    if (isUniqueViolation(insPessoa.error)) {
+      return {
+        ok: false,
+        status: 409,
+        error: "Contacto já cadastrado (documento ou telefone duplicado).",
+      };
+    }
     const pg =
       insPessoa.error && typeof insPessoa.error === "object"
         ? (insPessoa.error as { message?: string; code?: string; hint?: string })
@@ -328,6 +346,7 @@ export async function salvarSuperCadastro(
         .from("hub_empresas")
         .select("id")
         .eq("cnpj", empPayload.cnpj)
+        .or(tenantScope)
         .maybeSingle();
 
       if (dupEmp) return dupEmp.id as string;

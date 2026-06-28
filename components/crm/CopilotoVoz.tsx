@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Mic, Square, X, Loader2, Sparkles, Check, ChevronDown, AlertTriangle } from "lucide-react";
+import { Mic, Square, X, Loader2, Sparkles, Check, ChevronDown, AlertTriangle, Pencil, Send } from "lucide-react";
 import { useCopilotoVoz } from "@/hooks/useCopilotoVoz";
 
 const HINT_KEY = "copiloto-hint-visto";
@@ -226,6 +226,9 @@ export function CopilotoVoz() {
   const pathname = usePathname() || "/crm";
   const {
     estado,
+    modo,
+    setModo,
+    enviarTexto,
     transcricaoLive,
     resultado,
     mensagem,
@@ -240,6 +243,70 @@ export function CopilotoVoz() {
 
   const [verJson, setVerJson] = useState(false);
   const [verResultadoJson, setVerResultadoJson] = useState(false);
+
+  // Modo texto: valor do campo + ref p/ foco automático ao entrar no modo.
+  const [textoInput, setTextoInput] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Gesto de arrastar (touch + mouse) p/ alternar voz↔texto, no MESMO layout.
+  const swipeRef = useRef<{ startX: number; startY: number; active: boolean } | null>(null);
+  const [arrasto, setArrasto] = useState(0); // deslocamento visual durante o swipe (px)
+
+  // Foco automático no campo ao entrar no modo texto com o painel aberto.
+  useEffect(() => {
+    if (modo === "texto" && estado !== "idle") {
+      const t = setTimeout(() => inputRef.current?.focus(), 60);
+      return () => clearTimeout(t);
+    }
+  }, [modo, estado]);
+
+  const trocarModo = useCallback(
+    (m: "voz" | "texto") => {
+      setArrasto(0);
+      setModo(m);
+    },
+    [setModo],
+  );
+
+  const submeterTexto = useCallback(() => {
+    const v = textoInput.trim();
+    if (!v) return;
+    enviarTexto(v);
+    setTextoInput("");
+  }, [textoInput, enviarTexto]);
+
+  // Swipe horizontal no conteúdo do painel: arrastar p/ a esquerda → texto; p/ a direita → voz.
+  const onSwipeStart = useCallback((e: React.PointerEvent) => {
+    // Não captura sobre o textarea/botões interativos (deixa selecionar/escrever).
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === "TEXTAREA" || tag === "INPUT") return;
+    swipeRef.current = { startX: e.clientX, startY: e.clientY, active: true };
+  }, []);
+
+  const onSwipeMove = useCallback((e: React.PointerEvent) => {
+    const s = swipeRef.current;
+    if (!s?.active) return;
+    const dx = e.clientX - s.startX;
+    const dy = e.clientY - s.startY;
+    // Só trata como swipe horizontal se o movimento for predominante no eixo X.
+    if (Math.abs(dx) < Math.abs(dy)) return;
+    setArrasto(Math.max(-60, Math.min(60, dx)));
+  }, []);
+
+  const onSwipeEnd = useCallback(
+    (e: React.PointerEvent) => {
+      const s = swipeRef.current;
+      swipeRef.current = null;
+      if (!s?.active) return;
+      const dx = e.clientX - s.startX;
+      const dy = e.clientY - s.startY;
+      setArrasto(0);
+      if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return; // gesto curto/vertical = ignora
+      if (dx < 0) trocarModo("texto"); // arrastou p/ a esquerda → escrever
+      else trocarModo("voz"); // arrastou p/ a direita → falar
+    },
+    [trocarModo],
+  );
 
   // Hint de descoberta do FAB
   const [mostrarHint, setMostrarHint] = useState(false);
@@ -433,14 +500,116 @@ export function CopilotoVoz() {
             </button>
           </div>
 
-          {/* Zona 2 — transcrição ao vivo */}
-          <div style={{
-            minHeight: 64, maxHeight: 140, overflowY: "auto",
-            background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12,
-            padding: 12, color: transcricaoLive ? "#e6edf3" : "#6e7681",
-            fontSize: 14, lineHeight: 1.5,
-          }}>
-            {transcricaoLive || (ouvindo ? "Fale agora…" : "Toque no microfone e fale.")}
+          {/* Toggle Falar / Escrever — segmentado, na marca. Trocar de modo NÃO fecha o painel. */}
+          <div
+            role="tablist"
+            aria-label="Modo de entrada do copiloto"
+            style={{
+              display: "flex", gap: 4, padding: 4,
+              background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12,
+            }}
+          >
+            {([
+              { id: "voz", rotulo: "Falar", Icone: Mic },
+              { id: "texto", rotulo: "Escrever", Icone: Pencil },
+            ] as const).map(({ id, rotulo, Icone }) => {
+              const ativo = modo === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={ativo}
+                  aria-label={id === "voz" ? "Falar com o copiloto" : "Escrever para o copiloto"}
+                  onClick={() => trocarModo(id)}
+                  style={{
+                    flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    padding: "10px 0", borderRadius: 9, cursor: "pointer",
+                    border: ativo ? "1px solid #c9a24a" : "1px solid transparent",
+                    background: ativo ? "linear-gradient(180deg, #1d5c3c, #003b26)" : "transparent",
+                    color: ativo ? "#f0c869" : "#8aa99a",
+                    fontWeight: 800, fontSize: 13.5,
+                    transition: "background 180ms, color 180ms, border-color 180ms",
+                  }}
+                >
+                  <Icone size={16} /> {rotulo}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Zona 2 — conteúdo que alterna voz↔texto (arrastável). MESMO layout, transição suave. */}
+          <div
+            onPointerDown={onSwipeStart}
+            onPointerMove={onSwipeMove}
+            onPointerUp={onSwipeEnd}
+            onPointerCancel={onSwipeEnd}
+            style={{
+              transform: arrasto ? `translateX(${arrasto}px)` : "none",
+              opacity: arrasto ? 1 - Math.min(0.4, Math.abs(arrasto) / 150) : 1,
+              transition: arrasto ? "none" : "transform 200ms cubic-bezier(0.33,1,0.68,1), opacity 200ms",
+              touchAction: "pan-y",
+            }}
+          >
+            {modo === "texto" ? (
+              /* MODO TEXTO — campo no mesmo estilo verde/dourado. Enter envia, Shift+Enter quebra linha. */
+              <div style={{
+                display: "flex", alignItems: "flex-end", gap: 8,
+                background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12,
+                padding: 8,
+              }}>
+                <textarea
+                  ref={inputRef}
+                  value={textoInput}
+                  onChange={(e) => setTextoInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      submeterTexto();
+                    }
+                  }}
+                  rows={1}
+                  aria-label="Escreva o que quer fazer"
+                  placeholder="Escreva o que quer fazer… (ex.: 'resumo deste lead')"
+                  disabled={processando}
+                  style={{
+                    flex: 1, resize: "none", minHeight: 44, maxHeight: 120,
+                    background: "transparent", border: "none", outline: "none",
+                    color: "#e6edf3", fontSize: 14, lineHeight: 1.5,
+                    padding: "10px 8px", fontFamily: "inherit",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={submeterTexto}
+                  disabled={!textoInput.trim() || processando}
+                  aria-label="Enviar"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 44, height: 44, flexShrink: 0, borderRadius: 11,
+                    border: "1px solid #c9a24a",
+                    background: textoInput.trim() && !processando
+                      ? "linear-gradient(180deg, #1d5c3c, #003b26)"
+                      : "#16271e",
+                    color: textoInput.trim() && !processando ? "#f0c869" : "#5c6b62",
+                    cursor: textoInput.trim() && !processando ? "pointer" : "default",
+                    transition: "background 180ms, color 180ms",
+                  }}
+                >
+                  {processando ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                </button>
+              </div>
+            ) : (
+              /* MODO VOZ — transcrição ao vivo (inalterado). */
+              <div style={{
+                minHeight: 64, maxHeight: 140, overflowY: "auto",
+                background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12,
+                padding: 12, color: transcricaoLive ? "#e6edf3" : "#6e7681",
+                fontSize: 14, lineHeight: 1.5,
+              }}>
+                {transcricaoLive || (ouvindo ? "Fale agora…" : "Toque no microfone e fale.")}
+              </div>
+            )}
           </div>
 
           {/* Zona 3 — resposta/resultado */}
@@ -637,7 +806,8 @@ export function CopilotoVoz() {
                 background: "#003b26", color: "#c9a24a", fontWeight: 800, fontSize: 13, cursor: "pointer",
               }}
             >
-              <Mic size={15} /> Falar de novo
+              {modo === "texto" ? <Pencil size={15} /> : <Mic size={15} />}
+              {modo === "texto" ? "Escrever de novo" : "Falar de novo"}
             </button>
           ) : null}
         </div>
@@ -663,7 +833,7 @@ export function CopilotoVoz() {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
             <span style={{ color: "#2f9e8f", fontWeight: 700, fontSize: 11.5, letterSpacing: 0.3, textTransform: "uppercase" }}>
-              Tente dizer...
+              Tente dizer / escrever...
             </span>
             <button
               type="button"

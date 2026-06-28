@@ -100,39 +100,62 @@ export function webhookAutenticado(request: NextRequest, rawBody: string, secret
 }
 
 function db() {
+  // SEM fallback p/ ANON: com anon + RLS os INSERTs falham em silêncio (webhook
+  // responde 200 e nada é gravado = perda de lead). Falhar cedo, igual às outras rotas.
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
 async function encontrarOuCriarPessoa(telefone: string, nome: string, origem: string) {
   const supabase = db();
 
-  const { data: pessoaExistente } = await supabase
-    .from("hub_pessoas")
-    .select("*")
-    .eq("telefone", telefone)
-    .maybeSingle();
+  // Telefone CANÔNICO (só dígitos, E.164 sem +): a MESMA forma na busca e na gravação.
+  // Sem isto, um cadastro manual (com máscara/+55) e o auto-cadastro do WhatsApp
+  // (só dígitos) viram 2 pessoas para o mesmo número.
+  const telCanonico = telefoneConversaId(telefone);
 
+  const buscarPorTelefone = async () =>
+    (
+      await supabase
+        .from("hub_pessoas")
+        .select("*")
+        .eq("telefone", telCanonico)
+        .maybeSingle()
+    ).data;
+
+  const pessoaExistente = await buscarPorTelefone();
   if (pessoaExistente) return pessoaExistente;
 
   const codigo = await gerarCodigoPessoa(supabase);
 
   const nomePessoa = pushNameParaNomeExibicao(nome) || nome?.trim() || "Lead WhatsApp";
 
-  const { data: novaPessoa } = await supabase
+  const { data: novaPessoa, error } = await supabase
     .from("hub_pessoas")
     .insert({
       codigo,
       nome: nomePessoa,
-      telefone,
-      whatsapp_id: telefone,
+      telefone: telCanonico,
+      whatsapp_id: telCanonico,
       tipo: "lead",
       origem: origem || "whatsapp",
+      tenant_id: defaultTenantId(),
     })
     .select()
     .single();
+
+  // Corrida / telefone já existente noutro formato: o UNIQUE bate (23505) e o insert
+  // devolve null. Re-buscar a pessoa existente em vez de seguir com pessoa nula.
+  if (error) {
+    if ((error as { code?: string }).code === "23505") {
+      const reencontrada = await buscarPorTelefone();
+      if (reencontrada) return reencontrada;
+    }
+    console.error("[WEBHOOK] Erro ao criar pessoa:", error.message ?? error);
+    return null;
+  }
 
   return novaPessoa;
 }

@@ -444,6 +444,25 @@ export default function CadastroPage() {
         >
           Mão de obra
         </a>
+        <a
+          href="/crm/pessoas/duplicatas"
+          title="Revisar e mesclar contatos duplicados (mesmo CPF/telefone)"
+          style={{
+            background: "transparent",
+            color: "#8b949e",
+            border: "1px solid #1d3a2c",
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          Duplicatas
+        </a>
         <button
           type="button"
           onClick={() => {

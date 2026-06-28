@@ -18,11 +18,14 @@ type SpeechRecognitionLike = {
 
 export type CopilotoEstado =
   | "idle"
+  | "aguardando" // painel aberto sem captura ativa (modo texto / pós-troca de modo)
   | "listening"
   | "processing"
   | "confirming"
   | "done"
   | "erro";
+/** Modo de entrada do copiloto: voz (microfone) ou texto (teclado). Default 'voz'. */
+export type CopilotoModo = "voz" | "texto";
 export type CopilotoContexto = { rota: string; leadId?: string };
 
 /** Proposta de ESCRITA aguardando confirmação humana (nunca executa sozinha). */
@@ -47,6 +50,8 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
 
 export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
   const [estado, setEstado] = useState<CopilotoEstado>("idle");
+  // Modo de entrada — 'voz' por padrão (preserva a experiência atual). Texto é a alternativa.
+  const [modo, setModoState] = useState<CopilotoModo>("voz");
   const [transcricaoLive, setTranscricaoLive] = useState("");
   const [resultado, setResultado] = useState<unknown>(null);
   const [mensagem, setMensagem] = useState("");
@@ -193,6 +198,19 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     [executarProposta]
   );
 
+  // MODO TEXTO: o texto digitado segue EXATAMENTE o mesmo caminho do transcript de voz.
+  // Reusa `processar` (interpretar → confirmar → executar) — zero duplicação de lógica.
+  const enviarTexto = useCallback(
+    (texto: string) => {
+      const cmd = texto.trim();
+      if (!cmd) return;
+      // Eco no card (mesma zona que mostra a transcrição da voz).
+      setTranscricaoLive(cmd);
+      void processar(cmd);
+    },
+    [processar]
+  );
+
   // Integridade de contexto: se a rota/lead mudar enquanto há uma ESCRITA pendente,
   // a proposta foi assinada para o lead ANTERIOR — descarta e avisa, em vez de arriscar
   // executar a alteração no lead errado (o servidor também recusaria, pois o leadId
@@ -249,6 +267,23 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       /* noop */
     }
   }, []);
+
+  // Alterna voz↔texto sem fechar o painel. Ao sair da voz enquanto ouve, para o microfone.
+  const setModo = useCallback(
+    (m: CopilotoModo) => {
+      setModoState((atual) => {
+        if (atual === m) return atual;
+        if (m === "texto") {
+          // Entrando no texto: silencia qualquer captura de voz em andamento e
+          // segura o painel aberto em "aguardando" (parar() poderia voltar a idle).
+          parar();
+          setEstado((e) => (e === "idle" || e === "listening" ? "aguardando" : e));
+        }
+        return m;
+      });
+    },
+    [parar]
+  );
 
   // Fallback Voxtral: envia o áudio gravado para transcrição no servidor.
   const enviarParaTranscrever = useCallback(
@@ -384,8 +419,16 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
 
   const toggle = useCallback(() => {
     if (estado === "listening") parar();
-    else if (estado === "idle" || estado === "done" || estado === "erro") iniciar();
-  }, [estado, iniciar, parar]);
+    else if (estado === "idle" || estado === "done" || estado === "erro" || estado === "aguardando") {
+      // No modo texto, "de novo" volta ao painel aguardando (sem microfone).
+      if (modo === "texto") {
+        setTranscricaoLive("");
+        setResultado(null);
+        setMensagem("");
+        setEstado("aguardando");
+      } else iniciar();
+    }
+  }, [estado, modo, iniciar, parar]);
 
   const cancelar = useCallback(() => {
     limparSilencio();
@@ -410,12 +453,15 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
   }, []);
 
   // Toque no FAB: idle→ouvir, ouvindo→parar, processando→ignora, resto (done/erro/confirmando)→FECHA.
+  // No modo TEXTO, idle apenas ABRE o painel (não dispara o microfone).
   const aoTocarFab = useCallback(() => {
     if (estado === "listening") parar();
     else if (estado === "processing") return;
-    else if (estado === "idle") iniciar();
-    else cancelar();
-  }, [estado, iniciar, parar, cancelar]);
+    else if (estado === "idle" || estado === "aguardando") {
+      if (modo === "texto") setEstado("aguardando");
+      else iniciar();
+    } else cancelar();
+  }, [estado, modo, iniciar, parar, cancelar]);
 
   useEffect(() => () => {
     limparSilencio();
@@ -434,6 +480,9 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
 
   return {
     estado,
+    modo,
+    setModo,
+    enviarTexto,
     transcricaoLive,
     resultado,
     mensagem,

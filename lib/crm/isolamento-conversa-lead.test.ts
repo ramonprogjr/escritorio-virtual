@@ -10,4 +10,13 @@ describe("isolamento-conversa-lead", () => {
     expect(telefonesConversaEquivalentes("5511999990000", "11999990000")).toBe(true);
     expect(telefonesConversaEquivalentes("5511999990000", "5511888880000")).toBe(false);
   });
+
+  it("forma canônica é IDÊNTICA p/ máscara, +55 e só dígitos (dedup WhatsApp×manual)", () => {
+    // Invariante do fix do webhook: gravar e buscar usam a MESMA forma canônica,
+    // logo cadastro manual (máscara) e auto-cadastro WhatsApp (dígitos) NÃO duplicam.
+    const canonico = "5511970364763";
+    expect(telefoneConversaId("+55 (11) 97036-4763")).toBe(canonico);
+    expect(telefoneConversaId("55 11 97036-4763")).toBe(canonico);
+    expect(telefoneConversaId("5511970364763")).toBe(canonico);
+  });
 });

@@ -30,4 +30,11 @@ export const crmFeatureFlags = {
       process.env.NEXT_PUBLIC_CRM_PLAYBOOK_FLOW_VISUAL_SIDEOVER,
       process.env.NODE_ENV === "development"
     ),
+  /**
+   * Merge de duplicatas de pessoas. Detecção + comparação ficam SEMPRE ligadas;
+   * esta flag protege apenas a ação REAL de mesclar (POST). Default OFF: o dono
+   * liga após aprovar o 1º par real ("em homologação" até lá). NEXT_PUBLIC_* para
+   * o botão da tela ler o mesmo estado que a API valida.
+   */
+  mergeDuplicatas: () => publicEnvBool(process.env.NEXT_PUBLIC_CRM_MERGE_DUPLICATAS, false),
 } as const;

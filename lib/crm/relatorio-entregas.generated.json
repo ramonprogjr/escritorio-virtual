@@ -1,7 +1,60 @@
 {
-  "geradoEm": "2026-06-28T19:37:52.905Z",
+  "geradoEm": "2026-06-28T22:49:37.290Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "1d50d9c257330e9d2d4bc8ee99e5371f6c6874c7",
+      "hashCurto": "1d50d9c",
+      "mensagem": "erro da Mistral mostra a causa exata (401 chave / 429 creditos / 422 modelo)",
+      "mensagemRaw": "fix(ia): erro da Mistral mostra a causa exata (401 chave / 429 creditos / 422 modelo)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T21:52:18.000Z",
+      "hora": "18:52",
+      "arquivos": [
+        "lib/ia/mistral-chat.ts"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "276bd7505677b0fa70c4fbcc6c8af4a6e8b8ca74",
+      "hashCurto": "276bd75",
+      "mensagem": "passo a passo das acoes pendentes de producao (Mistral/billing, 2 migracoes, flip MOTOR_FONTE, token, decisoes do dono)",
+      "mensagemRaw": "docs(dev): passo a passo das acoes pendentes de producao (Mistral/billing, 2 migracoes, flip MOTOR_FONTE, token, decisoes do dono)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T21:47:15.000Z",
+      "hora": "18:47",
+      "arquivos": [
+        "docs/HANDOFF-DEV-ACOES-PENDENTES.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "24155d8a3f0531857717251cca5f27a6c6e43e7c",
+      "hashCurto": "24155d8",
+      "mensagem": "polimento funcional-nao-fachada das telas de trabalho (auditoria #6)",
+      "mensagemRaw": "fix(ux): polimento funcional-nao-fachada das telas de trabalho (auditoria #6)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T19:38:21.000Z",
+      "hora": "16:38",
+      "arquivos": [
+        "app/crm/distribuicao/page.tsx",
+        "app/crm/financeiro/pagar/page.tsx",
+        "app/crm/financeiro/receber/page.tsx",
+        "app/crm/leads/page.tsx",
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/negocios/page.tsx",
+        "app/crm/obras/page.tsx",
+        "components/crm/CrmFinanceDashboard.tsx"
+      ],
+      "areas": {
+        "app/crm": 7,
+        "components/crm": 1
+      }
+    },
     {
       "hash": "3b209b98cd6ddda0c123d8caa7643a06d10fb1bf",
       "hashCurto": "3b209b9",

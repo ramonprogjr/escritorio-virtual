@@ -34,14 +34,22 @@ async function vincularPessoaPorTelefone(
   telefone: string,
   nome: string,
   origem: string,
-  mercados: string[]
+  mercados: string[],
+  tenantId: string
 ): Promise<string | null> {
-  const { data: existente } = await supabase
-    .from("hub_pessoas")
-    .select("id")
-    .eq("telefone", telefone)
-    .maybeSingle();
+  // Busca e gravação SEMPRE escopadas no tenant — senão um lead do tenant A
+  // se vincula a pessoa do tenant B (vazamento) e pessoa nova nasce órfã (tenant NULL).
+  const buscar = async () =>
+    (
+      await supabase
+        .from("hub_pessoas")
+        .select("id")
+        .eq("telefone", telefone)
+        .or(tenantScopeOrFilter(tenantId))
+        .maybeSingle()
+    ).data;
 
+  const existente = await buscar();
   if (existente?.id) return existente.id as string;
 
   const codigo = await gerarCodigoPessoa(supabase);
@@ -54,11 +62,17 @@ async function vincularPessoaPorTelefone(
       telefone,
       tipo: "lead",
       origem: origem || "crm_manual",
+      tenant_id: tenantId,
       dados_extras: { mercados },
     })
     .select("id")
     .single();
 
+  // Corrida: o UNIQUE de telefone bate (23505) → re-buscar a existente no tenant.
+  if ((error as { code?: string } | null)?.code === "23505") {
+    const r = await buscar();
+    if (r?.id) return r.id as string;
+  }
   if (error || !nova) return null;
   return nova.id as string;
 }
@@ -187,10 +201,12 @@ export async function POST(request: NextRequest) {
   const d = validacao.data;
 
   if (d.telefone) {
+    // Dedup restrita ao tenant da sessão (+ legados sem tenant) — não vaza/colide cross-tenant.
     const { data: dup } = await supabase
       .from("hub_leads_crm")
       .select("id, nome")
       .eq("telefone", d.telefone)
+      .or(tenantScopeOrFilter(tenantId))
       .maybeSingle();
 
     if (dup) {
@@ -213,7 +229,8 @@ export async function POST(request: NextRequest) {
       d.telefone,
       d.nome,
       d.origem,
-      d.mercados
+      d.mercados,
+      tenantId
     );
   }
 
