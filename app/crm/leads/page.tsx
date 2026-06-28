@@ -482,9 +482,15 @@ export default function LeadsPage() {
   }, [filtrados]);
 
   const hoje = new Date().toDateString();
-  const semResposta = leadsDoPipeline.filter(l => !["ganho", "perdido"].includes(l.estagio) && Date.now() - new Date(l.atualizado_em).getTime() > 86_400_000).length;
-  const emRisco = leadsDoPipeline.filter(l => !["ganho", "perdido"].includes(l.estagio) && Date.now() - new Date(l.atualizado_em).getTime() > 3_600_000).reduce((s, l) => s + l.valor_estimado, 0);
-  const pipeline = leadsDoPipeline.filter(l => !["ganho", "perdido"].includes(l.estagio)).reduce((s, l) => s + l.valor_estimado, 0);
+  // Etapas que saíram da fila ATIVA do dono: fechadas OU já encaminhadas ao parceiro
+  // (encaminhado = aguardando o parceiro, NÃO "sem resposta minha"). Os KPIs do topo e o
+  // board precisam do mesmo denominador — senão o número mente (board vazio mas "6 sem resposta").
+  const foraDaFilaAtiva = new Set(["ganho", "perdido", "spam_invalido", "convertido_negocio", "encaminhado"]);
+  const ativosNaFila = leadsDoPipeline.filter((l) => !foraDaFilaAtiva.has(l.estagio));
+  const encaminhados = leadsDoPipeline.filter((l) => l.estagio === "encaminhado").length;
+  const semResposta = ativosNaFila.filter(l => Date.now() - new Date(l.atualizado_em).getTime() > 86_400_000).length;
+  const emRisco = ativosNaFila.filter(l => Date.now() - new Date(l.atualizado_em).getTime() > 3_600_000).reduce((s, l) => s + l.valor_estimado, 0);
+  const pipeline = ativosNaFila.reduce((s, l) => s + l.valor_estimado, 0);
 
   const botaoNovoLead = useMemo(
     () => (
@@ -665,11 +671,12 @@ export default function LeadsPage() {
       )}
 
       {/* ─── METRICS ─── */}
-      <div className="grid grid-cols-2 gap-px sm:grid-cols-4 flex-shrink-0 bg-[#1d3a2c]">
+      <div className="grid grid-cols-2 gap-px sm:grid-cols-5 flex-shrink-0 bg-[#1d3a2c]">
         {[
           { label: "Leads Hoje", value: String(leadsDoPipeline.filter(l => new Date(l.criado_em).toDateString() === hoje).length), cor: "#c9a24a" },
           { label: "Sem Resposta +24h", value: String(semResposta), cor: semResposta > 0 ? "#EF4444" : "#22C55E" },
           { label: "Em Risco +1h", value: emRisco > 0 ? moeda(emRisco) : "—", cor: emRisco > 0 ? "#EAB308" : "#6B7280" },
+          { label: "Encaminhados", value: String(encaminhados), cor: encaminhados > 0 ? "#c9a24a" : "#6B7280" },
           { label: "Pipeline Total", value: moeda(pipeline), cor: "#22C55E" },
         ].map(m => (
           <div key={m.label} className="bg-[#0f1d16] px-3 py-2.5 sm:px-5">

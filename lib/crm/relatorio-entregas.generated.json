@@ -1,7 +1,32 @@
 {
-  "geradoEm": "2026-06-28T15:57:07.117Z",
+  "geradoEm": "2026-06-28T16:03:16.874Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "feff1a06c1b55ff26fd62aba76e68e1104993a94",
+      "hashCurto": "feff1a0",
+      "mensagem": "controle do motor pela UI + FIX 2 vazamentos cross-tenant (mesa redonda a/b: Fase 0+B)",
+      "mensagemRaw": "feat(parceiros): controle do motor pela UI + FIX 2 vazamentos cross-tenant (mesa redonda a/b: Fase 0+B)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T15:57:41.000Z",
+      "hora": "12:57",
+      "arquivos": [
+        "app/api/crm/fornecedores/route.ts",
+        "app/api/parceiros/[id]/route.ts",
+        "app/api/parceiros/route.ts",
+        "app/crm/parceiros/[id]/page.tsx",
+        "app/crm/parceiros/page.tsx",
+        "lib/crm/distribuir-lead.test.ts",
+        "lib/crm/distribuir-lead.ts",
+        "lib/crm/parceiro-fornecedor-map.test.ts",
+        "lib/crm/parceiro-fornecedor-map.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 2,
+        "lib/crm": 4
+      }
+    },
     {
       "hash": "601f4acd316a3b4fd203e1960b8849cb66bac924",
       "hashCurto": "601f4ac",
