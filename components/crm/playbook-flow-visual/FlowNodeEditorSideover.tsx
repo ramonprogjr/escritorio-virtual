@@ -31,10 +31,10 @@ type FlowNodeEditorSideoverProps = {
 };
 
 const KIND_COLOR: Record<string, string> = {
-  message: "#388bfd",
-  input: "#e08a14",
-  menu: "#9254de",
-  complete: "#2ea043",
+  message: "#2f6f4f",
+  input: "#e3b341",
+  menu: "#c9a24a",
+  complete: "#3fb950",
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -407,7 +407,7 @@ const fieldLabelStyle: CSSProperties = {
 const inputStyle: CSSProperties = {
   border: "1px solid #2a3545",
   borderRadius: 9,
-  background: "#111b2f",
+  background: "#0f1d16",
   color: "#e2e8f0",
   padding: "8px 10px",
   fontSize: 12.5,
@@ -419,7 +419,7 @@ const inputStyle: CSSProperties = {
 const textareaStyle: CSSProperties = {
   border: "1px solid #2a3545",
   borderRadius: 9,
-  background: "#111b2f",
+  background: "#0f1d16",
   color: "#e2e8f0",
   padding: "8px 10px",
   fontSize: 12,
@@ -444,7 +444,7 @@ const optionRowStyle: CSSProperties = {
   gap: 6,
   borderRadius: 8,
   border: "1px solid #2a3545",
-  background: "#111b2f",
+  background: "#0f1d16",
   padding: "6px 8px",
 };
 
@@ -484,7 +484,7 @@ const addOptionButtonStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   gap: 6,
-  border: "1px dashed #334155",
+  border: "1px dashed #1d3a2c",
   borderRadius: 8,
   background: "#161c28",
   color: "#94a3b8",
@@ -518,7 +518,7 @@ const deleteButtonStyle: CSSProperties = {
 const entryButtonStyle: CSSProperties = {
   border: "1px solid #2a3545",
   borderRadius: 9,
-  background: "#111b2f",
+  background: "#0f1d16",
   color: "#e2e8f0",
   padding: "8px 10px",
   fontSize: 12,
@@ -536,7 +536,7 @@ const entryButtonActiveStyle: CSSProperties = {
 const selectStyle: CSSProperties = {
   border: "1px solid #2a3545",
   borderRadius: 9,
-  background: "#111b2f",
+  background: "#0f1d16",
   color: "#e2e8f0",
   padding: "8px 10px",
   fontSize: 12.5,

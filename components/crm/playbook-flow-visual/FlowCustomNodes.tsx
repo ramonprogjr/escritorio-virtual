@@ -48,40 +48,43 @@ type KindTheme = {
   Icon: React.ComponentType<{ size: number; strokeWidth: number }>;
 };
 
+// Paleta da marca (verde + dourado) — alinhada a app/globals.css e às telas do CRM.
+//  message  → verde da marca   |  menu (múltipla escolha) → dourado #c9a24a
+//  input    → dourado claro    |  complete → verde escuro com destaque
 const KIND_THEME: Record<FlowNodeKind, KindTheme> = {
   message: {
-    border: "#4db3c4",
-    headerBg: "#0f1f38",
-    headerText: "#bfdbfe",
-    badgeBg: "#1d4d8f",
-    badgeText: "#dbeafe",
+    border: "#2f6f4f",
+    headerBg: "#10231a",
+    headerText: "#cdd9d2",
+    badgeBg: "#0f3d29",
+    badgeText: "#9fd3bf",
     label: "Mensagem",
     Icon: MessageSquare,
   },
   input: {
-    border: "#f59e0b",
-    headerBg: "#2f1d08",
-    headerText: "#fcd9a2",
-    badgeBg: "#7c4a0c",
-    badgeText: "#ffedd5",
+    border: "#e3b341",
+    headerBg: "#241c0c",
+    headerText: "#f0d8a0",
+    badgeBg: "#5c4410",
+    badgeText: "#f5e3b0",
     label: "Coleta",
     Icon: Pencil,
   },
   menu: {
-    border: "#b58a63",
-    headerBg: "#23163b",
-    headerText: "#ddd6fe",
-    badgeBg: "#4c2b95",
-    badgeText: "#ede9fe",
+    border: "#c9a24a",
+    headerBg: "#211a0d",
+    headerText: "#e3b341",
+    badgeBg: "#4d3c12",
+    badgeText: "#f0d8a0",
     label: "Menu",
     Icon: ClipboardList,
   },
   complete: {
-    border: "#4ade80",
-    headerBg: "#112a1b",
-    headerText: "#bbf7d0",
-    badgeBg: "#166534",
-    badgeText: "#dcfce7",
+    border: "#3fb950",
+    headerBg: "#0e2a1b",
+    headerText: "#9fd3bf",
+    badgeBg: "#15532f",
+    badgeText: "#bfe8cf",
     label: "Conclusão",
     Icon: CheckCircle,
   },
@@ -156,7 +159,7 @@ function BaseCard({
     <div
       style={{
         ...cardBase,
-        border: `1px solid ${selected ? "#334155" : `${theme.border}88`}`,
+        border: `1px solid ${selected ? theme.border : `${theme.border}88`}`,
         boxShadow: selected
           ? `0 0 0 2px ${theme.border}55, 0 12px 34px #02061799`
           : "0 8px 24px #02061780",
@@ -388,7 +391,7 @@ const cardBase: CSSProperties = {
   width: 300,
   minWidth: 300,
   maxWidth: 300,
-  background: "#0b1220",
+  background: "#0a140f",
   borderRadius: 14,
   overflow: "visible",
   cursor: "default",
@@ -402,7 +405,7 @@ const headerBase: CSSProperties = {
   flexDirection: "column",
   gap: 6,
   borderRadius: "13px 13px 0 0",
-  borderBottom: "1px solid #22314a",
+  borderBottom: "1px solid #1d3a2c",
 };
 
 const badgeRow: CSSProperties = {
@@ -428,16 +431,16 @@ const idTag: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: 4,
-  color: "#94a3b8",
-  background: "#0b1220",
-  border: "1px solid #334155",
+  color: "#8b949e",
+  background: "#0a140f",
+  border: "1px solid #1d3a2c",
   borderRadius: 999,
   padding: "2px 7px",
 };
 
 const idCode: CSSProperties = {
   fontSize: 9.5,
-  color: "#cbd5e1",
+  color: "#cdd9d2",
   fontFamily: "monospace",
   lineHeight: 1,
   flexShrink: 1,
@@ -461,10 +464,10 @@ const titleDisplay: CSSProperties = {
 const titleInput: CSSProperties = {
   fontSize: 12.5,
   fontWeight: 600,
-  background: "#0f172a",
-  border: "1px solid #4db3c4",
+  background: "#0f1d16",
+  border: "1px solid #c9a24a",
   borderRadius: 6,
-  color: "#e2e8f0",
+  color: "#e6edf3",
   padding: "5px 7px",
   outline: "none",
   width: "100%",
@@ -481,7 +484,7 @@ const bodyBase: CSSProperties = {
 const legendText: CSSProperties = {
   margin: 0,
   fontSize: 10,
-  color: "#7b8da7",
+  color: "#6e7c74",
   letterSpacing: 0.2,
   lineHeight: 1.35,
 };
@@ -489,24 +492,24 @@ const legendText: CSSProperties = {
 const contentDisplay: CSSProperties = {
   margin: 0,
   fontSize: 12,
-  color: "#cbd5e1",
+  color: "#cdd9d2",
   lineHeight: 1.55,
   cursor: "text",
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",
   borderRadius: 8,
   padding: "7px 8px",
-  background: "#111b2f",
-  border: "1px solid #2c3e5d",
+  background: "#0f1d16",
+  border: "1px solid #1d3a2c",
   minHeight: 42,
 };
 
 const contentTextarea: CSSProperties = {
   fontSize: 12,
-  color: "#e2e8f0",
+  color: "#e6edf3",
   lineHeight: 1.55,
-  background: "#0f172a",
-  border: "1px solid #4db3c4",
+  background: "#0f1d16",
+  border: "1px solid #c9a24a",
   borderRadius: 8,
   padding: "7px 8px",
   resize: "vertical",
@@ -541,9 +544,9 @@ function handleStyle(color: string, pos: "top" | "bottom"): CSSProperties {
     width: 14,
     height: 14,
     background: color,
-    border: "2px solid #0b1220",
+    border: "2px solid #0a140f",
     borderRadius: "50%",
-    boxShadow: "0 0 0 3px #0f172a",
+    boxShadow: "0 0 0 3px #0f1d16",
   };
 }
 
@@ -553,14 +556,14 @@ const optionsSection: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 5,
-  borderTop: "1px solid #22314a",
+  borderTop: "1px solid #1d3a2c",
   paddingTop: 8,
 };
 
 const optionsSectionLabel: CSSProperties = {
   fontSize: 10,
   fontWeight: 700,
-  color: "#94a3b8",
+  color: "#c9a24a",
   letterSpacing: 0.5,
   textTransform: "uppercase",
   marginBottom: 1,
@@ -570,8 +573,8 @@ const optRow: CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 6,
-  background: "#111b2f",
-  border: "1px solid #2c3e5d",
+  background: "#0f1d16",
+  border: "1px solid #4d3c12",
   borderRadius: 7,
   padding: "4px 7px",
   minHeight: 27,
@@ -580,7 +583,7 @@ const optRow: CSSProperties = {
 const optNum: CSSProperties = {
   fontSize: 9.5,
   fontWeight: 700,
-  color: "#b58a63",
+  color: "#c9a24a",
   minWidth: 14,
   textAlign: "center",
 };
@@ -588,7 +591,7 @@ const optNum: CSSProperties = {
 const optLabel: CSSProperties = {
   flex: 1,
   fontSize: 11,
-  color: "#cbd5e1",
+  color: "#cdd9d2",
   cursor: "text",
   lineHeight: 1.4,
   wordBreak: "break-word",
@@ -597,7 +600,7 @@ const optLabel: CSSProperties = {
 const optInput: CSSProperties = {
   flex: 1,
   fontSize: 10.5,
-  color: "#e2e8f0",
+  color: "#e6edf3",
   background: "transparent",
   border: "none",
   outline: "none",
@@ -607,7 +610,7 @@ const optInput: CSSProperties = {
 
 const optRemove: CSSProperties = {
   fontSize: 9.5,
-  color: "#94a3b8",
+  color: "#8b949e",
   background: "none",
   border: "none",
   cursor: "pointer",
@@ -618,9 +621,9 @@ const optRemove: CSSProperties = {
 
 const addOptBtn: CSSProperties = {
   fontSize: 10.5,
-  color: "#b58a63",
-  background: "#1f1638",
-  border: "1px dashed #b58a63",
+  color: "#e3b341",
+  background: "#211a0d",
+  border: "1px dashed #c9a24a",
   borderRadius: 7,
   padding: "6px 8px",
   cursor: "pointer",
@@ -640,9 +643,9 @@ const addOptRow: CSSProperties = {
 const addOptInput: CSSProperties = {
   flex: 1,
   fontSize: 10.5,
-  color: "#e2e8f0",
-  background: "#0f172a",
-  border: "1px solid #b58a63",
+  color: "#e6edf3",
+  background: "#0f1d16",
+  border: "1px solid #c9a24a",
   borderRadius: 7,
   padding: "5px 7px",
   outline: "none",
@@ -650,9 +653,9 @@ const addOptInput: CSSProperties = {
 };
 
 const addOptConfirm: CSSProperties = {
-  color: "#bbf7d0",
-  background: "#123322",
-  border: "1px solid #166534",
+  color: "#bfe8cf",
+  background: "#0e2a1b",
+  border: "1px solid #15532f",
   borderRadius: 6,
   cursor: "pointer",
   width: 24,
@@ -663,9 +666,9 @@ const addOptConfirm: CSSProperties = {
 };
 
 const addOptCancel: CSSProperties = {
-  color: "#94a3b8",
-  background: "#111b2f",
-  border: "1px solid #334155",
+  color: "#8b949e",
+  background: "#0f1d16",
+  border: "1px solid #1d3a2c",
   borderRadius: 6,
   cursor: "pointer",
   width: 24,

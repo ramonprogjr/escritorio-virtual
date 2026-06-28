@@ -1,7 +1,28 @@
 {
-  "geradoEm": "2026-06-28T16:21:26.665Z",
+  "geradoEm": "2026-06-28T17:37:36.835Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "240ecd83c376010079ff39f1c217db91cd3f4073",
+      "hashCurto": "240ecd8",
+      "mensagem": "motor apto a ler fornecedores atras de flag + sync espelho (consolidacao reversivel)",
+      "mensagemRaw": "feat(Fase A): motor apto a ler fornecedores atras de flag + sync espelho (consolidacao reversivel)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T16:22:04.000Z",
+      "hora": "13:22",
+      "arquivos": [
+        "app/api/parceiros/[id]/route.test.ts",
+        "app/api/parceiros/[id]/route.ts",
+        "lib/crm/distribuir-lead.test.ts",
+        "lib/crm/distribuir-lead.ts",
+        "supabase/migrations/20260701120000_hub_fornecedores_espelho_motor.sql"
+      ],
+      "areas": {
+        "app/api": 2,
+        "lib/crm": 2,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "bd027c9c78701da2da8ea7bd6065a306de3e8a42",
       "hashCurto": "bd027c9",

@@ -3,12 +3,31 @@
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { AlertTriangle, CheckCircle2, Save, Workflow } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Save, Sparkles, Workflow } from "lucide-react";
 import { parsePlaybookFlowFromMarkdown } from "@/lib/playbook/flow-parse";
 import { upsertPlaybookFlowBlockInMarkdown } from "@/lib/playbook/playbook-flow-markdown";
 import { emitFlowVisualTelemetry } from "@/lib/playbook/flow-visual-telemetry";
 import { validatePlaybookFlowDefinition } from "@/lib/playbook/flow-validate";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import type { FlowCanvasSnapshot } from "@/components/crm/playbook-flow-visual/types";
+
+/**
+ * Reconhece falhas de geração por falta de chave de IA e devolve uma mensagem amigável
+ * (sem vazar o nome cru da variável de ambiente para o usuário do CRM).
+ */
+function mensagemAmigavelDeErro(raw: string): string {
+  const texto = (raw || "").toLowerCase();
+  const semChaveIa =
+    texto.includes("mistral_api_key") ||
+    texto.includes("anthropic_api_key") ||
+    texto.includes("provedor ia") ||
+    texto.includes("provedor de ia") ||
+    (texto.includes("não configurad") && texto.includes("ia"));
+  if (semChaveIa) {
+    return "A IA vai montar o fluxo automaticamente assim que a chave de IA estiver ativa. Por enquanto, você pode montar o fluxo manualmente.";
+  }
+  return raw || "Não foi possível gerar o fluxo agora. Tente novamente em instantes.";
+}
 
 const FlowCanvas = dynamic(
   () => import("@/components/crm/playbook-flow-visual/FlowCanvas").then((m) => m.FlowCanvas),
@@ -56,6 +75,48 @@ export function PlaybookFlowReactFlowPanel({
   const lastCanvasMarkdownRef = useRef<string>(markdown);
   const [mountKey, setMountKey] = useState(0);
 
+  // Estado-vazio: gerar o fluxo com IA a partir do próprio texto do playbook.
+  const [gerando, setGerando] = useState(false);
+  const [erroGeracao, setErroGeracao] = useState("");
+
+  async function gerarFluxoComIa() {
+    if (gerando || disabled) return;
+    setGerando(true);
+    setErroGeracao("");
+    try {
+      // A IA monta o fluxo a partir do texto do próprio playbook (sem precisar redigitar nada).
+      const descricao = markdown.trim();
+      const res = await fetch(
+        `/api/hub/agentes/${encodeURIComponent(agenteSlug)}/playbook/gerar-por-ia`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+          body: JSON.stringify({ descricao }),
+        }
+      );
+      const data = (await res.json().catch(() => ({}))) as {
+        markdown?: string;
+        error?: string;
+      };
+      if (!res.ok || typeof data.markdown !== "string") {
+        setErroGeracao(mensagemAmigavelDeErro(data.error || ""));
+        return;
+      }
+      // Entrega o markdown gerado (com o bloco obra10_playbook_flow) ao editor.
+      lastCanvasMarkdownRef.current = data.markdown;
+      onMarkdownChange(data.markdown);
+      onCanvasDirty?.();
+    } catch (e) {
+      setErroGeracao(
+        e instanceof Error && e.message
+          ? mensagemAmigavelDeErro(e.message)
+          : "Falha de rede ao gerar o fluxo. Tente novamente."
+      );
+    } finally {
+      setGerando(false);
+    }
+  }
+
   useEffect(() => {
     if (markdown !== lastCanvasMarkdownRef.current) {
       // External change (e.g. user clicked Recarregar) — remount canvas with fresh data.
@@ -88,24 +149,40 @@ export function PlaybookFlowReactFlowPanel({
     );
   }
 
-  // ── No flow block found ──
+  // ── No flow block found → estado-vazio amigável (a IA monta) ──
   if (!parsed.ok) {
     return (
       <div style={emptyState}>
-        <AlertTriangle size={26} style={{ color: "#d29922" }} />
-        <p style={{ ...emptyText, color: "#d29922" }}>
-          Bloco <code>obra10_playbook_flow</code> não encontrado ou inválido.
-        </p>
-        <p style={hintText}>
-          Clique em <strong>Adaptar motor WA</strong> na calibração para gerar o bloco JSON automaticamente.
-          Depois volte aqui.
-        </p>
-        {parsed.errors.length > 0 && (
-          <ul style={errorList}>
-            {parsed.errors.slice(0, 3).map((e, i) => (
-              <li key={i} style={errorItem}>{e}</li>
-            ))}
-          </ul>
+        <div style={emptyIconBubble}>
+          <Workflow size={26} style={{ color: "#c9a24a" }} />
+        </div>
+        <p style={emptyTitle}>Este agente ainda não tem um fluxo</p>
+        <p style={emptyLead}>A IA monta o fluxo automaticamente a partir do playbook.</p>
+
+        <button
+          type="button"
+          onClick={() => void gerarFluxoComIa()}
+          disabled={gerando || disabled}
+          style={{
+            ...gerarBtn,
+            opacity: gerando || disabled ? 0.7 : 1,
+            cursor: gerando || disabled ? "default" : "pointer",
+          }}
+          title="A IA monta o fluxo a partir do texto do playbook"
+        >
+          {gerando ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <Sparkles size={15} />
+          )}
+          {gerando ? "Montando o fluxo…" : "✨ Gerar fluxo com IA"}
+        </button>
+
+        {erroGeracao && <p style={emptyHint}>{erroGeracao}</p>}
+        {!erroGeracao && (
+          <p style={emptyHint}>
+            A IA sugere; você revisa e ajusta. Você também pode montar o fluxo manualmente.
+          </p>
         )}
       </div>
     );
@@ -202,8 +279,8 @@ const metaBar: CSSProperties = {
   alignItems: "center",
   gap: 10,
   padding: "8px 12px",
-  background: "#0b1425",
-  border: "1px solid #23314a",
+  background: "#0f1d16",
+  border: "1px solid #1d3a2c",
   borderRadius: 10,
   boxShadow: "0 6px 18px #02061780",
   flexShrink: 0,
@@ -214,12 +291,12 @@ const metaItem: CSSProperties = {
   alignItems: "center",
   gap: 5,
   fontSize: 11.5,
-  color: "#cbd5e1",
+  color: "#cdd9d2",
 };
 
 const metaCode: CSSProperties = {
   fontSize: 10,
-  color: "#93cdd4",
+  color: "#e3b341",
   fontFamily: "monospace",
 };
 
@@ -238,9 +315,9 @@ const saveButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: 5,
-  border: "1px solid #2f9e8f",
-  background: "#2f9e8f2a",
-  color: "#9ecbff",
+  border: "1px solid #2f6f4f",
+  background: "#0f3d2933",
+  color: "#9fd3bf",
   borderRadius: 8,
   padding: "5px 9px",
   fontSize: 11,
@@ -273,30 +350,61 @@ const emptyState: CSSProperties = {
 
 const emptyText: CSSProperties = {
   margin: 0,
-  color: "#cbd5e1",
+  color: "#cdd9d2",
   fontSize: 13.5,
   textAlign: "center",
 };
 
-const hintText: CSSProperties = {
+const emptyIconBubble: CSSProperties = {
+  width: 56,
+  height: 56,
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#211a0d",
+  border: "1px solid #4d3c12",
+  boxShadow: "0 8px 22px #02061766",
+};
+
+const emptyTitle: CSSProperties = {
   margin: 0,
-  color: "#94a3b8",
+  color: "#e6edf3",
+  fontSize: 15.5,
+  fontWeight: 800,
+  textAlign: "center",
+};
+
+const emptyLead: CSSProperties = {
+  margin: 0,
+  color: "#9fd3bf",
+  fontSize: 12.5,
+  textAlign: "center",
+  maxWidth: 380,
+  lineHeight: 1.6,
+};
+
+const emptyHint: CSSProperties = {
+  margin: 0,
+  color: "#8b949e",
   fontSize: 11,
   textAlign: "center",
   maxWidth: 380,
   lineHeight: 1.6,
 };
 
-const errorList: CSSProperties = {
-  margin: 0,
-  padding: "0 0 0 16px",
-  listStyle: "disc",
-};
-
-const errorItem: CSSProperties = {
-  fontSize: 11,
-  color: "#ff7b72",
-  lineHeight: 1.5,
+const gerarBtn: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 18px",
+  borderRadius: 10,
+  border: "none",
+  background: "#c9a24a",
+  color: "#0a140f",
+  fontWeight: 800,
+  fontSize: 13,
+  boxShadow: "0 6px 18px #c9a24a33",
 };
 
 const loadingStyle: CSSProperties = {
@@ -307,6 +415,6 @@ const loadingStyle: CSSProperties = {
   gap: 10,
   height: "100%",
   minHeight: 300,
-  color: "#94a3b8",
+  color: "#8b949e",
   fontSize: 12,
 };

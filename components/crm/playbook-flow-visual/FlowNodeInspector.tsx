@@ -13,10 +13,10 @@ type FlowNodeInspectorProps = {
 };
 
 const KIND_COLOR: Record<string, string> = {
-  message: "#388bfd",
-  input: "#e08a14",
-  menu: "#9254de",
-  complete: "#2ea043",
+  message: "#2f6f4f",
+  input: "#e3b341",
+  menu: "#c9a24a",
+  complete: "#3fb950",
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -244,7 +244,7 @@ const labelStyle: CSSProperties = {
 
 const idCodeStyle: CSSProperties = {
   fontSize: 11,
-  color: "#9ecbff",
+  color: "#e3b341",
   background: "#0f1d16",
   border: "1px solid #16271e",
   borderRadius: 6,
@@ -326,9 +326,9 @@ const optionRemoveStyle: CSSProperties = {
 
 const addOptBtnStyle: CSSProperties = {
   fontSize: 10,
-  color: "#9254de",
-  background: "#1a1328",
-  border: "1px dashed #9254de66",
+  color: "#e3b341",
+  background: "#211a0d",
+  border: "1px dashed #c9a24a66",
   borderRadius: 7,
   padding: "6px 8px",
   cursor: "pointer",

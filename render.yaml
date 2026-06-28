@@ -13,6 +13,7 @@
 #   UAZAPI_ADMIN_TOKEN            — criar instância / sync webhook na ficha do agente
 #   WEBHOOK_SECRET                — mesmo valor no header da UAZAPI (x-webhook-secret ou Bearer)
 #   DEFAULT_TENANT_ID             — 00000000-0000-4000-8000-000000000001
+#   NEXT_PUBLIC_CRM_PLAYBOOK_FLOW_VISUAL_SIDEOVER — "true" liga o editor visual de fluxo (build-time)
 # Supabase: aplicar migrações (incl. 20260605120000_ensure_hub_leads_crm_tenant.sql) antes do go-live.
 # WhatsApp: após deploy, abrir agente → QR/pareamento (sincroniza webhook para NEXT_PUBLIC_APP_URL/api/whatsapp/webhook).
 #
@@ -69,6 +70,11 @@ services:
         sync: false
       - key: WHATSAPP_PROVIDER
         value: "uazapi"
+      # Editor visual de fluxo do playbook (ficha do agente → Calibração → "Editar fluxo visual").
+      # NEXT_PUBLIC_* é build-time: o webpack inlina "true" no bundle durante `npm run build`.
+      # (default em dev = ligado; em prod precisa ser declarado explicitamente — ver lib/crm/feature-flags.ts)
+      - key: NEXT_PUBLIC_CRM_PLAYBOOK_FLOW_VISUAL_SIDEOVER
+        value: "true"
 
   - type: cron
     name: dispatch-ciclos-cron

@@ -270,7 +270,7 @@ function buildInitialEdges(def?: PlaybookFlowDefinition): Edge[] {
         source: step.id,
         target: step.next,
         markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: "#7da8d6", strokeWidth: 2 },
+        style: { stroke: "#2f9e6f", strokeWidth: 2 },
         type: "smoothstep",
       });
     }
@@ -283,9 +283,9 @@ function buildInitialEdges(def?: PlaybookFlowDefinition): Edge[] {
           target: opt.next,
           label: opt.label,
           markerEnd: { type: MarkerType.ArrowClosed },
-          style: { stroke: "#b58a63", strokeWidth: 2 },
-          labelStyle: { fill: "#e2e8f0", fontSize: 10, fontFamily: "inherit", fontWeight: 600 },
-          labelBgStyle: { fill: "#0f172acc", opacity: 0.96 },
+          style: { stroke: "#c9a24a", strokeWidth: 2 },
+          labelStyle: { fill: "#f0d8a0", fontSize: 10, fontFamily: "inherit", fontWeight: 600 },
+          labelBgStyle: { fill: "#211a0dcc", opacity: 0.96 },
           labelBgPadding: [4, 4],
           labelBgBorderRadius: 4,
           type: "smoothstep",
@@ -579,7 +579,7 @@ function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChan
           ...connection,
           id: connectionId(connection),
           markerEnd: { type: MarkerType.ArrowClosed },
-          style: { stroke: "#7aa2f7", strokeWidth: 2 },
+          style: { stroke: "#2f9e6f", strokeWidth: 2 },
           type: "smoothstep",
         }, cur);
         return next;
@@ -820,47 +820,47 @@ function FlowCanvasInner({ initialDefinition, initialNodes, initialEdges, onChan
               snapToGrid
               snapGrid={[16, 16]}
               style={{
-                background: "linear-gradient(180deg, #050913 0%, #0b1220 100%)",
+                background: "linear-gradient(180deg, #08130d 0%, #0a140f 100%)",
                 width: "100%",
                 height: "100%",
               }}
               defaultEdgeOptions={{
                 markerEnd: { type: MarkerType.ArrowClosed },
-                style: { stroke: "#7aa2f7", strokeWidth: 2 },
+                style: { stroke: "#2f9e6f", strokeWidth: 2 },
                 type: "smoothstep",
               }}
               deleteKeyCode="Delete"
               proOptions={{ hideAttribution: true }}
             >
-              <Background color="#1f2c44" gap={26} size={1.2} variant={"dots" as never} />
+              <Background color="#1d3a2c" gap={26} size={1.2} variant={"dots" as never} />
               <MiniMap
                 pannable
                 zoomable
                 nodeColor={(node) => {
                   const colors: Record<string, string> = {
-                    message: "#388bfd",
-                    input: "#e08a14",
-                    menu: "#9254de",
-                    complete: "#2ea043",
+                    message: "#2f6f4f",
+                    input: "#e3b341",
+                    menu: "#c9a24a",
+                    complete: "#3fb950",
                   };
-                  return colors[(node.data as FlowVisualNodeData).kind] ?? "#484f58";
+                  return colors[(node.data as FlowVisualNodeData).kind] ?? "#3a4a42";
                 }}
                 style={{
-                  background: "#0c1423",
-                  border: "1px solid #22314a",
+                  background: "#0f1d16",
+                  border: "1px solid #1d3a2c",
                   borderRadius: 10,
                   width: 190,
                   height: 120,
                   boxShadow: "0 8px 22px #02061799",
                 }}
-                maskColor="#1f2a3b66"
+                maskColor="#0a140f66"
               />
               <Controls
                 showInteractive={false}
                 style={{
-                  border: "1px solid #22314a",
+                  border: "1px solid #1d3a2c",
                   borderRadius: 10,
-                  background: "#0c1423",
+                  background: "#0f1d16",
                   boxShadow: "0 8px 22px #02061799",
                 }}
               />
@@ -915,10 +915,10 @@ const canvasStyle: CSSProperties = {
   inset: 0,
   width: "100%",
   height: "100%",
-  border: "1px solid #25344d",
+  border: "1px solid #1d3a2c",
   borderRadius: 14,
   overflow: "hidden",
-  background: "#060c18",
+  background: "#08130d",
   boxShadow: "0 14px 36px #0206178a",
 };
 
@@ -931,8 +931,8 @@ const canvasToolbarStyle: CSSProperties = {
   gap: 7,
   flexWrap: "wrap",
   maxWidth: "calc(100% - 24px)",
-  background: "#0b1425dc",
-  border: "1px solid #23314a",
+  background: "#0f1d16dc",
+  border: "1px solid #1d3a2c",
   borderRadius: 11,
   padding: 7,
   boxShadow: "0 8px 20px #02061799",
