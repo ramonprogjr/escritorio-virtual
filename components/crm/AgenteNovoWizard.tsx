@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, MessageSquare, Webhook, Zap } from "lucide-react";
+import { Clock, MessageSquare, Sparkles, Webhook, Zap } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { AgenteBuilderIaPanel } from "@/components/crm/AgenteBuilderIaPanel";
 import {
   MODO_OPERACAO_DESCRICAO,
   MODO_OPERACAO_LABEL,
@@ -359,6 +360,19 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [cargoSelecionado, setCargoSelecionado] = useState<Cargo | null>(null);
   /** Sem cargo no catálogo — instruções só do playbook publicado no bucket. */
   const [somentePlaybook, setSomentePlaybook] = useState(false);
+  /**
+   * Modo "Descrever para a IA montar": é um sub-modo de `somentePlaybook`
+   * (cria com playbook_only), mas no passo 1 troca a UI de upload pela UI de
+   * descrição (texto/PDF/áudio) e relaxa o gate (não exige arquivo, só o nome).
+   * Após criar o agente mínimo, a geração roda via AgenteBuilderIaPanel.
+   */
+  const [descreverIa, setDescreverIa] = useState(false);
+  /** Markdown devolvido pela IA (ou pelo template), pendente de publicação. */
+  const [iaMarkdownGerado, setIaMarkdownGerado] = useState("");
+  /** Aviso amigável quando a geração ao vivo não roda (ex.: sem MISTRAL_API_KEY). */
+  const [iaGeracaoAviso, setIaGeracaoAviso] = useState("");
+  /** Publicação (PUT /playbook/conteudo) do markdown gerado pela IA em andamento. */
+  const [iaPublicando, setIaPublicando] = useState(false);
   const [nome, setNome] = useState("");
   const [mercados, setMercados] = useState<string[]>([]);
   const [comportamentoIdx, setComportamentoIdx] = useState(1); // Consultivo
@@ -1031,9 +1045,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           : "#0a140f";
 
   /** Só playbook: exige arquivo + análise; fluxo WA dinâmico é opcional no passo 1 (aviso no banner). */
-  const passo1AvancarBloqueado = somentePlaybook
-    ? !playbookConteudoAnalise.trim() || !playbookAnaliseResultado
-    : !cargoSelecionado;
+  const passo1AvancarBloqueado = descreverIa
+    ? false // Descrever para a IA: só o nome é obrigatório (gate em grupo1AvancarBloqueado).
+    : somentePlaybook
+      ? !playbookConteudoAnalise.trim() || !playbookAnaliseResultado
+      : !cargoSelecionado;
 
   useEffect(() => {
     // Lista de ciclos é exibida na Revisão (sub-passo 5), que agora vive no grupo 3.
@@ -1292,6 +1308,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           if (somentePlaybook && playbookArquivoPendente) {
             await salvarPlaybookPorUpload(playbookArquivoPendente, slug);
           }
+          // Modo "Descrever para a IA": se a IA já devolveu o markdown antes de
+          // criar (raro — fluxo normal gera após criar), publica agora.
+          if (descreverIa && iaMarkdownGerado.trim()) {
+            await publicarIaMarkdown(iaMarkdownGerado, slug);
+          }
           await processarFilaRagNoAgente(slug);
           const noServidor = mergeUsoFerramentasComPadraoPreservandoCustom(data.uso_ferramentas_ia);
           const noWizard = mergeUsoFerramentasComPadraoPreservandoCustom(usoFerramentasIa);
@@ -1331,6 +1352,33 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     }
   }
 
+  /**
+   * Publica o markdown que a IA montou no playbook do agente recém-criado
+   * (mesmo contrato do drawer de Calibração: PUT /playbook/conteudo).
+   * Best-effort: se falhar, não quebra — o agente já existe e o dono pode
+   * publicar depois pela ficha/drawer. Devolve true só em sucesso.
+   */
+  async function publicarIaMarkdown(markdownToPublish: string, slugAlvo: string): Promise<boolean> {
+    const md = markdownToPublish.trim();
+    if (!md || !slugAlvo) return false;
+    setIaPublicando(true);
+    try {
+      const res = await fetch(
+        `/api/hub/agentes/${encodeURIComponent(slugAlvo)}/playbook/conteudo`,
+        {
+          method: "PUT",
+          headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ markdown: md }),
+        }
+      );
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      setIaPublicando(false);
+    }
+  }
+
   const personalidadeGerada = gerarPersonalidade(comportamentoIdx, condutaIdx);
 
   /** Grupo visível (1–3) derivado do sub-passo interno; dirige a barra de 3 passos e a navegação. */
@@ -1342,7 +1390,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   }
 
   /** Gate de avançar para o grupo 2 (precisa de cargo/playbook do passo 1 e nome do passo 2). */
-  const grupo1AvancarBloqueado = passo1AvancarBloqueado || !nome.trim();
+  const grupo1AvancarBloqueado =
+    passo1AvancarBloqueado ||
+    !nome.trim() ||
+    // Descrever para a IA: só libera avançar pelo rodapé depois de o agente ser
+    // criado (a ação primária é o botão "Criar e montar com IA").
+    (descreverIa && !agenteSlugCriado);
 
   const chip = (ativo: boolean, cor?: string): CSSProperties => ({
     padding: "6px 14px",
@@ -1606,8 +1659,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   type="button"
                   onClick={() => {
                     setSomentePlaybook(false);
+                    setDescreverIa(false);
                   }}
-                  style={chip(!somentePlaybook)}
+                  style={chip(!somentePlaybook && !descreverIa)}
                 >
                   Cargo do catálogo
                 </button>
@@ -1615,15 +1669,208 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   type="button"
                   onClick={() => {
                     setSomentePlaybook(true);
+                    setDescreverIa(false);
                     setCargoSelecionado(null);
                   }}
-                  style={chip(somentePlaybook, "#c9a24a")}
+                  style={chip(somentePlaybook && !descreverIa, "#c9a24a")}
                 >
                   Só playbook (sem cargo)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Sub-modo de só-playbook: cria com playbook_only e depois a IA monta.
+                    setDescreverIa(true);
+                    setSomentePlaybook(true);
+                    setCargoSelecionado(null);
+                  }}
+                  style={{
+                    ...chip(descreverIa, "#c9a24a"),
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    boxShadow: descreverIa ? "0 0 0 1px #c9a24a55" : "none",
+                  }}
+                  title="Conte em palavras (ou envie PDF/áudio) e a IA monta o playbook para você"
+                >
+                  <Sparkles size={13} color={descreverIa ? "#c9a24a" : "#e3b341"} />
+                  Descrever para a IA montar
+                </button>
               </div>
 
-              {somentePlaybook ? (
+              {descreverIa ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    borderRadius: 12,
+                    border: "1px solid #2f6f4f",
+                    background: "linear-gradient(180deg, #10231a 0%, #0d1c15 100%)",
+                    padding: 16,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Sparkles size={16} color="#c9a24a" />
+                    <span style={{ color: "#e6edf3", fontSize: 14, fontWeight: 800 }}>
+                      Descreva — a IA monta o playbook
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, color: "#8b949e", fontSize: 12.5, lineHeight: 1.55 }}>
+                    Dê um nome ao agente e clique em{" "}
+                    <strong style={{ color: "#cdd9d2" }}>Criar e montar com IA</strong>. Em seguida você conta, em
+                    palavras suas (ou enviando um PDF/áudio), como ele deve atender — a IA monta o fluxo + as regras e
+                    você revisa antes de publicar.
+                  </p>
+
+                  {!agenteSlugCriado ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div>
+                        <label
+                          style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}
+                        >
+                          Nome do agente <span style={{ color: "#ef4444" }}>*</span>
+                        </label>
+                        <input
+                          value={nome}
+                          onChange={(e) => setNome(e.target.value)}
+                          placeholder="Ex: Mari, Marina, SDR Apex…"
+                          style={{
+                            width: "100%",
+                            background: "#0a140f",
+                            border: "1px solid #1d3a2c",
+                            color: "#e6edf3",
+                            borderRadius: 8,
+                            padding: "10px 14px",
+                            fontSize: 14,
+                            outline: "none",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {MERCADOS_FIXOS.map((m) => {
+                          const sel = mercados.includes(m);
+                          return (
+                            <button
+                              type="button"
+                              key={m}
+                              onClick={() => toggleMercado(m)}
+                              title={MERCADO_LABEL[m] || m}
+                              style={{ ...chip(sel), display: "inline-flex", alignItems: "center", gap: 6 }}
+                            >
+                              {MERCADO_LABEL[m] || m}
+                              <span style={{ fontSize: 10, opacity: 0.55, fontWeight: 700, letterSpacing: 0.3 }}>
+                                {m}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {erro ? (
+                        <p style={{ margin: 0, color: "#f85149", fontSize: 12, lineHeight: 1.5 }}>{erro}</p>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        onClick={() => void criarAgente({ avancarPasso: false })}
+                        disabled={!nome.trim() || criando}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
+                          alignSelf: "flex-start",
+                          padding: "11px 18px",
+                          borderRadius: 9,
+                          border: "none",
+                          background: !nome.trim() || criando ? "#2a2f2b" : "#c9a24a",
+                          color: !nome.trim() || criando ? "#6e7681" : "#0a140f",
+                          fontWeight: 800,
+                          fontSize: 13,
+                          cursor: !nome.trim() || criando ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        <Sparkles size={14} />
+                        {criando ? "Criando o agente…" : "Criar e montar com IA"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          color: "#3fb950",
+                          fontSize: 12.5,
+                          lineHeight: 1.5,
+                          background: "#23863618",
+                          border: "1px solid #23863644",
+                          borderRadius: 8,
+                          padding: "9px 12px",
+                        }}
+                      >
+                        ✓ Agente <strong>{nome || agenteSlugCriado}</strong> criado. Agora descreva abaixo (ou envie
+                        PDF/áudio) — a IA monta o playbook.
+                      </p>
+
+                      <AgenteBuilderIaPanel
+                        agenteSlug={agenteSlugCriado}
+                        agenteNome={nome}
+                        onGerado={(md) => {
+                          setIaMarkdownGerado(md);
+                          setIaGeracaoAviso("");
+                          void publicarIaMarkdown(md, agenteSlugCriado);
+                        }}
+                      />
+
+                      {iaGeracaoAviso ? (
+                        <p
+                          style={{
+                            margin: 0,
+                            color: "#e3b341",
+                            fontSize: 12,
+                            lineHeight: 1.5,
+                            background: "#e3b34114",
+                            border: "1px solid #e3b34140",
+                            borderRadius: 8,
+                            padding: "9px 12px",
+                          }}
+                        >
+                          {iaGeracaoAviso}
+                        </p>
+                      ) : null}
+
+                      <p style={{ margin: 0, color: "#8b949e", fontSize: 11.5, lineHeight: 1.5 }}>
+                        {iaPublicando
+                          ? "Publicando o playbook montado pela IA…"
+                          : "Quando a IA gerar, o playbook é publicado automaticamente. Pode concluir o assistente — dá para refinar depois no agente."}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => irParaGrupo(3)}
+                        style={{
+                          alignSelf: "flex-start",
+                          padding: "10px 16px",
+                          borderRadius: 9,
+                          border: "1px solid #2f6f4f",
+                          background: "#0f1d16",
+                          color: "#c9a24a",
+                          fontWeight: 700,
+                          fontSize: 12.5,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Concluir / configurar como roda →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {somentePlaybook && !descreverIa ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
                     <button
@@ -1835,7 +2082,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {grupoVisivel === 1 && (cargoSelecionado || somentePlaybook) && (
+          {grupoVisivel === 1 && !descreverIa && (cargoSelecionado || somentePlaybook) && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
@@ -1935,7 +2182,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {grupoVisivel === 1 && (cargoSelecionado || somentePlaybook) && (
+          {grupoVisivel === 1 && !descreverIa && (cargoSelecionado || somentePlaybook) && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
