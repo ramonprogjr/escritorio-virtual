@@ -36,6 +36,30 @@ function parseBoolFerr(v: unknown, defaultVal: boolean): boolean {
   return defaultVal;
 }
 
+/**
+ * Normaliza `setor_ia` do payload: string curta (≤ 40) → trim; vazio/ausente → null.
+ * Não obrigatório e tolerante: não valida contra uma lista fechada para nunca
+ * recusar um setor novo; só protege contra lixo grande.
+ */
+function normSetorIa(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (!s) return null;
+  return s.slice(0, 40);
+}
+
+/** Detecta erro do insert/update ligado à coluna setor_ia (best-effort). */
+function isSetorIaColumnMissing(message?: string): boolean {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  if (!m.includes("setor_ia")) return false;
+  return (
+    m.includes("does not exist") ||
+    m.includes("schema cache") ||
+    m.includes("could not find")
+  );
+}
+
 /** Modelo "Turbo" (robusto) quando o dono escolhe Claude. Cai p/ Mistral se ANTHROPIC_API_KEY ausente. */
 const MODELO_TURBO = "claude-sonnet-4-6";
 
@@ -568,6 +592,12 @@ export async function POST(request: NextRequest) {
   row.mistral_agent_sync_habilitado = mistralAgentSyncHabilitado;
   row.uso_ferramentas_ia = serializarUsoFerramentasParaDb(body.uso_ferramentas_ia);
 
+  // Setor derivado do cargo (Fase 4), agora PERSISTIDO. Aditivo e opcional.
+  const setorIa = normSetorIa(body.setor_ia);
+  if (setorIa) {
+    row.setor_ia = setorIa;
+  }
+
   let rowInsert: Record<string, unknown> = row;
   let { data, error } = await supabase
     .from("hub_agente_identidade")
@@ -579,6 +609,18 @@ export async function POST(request: NextRequest) {
   if (error && isTenantColumnMissing(error.message)) {
     const { tenant_id, ...rowWithoutTenant } = rowInsert;
     rowInsert = rowWithoutTenant;
+    ({ data, error } = await supabase
+      .from("hub_agente_identidade")
+      .insert(rowInsert)
+      .select()
+      .single());
+  }
+
+  // Best-effort: se a coluna setor_ia faltar (base sem a migração), repete sem ela.
+  // A coluna JÁ existe em produção; isto é só salvaguarda para não quebrar a criação.
+  if (error && isSetorIaColumnMissing(error.message)) {
+    const { setor_ia, ...rowSemSetor } = rowInsert;
+    rowInsert = rowSemSetor;
     ({ data, error } = await supabase
       .from("hub_agente_identidade")
       .insert(rowInsert)

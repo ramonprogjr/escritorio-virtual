@@ -13,6 +13,12 @@ import {
   mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
 import { AREAS_ATUACAO } from "@/lib/crm/areas-atuacao";
+import {
+  SETOR_AGENTE_IDS,
+  rotuloSetor,
+  setorDoCargo,
+  type SetorAgente,
+} from "@/lib/hub/agente-setor";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -151,10 +157,18 @@ type Agente = {
   horario_inicio?: string;
   horario_fim?: string;
   dias_semana?: number[];
+  setor_ia?: string | null;
   arquivado_em?: string | null;
   ativo?: boolean;
   [key: string]: unknown;
 };
+
+/** Setor salvo coage para um id válido; "" significa "sem setor" (—). */
+function coagirSetor(v: unknown): SetorAgente | "" {
+  if (typeof v !== "string") return "";
+  const s = v.trim();
+  return (SETOR_AGENTE_IDS as readonly string[]).includes(s) ? (s as SetorAgente) : "";
+}
 
 /** Alinha com `hub_agente_identidade`: arquivado_em > coluna ativo (inativo ≠ arquivado). */
 function badgeStatusAgente(agente: Pick<Agente, "arquivado_em" | "ativo">): {
@@ -219,6 +233,8 @@ export default function AgentePage() {
   const [tomVoz, setTomVoz] = useState("");
   const [estiloComunicacao, setEstiloComunicacao] = useState("");
   const [systemPromptBase, setSystemPromptBase] = useState("");
+  // Setor de trabalho persistido (hub_agente_identidade.setor_ia). "" = sem setor (—).
+  const [setorIa, setSetorIa] = useState<SetorAgente | "">("");
 
   const [motorFerramentasHub, setMotorFerramentasHub] = useState(false);
   const [mistralProvisionar, setMistralProvisionar] = useState(false);
@@ -281,6 +297,15 @@ export default function AgentePage() {
         setTomVoz(data.tom_voz || "");
         setEstiloComunicacao(data.estilo_comunicacao || "");
         setSystemPromptBase(data.system_prompt_base || "");
+        {
+          // Tolerância: usa setor_ia salvo; se nulo/ausente, sugere o derivado do cargo
+          // (segmento = area; especialidade = título do cargo) — nunca quebra.
+          const salvo = coagirSetor(data.setor_ia);
+          const sugerido = salvo
+            ? salvo
+            : setorDoCargo({ segmento: data.area, especialidade: data.cargo });
+          setSetorIa(salvo || sugerido);
+        }
         setMotorFerramentasHub(data.motor_ferramentas_habilitado === true);
         setMistralProvisionar(data.mistral_agent_sync_habilitado === true);
         setUsoFerramentasIa(
@@ -458,6 +483,8 @@ export default function AgentePage() {
           tom_voz: tomVoz,
           estilo_comunicacao: estiloComunicacao,
           system_prompt_base: systemPromptBase,
+          // "—" (vazio) limpa o setor → null; caso contrário grava o id escolhido.
+          setor_ia: setorIa === "" ? null : setorIa,
           motor_ferramentas_habilitado: motorFerramentasHub,
           mistral_agent_sync_habilitado: mistralProvisionar,
           uso_ferramentas_ia: usoFerramentasIa,
@@ -1240,6 +1267,29 @@ export default function AgentePage() {
               onChange={(e) => setEstiloComunicacao(e.target.value)}
               style={inputStyle}
             />
+          </div>
+
+          {/* Setor — derivado do cargo, mas editável (override). Persistido em setor_ia. */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#e6edf3", display: "block", marginBottom: 8 }}>
+              Setor
+            </label>
+            <select
+              value={setorIa}
+              onChange={(e) => setSetorIa(coagirSetor(e.target.value))}
+              style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
+            >
+              <option value="">—</option>
+              {SETOR_AGENTE_IDS.map((s) => (
+                <option key={s} value={s}>
+                  {rotuloSetor(s)}
+                </option>
+              ))}
+            </select>
+            <p style={{ color: "#8b949e", fontSize: 11, margin: "8px 0 0", lineHeight: 1.5 }}>
+              Sugerido pelo cargo, mas você pode ajustar. Define as ferramentas e tarefas
+              recomendadas para este agente.
+            </p>
           </div>
 
           {/* System prompt base */}

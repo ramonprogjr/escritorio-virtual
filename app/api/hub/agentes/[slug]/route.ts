@@ -18,6 +18,26 @@ function parseBoolPatch(v: unknown): boolean | undefined {
   return undefined;
 }
 
+/** setor_ia no PATCH: null limpa; string curta grava; resto → undefined (não toca). */
+function normSetorIaPatch(v: unknown): string | null | undefined {
+  if (v === null) return null;
+  if (typeof v !== "string") return undefined;
+  const s = v.trim();
+  return s ? s.slice(0, 40) : null;
+}
+
+/** Detecta erro do update ligado à coluna setor_ia (best-effort). */
+function isSetorIaColumnMissing(message?: string): boolean {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  if (!m.includes("setor_ia")) return false;
+  return (
+    m.includes("does not exist") ||
+    m.includes("schema cache") ||
+    m.includes("could not find")
+  );
+}
+
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -140,6 +160,10 @@ export async function PATCH(
   if ("uso_ferramentas_ia" in body && body.uso_ferramentas_ia !== undefined) {
     patch.uso_ferramentas_ia = serializarUsoFerramentasParaDb(body.uso_ferramentas_ia);
   }
+  if ("setor_ia" in body) {
+    const s = normSetorIaPatch(body.setor_ia);
+    if (s !== undefined) patch.setor_ia = s; // string curta ou null (limpar)
+  }
 
   const syncTriggers = [
     "motor_ferramentas_habilitado",
@@ -187,6 +211,20 @@ export async function PATCH(
     .eq("agente_slug", slug)
     .select()
     .maybeSingle();
+
+  // Best-effort: base sem a coluna setor_ia → repete o update sem ela (a coluna existe em prod).
+  if (error && isSetorIaColumnMissing(error.message)) {
+    const { setor_ia, ...patchSemSetor } = patch;
+    if (Object.keys(patchSemSetor).length === 0) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    ({ data, error } = await supabase
+      .from("hub_agente_identidade")
+      .update(patchSemSetor)
+      .eq("agente_slug", slug)
+      .select()
+      .maybeSingle());
+  }
 
   if (error && isHubAgenteFerramentasColumnsMissing(error.message)) {
     console.warn(

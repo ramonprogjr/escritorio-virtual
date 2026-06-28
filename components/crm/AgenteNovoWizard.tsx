@@ -1244,6 +1244,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         payload.cargo_slug = cargoSelecionado.slug;
       }
 
+      // Setor derivado do cargo (Fase 4) persistido em hub_agente_identidade.setor_ia.
+      // Modo só-playbook não tem cargo → omite (null), o servidor lida com isso.
+      payload.setor_ia = setorAgente ?? null;
+
       if (hubCicloEstrategia === "somente_vincular") {
         payload.omit_hub_ciclo_padrao = true;
         payload.ciclos_vincular_ids = hubCiclosVincularIds;
