@@ -1,7 +1,92 @@
 {
-  "geradoEm": "2026-06-28T02:23:39.448Z",
+  "geradoEm": "2026-06-28T14:03:02.151Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "0893256a70771795fa90c484d63727f2833af891",
+      "hashCurto": "0893256",
+      "mensagem": "harmoniza TODAS as telas na marca verde+dourado (fim do azul/roxo)",
+      "mensagemRaw": "feat(F4-A): harmoniza TODAS as telas na marca verde+dourado (fim do azul/roxo)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T14:02:54.000Z",
+      "hora": "11:02",
+      "arquivos": [
+        "app/agentes/page.tsx",
+        "app/api/crm/pipelines/route.ts",
+        "app/crm/agentes/[slug]/page.tsx",
+        "app/crm/aprovacoes/page.tsx",
+        "app/crm/atendimento/page.tsx",
+        "app/crm/conteudo/page.tsx",
+        "app/crm/leads/page.tsx",
+        "app/crm/negocios/page.tsx",
+        "app/crm/trafego/page.tsx",
+        "app/globals.css",
+        "components/crm/leads/LeadKanbanCard.tsx",
+        "components/crm/leads/LeadRapidoSideover.tsx",
+        "components/office/AgentBubble.tsx",
+        "components/office/AgentLogPanel.tsx",
+        "components/office/AgentPanel.tsx",
+        "components/office/AgentsDrawer.tsx",
+        "components/office/AnalyticsPanel.tsx",
+        "components/office/Ariane.tsx",
+        "components/office/ComercialPanel.tsx",
+        "components/office/CommandTop.tsx",
+        "components/office/CriticalActionModal.tsx",
+        "components/office/CriticalStrip.tsx",
+        "components/office/DashboardPanel.tsx",
+        "components/office/DecisionCard.tsx",
+        "components/office/DetailModal.tsx",
+        "components/office/FFTAgentNode.tsx",
+        "components/office/FFTLeadNode.tsx",
+        "components/office/Lead360Drawer.tsx",
+        "components/office/LiveCrmPanel.tsx",
+        "components/office/LiveFeed.tsx",
+        "components/office/LiveLeadDot.tsx",
+        "components/office/LivePulse.tsx",
+        "components/office/MarketingPanel.tsx",
+        "components/office/OfficeCanvas.tsx",
+        "components/office/OfficeFilters.tsx",
+        "components/office/PanelItem.tsx",
+        "components/office/Partner360Drawer.tsx",
+        "components/office/SidebarPanel.tsx",
+        "components/office/SlidePanel.tsx",
+        "components/office/ToastAlert.tsx",
+        "lib/agent-states.ts",
+        "lib/crm-glass-card.ts",
+        "lib/crm/funil-analytics.ts",
+        "lib/crm/mercado-visual.ts",
+        "lib/crm/pipeline-defaults.ts",
+        "lib/crm/pipeline-funil.ts",
+        "lib/crm/pipelines.ts",
+        "lib/crm/telefone-brasil.ts",
+        "lib/data/decisions-mock.ts",
+        "lib/data/leads-mock.ts",
+        "lib/data/live-leads.ts",
+        "lib/data/office-map.ts",
+        "lib/data/partners-mock.ts",
+        "lib/hub/landing-content.ts",
+        "lib/ia/agentes-config.ts"
+      ],
+      "areas": {
+        "outros": 38,
+        "app/api": 1,
+        "app/crm": 7,
+        "components/crm": 2,
+        "lib/crm": 6,
+        "lib/hub": 1
+      }
+    },
+    {
+      "hash": "c3ba2768e5bd89b2aee6637e72cee130d0bb9c0e",
+      "hashCurto": "c3ba276",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T02:24:23.000Z",
+      "hora": "23:24",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "35d4a43d7b03dde49d7d76bf8ebb4b29a577eb1c",
       "hashCurto": "35d4a43",
@@ -5113,250 +5198,6 @@
       "areas": {
         "app/hub": 1,
         "outros": 1
-      }
-    },
-    {
-      "hash": "b3422d32b9a02f35d2c368a12d0be398dafcd737",
-      "hashCurto": "b3422d3",
-      "mensagem": "relatorio PDF narrativo por areas (Implementado/Corrigido)",
-      "mensagemRaw": "feat(crm): relatorio PDF narrativo por areas (Implementado/Corrigido)",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T04:19:15.000Z",
-      "hora": "01:19",
-      "arquivos": [
-        "components/crm/ProgressoSistemaDashboard.tsx",
-        "lib/crm/progresso-sistema-data.ts",
-        "lib/crm/relatorio-desenvolvimento-estruturado.ts",
-        "lib/crm/relatorio-diario-pdf.ts",
-        "lib/crm/relatorio-git-entregas.ts"
-      ],
-      "areas": {
-        "components/crm": 1,
-        "lib/crm": 4
-      }
-    },
-    {
-      "hash": "f08a42db4b96f2666526c76366eebd11da72ea73",
-      "hashCurto": "f08a42d",
-      "mensagem": "atualizar artefactos de progresso e tsconfig dev",
-      "mensagemRaw": "chore: atualizar artefactos de progresso e tsconfig dev",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T04:05:17.000Z",
-      "hora": "01:05",
-      "arquivos": [
-        "tsconfig.json"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "8ea7e93e63234831d89a6b854b13aa3aa3e93bec",
-      "hashCurto": "8ea7e93",
-      "mensagem": "formulario SSR em cadastre-se via Server Action",
-      "mensagemRaw": "fix(hub): formulario SSR em cadastre-se via Server Action",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T03:56:47.000Z",
-      "hora": "00:56",
-      "arquivos": [
-        "app/cadastre-se/actions.ts",
-        "app/cadastre-se/page.tsx",
-        "components/hub/HubLeadForm.tsx",
-        "components/hub/HubLeadFormServer.tsx",
-        "components/hub/HubPublicShell.tsx"
-      ],
-      "areas": {
-        "app/hub": 2,
-        "components/hub": 3
-      }
-    },
-    {
-      "hash": "332a6f0534a303715fdeb0656b7a2fc7c29301a9",
-      "hashCurto": "332a6f0",
-      "mensagem": "formulario de lead na landing e cadastre-se",
-      "mensagemRaw": "feat(hub): formulario de lead na landing e cadastre-se",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T03:48:48.000Z",
-      "hora": "00:48",
-      "arquivos": [
-        "app/api/public/lead-hub/route.ts",
-        "app/cadastre-se/page.tsx",
-        "components/hub/HubHero.tsx",
-        "components/hub/HubLeadForm.tsx",
-        "components/hub/HubScrollReveal.tsx",
-        "lib/crm/lead-hub-publico.ts"
-      ],
-      "areas": {
-        "app/api": 1,
-        "app/hub": 1,
-        "components/hub": 3,
-        "lib/crm": 1
-      }
-    },
-    {
-      "hash": "66b2e9a3c53a1c7857fb8e1d3d9d57a207ebdcf8",
-      "hashCurto": "66b2e9a",
-      "mensagem": "forcar NODE_ENV=development para PostCSS/Tailwind em dev",
-      "mensagemRaw": "fix(dev): forcar NODE_ENV=development para PostCSS/Tailwind em dev",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T03:39:14.000Z",
-      "hora": "00:39",
-      "arquivos": [
-        "package.json",
-        "scripts/dev-insecure-tls.cjs",
-        "scripts/dev-strict-tls.cjs"
-      ],
-      "areas": {
-        "outros": 3
-      }
-    },
-    {
-      "hash": "272f4a3e447f65579db2079f586aee1e327dd68b",
-      "hashCurto": "272f4a3",
-      "mensagem": "cadastre-se funcional e relatorio PDF so de desenvolvimento",
-      "mensagemRaw": "fix(hub): cadastre-se funcional e relatorio PDF so de desenvolvimento",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T03:28:22.000Z",
-      "hora": "00:28",
-      "arquivos": [
-        "app/cadastre-se/error.tsx",
-        "app/cadastre-se/layout.tsx",
-        "app/cadastre-se/page.tsx",
-        "app/loading.tsx",
-        "components/crm/ProgressoSistemaDashboard.tsx",
-        "components/hub/CadastreSeForm.tsx",
-        "components/hub/HubPublicShell.tsx",
-        "components/hub/HubScrollReveal.tsx",
-        "components/mobile/MobileDetector.tsx",
-        "lib/crm/relatorio-diario-aggregate.ts",
-        "lib/crm/relatorio-diario-pdf.ts",
-        "lib/crm/relatorio-git-entregas.ts",
-        "lib/mobile/nav.ts"
-      ],
-      "areas": {
-        "app/hub": 3,
-        "outros": 3,
-        "components/crm": 1,
-        "components/hub": 3,
-        "lib/crm": 3
-      }
-    },
-    {
-      "hash": "327af539561b370c61e3d85a4fbdf208b5b4a1dc",
-      "hashCurto": "327af53",
-      "mensagem": "move @types/pdfkit to dependencies for Render type-check",
-      "mensagemRaw": "fix(build): move @types/pdfkit to dependencies for Render type-check",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T03:03:00.000Z",
-      "hora": "00:03",
-      "arquivos": [
-        "package.json"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "219c486cea0b889bd364a7f888132fa62a280a93",
-      "hashCurto": "219c486",
-      "mensagem": "move tsx to dependencies for Render production build",
-      "mensagemRaw": "fix(build): move tsx to dependencies for Render production build",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T02:51:04.000Z",
-      "hora": "23:51",
-      "arquivos": [
-        "package.json"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "33fa768d5535efd78199e29dd7b05f7dd192cf5f",
-      "hashCurto": "33fa768",
-      "mensagem": "landing pública, cadastro de empresas, relatório PDF diário e progresso automático",
-      "mensagemRaw": "feat(hub): landing pública, cadastro de empresas, relatório PDF diário e progresso automático",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-21T02:38:33.000Z",
-      "hora": "23:38",
-      "arquivos": [
-        ".env.example",
-        ".gitignore",
-        "app/api/crm/financeiro/contas/pagar/[id]/route.ts",
-        "app/api/crm/financeiro/contas/receber/[id]/route.ts",
-        "app/api/crm/financeiro/contas/route.ts",
-        "app/api/crm/financeiro/dashboard/route.ts",
-        "app/api/crm/integracoes/status/route.ts",
-        "app/api/crm/me/context/route.ts",
-        "app/api/crm/onboarding/status/route.ts",
-        "app/api/crm/relatorio-diario/route.ts",
-        "app/api/crm/tenant-settings/route.ts",
-        "app/api/crm/tenants/route.ts",
-        "app/api/crm/usuarios/[id]/route.ts",
-        "app/api/crm/usuarios/route.ts",
-        "app/api/public/cadastro-empresa/route.ts",
-        "app/api/whatsapp/webhook/route.ts",
-        "app/cadastre-se/layout.tsx",
-        "app/cadastre-se/page.tsx",
-        "app/crm/empresas/page.tsx",
-        "app/crm/layout.tsx",
-        "app/crm/usuarios/page.tsx",
-        "app/globals.css",
-        "app/layout.tsx",
-        "app/login/page.tsx",
-        "app/page.tsx",
-        "components/crm/CrmPermissaoSelect.tsx",
-        "components/crm/CrmSessionFooter.tsx",
-        "components/crm/CrmTenantContext.tsx",
-        "components/crm/CrmUniversalHeader.tsx",
-        "components/crm/ProgressoSistemaDashboard.tsx",
-        "components/hub/HubCtaBand.tsx",
-        "components/hub/HubHero.tsx",
-        "components/hub/HubModuleCard.tsx",
-        "components/hub/HubModuleGrid.tsx",
-        "components/hub/HubPublicShell.tsx",
-        "components/hub/HubPurposeSection.tsx",
-        "components/hub/HubScrollReveal.tsx",
-        "components/hub/HubStepsSection.tsx",
-        "docs/sql/seed-users-rbac.sql",
-        "lib/crm-header-defaults.ts",
-        "lib/crm-nav-groups.ts",
-        "lib/crm/cadastro-empresa-publico.ts",
-        "lib/crm/convidar-colaborador.ts",
-        "lib/crm/crm-api-auth.ts",
-        "lib/crm/crm-permissoes.ts",
-        "lib/crm/progresso-checks-registry.ts",
-        "lib/crm/progresso-checks-types.ts",
-        "lib/crm/progresso-sistema-data.ts",
-        "lib/crm/progresso-sistema-runtime.ts",
-        "lib/crm/relatorio-deploy-resumo.ts",
-        "lib/crm/relatorio-diario-aggregate.ts",
-        "lib/crm/relatorio-diario-pdf.ts",
-        "lib/crm/relatorio-git-entregas.ts",
-        "lib/crm/tenant-slug.ts",
-        "lib/crm/users-equipa.ts",
-        "lib/hub/landing-content.ts",
-        "next.config.ts",
-        "package.json",
-        "proxy.ts",
-        "scripts/apply-users-rbac-migration.mjs",
-        "scripts/collect-relatorio-entregas-git.ts",
-        "scripts/seed-users-rbac.mjs",
-        "scripts/verify-progresso-sistema.ts",
-        "supabase/migrations/20260620190000_users_rbac_tenant.sql",
-        "tsconfig.json",
-        "vitest.config.ts"
-      ],
-      "areas": {
-        "outros": 16,
-        "app/api": 14,
-        "app/hub": 4,
-        "app/crm": 3,
-        "components/crm": 5,
-        "components/hub": 8,
-        "lib/crm": 14,
-        "lib/hub": 1,
-        "supabase/migrations": 1
       }
     }
   ]
