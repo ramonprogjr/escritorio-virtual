@@ -69,7 +69,16 @@ export async function mistralChatCompletion(params: {
 
       if (!res.ok) {
         const t = await res.text().catch(() => "");
-        lastError = `Mistral HTTP ${res.status}: ${t.slice(0, 280)}`;
+        // Causa legível por status (ajuda o diagnóstico sem vazar a chave):
+        const causa =
+          res.status === 401
+            ? "chave da Mistral inválida ou inativa (confira MISTRAL_API_KEY e o billing da conta)"
+            : res.status === 429
+              ? "sem créditos/quota na conta Mistral (ative o billing/plano)"
+              : res.status === 422
+                ? "requisição ou modelo inválido para a Mistral"
+                : `HTTP ${res.status}`;
+        lastError = `Mistral: ${causa}${t ? ` · ${t.slice(0, 200)}` : ""}`;
         if (attempt < retries && shouldRetryMistral(res.status, t)) {
           await new Promise((r) => setTimeout(r, 450 * (attempt + 1)));
           continue;
