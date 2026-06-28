@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-28T01:04:46.081Z",
+  "geradoEm": "2026-06-28T01:15:51.123Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "0bb913c23091838ba8527947d1afedf9deb8e535",
+      "hashCurto": "0bb913c",
+      "mensagem": "#16 — 'Descrever para a IA montar' na PORTA da criação",
+      "mensagemRaw": "feat(wizard): #16 — 'Descrever para a IA montar' na PORTA da criação",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T01:15:43.000Z",
+      "hora": "22:15",
+      "arquivos": [
+        "components/crm/AgenteNovoWizard.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
+    {
+      "hash": "1326c4fb62f0d3e21962e3f3b9e2f975278d12e5",
+      "hashCurto": "1326c4f",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T01:06:10.000Z",
+      "hora": "22:06",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "ec506eb4393de721a9fc1046427c14c52776d871",
       "hashCurto": "ec506eb",
