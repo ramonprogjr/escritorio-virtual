@@ -53,17 +53,37 @@ const MERCADO_LABEL: Record<string, string> = Object.fromEntries(
   AREAS_ATUACAO.filter((a) => a.mercadoSigla).map((a) => [a.mercadoSigla as string, a.label])
 );
 
-/** Passos do assistente — após «Ferramentas» e criar agente, passos 7–8 são pós-criação. */
-const WIZARD_STEP_LABELS = [
-  "Cargo",
-  "Identidade",
-  "Personalidade",
-  "Documentos",
-  "Revisão",
-  "Ferramentas",
-  "Materiais",
-  "Canal",
+/**
+ * Sub-passos internos (numeração ORIGINAL preservada — effects, validação e criação
+ * continuam a referenciar estes números):
+ * 1 Cargo · 2 Identidade · 3 Personalidade · 4 Documentos · 5 Revisão/ciclos ·
+ * 6 Ferramentas · 7 Materiais · 8 Canal.
+ *
+ * UX — 3 passos visíveis (8 intimidava). Cada grupo reúne sub-passos internos sem
+ * mover a lógica de cada bloco:
+ *  - Grupo 1 «Quem é»            → sub-passos 1, 2, 3 (Cargo + Identidade + Personalidade/Modelo)
+ *  - Grupo 2 «O que sabe e faz»  → sub-passos 4, 6 (Documentos/RAG + Ferramentas + Tarefas)
+ *  - Grupo 3 «Como roda + concluir» → sub-passos 5, 7, 8 (Revisão/ciclos + Materiais + Canal) + criar/concluir
+ */
+const WIZARD_GROUPS = [
+  { num: 1, label: "Quem é", subpassos: [1, 2, 3] as const },
+  { num: 2, label: "O que sabe e faz", subpassos: [4, 6] as const },
+  { num: 3, label: "Como roda + concluir", subpassos: [5, 7, 8] as const },
 ] as const;
+
+/** Grupo visível (1–3) a partir do sub-passo interno (1–8). */
+function grupoDoSubpasso(subpasso: number): 1 | 2 | 3 {
+  if (subpasso <= 3) return 1;
+  if (subpasso === 4 || subpasso === 6) return 2;
+  return 3; // 5, 7, 8
+}
+
+/** Primeiro sub-passo (ponto de entrada) de cada grupo visível. */
+function primeiroSubpassoDoGrupo(grupo: 1 | 2 | 3): number {
+  if (grupo === 1) return 1;
+  if (grupo === 2) return 4;
+  return 5;
+}
 
 const SEGMENTO_COR: Record<string, string> = {
   Marketing: "#2f9e8f",
@@ -475,7 +495,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   }, [agenteSlugCriado]);
 
   useEffect(() => {
-    if (passo !== 8 || !agenteSlugCriado) {
+    // Sincroniza modo/canal quando o grupo 3 (Como roda + concluir) está visível e o
+    // agente já existe — antes ficava preso ao sub-passo 8 (Canal).
+    if (grupoDoSubpasso(passo) !== 3 || !agenteSlugCriado) {
       setSyncCanalLoading(false);
       return;
     }
@@ -494,7 +516,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   }, [passo, agenteSlugCriado, modoOperacao, modoExecucao]);
 
   useEffect(() => {
-    if (passo !== 7 || !agenteSlugCriado) return;
+    // Lê metadados do playbook quando o grupo 3 está visível com agente criado
+    // (Materiais agora vive dentro do grupo 3, junto da Revisão e do Canal).
+    if (grupoDoSubpasso(passo) !== 3 || !agenteSlugCriado) return;
     let cancel = false;
     setPlaybookMetaLoading(true);
     setPlaybookErro("");
@@ -642,13 +666,21 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     setRagPosCriacaoAviso("");
     try {
       if (!agenteSlugCriado) {
+        // UX 3 passos: a criação do agente é EXPLÍCITA e única, no passo final
+        // (grupo «Como roda + concluir»). Aqui só preparamos a fila localmente —
+        // os documentos são indexados automaticamente logo após «Criar agente».
         if ((!somentePlaybook && !cargoSelecionado) || !nome.trim()) {
-          setRagPendenteErro("Preencha cargo (ou modo só playbook) e nome antes de processar embeddings.");
+          setRagPendenteErro("Preencha cargo (ou modo só playbook) e nome antes de preparar os documentos.");
           return;
         }
+        setRagPendentes((prev) =>
+          prev.map((item) => ({
+            ...item,
+            status: "preparado",
+            mensagem: "Pronto — será indexado ao concluir a criação do agente.",
+          }))
+        );
         setRagPreparados(true);
-        // Cria o agente e indexa, mas mantém o utilizador no passo actual (Revisão/Ferramentas vêm a seguir).
-        await criarAgente({ avancarPasso: false });
         return;
       }
       setRagPendentes((prev) =>
@@ -1004,7 +1036,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     : !cargoSelecionado;
 
   useEffect(() => {
-    if (passo !== 6) {
+    // Lista de ciclos é exibida na Revisão (sub-passo 5), que agora vive no grupo 3.
+    // Carrega ao entrar nesse grupo.
+    if (grupoDoSubpasso(passo) !== 3) {
       hubCiclosLoadRef.current = false;
       return;
     }
@@ -1127,7 +1161,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   }
 
   function handleBackClick() {
-    if (agenteSlugCriado && passo >= 7) {
+    // Após a criação (agente já existe), confirmar antes de sair — vale para todo o grupo 3.
+    if (agenteSlugCriado) {
       setDialogFecharAssistente(true);
       return;
     }
@@ -1275,7 +1310,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
         setAgenteSlugCriado(slug ?? null);
         setShowConfirm(false);
         if (slug) {
-          if (avancarPasso) setPasso(7);
+          // Permanece no grupo 3 (Como roda + concluir): com o agente criado, os blocos
+          // Materiais e Canal passam a aparecer empilhados sob a Revisão.
+          if (avancarPasso) setPasso(5);
         } else setErro("Agente criado mas a API não devolveu o slug.");
       } else {
         const data = (await res.json().catch(() => ({}))) as { erro?: string; error?: string };
@@ -1291,6 +1328,17 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   }
 
   const personalidadeGerada = gerarPersonalidade(comportamentoIdx, condutaIdx);
+
+  /** Grupo visível (1–3) derivado do sub-passo interno; dirige a barra de 3 passos e a navegação. */
+  const grupoVisivel = grupoDoSubpasso(passo);
+
+  /** Avança/recua ENTRE grupos (1↔2↔3), entrando sempre pelo 1.º sub-passo do grupo. */
+  function irParaGrupo(grupo: 1 | 2 | 3) {
+    setPasso(primeiroSubpassoDoGrupo(grupo));
+  }
+
+  /** Gate de avançar para o grupo 2 (precisa de cargo/playbook do passo 1 e nome do passo 2). */
+  const grupo1AvancarBloqueado = passo1AvancarBloqueado || !nome.trim();
 
   const chip = (ativo: boolean, cor?: string): CSSProperties => ({
     padding: "6px 14px",
@@ -1466,10 +1514,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             WebkitOverflowScrolling: "touch",
           }}
         >
-          {WIZARD_STEP_LABELS.map((label, i) => {
-            const num = i + 1;
-            const ativo = passo === num;
-            const passado = passo > num;
+          {WIZARD_GROUPS.map((g, i) => {
+            const num = g.num;
+            const ativo = grupoVisivel === num;
+            const passado = grupoVisivel > num;
             return (
               <div key={num} style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 56 }}>
                 <div
@@ -1494,25 +1542,25 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   </div>
                   <span
                     style={{
-                      fontSize: 9,
+                      fontSize: 10,
                       color: ativo ? "#c9a24a" : "#8b949e",
                       whiteSpace: "nowrap",
                       textAlign: "center",
-                      maxWidth: 72,
+                      maxWidth: 110,
                       lineHeight: 1.15,
                     }}
                   >
-                    {label}
+                    {g.label}
                   </span>
                 </div>
-                {i < WIZARD_STEP_LABELS.length - 1 && (
+                {i < WIZARD_GROUPS.length - 1 && (
                   <div
                     style={{
                       height: 2,
                       flex: 0,
                       width: 12,
                       flexShrink: 0,
-                      background: passo > num ? "#c9a24a" : "#1d3a2c",
+                      background: grupoVisivel > num ? "#c9a24a" : "#1d3a2c",
                       marginBottom: 16,
                     }}
                   />
@@ -1533,14 +1581,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       >
         <div
           style={{
-            maxWidth: passo === 6 || passo === 8 ? 1180 : 760,
+            maxWidth: grupoVisivel >= 2 ? 1180 : 760,
             margin: "0 auto",
             padding: "28px 24px 48px",
             width: "100%",
             boxSizing: "border-box",
           }}
         >
-          {passo === 1 && (
+          {grupoVisivel === 1 && (
             <div>
               <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
                 Como este agente será instruído?
@@ -1783,8 +1831,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {passo === 2 && (cargoSelecionado || somentePlaybook) && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {grupoVisivel === 1 && (cargoSelecionado || somentePlaybook) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
                   Identidade do agente
@@ -1883,8 +1931,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {passo === 3 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {grupoVisivel === 1 && (cargoSelecionado || somentePlaybook) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
                   Personalidade
@@ -2027,7 +2075,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {passo === 4 && (
+          {grupoVisivel === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
@@ -2105,11 +2153,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     </p>
                     <p style={{ color: "#8b949e", fontSize: 12, margin: "0 0 12px", lineHeight: 1.55 }}>
                       Recomendado: subir até <strong style={{ color: "#adbac7" }}>{RAG_DOCS_LIMIT} arquivos</strong>{" "}
-                      sobre produto, serviços e empresa. Primeiro ficam só no navegador; o envio ao servidor exige um
-                      agente criado. Pode indexar já com <strong style={{ color: "#adbac7" }}>Processar embeddings</strong>{" "}
-                      (cria o agente se ainda não existir) ou deixar na fila e concluir no passo{" "}
-                      <strong style={{ color: "#adbac7" }}>Ferramentas</strong>. Formatos:{" "}
-                      <strong style={{ color: "#adbac7" }}>{RAG_FORMATOS_RESUMO}</strong>.
+                      sobre produto, serviços e empresa. Por enquanto ficam só no navegador — são{" "}
+                      <strong style={{ color: "#adbac7" }}>indexados automaticamente ao concluir a criação do agente</strong>{" "}
+                      no último passo. Use <strong style={{ color: "#adbac7" }}>Preparar documentos</strong> para validar a
+                      fila. Formatos: <strong style={{ color: "#adbac7" }}>{RAG_FORMATOS_RESUMO}</strong>.
                     </p>
                   </div>
                   <span
@@ -2174,10 +2221,16 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   }}
                 >
                   {ragPreparando
-                    ? "A enviar e indexar..."
-                    : ragPreparados
-                      ? "Reprocessar embeddings"
-                      : "Processar embeddings agora"}
+                    ? agenteSlugCriado
+                      ? "A enviar e indexar..."
+                      : "A preparar..."
+                    : agenteSlugCriado
+                      ? ragPreparados
+                        ? "Reprocessar embeddings"
+                        : "Processar embeddings agora"
+                      : ragPreparados
+                        ? "Documentos prontos ✓"
+                        : "Preparar documentos"}
                 </button>
 
                 {ragPendenteErro ? (
@@ -2199,7 +2252,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     }}
                   >
                     Agente <strong style={{ color: "#e6edf3" }}>{agenteSlugCriado}</strong> criado. Use{" "}
-                    <strong style={{ color: "#e6edf3" }}>Próximo</strong> para Revisão → Ferramentas → Materiais → Canal.
+                    <strong style={{ color: "#e6edf3" }}>Próximo</strong> para concluir (materiais e canal).
                   </p>
                 ) : null}
 
@@ -2238,7 +2291,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         : ragPendentes.some((i) => i.status === "concluido")
                           ? "Documentos indexados no servidor."
                           : ragPendentes.every((i) => i.status === "na_fila")
-                            ? "Na fila local — clique em «Processar embeddings agora» ou conclua com «Criar agente»."
+                            ? "Na fila local — serão indexados automaticamente ao concluir a criação do agente."
                             : "Aguardando processamento."}
                     </p>
                   </div>
@@ -2361,8 +2414,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {passo === 6 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {grupoVisivel === 2 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
                   Ferramentas Hub
@@ -2370,8 +2423,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                   Ligue o motor e active as funções que o Mistral pode pedir ao servidor (lead na sessão). Inclui o catálogo{" "}
                   <strong style={{ color: "#aebccf" }}>builtin</strong> e as ferramentas{" "}
-                  <strong style={{ color: "#c9a24a" }}>custom</strong> activas do tenant. Se escolheu{" "}
-                  <strong style={{ color: "#aebccf" }}>WhatsApp</strong> no passo anterior, as sugestões para esse canal
+                  <strong style={{ color: "#c9a24a" }}>custom</strong> activas do tenant. Se escolher{" "}
+                  <strong style={{ color: "#aebccf" }}>WhatsApp</strong> no último passo, as sugestões para esse canal
                   aparecem em destaque.
                 </p>
               </div>
@@ -2502,63 +2555,23 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </div>
               ) : null}
 
-              {agenteSlugCriado ? (
-                <p style={{ color: "#3fb950", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
-                  Agente <strong style={{ color: "#e6edf3" }}>{agenteSlugCriado}</strong> já foi criado (ex.: ao
-                  processar documentos RAG). Grave as ferramentas abaixo e continue para Materiais e Canal.
-                </p>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (agenteSlugCriado) {
-                    void (async () => {
-                      setCriando(true);
-                      setErro("");
-                      const ok = await sincronizarWizardNoAgente(agenteSlugCriado);
-                      setCriando(false);
-                      if (ok) setPasso(7);
-                    })();
-                    return;
-                  }
-                  setShowConfirm(true);
-                }}
-                disabled={(!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando}
-                style={{
-                  padding: "14px 0",
-                  borderRadius: 10,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  background: "#003b26",
-                  border: "none",
-                  color: "#c9a24a",
-                  cursor:
-                    (!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity:
-                    (!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando ? 0.4 : 1,
-                }}
-              >
-                {criando
-                  ? "A gravar⬦"
-                  : agenteSlugCriado
-                    ? "Continuar → Materiais"
-                    : "Criar agente"}
-              </button>
+              <p style={{ color: "#6e7781", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                Tudo pronto aqui. Avance para o último passo para revisar e{" "}
+                <strong style={{ color: "#aebccf" }}>criar o agente</strong>.
+              </p>
             </div>
           )}
 
-          {passo === 5 && (
+          {grupoVisivel === 3 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-                  Revisão
+                  {agenteSlugCriado ? "Agente criado — finalize" : "Revisão e criação"}
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
-                  Confira identidade, cargo e como o copiloto opera (canal e ciclos). Depois configure as ferramentas
-                  e crie o agente.
+                  {agenteSlugCriado
+                    ? "O agente foi criado. Abaixo finalize os materiais (playbook) e o canal (WhatsApp), depois conclua."
+                    : "Confira identidade, cargo e como o copiloto opera (canal e ciclos). Ao final, crie o agente."}
                 </p>
                 {ragPendentes.some((i) => i.status === "na_fila" || i.status === "preparado") ? (
                   <p style={{ color: "#c9a24a", fontSize: 12, margin: "10px 0 0", lineHeight: 1.5 }}>
@@ -3128,18 +3141,43 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   </div>
                 </div>
               ) : null}
+
+              {!agenteSlugCriado ? (
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(true)}
+                  disabled={(!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando}
+                  style={{
+                    padding: "14px 0",
+                    borderRadius: 10,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    background: "#003b26",
+                    border: "none",
+                    color: "#c9a24a",
+                    cursor:
+                      (!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      (!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando ? 0.4 : 1,
+                  }}
+                >
+                  {criando ? "A criar⬦" : "Criar agente"}
+                </button>
+              ) : null}
             </div>
           )}
 
-          {passo === 7 && agenteSlugCriado && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {grupoVisivel === 3 && agenteSlugCriado && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
                   Materiais (playbook)
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                   Gera um arquivo no Storage com a configuração deste agente, para ferramentas ou equipes que precisem
-                  do playbook num URL estável. Se já passou pelo passo Canal (WhatsApp), use <strong style={{ color: "#aebccf" }}>← Anterior</strong> a partir dessa tela para voltar aqui antes de concluir.
+                  do playbook num URL estável. Opcional — pode gerar agora ou depois na ficha do agente.
                 </p>
               </div>
 
@@ -3319,8 +3357,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             </div>
           )}
 
-          {passo === 8 && agenteSlugCriado && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {grupoVisivel === 3 && agenteSlugCriado && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
                   Canal
@@ -3332,25 +3370,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </p>
               </div>
 
-              {ragPosCriacaoAviso ? (
-                <div>
-                  <p
-                    style={{
-                      color: "#f0b429",
-                      fontSize: 12,
-                      margin: 0,
-                      lineHeight: 1.55,
-                      background: "rgba(240,180,41,0.1)",
-                      border: "1px solid rgba(240,180,41,0.35)",
-                      borderRadius: 8,
-                      padding: "10px 14px",
-                    }}
-                  >
-                    {ragPosCriacaoAviso}
-                  </p>
-                  <RagErroAjuda mensagem={ragPosCriacaoAviso} />
-                </div>
-              ) : null}
+              {/* Aviso de RAG já é mostrado no bloco Materiais acima (mesmo grupo). */}
 
               {modoOperacao === "canal_whatsapp" && hubCicloEstrategia === "somente_vincular" ? (
                 <div
@@ -3415,10 +3435,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           )}
 
           <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
-            {passo > 1 && (
+            {/* Anterior: navega ENTRE grupos, só enquanto o agente não foi criado. */}
+            {grupoVisivel > 1 && !agenteSlugCriado && (
               <button
                 type="button"
-                onClick={() => setPasso((p) => p - 1)}
+                onClick={() => irParaGrupo((grupoVisivel - 1) as 1 | 2 | 3)}
                 style={{
                   flex: 1,
                   padding: "12px 0",
@@ -3434,13 +3455,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 ← Anterior
               </button>
             )}
-            {passo < 6 && (
+            {/* Próximo: avança para o próximo grupo (1→2→3); gate de validação no grupo 1. */}
+            {grupoVisivel < 3 && (
               <button
                 type="button"
-                onClick={() => setPasso((p) => p + 1)}
-                disabled={
-                  passo === 1 ? passo1AvancarBloqueado : passo === 2 ? !nome.trim() : false
-                }
+                onClick={() => irParaGrupo((grupoVisivel + 1) as 1 | 2 | 3)}
+                disabled={grupoVisivel === 1 ? grupo1AvancarBloqueado : false}
                 style={{
                   flex: 1,
                   padding: "12px 0",
@@ -3450,37 +3470,15 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   background: "#003b26",
                   border: "none",
                   color: "#c9a24a",
-                  cursor:
-                    (passo === 1 && passo1AvancarBloqueado) || (passo === 2 && !nome.trim())
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity:
-                    (passo === 1 && passo1AvancarBloqueado) || (passo === 2 && !nome.trim()) ? 0.4 : 1,
+                  cursor: grupoVisivel === 1 && grupo1AvancarBloqueado ? "not-allowed" : "pointer",
+                  opacity: grupoVisivel === 1 && grupo1AvancarBloqueado ? 0.4 : 1,
                 }}
               >
                 Próximo →
               </button>
             )}
-            {passo === 7 && agenteSlugCriado ? (
-              <button
-                type="button"
-                onClick={() => setPasso(8)}
-                style={{
-                  flex: 1,
-                  padding: "12px 0",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  background: "#003b26",
-                  border: "none",
-                  color: "#c9a24a",
-                  cursor: "pointer",
-                }}
-              >
-                Continuar → Canal
-              </button>
-            ) : null}
-            {passo === 8 ? (
+            {/* Concluir: só após a criação explícita do agente (grupo 3, fase final). */}
+            {grupoVisivel === 3 && agenteSlugCriado ? (
               <button
                 type="button"
                 onClick={concluirPosCriacao}
