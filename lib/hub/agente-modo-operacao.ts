@@ -31,17 +31,17 @@ export function cicloExecucaoPadraoFromModoOperacao(modo: ModoOperacaoAgente): C
   return modo === "canal_whatsapp" ? "interacao" : "agenda";
 }
 
-/** Rótulos para UI (wizard, ciclos, listagens). */
+/** Rótulos para UI (wizard, ciclos, listagens) — linguagem de negócio, sem jargão técnico. */
 export const MODO_OPERACAO_LABEL: Record<ModoOperacaoAgente, string> = {
-  canal_whatsapp: "Atendimento no WhatsApp (canal, legado)",
-  jobs_internos: "Operações internas (ciclos)",
+  canal_whatsapp: "Atende no WhatsApp",
+  jobs_internos: "Trabalha nos bastidores",
 };
 
 export const MODO_OPERACAO_DESCRICAO: Record<ModoOperacaoAgente, string> = {
   canal_whatsapp:
-    "O agente passa a operar no atendimento: conversas entram pelo canal (webhook legado, ex. WhatsApp) e disparam o copiloto por mensagem. Para rotinas de escritório sem fila ao vivo no canal, prefira operações internas.",
+    "Conversa de verdade com os seus clientes pelo WhatsApp: as mensagens chegam e o agente responde sozinho.",
   jobs_internos:
-    "Sem atendimento ao vivo no canal: relatórios, análises e cadências via hub_ciclos_ia e /api/cron/dispatch-ciclos (tipos contínuo ou programado).",
+    "Faz relatórios, análises e rotinas automáticas para a sua equipe. Não conversa com cliente no WhatsApp.",
 };
 
 type AgenteModoRow = {

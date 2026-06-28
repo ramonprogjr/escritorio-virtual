@@ -270,7 +270,7 @@ export function AgenteFerramentasIaBlock({
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: motorHabilitado ? "#3fb950" : "#6e7781" }}>
-            {motorHabilitado ? "ACTIVO" : "INACTIVO"}
+            {motorHabilitado ? "ATIVO" : "INATIVO"}
           </span>
           <ToggleSwitch
             checked={motorHabilitado}
@@ -301,14 +301,14 @@ export function AgenteFerramentasIaBlock({
             Sincronizar com a nuvem Mistral ao guardar
           </span>
           <span style={{ display: "block", color: "#8b949e", fontWeight: 400, fontSize: 12, marginTop: 2 }}>
-            Cria ou actualiza um Agent na Mistral (console) com o prompt unificado de produção (identidade,
-            conhecimento, regras) e {nAtivas} função(ões) activa(s). Requer{" "}
+            Cria ou atualiza um Agent na Mistral (console) com o prompt unificado de produção (identidade,
+            conhecimento, regras) e {nAtivas} função(ões) ativa(s). Requer{" "}
             <code style={{ fontSize: 11 }}>MISTRAL_API_KEY</code> no servidor.
           </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: mistralSyncHabilitado ? "#a371f7" : "#6e7781" }}>
-            {mistralSyncHabilitado ? "ACTIVO" : "INACTIVO"}
+            {mistralSyncHabilitado ? "ATIVO" : "INATIVO"}
           </span>
           <ToggleSwitch
             checked={mistralSyncHabilitado}
@@ -427,7 +427,7 @@ export function AgenteFerramentasIaBlock({
                             }}
                           >
                             <span style={{ fontSize: 10, fontWeight: 700, color: ligado ? "#3fb950" : "#6e7781" }}>
-                              {ligado ? "ACTIVO" : "INACTIVO"}
+                              {ligado ? "ATIVO" : "INATIVO"}
                             </span>
                             <ToggleSwitch
                               checked={ligado}
@@ -565,7 +565,7 @@ export function AgenteFerramentasIaBlock({
                         }}
                       >
                         <span style={{ fontSize: 10, fontWeight: 700, color: ligado ? "#3fb950" : "#6e7781" }}>
-                          {ligado ? "ACTIVO" : "INACTIVO"}
+                          {ligado ? "ATIVO" : "INATIVO"}
                         </span>
                         <ToggleSwitch
                           checked={ligado}

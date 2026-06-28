@@ -1222,7 +1222,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
     setRagPosCriacaoAviso("");
     try {
       if (hubCicloEstrategia === "somente_vincular" && hubCiclosVincularIds.length === 0) {
-        setErro("Selecione pelo menos um ciclo da Central para associar a este agente.");
+        setErro("Escolha pelo menos uma rotina da Central para associar a este agente.");
         setCriando(false);
         return;
       }
@@ -1384,6 +1384,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   /** Grupo visível (1–3) derivado do sub-passo interno; dirige a barra de 3 passos e a navegação. */
   const grupoVisivel = grupoDoSubpasso(passo);
 
+  /**
+   * Setores de relação com o cliente (atendimento/comercial) → recomendar "Atende no
+   * WhatsApp"; os demais → "Trabalha nos bastidores". Se não der pra derivar o setor
+   * (ex.: modo só playbook), mantém o default antigo (recomenda bastidores).
+   */
+  const setorRecomendaWhatsapp =
+    setorAgente === "atendimento" || setorAgente === "comercial";
+
   /** Avança/recua ENTRE grupos (1↔2↔3), entrando sempre pelo 1.º sub-passo do grupo. */
   function irParaGrupo(grupo: 1 | 2 | 3) {
     setPasso(primeiroSubpassoDoGrupo(grupo));
@@ -1480,8 +1488,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               Confirmar criação
             </h2>
             <p style={{ color: "#8b949e", fontSize: 13, margin: "0 0 20px", lineHeight: 1.5 }}>
-              Confirmar criação do agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>? Em seguida passará por
-              Materiais (playbook) e, se aplicável, Canal (WhatsApp).
+              Criar o agente <strong style={{ color: "#e6edf3" }}>{nome}</strong>? Depois de criar, abrimos a etapa de
+              finalização aqui mesmo — materiais e, se for o caso, a conexão do WhatsApp. É rápido e opcional.
             </p>
             {erro && <p style={{ color: "#ef4444", fontSize: 12, marginBottom: 12 }}>{erro}</p>}
             <div style={{ display: "flex", gap: 10 }}>
@@ -1948,6 +1956,52 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </div>
               ) : !somentePlaybook ? (
                 <>
+                  {cargoSelecionado ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: 16,
+                        borderRadius: 12,
+                        background: "#0f1d16",
+                        border: "2px solid #c9a24a",
+                      }}
+                    >
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+                        <span style={{ color: "#c9a24a", fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>
+                          CARGO ESCOLHIDO ✓
+                        </span>
+                        <span style={{ color: "#e6edf3", fontSize: 14, fontWeight: 700 }}>
+                          {cargoSelecionado.titulo}
+                        </span>
+                        {cargoSelecionado.descricao_curta ? (
+                          <span style={{ color: "#8b949e", fontSize: 12 }}>
+                            {cargoSelecionado.descricao_curta}
+                          </span>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCargoSelecionado(null)}
+                        style={{
+                          flexShrink: 0,
+                          padding: "8px 14px",
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background: "#16271e",
+                          border: "1px solid #c9a24a55",
+                          color: "#c9a24a",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Trocar cargo
+                      </button>
+                    </div>
+                  ) : (
+                  <>
                   <div style={{ marginBottom: 12 }}>
                     <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>SEGMENTO</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -2009,7 +2063,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {cargosFiltrados.map((c) => {
-                        const ativo = cargoSelecionado?.slug === c.slug;
+                        // Este grid só renderiza quando nada está selecionado (modo "trocar cargo"
+                        // mostra a versão colapsada acima), então nenhum item fica ativo aqui.
+                        const ativo = false;
                         const segCor = SEGMENTO_COR[c.segmento || ""] || "#8b949e";
                         const nivelCor = NIVEL_COR[c.nivel || ""] || "#8b949e";
                         return (
@@ -2076,6 +2132,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         );
                       })}
                     </div>
+                  )}
+                  </>
                   )}
                 </>
               ) : null}
@@ -2817,12 +2875,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-                  {agenteSlugCriado ? "Agente criado — finalize" : "Revisão e criação"}
+                  {agenteSlugCriado ? "Agente criado — finalize abaixo (opcional)" : "Revisão e criação"}
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
                   {agenteSlugCriado
-                    ? "O agente foi criado. Abaixo finalize os materiais (playbook) e o canal (WhatsApp), depois conclua."
-                    : "Confira identidade, cargo e como o copiloto opera (canal e ciclos). Ao final, crie o agente."}
+                    ? "Pronto! O agente já existe. Abaixo você pode gerar o material de apoio e conectar o WhatsApp — depois é só concluir."
+                    : "Confira a identidade, o cargo e onde o agente vai trabalhar. Ao final, clique em criar."}
                 </p>
                 {ragPendentes.some((i) => i.status === "na_fila" || i.status === "preparado") ? (
                   <p style={{ color: "#c9a24a", fontSize: 12, margin: "10px 0 0", lineHeight: 1.5 }}>
@@ -2929,16 +2987,16 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 }}
               >
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 4px" }}>
-                  COMO O COPILOTO RODA
+                  ONDE O AGENTE VAI TRABALHAR
                 </p>
                 <p style={{ color: "#6e7781", fontSize: 12, margin: "0 0 14px", lineHeight: 1.5 }}>
-                  Aqui você define se o modelo <strong style={{ color: "#aebccf" }}>atende no canal</strong> (WhatsApp
-                  legado) ou se fica só em <strong style={{ color: "#aebccf" }}>operações internas</strong> por ciclos.
-                  Por padrão recomendamos o copiloto interno; use o canal quando precisar de fila de atendimento ao vivo.
+                  Escolha se este agente <strong style={{ color: "#aebccf" }}>atende seus clientes no WhatsApp</strong> ou
+                  se <strong style={{ color: "#aebccf" }}>trabalha nos bastidores</strong> (relatórios e rotinas, sem
+                  conversar com cliente). Você pode mudar isso depois.
                 </p>
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
-                  ONDE O AGENTE OPERA
+                  ESCOLHA UMA OPÇÃO
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
                   {(
@@ -2948,14 +3006,16 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         Icon: Zap,
                         titulo: MODO_OPERACAO_LABEL.jobs_internos,
                         texto: MODO_OPERACAO_DESCRICAO.jobs_internos,
-                        badge: "Recomendado",
+                        // "Recomendado" só quando o cargo NÃO for de atender cliente
+                        // (atendimento/comercial são de relação com o cliente → recomenda WhatsApp).
+                        badge: setorRecomendaWhatsapp ? null : "Recomendado",
                       },
                       {
                         id: "canal_whatsapp" as const,
                         Icon: MessageSquare,
                         titulo: MODO_OPERACAO_LABEL.canal_whatsapp,
                         texto: MODO_OPERACAO_DESCRICAO.canal_whatsapp,
-                        badge: null,
+                        badge: setorRecomendaWhatsapp ? "Recomendado" : null,
                       },
                     ] as const
                   ).map((opt) => {
@@ -3040,14 +3100,15 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       lineHeight: 1.5,
                     }}
                   >
-                    <strong style={{ color: "#e6c06a" }}>Canal WhatsApp:</strong> recomendamos activar resumo do lead,
-                    memórias e registo de nota. No passo seguinte (<strong style={{ color: "#c9a24a" }}>Ferramentas</strong>
-                    ) estas opções aparecem em destaque — avance com <strong style={{ color: "#c9a24a" }}>Próximo</strong>.
+                    <strong style={{ color: "#e6c06a" }}>Atendimento no WhatsApp:</strong> recomendamos ativar resumo do
+                    cliente, histórico e registro de anotações. No passo seguinte
+                    (<strong style={{ color: "#c9a24a" }}>Ferramentas</strong>) essas opções aparecem em destaque — avance
+                    com <strong style={{ color: "#c9a24a" }}>Próximo</strong>.
                   </div>
                 ) : null}
 
                 <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
-                  TIPO DE EXECUÇÃO DO CICLO PADRÃO
+                  QUANDO O AGENTE VAI AGIR
                 </p>
                 <p
                   style={{
@@ -3063,14 +3124,13 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 >
                   {modoOperacao === "jobs_internos" ? (
                     <>
-                      O modelo será salvo como <strong style={{ color: "#c9a24a" }}>jobs_internos</strong> e já
-                      provisiona um ciclo padrão em <code style={{ color: "#8b949e" }}>hub_ciclos_ia</code>.
+                      Este agente <strong style={{ color: "#c9a24a" }}>trabalha nos bastidores</strong>: você define
+                      abaixo se ele roda o tempo todo ou em horários fixos.
                     </>
                   ) : (
                     <>
-                      O modelo será salvo como <strong style={{ color: "#c9a24a" }}>canal_whatsapp</strong> —
-                      modo <strong style={{ color: "#c9a24a" }}>atendimento no canal</strong> — e provisiona ciclo de{" "}
-                      <strong style={{ color: "#c9a24a" }}>gatilho por interação</strong> (cada mensagem no webhook).
+                      Este agente <strong style={{ color: "#c9a24a" }}>atende no WhatsApp</strong>: ele responde
+                      automaticamente a cada mensagem que o cliente envia.
                     </>
                   )}
                 </p>
@@ -3078,8 +3138,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
                   {(
                     [
-                      { id: "provisionar" as const, label: "Criar ciclo do assistente" },
-                      { id: "somente_vincular" as const, label: "Só associar existentes" },
+                      { id: "provisionar" as const, label: "Criar rotina nova" },
+                      { id: "somente_vincular" as const, label: "Usar rotina existente" },
                     ] as const
                   ).map((opt) => {
                     const at = hubCicloEstrategia === opt.id;
@@ -3108,8 +3168,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
                 {hubCicloEstrategia === "somente_vincular" ? (
                   <p style={{ color: "#c9a24a", fontSize: 11, margin: "0 0 12px", lineHeight: 1.5 }}>
-                    Os ciclos escolhidos passam a usar o <strong>slug do novo agente</strong> e deixam de
-                    contar para o agente anterior nesta tabela.
+                    As rotinas escolhidas passam a ser deste novo agente e deixam de pertencer ao agente anterior.
                   </p>
                 ) : null}
 
@@ -3128,8 +3187,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           background: "#0a140f",
                         }}
                       >
-                        Para atendimento no WhatsApp (legado), o ciclo padrão é{" "}
-                        <strong style={{ color: "#c9a24a" }}>sob interação</strong> (gatilho a cada mensagem no canal).
+                        No atendimento pelo WhatsApp, o agente age{" "}
+                        <strong style={{ color: "#c9a24a" }}>a cada mensagem</strong> que o cliente envia.
                       </p>
                     ) : null}
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -3140,25 +3199,25 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                                 {
                                   id: "interacao" as const,
                                   Icon: Webhook,
-                                  titulo: "Sob interação",
+                                  titulo: "A cada mensagem",
                                   texto:
-                                    "Dispara por interação no canal; não depende de cron para cada mensagem.",
+                                    "O agente responde sempre que o cliente manda uma mensagem no WhatsApp.",
                                 },
                               ] as const)
                             : ([
                                 {
                                   id: "tempo_real" as const,
                                   Icon: Zap,
-                                  titulo: "Automático contínuo",
+                                  titulo: "O tempo todo",
                                   texto:
-                                    "Motor interno em ciclo contínuo. Útil para supervisão e rotinas sem horário fixo.",
+                                    "O agente trabalha continuamente, acompanhando e cuidando das rotinas sem hora marcada.",
                                 },
                                 {
                                   id: "agenda" as const,
                                   Icon: Clock,
-                                  titulo: "Horário fixo / recorrente",
+                                  titulo: "Em horários fixos",
                                   texto:
-                                    "Ciclo programado (inicia em pausa) com intervalo abaixo; depois configure cron/dispatch e ative.",
+                                    "O agente roda de tempos em tempos, no intervalo que você escolher abaixo.",
                                 },
                               ] as const)),
                         ] as const
@@ -3259,14 +3318,14 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     }}
                   >
                     {hubCicloEstrategia === "somente_vincular"
-                      ? "SELECIONAR CICLOS"
-                      : "VINCULAR CICLOS EXISTENTES (OPCIONAL)"}
+                      ? "ESCOLHER ROTINAS"
+                      : "REAPROVEITAR ROTINAS EXISTENTES (OPCIONAL)"}
                   </p>
                   {hubCiclosCarregando ? (
-                    <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>Carregando ciclos⬦</p>
+                    <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>Carregando rotinas⬦</p>
                   ) : hubCiclosLista.length === 0 ? (
                     <p style={{ color: "#6e7781", fontSize: 12, margin: 0 }}>
-                      Nenhum ciclo em hub_ciclos_ia. Crie-os em CRM → Ciclos IA.
+                      Nenhuma rotina disponível ainda. Você pode criar rotinas em CRM → Ciclos IA.
                     </p>
                   ) : (
                     <div
@@ -3414,7 +3473,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       (!somentePlaybook && !cargoSelecionado) || !nome.trim() || criando ? 0.4 : 1,
                   }}
                 >
-                  {criando ? "A criar⬦" : "Criar agente"}
+                  {criando ? "Criando⬦" : "Criar e finalizar"}
                 </button>
               ) : null}
             </div>
@@ -3424,11 +3483,11 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-                  Materiais (playbook)
+                  Material de apoio do agente
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
-                  Gera um arquivo no Storage com a configuração deste agente, para ferramentas ou equipes que precisem
-                  do playbook num URL estável. Opcional — pode gerar agora ou depois na ficha do agente.
+                  Gera um documento com tudo o que este agente sabe e como ele age — útil para consultar ou compartilhar
+                  com a equipe. É opcional: você pode gerar agora ou depois, na ficha do agente.
                 </p>
               </div>
 
@@ -3563,7 +3622,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 </div>
               ) : !playbookMetaLoading && !playbookErro ? (
                 <p style={{ color: "#6e7781", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
-                  Ainda não há playbook no Storage para este agente. Use o botão abaixo para gerar.
+                  Este agente ainda não tem material de apoio. Use o botão abaixo para gerar.
                 </p>
               ) : null}
 
@@ -3583,7 +3642,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   opacity: playbookGerando || playbookMetaLoading ? 0.65 : 1,
                 }}
               >
-                {playbookGerando ? "A gerar playbook⬦" : "Gerar playbook no Storage"}
+                {playbookGerando ? "Gerando⬦" : "Gerar material de apoio"}
               </button>
 
               {ragPosCriacaoAviso ? (
@@ -3612,12 +3671,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
             <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 28, paddingTop: 28, borderTop: "1px solid #16271e" }}>
               <div>
                 <h2 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-                  Canal
+                  Conexão do WhatsApp
                 </h2>
                 <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
                   {modoOperacao === "canal_whatsapp"
-                    ? "Passo 1: região + criar instância WhatsApp. Passo 2 (opcional agora): QR ou código para ligar o telefone."
-                    : "Este agente está em modo copiloto interno (jobs por ciclo). Não há WhatsApp neste fluxo — pode concluir e gerenciar ciclos na Central ou na ficha do agente."}
+                    ? "Passo 1: escolha a região e crie o número de WhatsApp. Passo 2 (opcional agora): leia o QR Code ou use o código para conectar o telefone."
+                    : "Este agente trabalha nos bastidores. Não usa WhatsApp neste fluxo — você pode concluir e ajustar as rotinas depois, na Central ou na ficha do agente."}
                 </p>
               </div>
 
@@ -3635,11 +3694,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                     lineHeight: 1.55,
                   }}
                 >
-                  <strong style={{ color: "#c9a24a" }}>Ciclos vinculados:</strong> associou ciclos existentes da Central a
-                  este agente. Confirme no painel WhatsApp que o <strong style={{ color: "#e6edf3" }}>webhook</strong> aponta
-                  para <code style={{ fontSize: 11, color: "#93cdd4" }}>/api/whatsapp/webhook</code> e que a instância
-                  abaixo fica <strong style={{ color: "#e6edf3" }}>connected</strong> — só assim as mensagens disparam a
-                  IA neste modelo.
+                  <strong style={{ color: "#c9a24a" }}>Rotinas reaproveitadas:</strong> você associou rotinas já
+                  existentes a este agente. Confirme no painel abaixo que o WhatsApp aparece como{" "}
+                  <strong style={{ color: "#e6edf3" }}>conectado</strong> — só assim as mensagens dos clientes começam a
+                  ser respondidas pela IA.
                 </div>
               ) : null}
 
@@ -3647,7 +3705,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                 <>
                   {syncCanalLoading ? (
                     <p style={{ color: "#8b949e", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
-                      A gravar modo WhatsApp e configuração no agente⬦
+                      Salvando a configuração do agente⬦
                     </p>
                   ) : null}
                   <AgenteUazapiBlock
@@ -3677,8 +3735,8 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
               ) : (
                 <div style={{ background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 12, padding: 16 }}>
                   <p style={{ color: "#8b949e", fontSize: 13, margin: 0, lineHeight: 1.55 }}>
-                    Para ativar WhatsApp mais tarde, abra a ficha do agente e altere o modo de operação / ciclo ou use o
-                    bloco WhatsApp na área de integrações.
+                    Para ativar o WhatsApp mais tarde, abra a ficha do agente e troque para &quot;Atende no WhatsApp&quot;,
+                    ou use o bloco de WhatsApp na área de integrações.
                   </p>
                 </div>
               )}

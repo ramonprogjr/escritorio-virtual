@@ -810,7 +810,7 @@ export function AgenteUazapiBlock({
               onClick={() => postAction("status")}
             >
               {loading === "status" ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
-              Actualizar estado
+              Atualizar estado
             </button>
             <button
               type="button"
@@ -1106,7 +1106,7 @@ export function AgenteUazapiBlock({
                 }}
               >
                 <RefreshCw size={12} aria-hidden />
-                Actualizar lista
+                Atualizar lista
               </button>
             </div>
             <label style={{ display: "block", color: "#8b949e", fontSize: 11, fontWeight: 700, marginBottom: 8 }}>

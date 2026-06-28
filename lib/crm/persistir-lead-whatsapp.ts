@@ -184,7 +184,7 @@ export async function persistirDadosLeadWhatsapp(
     await supabase.from("hub_atividades").insert({
       lead_id: leadId,
       tipo: "ia_acao",
-      descricao: `Dados do lead actualizados no CRM (${campos.join(", ")})`,
+      descricao: `Dados do lead atualizados no CRM (${campos.join(", ")})`,
       feito_por: agenteSlug,
       feito_por_tipo: "ia",
       metadata: { origem: "persistir_dados_lead_whatsapp", campos },

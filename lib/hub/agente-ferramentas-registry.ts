@@ -150,7 +150,7 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
   {
     id: "hub_atualizar_lead",
     categoria: "registos",
-    titulo: "Actualizar lead no CRM",
+    titulo: "Atualizar lead no CRM",
     descricao:
       "Grava campos permitidos na ficha do cliente (hub_leads_crm): estágio, score, valor, interesse, follow-up, tags, metadata.",
     recomendadoWhatsApp: true,

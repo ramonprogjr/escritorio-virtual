@@ -167,7 +167,7 @@ function OpcaoToggleCard({
         }}
       >
         <span style={{ fontSize: 10, fontWeight: 700, color: ativo ? "#3fb950" : "#6e7781" }}>
-          {ativo ? "ACTIVO" : "INACTIVO"}
+          {ativo ? "ATIVO" : "INATIVO"}
         </span>
         <CrmToggleSwitch
           checked={ativo}

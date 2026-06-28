@@ -499,7 +499,7 @@ export function CrmFerramentasCustomDrawer({
           setForm((f) => ({ ...f, ativo: ativoAlvo }));
         }
       } else {
-        setErro("Não foi possível actualizar todas as ferramentas.");
+        setErro("Não foi possível atualizar todas as ferramentas.");
         await qc.invalidateQueries({ queryKey: hubQueryKeys.ferramentasCustom() });
       }
     } catch (e) {

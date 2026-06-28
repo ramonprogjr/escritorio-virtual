@@ -498,7 +498,7 @@ async function atualizarLeadPlaybook(
   await supabase.from("hub_acoes_ia").insert({
     agente_slug: agenteSlug,
     tipo: "memoria_salva",
-    descricao: "Lead actualizado via playbook Maria",
+    descricao: "Lead atualizado via playbook Maria",
     lead_id: leadId,
     sucesso: true,
     metadata: { origem: "playbook_flow_maria", campos: Object.keys(built.patch) },

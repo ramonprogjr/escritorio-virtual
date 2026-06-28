@@ -1632,7 +1632,7 @@ export function CrmCargosCatalogDrawer({
                 <p style={{ margin: 0, fontSize: 10, color: OB.texto3, lineHeight: 1.45 }}>
                   Taxonomia oficial em código:{" "}
                   <code style={{ fontSize: 10, color: OB.texto2 }}>lib/hub/documento-conceito-catalogo.ts</code>
-                  . Novos setores ou mudanças nas secções do playbook devem actualizar esse ficheiro primeiro; a IA de
+                  . Novos setores ou mudanças nas secções do playbook devem atualizar esse ficheiro primeiro; a IA de
                   sugestão segue esse «documento conceito» para não inventar nomes.
                 </p>
                 {segmentoForaDoConceito ? (
@@ -1649,7 +1649,7 @@ export function CrmCargosCatalogDrawer({
                     }}
                   >
                     Este segmento não está no documento conceito ({nomesSegmentosConceito().join(", ")}). Só continue se
-                    tiver actualizado{" "}
+                    tiver atualizado{" "}
                     <code style={{ fontSize: 10 }}>documento-conceito-catalogo.ts</code>; caso contrário prefira um dos
                     setores listados para relatórios e sugestões IA alinhadas.
                   </p>
@@ -1944,7 +1944,7 @@ export function CrmCargosCatalogDrawer({
                       />
                     </span>
                     <span style={{ color: OB.texto, fontSize: 12, lineHeight: 1.45 }}>
-                      Ao alterar o título, actualizar o campo <code style={{ fontSize: 11 }}>cargo</code> em todos os
+                      Ao alterar o título, atualizar o campo <code style={{ fontSize: 11 }}>cargo</code> em todos os
                       agentes que ainda usam o título antigo (referência por texto).
                     </span>
                   </label>

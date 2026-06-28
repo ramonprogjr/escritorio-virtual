@@ -274,7 +274,7 @@ async function executarFerramentaHubBuiltin(
       await supabase.from("hub_acoes_ia").insert({
         agente_slug: ctx.agenteSlug,
         tipo: "memoria_salva",
-        descricao: "Lead actualizado via hub_atualizar_lead",
+        descricao: "Lead atualizado via hub_atualizar_lead",
         lead_id: ctx.leadId,
         sucesso: true,
         metadata: {
