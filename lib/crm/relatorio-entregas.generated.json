@@ -1,7 +1,22 @@
 {
-  "geradoEm": "2026-06-28T18:43:58.837Z",
+  "geradoEm": "2026-06-28T19:04:30.669Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "ac2153ca9859d830c792a8d40c1d4936a0e5a39f",
+      "hashCurto": "ac2153c",
+      "mensagem": "IA no WhatsApp nao envia para destino arbitrario nem cria cadastro com telefone forjado",
+      "mensagemRaw": "fix(seg): IA no WhatsApp nao envia para destino arbitrario nem cria cadastro com telefone forjado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T18:44:27.000Z",
+      "hora": "15:44",
+      "arquivos": [
+        "lib/hub/executar-ferramenta-ia.ts"
+      ],
+      "areas": {
+        "lib/hub": 1
+      }
+    },
     {
       "hash": "8a1dfc8cb6fe4d88c0bdbdd06120dcbe8cb3521d",
       "hashCurto": "8a1dfc8",

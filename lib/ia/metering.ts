@@ -1,5 +1,10 @@
 import { crmDb } from "@/lib/crm/supabase-server";
-import { custoUsdDeTokens, custoBrl, creditosDeCusto } from "./metering-calc";
+import {
+  custoUsdDeTokens,
+  custoBrl,
+  creditosDeCusto,
+  type PrecoModelo,
+} from "./metering-calc";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type SupabaseLike = { from: (t: string) => any };
@@ -40,6 +45,38 @@ export async function carregarConfigPreco(
   }
 }
 
+/**
+ * Carrega a TABELA DE PREÇOS editável no painel (`hub_ia_precos`) e a converte para o
+ * shape consumido por `custoUsdDeTokens`. Só inclui modelos `ativo`. Tolerante por design:
+ * se a tabela estiver vazia, der erro ou a coluna não existir, retorna `undefined` e o
+ * cálculo recai em `PRECOS_MODELOS` (comportamento atual). Modo sombra — sem cobrança real.
+ */
+export async function carregarTabelaPrecos(
+  db: SupabaseLike = crmDb(),
+): Promise<Record<string, PrecoModelo> | undefined> {
+  try {
+    const { data, error } = await db
+      .from("hub_ia_precos")
+      .select("modelo, input_usd_milhao, output_usd_milhao, ativo");
+    if (error) return undefined;
+    const rows: any[] = Array.isArray(data) ? data : [];
+    const tabela: Record<string, PrecoModelo> = {};
+    for (const r of rows) {
+      const modelo = String(r?.modelo ?? "").trim();
+      if (!modelo) continue;
+      if (r?.ativo === false) continue; // modelo desativado no painel → ignora (cai no default)
+      const input = Number(r?.input_usd_milhao);
+      const output = Number(r?.output_usd_milhao);
+      if (!Number.isFinite(input) || !Number.isFinite(output)) continue;
+      tabela[modelo] = { inputUsdMilhao: input, outputUsdMilhao: output };
+    }
+    // Tabela vazia (nenhum preço válido) → undefined para usar os preços de referência.
+    return Object.keys(tabela).length > 0 ? tabela : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Best-effort: registra o consumo e o débito; nunca lança (não quebra o fluxo de IA). */
 export async function registrarConsumoIA(
   p: ConsumoInput,
@@ -47,10 +84,13 @@ export async function registrarConsumoIA(
 ): Promise<{ creditos: number; custoBrl: number } | null> {
   try {
     const cfg = await carregarConfigPreco(p.tenantId, db);
+    // Preços do PAINEL (hub_ia_precos) têm prioridade; ausentes/erro → PRECOS_MODELOS.
+    const tabela = await carregarTabelaPrecos(db);
     const usd = custoUsdDeTokens({
       modelo: p.modelo,
       tokensEntrada: p.tokensEntrada,
       tokensSaida: p.tokensSaida,
+      tabela,
     });
     const brl = custoBrl(usd, cfg.fxUsdBrl, cfg.markup);
     const creditos = creditosDeCusto(brl, cfg.valorCreditoBrl);

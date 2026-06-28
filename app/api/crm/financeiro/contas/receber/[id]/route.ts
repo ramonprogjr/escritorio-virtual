@@ -1,4 +1,5 @@
 import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
+import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -23,10 +24,24 @@ export async function PATCH(
     return NextResponse.json({ error: "status inválido" }, { status: 400 });
   }
 
-  const { error } = await db()
-    .from("hub_contas_receber")
-    .update({ status, atualizado_em: new Date().toISOString() })
-    .eq("id", id);
+  // Update com escopo de tenant (id + tenant atual / legado / NULL). Sem isto, o service-role
+  // bypassa RLS e um financeiro de um tenant flipava o status de recebíveis de outro tenant.
+  // Fallback sem o filtro `.or` se a coluna tenant_id ainda não existir nesta base.
+  const tenantId = auth.ctx.tenantId;
+  const supabase = db();
+  const runUpdate = (withTenantFilter: boolean) => {
+    let query = supabase
+      .from("hub_contas_receber")
+      .update({ status, atualizado_em: new Date().toISOString() })
+      .eq("id", id);
+    if (withTenantFilter) query = query.or(tenantScopeOrFilter(tenantId));
+    return query;
+  };
+
+  let { error } = await runUpdate(true);
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    ({ error } = await runUpdate(false));
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

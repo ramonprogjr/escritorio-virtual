@@ -3,7 +3,7 @@ import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
-import { isMissingPgColumn } from "@/lib/tenant-default";
+import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { derivarEntregaDoNegocio, type DerivarEntregaResult } from "@/lib/crm/derivar-entrega";
 
 type Params = { params: Promise<{ id: string }> };
@@ -96,6 +96,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 });
   if (!atual) return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
+  // Isolamento de tenant (espelha o GET irmão): negócio de outro tenant é 404, nunca
+  // editável. Fecha o vetor de um comercial alterar negócio/valores de outro tenant.
+  if (atual.tenant_id && atual.tenant_id !== tenantId) {
+    return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
+  }
 
   if (body.etapa && atual.pipeline_id) {
     const { data: estagios } = await supabase
@@ -165,10 +170,15 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   // Atualiza e lê de volta com o SELECT base (literal → tipagem estável do parser).
   // A coluna aditiva é refletida no cliente de forma otimista; o retorno usa o SELECT legado.
+  // Update SEMPRE com escopo de tenant (id + tenant atual / legado / NULL). Já checamos
+  // `atual` acima, mas o filtro no UPDATE evita TOCTOU e garante que nenhuma linha de
+  // outro tenant seja gravada mesmo sob corrida. Usa o mesmo `tenantScopeOrFilter` da
+  // listagem para não quebrar registros legados (tenant_id NULL / Obra10 padrão).
   let { data, error } = await supabase
     .from("hub_negocios")
     .update(patch)
     .eq("id", id)
+    .or(tenantScopeOrFilter(tenantId))
     .select(NEGOCIO_SELECT_LEGACY)
     .single();
   if (error && isMissingPgColumn(error, "proxima_acao_em")) {
@@ -178,6 +188,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       .from("hub_negocios")
       .update(patch)
       .eq("id", id)
+      .or(tenantScopeOrFilter(tenantId))
       .select(NEGOCIO_SELECT_LEGACY)
       .single());
   }

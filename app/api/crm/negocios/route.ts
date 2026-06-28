@@ -340,39 +340,69 @@ export async function GET(request: NextRequest) {
   }
 
   // Soma REAL sobre TODO o pipeline (não só a página de 20): KPI não pode mudar ao paginar.
-  // Consulta leve (3 colunas), mesmos filtros; sem range. Limite alto como salvaguarda.
-  let aggQuery = supabase
-    .from("hub_negocios")
-    .select("valor_estimado, valor_fechado, etapa")
-    .or(tenantScopeOrFilter(g.ctx.tenantId))
-    .limit(5000);
-  if (status) aggQuery = aggQuery.eq("status", status);
-  if (etapa) aggQuery = aggQuery.eq("etapa", etapa);
-  if (prefixo) aggQuery = aggQuery.eq("prefixo_mercado", prefixo);
-  if (pipelineId) aggQuery = aggQuery.eq("pipeline_id", pipelineId);
-  if (busca) aggQuery = aggQuery.or(`titulo.ilike.%${busca}%,codigo.ilike.%${busca}%`);
-
-  const { data: aggData } = await aggQuery;
-  const valorDe = (r: unknown) =>
-    Number(
-      (r as { valor_fechado?: number | null; valor_estimado?: number | null }).valor_fechado ??
-        (r as { valor_estimado?: number | null }).valor_estimado ??
-        0,
-    );
-  const etapaDe = (r: unknown) => String((r as { etapa?: unknown }).etapa ?? "");
-
-  // Soma e contagem por etapa (todo o pipeline) — cabeçalhos de coluna do Kanban.
+  // PRIMÁRIO: agrega no BANCO via RPC (SUM/COUNT por etapa) — sem teto de linhas, correto
+  // para tenants grandes. FALLBACK (RPC ausente nesta base): agregação no app com limite
+  // elevado e documentado. A função RPC é aditiva (migração 20260702120000, não aplicada).
   const etapaTotais: Record<string, number> = {};
   const etapaCounts: Record<string, number> = {};
-  for (const r of aggData ?? []) {
-    const e = etapaDe(r);
-    etapaTotais[e] = (etapaTotais[e] ?? 0) + valorDe(r);
-    etapaCounts[e] = (etapaCounts[e] ?? 0) + 1;
+  let pipelineTotal = 0;
+  let agregadoNoBanco = false;
+
+  const { data: rpcData, error: rpcErr } = await supabase.rpc("crm_negocios_pipeline_totais", {
+    p_tenant_id: g.ctx.tenantId,
+    p_status: status || null,
+    p_etapa: etapa || null,
+    p_prefixo: prefixo || null,
+    p_pipeline_id: pipelineId || null,
+    p_busca: busca || null,
+  });
+
+  if (!rpcErr && Array.isArray(rpcData)) {
+    // Linhas: { etapa, total, qtd }. Soma do "aberto" exclui ganho/perdido.
+    for (const r of rpcData as Array<{ etapa?: unknown; total?: unknown; qtd?: unknown }>) {
+      const e = String(r.etapa ?? "");
+      const total = Number(r.total ?? 0);
+      const qtd = Number(r.qtd ?? 0);
+      etapaTotais[e] = total;
+      etapaCounts[e] = qtd;
+      if (!["ganho", "perdido"].includes(e)) pipelineTotal += total;
+    }
+    agregadoNoBanco = true;
   }
-  // Total aberto (exclui ganho/perdido) — KPI "Pipeline Total".
-  const pipelineTotal = (aggData ?? [])
-    .filter((r) => !["ganho", "perdido"].includes(etapaDe(r)))
-    .reduce((s, r) => s + valorDe(r), 0);
+
+  // FALLBACK app-side (só quando a RPC não existe/erra nesta base). Limite elevado a 50k
+  // como salvaguarda; o caminho correto é a RPC acima (sem teto). Mantém o KPI estável ao
+  // paginar mesmo antes de a migração da função ser aplicada.
+  if (!agregadoNoBanco) {
+    let aggQuery = supabase
+      .from("hub_negocios")
+      .select("valor_estimado, valor_fechado, etapa")
+      .or(tenantScopeOrFilter(g.ctx.tenantId))
+      .limit(50000);
+    if (status) aggQuery = aggQuery.eq("status", status);
+    if (etapa) aggQuery = aggQuery.eq("etapa", etapa);
+    if (prefixo) aggQuery = aggQuery.eq("prefixo_mercado", prefixo);
+    if (pipelineId) aggQuery = aggQuery.eq("pipeline_id", pipelineId);
+    if (busca) aggQuery = aggQuery.or(`titulo.ilike.%${busca}%,codigo.ilike.%${busca}%`);
+
+    const { data: aggData } = await aggQuery;
+    const valorDe = (r: unknown) =>
+      Number(
+        (r as { valor_fechado?: number | null; valor_estimado?: number | null }).valor_fechado ??
+          (r as { valor_estimado?: number | null }).valor_estimado ??
+          0,
+      );
+    const etapaDe = (r: unknown) => String((r as { etapa?: unknown }).etapa ?? "");
+
+    for (const r of aggData ?? []) {
+      const e = etapaDe(r);
+      etapaTotais[e] = (etapaTotais[e] ?? 0) + valorDe(r);
+      etapaCounts[e] = (etapaCounts[e] ?? 0) + 1;
+    }
+    pipelineTotal = (aggData ?? [])
+      .filter((r) => !["ganho", "perdido"].includes(etapaDe(r)))
+      .reduce((s, r) => s + valorDe(r), 0);
+  }
 
   return NextResponse.json({
     data: data ?? [],

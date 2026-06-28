@@ -135,6 +135,10 @@ export default function NegocioDetalhePage() {
   const [buscaPessoa, setBuscaPessoa] = useState("");
   const [resultadosPessoa, setResultadosPessoa] = useState<PessoaMini[]>([]);
   const [modalReceber, setModalReceber] = useState(false);
+  // "Já gerado": evita o usuário criar dois recebíveis para o mesmo negócio (duplicidade
+  // no caminho do dinheiro). O backend já é a fonte da verdade (anti-duplicação + índice
+  // único parcial), este estado só dá o feedback visual de que a conta já foi lançada.
+  const [recebivelGerado, setRecebivelGerado] = useState(false);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -594,20 +598,22 @@ export default function NegocioDetalhePage() {
                 </p>
                 <button
                   type="button"
+                  disabled={recebivelGerado}
                   onClick={() => setModalReceber(true)}
                   style={{
                     minHeight: 40,
                     padding: "9px 16px",
                     borderRadius: 8,
-                    border: "1px solid #c9a24a",
+                    border: `1px solid ${recebivelGerado ? "#1d3a2c" : "#c9a24a"}`,
                     background: "transparent",
-                    color: "#c9a24a",
+                    color: recebivelGerado ? "#34d399" : "#c9a24a",
                     fontWeight: 700,
                     fontSize: 12,
-                    cursor: "pointer",
+                    cursor: recebivelGerado ? "default" : "pointer",
+                    opacity: recebivelGerado ? 0.85 : 1,
                   }}
                 >
-                  + Gerar conta a receber
+                  {recebivelGerado ? "✓ Conta a receber gerada" : "+ Gerar conta a receber"}
                 </button>
               </div>
             </div>
@@ -992,6 +998,7 @@ export default function NegocioDetalhePage() {
         open={modalReceber}
         onClose={() => setModalReceber(false)}
         onCriado={() => {
+          setRecebivelGerado(true);
           toast.success("Conta a receber gerada");
         }}
         tipoInicial="receber"

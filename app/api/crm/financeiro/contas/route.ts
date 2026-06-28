@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
-import { isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
+import { isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -61,6 +61,27 @@ export async function POST(request: NextRequest) {
   if (negocioId) row.negocio_id = negocioId;
 
   const table = tipo === "pagar" ? "hub_contas_pagar" : "hub_contas_receber";
+
+  // Anti-duplicação do recebível: um negócio gera NO MÁXIMO uma conta a receber.
+  // Se já existir recebível para este negocio_id (no tenant), retorna o existente em
+  // vez de criar outro. Tolerante: se a coluna negocio_id ainda não existir, ignora a
+  // checagem (a base antiga não duplica por negócio porque nem grava o vínculo).
+  if (negocioId) {
+    const existente = await supabase
+      .from("hub_contas_receber")
+      .select("id")
+      .eq("negocio_id", negocioId)
+      .or(tenantScopeOrFilter(tenantId))
+      .limit(1)
+      .maybeSingle();
+    if (!existente.error && existente.data?.id) {
+      return NextResponse.json(
+        { ok: true, id: existente.data.id, tipo, ja_existia: true },
+        { status: 200 },
+      );
+    }
+    // existente.error de coluna ausente → segue para o insert (base sem o vínculo).
+  }
 
   let { data, error } = await supabase.from(table).insert(row).select("id").single();
 
