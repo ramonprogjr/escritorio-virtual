@@ -1,7 +1,29 @@
 {
-  "geradoEm": "2026-06-28T14:14:56.838Z",
+  "geradoEm": "2026-06-28T14:23:32.293Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "c4f81861d2bce82b48eabe0ab54d3cb031390730",
+      "hashCurto": "c4f8186",
+      "mensagem": "tabela -> cards/foto (Imoveis, Cadastros, Canais)",
+      "mensagemRaw": "feat(F4-B): tabela -> cards/foto (Imoveis, Cadastros, Canais)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T14:15:34.000Z",
+      "hora": "11:15",
+      "arquivos": [
+        "app/api/crm/imoveis/route.ts",
+        "app/crm/cadastro/page.tsx",
+        "app/crm/canais/page.tsx",
+        "app/crm/imoveis/page.tsx",
+        "lib/crm/cadastro-list-columns.tsx",
+        "lib/crm/use-colunas-visiveis.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 3,
+        "lib/crm": 2
+      }
+    },
     {
       "hash": "35dddefa1090c01e527b83cf0a56e05bf9acef94",
       "hashCurto": "35dddef",

@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Coins, Save } from "lucide-react";
 import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { crmApiHeaders } from "@/lib/internal-api-headers-client";
-import { isCrmOwnerRole } from "@/lib/crm/crm-permissoes";
-import { supabase } from "@/lib/supabase/client";
+import { useCrmRole } from "@/hooks/useCrmRole";
 import { toast } from "@/components/crm/toast";
 
 type Config = {
@@ -28,26 +27,12 @@ const CONFIG_FALLBACK: Config = {
 };
 
 export default function PrecificacaoPage() {
-  const [myRole, setMyRole] = useState("");
+  const { isOwner, loading: roleLoading } = useCrmRole();
   const [cfg, setCfg] = useState<Config>(CONFIG_FALLBACK);
   const [precos, setPrecos] = useState<Preco[]>([]);
   const [loading, setLoading] = useState(true);
   const [salvandoCfg, setSalvandoCfg] = useState(false);
   const [salvandoModelo, setSalvandoModelo] = useState<string | null>(null);
-
-  const isOwner = isCrmOwnerRole(myRole);
-
-  useEffect(() => {
-    void supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        setMyRole("");
-        setLoading(false);
-        return;
-      }
-      const row = await supabase.from("users").select("role").eq("auth_id", user.id).maybeSingle();
-      setMyRole(row.data?.role != null ? String(row.data.role) : "");
-    });
-  }, []);
 
   const carregar = useCallback(async () => {
     if (!isOwner) {
@@ -73,8 +58,8 @@ export default function PrecificacaoPage() {
   }, [isOwner]);
 
   useEffect(() => {
-    if (myRole) void carregar();
-  }, [myRole, carregar]);
+    if (!roleLoading) void carregar();
+  }, [roleLoading, carregar]);
 
   async function salvarConfig() {
     setSalvandoCfg(true);
@@ -128,7 +113,7 @@ export default function PrecificacaoPage() {
     "w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3]";
   const labelCls = "mb-1 block text-[10px] font-bold uppercase tracking-wide text-[#8b949e]";
 
-  if (!myRole && loading) {
+  if (roleLoading) {
     return (
       <div className="flex min-h-full items-center justify-center bg-[#0a140f] text-sm text-[#8b949e]">
         Carregando…

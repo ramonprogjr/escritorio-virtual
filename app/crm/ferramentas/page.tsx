@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { CrmFerramentasCustomDrawer } from "@/components/crm/CrmFerramentasCustomDrawer";
+import { useCrmRole } from "@/hooks/useCrmRole";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import type { HubAgenteFerramentaId, HubFerramentaCategoria } from "@/lib/hub/agente-ferramentas-registry";
 import {
@@ -78,6 +79,10 @@ function agenteUsaFerramentaKey(a: AgenteLista, key: string): boolean {
 export default function FerramentasHubPage() {
   const pathname = usePathname();
   const { setSlot } = useCrmHeaderSlot();
+  // Identificadores internos (slugs de função, chaves, impl de execução) e a gestão
+  // de ferramentas custom/tenant-avançado são de PLATAFORMA — só owner/super-admin.
+  // O fornecedor (gestor) vê o catálogo em linguagem de negócio, sem segredos internos.
+  const { isOwner } = useCrmRole();
   const [agentes, setAgentes] = useState<AgenteLista[]>([]);
   const [customRows, setCustomRows] = useState<CustomRow[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -145,17 +150,16 @@ export default function FerramentasHubPage() {
       path: pathname,
       actions: (
         <div className="flex flex-wrap items-center gap-2 text-xs" style={{ color: "#8b949e" }}>
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="rounded px-2 py-1 font-semibold"
-            style={{ background: "#16271e", color: "#c9a24a", border: "1px solid #1d3a2c", cursor: "pointer" }}
-          >
-            Gerenciar custom + IA
-          </button>
-          <span className="rounded px-2 py-1" style={{ background: "#16271e", border: "1px solid #1d3a2c" }}>
-            {HUB_AGENTE_FERRAMENTAS_CATALOGO.length} builtins
-          </span>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="rounded px-2 py-1 font-semibold"
+              style={{ background: "#16271e", color: "#c9a24a", border: "1px solid #1d3a2c", cursor: "pointer" }}
+            >
+              Gerenciar custom + IA
+            </button>
+          )}
           <span className="rounded px-2 py-1" style={{ background: "#003b2630", color: "#c9a24a" }}>
             {agentesProducao.length} agentes ativos
           </span>
@@ -163,7 +167,7 @@ export default function FerramentasHubPage() {
       ),
     });
     return () => setSlot(null);
-  }, [pathname, setSlot, agentesProducao.length]);
+  }, [pathname, setSlot, agentesProducao.length, isOwner]);
 
   const porId = useMemo(() => {
     const m = new Map<HubAgenteFerramentaId, AgenteLista[]>();
@@ -194,9 +198,16 @@ export default function FerramentasHubPage() {
             Ferramentas IA (Hub)
           </h1>
           <p className="mt-2 text-sm leading-relaxed m-0" style={{ color: "#8b949e" }}>
-            Catálogo <strong style={{ color: "#aebccf" }}>built-in</strong> mais ferramentas{" "}
-            <strong style={{ color: "#c9a24a" }}>custom</strong> do tenant (nome e descrição próprios, mesma execução
-            segura; opcional smart Mistral/Gemini). Ativar por agente em{" "}
+            {isOwner ? (
+              <>
+                Catálogo <strong style={{ color: "#aebccf" }}>built-in</strong> mais ferramentas{" "}
+                <strong style={{ color: "#c9a24a" }}>custom</strong> do tenant (nome e descrição próprios, mesma
+                execução segura; opcional smart Mistral/Gemini).{" "}
+              </>
+            ) : (
+              <>O que os seus agentes conseguem fazer (consultar leads, registar notas, gerar relatórios). </>
+            )}
+            Ativar por agente em{" "}
             <Link href="/crm/agentes" className="underline font-medium" style={{ color: "#93cdd4" }}>
               Modelos
             </Link>
@@ -276,13 +287,15 @@ export default function FerramentasHubPage() {
                                 </span>
                               )}
                             </div>
-                            <code
-                              className="mt-1 block truncate text-[11px]"
-                              style={{ color: "#93cdd4" }}
-                              title={f.mistralFunction.name}
-                            >
-                              {f.mistralFunction.name}
-                            </code>
+                            {isOwner && (
+                              <code
+                                className="mt-1 block truncate text-[11px]"
+                                style={{ color: "#93cdd4" }}
+                                title={f.mistralFunction.name}
+                              >
+                                {f.mistralFunction.name}
+                              </code>
+                            )}
                             <p className="mt-2 mb-0 text-[13px] leading-relaxed" style={{ color: "#8b949e" }}>
                               {f.descricao}
                             </p>
@@ -328,7 +341,7 @@ export default function FerramentasHubPage() {
             );
           })}
 
-        {!loading && customComChave.length > 0 ? (
+        {isOwner && !loading && customComChave.length > 0 ? (
           <section className="mb-10">
             <h2 className="mb-4 flex items-center gap-2 text-base font-bold m-0" style={{ color: "#e6edf3" }}>
               <Wrench size={20} strokeWidth={1.5} style={{ color: "#c9a24a" }} />

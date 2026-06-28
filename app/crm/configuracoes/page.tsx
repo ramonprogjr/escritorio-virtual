@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { crmApiHeaders } from "@/lib/internal-api-headers-client";
+import { useCrmRole } from "@/hooks/useCrmRole";
 import type { TenantSettings } from "@/app/api/crm/tenant-settings/route";
 
 type HealthCheck = {
@@ -38,6 +39,7 @@ const LABELS: Record<string, string> = {
 };
 
 export default function Configuracoes() {
+  const { isOwner } = useCrmRole();
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [followup, setFollowup] = useState<FollowupRow[]>([]);
@@ -50,10 +52,10 @@ export default function Configuracoes() {
   });
   const [salvandoFollowup, setSalvandoFollowup] = useState(false);
   const [salvandoHorario, setSalvandoHorario] = useState(false);
+  const [salvandoDistribuicao, setSalvandoDistribuicao] = useState(false);
 
   const carregar = useCallback(async () => {
-    const [h, f, t] = await Promise.all([
-      fetch("/api/health").then((r) => r.json() as Promise<HealthResponse>),
+    const [f, t] = await Promise.all([
       fetch("/api/hub/followup-config", { headers: internalApiHeaders() }).then((r) =>
         r.json()
       ) as Promise<{ rows?: FollowupRow[] }>,
@@ -61,7 +63,6 @@ export default function Configuracoes() {
         r.json()
       ) as Promise<{ settings?: TenantSettings }>,
     ]);
-    setHealth(h);
     setFollowup(f.rows ?? []);
     if (t.settings) setTenantSettings(t.settings);
   }, []);
@@ -69,6 +70,26 @@ export default function Configuracoes() {
   useEffect(() => {
     carregar().catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar"));
   }, [carregar]);
+
+  // Ambiente/env vars (segredos da PLATAFORMA) — só owner/super-admin.
+  useEffect(() => {
+    if (!isOwner) {
+      setHealth(null);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/health")
+      .then((r) => r.json() as Promise<HealthResponse>)
+      .then((h) => {
+        if (!cancelled) setHealth(h);
+      })
+      .catch(() => {
+        /* bloco de diagnóstico opcional — não bloqueia a tela */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwner]);
 
   async function salvarFollowup() {
     setSalvandoFollowup(true);
@@ -97,8 +118,11 @@ export default function Configuracoes() {
     }
   }
 
-  async function salvarHorario() {
-    setSalvandoHorario(true);
+  async function salvarTenantSettings(
+    setBusy: (v: boolean) => void,
+    msgErro: string
+  ) {
+    setBusy(true);
     setErro(null);
     try {
       const res = await fetch("/api/crm/tenant-settings", {
@@ -108,14 +132,19 @@ export default function Configuracoes() {
       });
       const j = (await res.json()) as { error?: string; settings?: TenantSettings };
       if (!res.ok) {
-        setErro(j.error || "Falha ao guardar horário (requer admin)");
+        setErro(j.error || msgErro);
         return;
       }
       if (j.settings) setTenantSettings(j.settings);
     } finally {
-      setSalvandoHorario(false);
+      setBusy(false);
     }
   }
+
+  const salvarHorario = () =>
+    salvarTenantSettings(setSalvandoHorario, "Falha ao guardar horário (requer admin)");
+  const salvarDistribuicao = () =>
+    salvarTenantSettings(setSalvandoDistribuicao, "Falha ao guardar distribuição (requer admin)");
 
   return (
     <div className="flex min-h-full flex-col bg-[#0a140f]">
@@ -131,39 +160,43 @@ export default function Configuracoes() {
           </p>
         )}
 
-        <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-bold text-[#e6edf3]">Ambiente e integrações</p>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                health?.status === "ok" ? "bg-[#23863633] text-[#3fb950]" : "bg-[#d2992226] text-[#e3b341]"
-              }`}
-            >
-              {health?.status === "ok" ? "Completo" : "Atenção"}
-            </span>
-          </div>
-          {health && (
-            <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
-              {health.checks.map((check) => (
-                <div
-                  key={check.name}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2"
-                >
-                  <p className="truncate text-xs font-bold text-[#e6edf3]">
-                    {LABELS[check.name] || check.name}
-                  </p>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
-                      check.configured ? "bg-[#23863633] text-[#3fb950]" : "bg-[#f8514926] text-[#ff7b72]"
-                    }`}
-                  >
-                    {check.configured ? "OK" : "Falta"}
-                  </span>
-                </div>
-              ))}
+        {/* Ambiente / env vars = segredos da PLATAFORMA. Só owner/super-admin vê;
+            o fornecedor (gestor) não pode ver chaves/tokens do ambiente. */}
+        {isOwner && (
+          <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-bold text-[#e6edf3]">Ambiente e integrações</p>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  health?.status === "ok" ? "bg-[#23863633] text-[#3fb950]" : "bg-[#d2992226] text-[#e3b341]"
+                }`}
+              >
+                {health?.status === "ok" ? "Completo" : "Atenção"}
+              </span>
             </div>
-          )}
-        </div>
+            {health && (
+              <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
+                {health.checks.map((check) => (
+                  <div
+                    key={check.name}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2"
+                  >
+                    <p className="truncate text-xs font-bold text-[#e6edf3]">
+                      {LABELS[check.name] || check.name}
+                    </p>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${
+                        check.configured ? "bg-[#23863633] text-[#3fb950]" : "bg-[#f8514926] text-[#ff7b72]"
+                      }`}
+                    >
+                      {check.configured ? "OK" : "Falta"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-6 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
           <p className="text-sm font-bold text-[#e6edf3]">Horário comercial</p>
@@ -214,7 +247,6 @@ export default function Configuracoes() {
           <p className="text-sm font-bold text-[#e6edf3]">Distribuição de leads</p>
           <p className="mt-1 text-xs text-[#8b949e]">
             IA sugere parceiro após qualificação; gestor valida em Leads → Encaminhamentos pendentes.
-            Flag global: CRM_DISTRIBUICAO_AUTO no ambiente.
           </p>
           <label className="mt-3 flex items-center gap-2 text-sm text-[#e6edf3]">
             <input
@@ -244,11 +276,11 @@ export default function Configuracoes() {
           </label>
           <button
             type="button"
-            disabled={salvandoHorario}
-            onClick={() => void salvarHorario()}
+            disabled={salvandoDistribuicao}
+            onClick={() => void salvarDistribuicao()}
             className="mt-3 min-h-10 rounded-lg bg-[#c9a24a] px-4 text-xs font-bold text-[#003b26] disabled:opacity-50"
           >
-            {salvandoHorario ? "Salvando…" : "Guardar distribuição"}
+            {salvandoDistribuicao ? "Salvando…" : "Guardar distribuição"}
           </button>
         </div>
 
