@@ -13,7 +13,6 @@ import {
   Pencil,
   Plus,
   SplitSquareVertical,
-  Sparkles,
   Trash2,
   Workflow,
   X,
@@ -75,23 +74,6 @@ export function FlowGuiadoView({ definition, agenteSlug, disabled, onChange }: P
 
   return (
     <div style={wrapStyle}>
-      {/* Gancho de IA/voz — desabilitado até a chave de IA estar ligada. */}
-      <div style={aiBarStyle} title="Disponível com a IA ligada">
-        <span style={aiIconStyle}>
-          <Sparkles size={15} strokeWidth={2.2} />
-        </span>
-        <input
-          disabled
-          placeholder="Pedir à IA para ajustar o fluxo (em breve)…"
-          style={aiInputStyle}
-          aria-label="Pedir à IA para ajustar o fluxo"
-        />
-        <button type="button" disabled style={aiMicBtnStyle} title="Disponível com a IA ligada">
-          <Mic size={15} strokeWidth={2.2} />
-        </button>
-        <span style={aiHintBadge}>em breve</span>
-      </div>
-
       <ol style={listStyle}>
         {views.map((view, index) => (
           <StepCard
@@ -109,6 +91,25 @@ export function FlowGuiadoView({ definition, agenteSlug, disabled, onChange }: P
       </ol>
     </div>
   );
+}
+
+/**
+ * Texto de prévia do cartão. Para áudio/documento o "content" não é o texto
+ * enviado (áudio não tem texto; documento mostra o anexo), então damos um
+ * resumo honesto do anexo em vez de "(sem texto — toque para escrever)".
+ */
+function previewForView(view: GuidedStepView): string {
+  if (view.kind === "send_audio") {
+    return view.media?.url ? "🎤 Áudio anexado" : "Sem áudio — toque para anexar";
+  }
+  if (view.kind === "send_document") {
+    if (view.media?.url) {
+      const nome = view.media.file_name?.trim() || view.media.url.split("/").pop() || "arquivo";
+      return `📎 ${nome}`;
+    }
+    return "Sem arquivo — toque para anexar";
+  }
+  return view.content.trim() || "(sem texto — toque para escrever)";
 }
 
 // ─── Step card ────────────────────────────────────────────────────────────────
@@ -133,7 +134,7 @@ function StepCard({
   onPatch: (patch: GuidedStepPatch) => void;
 }) {
   const meta = KIND_META[view.kind];
-  const preview = view.content.trim();
+  const preview = previewForView(view);
 
   return (
     <li style={cardOuterStyle}>
@@ -154,7 +155,7 @@ function StepCard({
             {meta.label}
             {view.isEntry && <span style={entryTagStyle}>início</span>}
           </span>
-          <span style={previewStyle}>{preview || "(sem texto — toque para escrever)"}</span>
+          <span style={previewStyle}>{preview}</span>
         </span>
         <span style={chevronStyle}>
           {isEditing ? <X size={18} strokeWidth={2.3} /> : <ChevronRight size={18} strokeWidth={2.3} />}
@@ -531,61 +532,6 @@ const wrapStyle: CSSProperties = {
   flexDirection: "column",
   gap: 12,
   width: "100%",
-};
-
-const aiBarStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "8px 10px",
-  background: "#0f1d16",
-  border: "1px dashed #4d3c12",
-  borderRadius: 12,
-  opacity: 0.85,
-};
-
-const aiIconStyle: CSSProperties = {
-  display: "inline-flex",
-  color: "#c9a24a",
-  flexShrink: 0,
-};
-
-const aiInputStyle: CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  border: "none",
-  background: "transparent",
-  color: "#8b949e",
-  fontSize: 13,
-  outline: "none",
-  cursor: "not-allowed",
-};
-
-const aiMicBtnStyle: CSSProperties = {
-  width: 34,
-  height: 34,
-  borderRadius: 9,
-  border: "1px solid #1d3a2c",
-  background: "#16271e",
-  color: "#7a8fa6",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "not-allowed",
-  flexShrink: 0,
-};
-
-const aiHintBadge: CSSProperties = {
-  fontSize: 10,
-  fontWeight: 700,
-  color: "#c9a24a",
-  background: "#211a0d",
-  border: "1px solid #4d3c12",
-  borderRadius: 999,
-  padding: "2px 8px",
-  textTransform: "uppercase",
-  letterSpacing: 0.4,
-  flexShrink: 0,
 };
 
 const listStyle: CSSProperties = {

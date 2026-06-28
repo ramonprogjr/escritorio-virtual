@@ -122,6 +122,19 @@ export function upsertPlaybookFlowBlockInMarkdown(
 }
 
 /**
+ * Extrai apenas o CONTEÚDO NARRATIVO de um playbook em markdown — o que um humano
+ * escreveria como intenção (identidade, tom, saudação, o que coletar, §1–§6) — sem
+ * o frontmatter YAML e sem o bloco `json obra10_playbook_flow`.
+ *
+ * Usado quando o texto do playbook vira "descrição" para a IA gerar/refazer o fluxo:
+ * enviar o frontmatter ou o JSON antigo como se fosse intenção humana piora o resultado.
+ */
+export function extractPlaybookNarrativeText(markdown: string): string {
+  const semFluxo = stripAllPlaybookFlowBlocks(markdown);
+  return semFluxo.replace(FRONTMATTER_RE, "").trim();
+}
+
+/**
  * Ao regenerar o playbook (pipeline Hub), preserva o bloco `obra10_playbook_flow`
  * que já existia no ficheiro publicado — o render determinístico só gera `obra10_playbook_schema`.
  */

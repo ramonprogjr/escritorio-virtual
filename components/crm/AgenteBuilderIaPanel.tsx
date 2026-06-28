@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, Loader2, ChevronDown, ChevronUp, FileText, Mic, Square } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
@@ -39,6 +39,8 @@ export type AgenteBuilderIaPanelProps = {
   agenteNome: string;
   /** Recebe o markdown gerado para alimentar o editor de playbook existente. */
   onGerado: (markdown: string) => void;
+  /** Notifica o pai quando uma geração (texto/PDF/áudio) começa/termina — para travar o "Concluir". */
+  onGerandoChange?: (gerando: boolean) => void;
 };
 
 const DOC_ACCEPT = ".pdf,.docx,.txt,.md";
@@ -63,7 +65,12 @@ function lerArquivoBase64(file: File): Promise<string> {
   });
 }
 
-export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: AgenteBuilderIaPanelProps) {
+export function AgenteBuilderIaPanel({
+  agenteSlug,
+  agenteNome,
+  onGerado,
+  onGerandoChange,
+}: AgenteBuilderIaPanelProps) {
   const [aberto, setAberto] = useState(true);
   const [descricao, setDescricao] = useState("");
   const [gerando, setGerando] = useState(false);
@@ -79,6 +86,11 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const podeGerar = descricao.trim().length >= 12 && !gerando;
+
+  // Mantém o pai (wizard) ciente de quando há geração em andamento, para travar o "Concluir".
+  useEffect(() => {
+    onGerandoChange?.(gerando);
+  }, [gerando, onGerandoChange]);
 
   async function executarGeracao(extra?: {
     documento?: { base64: string; mimeType: string; nomeArquivo: string };
@@ -369,7 +381,7 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
           )}
           {sucesso && (
             <p style={{ margin: 0, color: "#3fb950", fontSize: 11.5, lineHeight: 1.5 }}>
-              ✓ Playbook gerado e carregado no editor abaixo. Revise e publique quando estiver bom.
+              ✓ Playbook gerado e publicado. Você revisa o fluxo na ficha do agente.
             </p>
           )}
           {avisos.length > 0 && (
@@ -382,7 +394,11 @@ export function AgenteBuilderIaPanel({ agenteSlug, agenteNome, onGerado }: Agent
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 10.5, color: "#6e7681" }}>
-              {descricao.trim().length < 12 ? "Descreva um pouco mais para gerar." : "A IA sugere; você confirma."}
+              {gerando || sucesso
+                ? "A IA sugere; você confirma."
+                : descricao.trim().length < 12
+                  ? "Descreva um pouco mais para gerar."
+                  : "A IA sugere; você confirma."}
             </span>
             <button
               type="button"

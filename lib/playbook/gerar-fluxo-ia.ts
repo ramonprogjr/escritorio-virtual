@@ -75,14 +75,17 @@ const SCHEMA_DOC = `O fluxo é um JSON \`PlaybookFlowDefinition\`:
   "entry_step_id": "<id do primeiro step>",
   "steps": [ ...PlaybookFlowStep ]
 }
-Cada step tem "id" (único, slug curto) e "kind". Os 4 tipos:
-- message  → { "kind":"message", "id":"...", "message":"texto enviado ao cliente", "next":"<id>" }   // ou "complete":{...} para encerrar
-- input    → { "kind":"input", "id":"...", "prompt":"pergunta", "field":"nome_campo", "input_type":"text|email|phone|number", "next":"<id>" }
-- menu     → { "kind":"menu", "id":"...", "prompt":"pergunta", "menu_type":"button|list|text", "options":[ {"id":"op1","label":"Opção","next":"<id>"} ] }   // button=1-3 opções, list=4+; cada option tem "next" OU "complete"
-- complete → { "kind":"complete", "id":"...", "complete":{ "type":"complete", "handoff_to":"arquitetura|imobiliario|parcerias|time_humano", "summary":"nota interna CRM", "user_message":"despedida ao cliente" } }
-Regras DURAS: todo "next"/option.next/on_select aponta para um "id" REAL em steps; "entry_step_id" existe em steps; todo caminho termina em um step "complete" (ou message com "complete"); ids únicos; mensagens curtas (máx ~3 linhas). Opcional em qualquer step: "crm_patch":{ "estagio","potencial":"ALTO|MEDIO|BAIXO","tags_add":[...] }.`
+Cada step tem "id" (único, slug curto) e "kind". Os 6 tipos:
+- message       → { "kind":"message", "id":"...", "message":"texto enviado ao cliente", "next":"<id>" }   // ou "complete":{...} para encerrar
+- input         → { "kind":"input", "id":"...", "prompt":"pergunta", "field":"nome_campo", "input_type":"text|email|phone|number", "next":"<id>" }
+- menu          → { "kind":"menu", "id":"...", "prompt":"pergunta", "menu_type":"button|list|text", "options":[ {"id":"op1","label":"Opção","next":"<id>"} ] }   // button=1-3 opções, list=4+; cada option tem "next" OU "complete"
+- send_document → { "kind":"send_document", "id":"...", "media":{ "type":"document", "url":"https://…/arquivo.pdf", "caption":"legenda opcional" }, "next":"<id>" }   // envia um PDF/arquivo pronto; media.type="document" (ou "image"); media.url obrigatório
+- send_audio    → { "kind":"send_audio", "id":"...", "media":{ "type":"audio", "url":"https://…/audio.ogg" }, "next":"<id>" }   // envia um áudio pronto; media.type="audio"; media.url obrigatório
+- complete      → { "kind":"complete", "id":"...", "complete":{ "type":"complete", "handoff_to":"arquitetura|imobiliario|parcerias|time_humano", "summary":"nota interna CRM", "user_message":"despedida ao cliente" } }   // handoff_to é um dos 4: arquitetura, imobiliario, parcerias, time_humano
+Regras DURAS: todo "next"/option.next/on_select aponta para um "id" REAL em steps; "entry_step_id" existe em steps; todo caminho termina em um step "complete" (ou message/send_document/send_audio com "complete"); ids únicos; mensagens curtas (máx ~3 linhas). Use send_document só quando houver um arquivo pronto pra enviar (ex.: "manda o catálogo em PDF") e send_audio só quando houver um áudio pronto; a url da mídia será preenchida pelo dono depois. Opcional em qualquer step: "crm_patch":{ "estagio","potencial":"ALTO|MEDIO|BAIXO","tags_add":[...] }.`
 
-const FLOW_EXEMPLO = `EXEMPLO mínimo (6 steps cobrindo os 4 kinds) — use como molde de ESTRUTURA, não de conteúdo:
+const FLOW_EXEMPLO = `EXEMPLO mínimo (cobrindo os 6 kinds) — use como molde de ESTRUTURA, não de conteúdo.
+Note os 4 valores possíveis de handoff_to ao encerrar: "arquitetura", "imobiliario", "parcerias", "time_humano".
 {
   "obra10_playbook_flow_schema": 1,
   "entry_step_id": "saudacao",
@@ -91,11 +94,13 @@ const FLOW_EXEMPLO = `EXEMPLO mínimo (6 steps cobrindo os 4 kinds) — use como
     { "kind": "input", "id": "pergunta_nome", "prompt": "Pra começar, qual é o seu nome?", "field": "nome", "input_type": "text", "next": "tipo" },
     { "kind": "menu", "id": "tipo", "prompt": "O que você procura?", "menu_type": "button", "options": [
       { "id": "projeto", "label": "Projeto de arquitetura", "next": "coleta_area" },
-      { "id": "imovel", "label": "Comprar/alugar imóvel", "next": "fim_imovel" }
+      { "id": "catalogo", "label": "Ver o catálogo em PDF", "next": "envia_catalogo" }
     ] },
     { "kind": "input", "id": "coleta_area", "prompt": "Qual a área aproximada em m²?", "field": "area_m2", "input_type": "number", "next": "fim_projeto" },
+    { "kind": "send_document", "id": "envia_catalogo", "media": { "type": "document", "url": "https://exemplo.obra10.app/catalogo.pdf", "caption": "Nosso catálogo 2026" }, "next": "envia_audio_boasvindas" },
+    { "kind": "send_audio", "id": "envia_audio_boasvindas", "media": { "type": "audio", "url": "https://exemplo.obra10.app/boas-vindas.ogg" }, "next": "fim_catalogo" },
     { "kind": "complete", "id": "fim_projeto", "complete": { "type": "complete", "handoff_to": "arquitetura", "summary": "Lead de projeto qualificado", "user_message": "Perfeito! Um arquiteto vai te chamar já já. 🙌" } },
-    { "kind": "complete", "id": "fim_imovel", "complete": { "type": "complete", "handoff_to": "imobiliario", "summary": "Lead imobiliário", "user_message": "Show! Um corretor entra em contato em breve." } }
+    { "kind": "complete", "id": "fim_catalogo", "complete": { "type": "complete", "handoff_to": "imobiliario", "summary": "Lead recebeu o catálogo", "user_message": "Mandei o catálogo! Qualquer dúvida, é só chamar. 🙌" } }
   ]
 }`
 

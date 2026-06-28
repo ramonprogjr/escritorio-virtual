@@ -5,7 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AlertTriangle, CheckCircle2, LayoutList, Loader2, Save, Sparkles, Workflow } from "lucide-react";
 import { parsePlaybookFlowFromMarkdown } from "@/lib/playbook/flow-parse";
-import { upsertPlaybookFlowBlockInMarkdown } from "@/lib/playbook/playbook-flow-markdown";
+import {
+  extractPlaybookNarrativeText,
+  upsertPlaybookFlowBlockInMarkdown,
+} from "@/lib/playbook/playbook-flow-markdown";
 import { emitFlowVisualTelemetry } from "@/lib/playbook/flow-visual-telemetry";
 import { validatePlaybookFlowDefinition } from "@/lib/playbook/flow-validate";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
@@ -110,7 +113,10 @@ export function PlaybookFlowReactFlowPanel({
     setErroGeracao("");
     try {
       // A IA monta o fluxo a partir do texto do próprio playbook (sem precisar redigitar nada).
-      const descricao = markdown.trim();
+      // Envia só o conteúdo narrativo (§1–§6) — sem frontmatter YAML nem o bloco JSON antigo,
+      // que não são "intenção humana" e pioram a geração. Fallback: o markdown cru se vazio.
+      const narrativa = extractPlaybookNarrativeText(markdown);
+      const descricao = narrativa || markdown.trim();
       const res = await fetch(
         `/api/hub/agentes/${encodeURIComponent(agenteSlug)}/playbook/gerar-por-ia`,
         {

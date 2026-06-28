@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, MessageSquare, Sparkles, Webhook, Zap } from "lucide-react";
+import { Clock, Loader2, MessageSquare, Sparkles, Webhook, Zap } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { AgenteBuilderIaPanel } from "@/components/crm/AgenteBuilderIaPanel";
 import {
@@ -373,6 +373,10 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
   const [iaGeracaoAviso, setIaGeracaoAviso] = useState("");
   /** Publicação (PUT /playbook/conteudo) do markdown gerado pela IA em andamento. */
   const [iaPublicando, setIaPublicando] = useState(false);
+  /** Geração (texto/PDF/áudio) em andamento dentro do AgenteBuilderIaPanel. */
+  const [iaGerando, setIaGerando] = useState(false);
+  /** Markdown que a IA gerou mas FALHOU ao publicar — habilita "Tentar publicar de novo". */
+  const [iaPublicFalhouMd, setIaPublicFalhouMd] = useState("");
   const [nome, setNome] = useState("");
   const [mercados, setMercados] = useState<string[]>([]);
   const [comportamentoIdx, setComportamentoIdx] = useState(1); // Consultivo
@@ -1371,8 +1375,12 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
           body: JSON.stringify({ markdown: md }),
         }
       );
+      // Não silencia a falha: guarda o markdown para o botão "Tentar publicar de novo".
+      if (res.ok) setIaPublicFalhouMd("");
+      else setIaPublicFalhouMd(md);
       return res.ok;
     } catch {
+      setIaPublicFalhouMd(md);
       return false;
     } finally {
       setIaPublicando(false);
@@ -1826,6 +1834,7 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                       <AgenteBuilderIaPanel
                         agenteSlug={agenteSlugCriado}
                         agenteNome={nome}
+                        onGerandoChange={setIaGerando}
                         onGerado={(md) => {
                           setIaMarkdownGerado(md);
                           setIaGeracaoAviso("");
@@ -1850,17 +1859,68 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                         </p>
                       ) : null}
 
+                      {/* Falha ao publicar o playbook — não silencia: oferece tentar de novo. */}
+                      {iaPublicFalhouMd && !iaPublicando ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 8,
+                            color: "#f85149",
+                            fontSize: 12,
+                            lineHeight: 1.5,
+                            background: "#f8514914",
+                            border: "1px solid #f8514940",
+                            borderRadius: 8,
+                            padding: "9px 12px",
+                          }}
+                        >
+                          <span>
+                            A IA gerou o playbook, mas não consegui publicá-lo agora. Tente de novo — o
+                            agente já existe e o conteúdo não foi perdido.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void publicarIaMarkdown(iaPublicFalhouMd, agenteSlugCriado)}
+                            style={{
+                              alignSelf: "flex-start",
+                              padding: "8px 14px",
+                              borderRadius: 8,
+                              border: "1px solid #f8514966",
+                              background: "#0a140f",
+                              color: "#ff7b72",
+                              fontWeight: 700,
+                              fontSize: 12,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Tentar publicar de novo
+                          </button>
+                        </div>
+                      ) : null}
+
                       <p style={{ margin: 0, color: "#8b949e", fontSize: 11.5, lineHeight: 1.5 }}>
-                        {iaPublicando
-                          ? "Publicando o playbook montado pela IA…"
-                          : "Quando a IA gerar, o playbook é publicado automaticamente. Pode concluir o assistente — dá para refinar depois no agente."}
+                        {iaGerando
+                          ? "Montando o playbook com a IA…"
+                          : iaPublicando
+                            ? "Publicando o playbook montado pela IA…"
+                            : "Quando a IA gerar, o playbook é publicado automaticamente. Pode concluir o assistente — dá para refinar depois no agente."}
                       </p>
 
                       <button
                         type="button"
                         onClick={() => irParaGrupo(3)}
+                        disabled={iaGerando || iaPublicando}
+                        title={
+                          iaGerando || iaPublicando
+                            ? "Aguarde a IA terminar de montar e publicar o playbook."
+                            : undefined
+                        }
                         style={{
                           alignSelf: "flex-start",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
                           padding: "10px 16px",
                           borderRadius: 9,
                           border: "1px solid #2f6f4f",
@@ -1868,9 +1928,13 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                           color: "#c9a24a",
                           fontWeight: 700,
                           fontSize: 12.5,
-                          cursor: "pointer",
+                          cursor: iaGerando || iaPublicando ? "not-allowed" : "pointer",
+                          opacity: iaGerando || iaPublicando ? 0.6 : 1,
                         }}
                       >
+                        {iaGerando || iaPublicando ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : null}
                         Concluir / configurar como roda →
                       </button>
                     </div>

@@ -1,7 +1,37 @@
 {
-  "geradoEm": "2026-06-28T19:04:30.669Z",
+  "geradoEm": "2026-06-28T19:23:37.825Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "998d5d9561ee6057c132dde7aacf9fe76d1cc303",
+      "hashCurto": "998d5d9",
+      "mensagem": "fecha vulnerabilidades cross-tenant + no-auth no caminho do dinheiro (auditoria #3)",
+      "mensagemRaw": "fix(seg/financeiro): fecha vulnerabilidades cross-tenant + no-auth no caminho do dinheiro (auditoria #3)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T19:05:02.000Z",
+      "hora": "16:05",
+      "arquivos": [
+        "app/api/crm/financeiro/contas/pagar/[id]/route.ts",
+        "app/api/crm/financeiro/contas/receber/[id]/route.ts",
+        "app/api/crm/financeiro/contas/route.test.ts",
+        "app/api/crm/financeiro/contas/route.ts",
+        "app/api/crm/fornecedores/[id]/route.test.ts",
+        "app/api/crm/fornecedores/[id]/route.ts",
+        "app/api/crm/negocios/[id]/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "app/crm/negocios/[id]/page.tsx",
+        "lib/ia/metering.test.ts",
+        "lib/ia/metering.ts",
+        "supabase/migrations/20260702120000_crm_negocios_pipeline_totais_rpc.sql",
+        "supabase/migrations/20260703120000_hub_contas_receber_negocio_id_unique.sql"
+      ],
+      "areas": {
+        "app/api": 8,
+        "app/crm": 1,
+        "outros": 2,
+        "supabase/migrations": 2
+      }
+    },
     {
       "hash": "ac2153ca9859d830c792a8d40c1d4936a0e5a39f",
       "hashCurto": "ac2153c",
