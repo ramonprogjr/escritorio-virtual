@@ -1,7 +1,45 @@
 {
-  "geradoEm": "2026-06-28T22:49:37.290Z",
+  "geradoEm": "2026-06-28T22:57:22.459Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "61b09bdf26642364583a589504dc394749bd342a",
+      "hashCurto": "61b09bd",
+      "mensagem": "dedup hardening + merge de duplicatas (flag) + copiloto modo texto + fixes de seguranca",
+      "mensagemRaw": "feat(crm): dedup hardening + merge de duplicatas (flag) + copiloto modo texto + fixes de seguranca",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T22:51:00.000Z",
+      "hora": "19:51",
+      "arquivos": [
+        "app/api/crm/leads/route.ts",
+        "app/api/crm/pessoas/duplicatas/route.ts",
+        "app/api/crm/pessoas/merge/route.ts",
+        "app/api/whatsapp/webhook/route.ts",
+        "app/crm/cadastro/page.tsx",
+        "app/crm/pessoas/duplicatas/page.tsx",
+        "components/crm/CopilotoVoz.tsx",
+        "hooks/useCopilotoVoz.ts",
+        "lib/crm/buscar-pessoa-documento.test.ts",
+        "lib/crm/buscar-pessoa-documento.ts",
+        "lib/crm/feature-flags.ts",
+        "lib/crm/isolamento-conversa-lead.test.ts",
+        "lib/crm/merge-pessoas.test.ts",
+        "lib/crm/merge-pessoas.ts",
+        "lib/crm/salvar-super-cadastro.test.ts",
+        "lib/crm/salvar-super-cadastro.ts",
+        "supabase/migrations/20260704120000_crm_codigo_rastreio_rpc.sql",
+        "supabase/migrations/20260704120001_hub_pessoas_codigo_unique.sql",
+        "supabase/migrations/20260705120000_merge_pessoas.sql"
+      ],
+      "areas": {
+        "app/api": 4,
+        "app/crm": 2,
+        "components/crm": 1,
+        "outros": 1,
+        "lib/crm": 8,
+        "supabase/migrations": 3
+      }
+    },
     {
       "hash": "1d50d9c257330e9d2d4bc8ee99e5371f6c6874c7",
       "hashCurto": "1d50d9c",

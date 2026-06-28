@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Radio, Plus, Trash2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
+import { toast } from "@/components/crm/toast";
 
 type Canal = {
   id: string;
@@ -33,6 +35,8 @@ export default function CanaisEntradaPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [form, setForm] = useState({ tipo: "whatsapp", nome: "", identificador: "", origem_slug: "", observacao: "" });
+  const [confirmExcluir, setConfirmExcluir] = useState<Canal | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -77,13 +81,31 @@ export default function CanaisEntradaPage() {
     void carregar();
   }
 
-  async function excluir(id: string) {
-    if (!confirm("Excluir este canal de entrada?")) return;
-    await fetch(`/api/crm/canais-entrada/${id}`, { method: "DELETE", headers: internalApiHeaders() });
-    void carregar();
+  async function confirmarExcluir() {
+    if (!confirmExcluir) return;
+    setExcluindo(true);
+    try {
+      const res = await fetch(`/api/crm/canais-entrada/${confirmExcluir.id}`, {
+        method: "DELETE",
+        headers: internalApiHeaders(),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(json.error || "Falha ao excluir o canal.");
+        return;
+      }
+      toast.success("Canal de entrada excluído.");
+      setConfirmExcluir(null);
+      void carregar();
+    } catch {
+      toast.error("Erro de rede ao excluir.");
+    } finally {
+      setExcluindo(false);
+    }
   }
 
   return (
+    <>
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Radio size={22} color="#c9a24a" aria-hidden />
@@ -134,7 +156,7 @@ export default function CanaisEntradaPage() {
                 style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #1d3a2c", background: "transparent", color: c.ativo ? "#34d399" : "#8b949e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 {c.ativo ? "ativo" : "inativo"}
               </button>
-              <button type="button" onClick={() => void excluir(c.id)} title="Excluir"
+              <button type="button" onClick={() => setConfirmExcluir(c)} title="Excluir"
                 style={{ padding: 6, borderRadius: 8, border: "1px solid #f8514944", background: "transparent", color: "#f85149", cursor: "pointer", display: "flex" }}>
                 <Trash2 size={14} aria-hidden />
               </button>
@@ -143,5 +165,22 @@ export default function CanaisEntradaPage() {
         </div>
       )}
     </div>
+
+      <CrmConfirmDialog
+        open={confirmExcluir !== null}
+        title="Excluir canal de entrada?"
+        danger
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        loading={excluindo}
+        onCancel={() => !excluindo && setConfirmExcluir(null)}
+        onConfirm={() => void confirmarExcluir()}
+      >
+        <p style={{ margin: 0 }}>
+          O canal <strong style={{ color: "#e6edf3" }}>«{confirmExcluir?.nome}»</strong> será removido. As regras de
+          Direcionamento que usam esta origem deixam de reconhecê-la.
+        </p>
+      </CrmConfirmDialog>
+    </>
   );
 }

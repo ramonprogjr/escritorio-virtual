@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
 
   const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const status = request.nextUrl.searchParams.get("status") || "";
+  const negocioId = request.nextUrl.searchParams.get("negocio_id") || "";
 
   let query = crmDb()
     .from("hub_obras")
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
     .limit(50);
 
   if (status) query = query.eq("status", status);
+  if (negocioId) query = query.eq("negocio_id", negocioId);
 
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

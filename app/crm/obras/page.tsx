@@ -26,11 +26,14 @@ function ObrasPageInner() {
 
   const carregar = useCallback(async () => {
     setCarregando(true);
-    const res = await fetch("/api/crm/obras", { headers: internalApiHeaders() });
+    const url = negocioId
+      ? `/api/crm/obras?negocio_id=${encodeURIComponent(negocioId)}`
+      : "/api/crm/obras";
+    const res = await fetch(url, { headers: internalApiHeaders() });
     const json = (await res.json()) as { data?: Obra[] };
     setObras(json.data ?? []);
     setCarregando(false);
-  }, []);
+  }, [negocioId]);
 
   useEffect(() => {
     void carregar();
@@ -42,7 +45,7 @@ function ObrasPageInner() {
     await fetch("/api/crm/obras", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...internalApiHeaders() },
-      body: JSON.stringify({ titulo: titulo.trim() }),
+      body: JSON.stringify(negocioId ? { titulo: titulo.trim(), negocio_id: negocioId } : { titulo: titulo.trim() }),
     });
     setTitulo("");
     setSalvando(false);
@@ -114,7 +117,7 @@ function ObrasPageInner() {
       {carregando ? (
         <p style={{ color: "#8b949e" }}>Carregando...</p>
       ) : obras.length === 0 ? (
-        <EmptyState message="Nenhuma obra cadastrada." />
+        <EmptyState message={negocioId ? "Nenhuma obra para este negócio ainda." : "Nenhuma obra cadastrada."} />
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
           {obras.map((o) => (
