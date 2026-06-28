@@ -52,11 +52,11 @@ export default function LiveCrmPanel({ leads, onLeadClick, onAvancarFase }: Live
       <div style={{
         padding: "6px 12px",
         borderBottom: "1px solid rgba(255,255,255,0.05)",
-        background: "rgba(168,85,247,0.04)",
+        background: "rgba(201,162,74,0.04)",
         flexShrink: 0,
       }}>
         <div style={{
-          fontSize: 8, color: "rgba(168,85,247,0.7)", fontWeight: 700,
+          fontSize: 8, color: "rgba(201,162,74,0.7)", fontWeight: 700,
           textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4,
         }}>
           👁️ Supervisão — Ger. Atendimento
@@ -89,8 +89,8 @@ export default function LiveCrmPanel({ leads, onLeadClick, onAvancarFase }: Live
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
           {[
             { label: "Fila",    count: porFase.aguardando,     cor: "#fbbf24" },
-            { label: "Triagem", count: porFase.triagem,        cor: "#60a5fa" },
-            { label: "SDR",     count: porFase.qualificando,   cor: "#60a5fa" },
+            { label: "Triagem", count: porFase.triagem,        cor: "#c9a24a" },
+            { label: "SDR",     count: porFase.qualificando,   cor: "#e0b86a" },
             { label: "Qualif.", count: porFase.qualificado,    cor: "#22c55e" },
             { label: "Match",   count: porFase.match_realizado,cor: "#22c55e" },
           ].map((item, i) => (

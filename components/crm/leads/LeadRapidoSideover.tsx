@@ -163,7 +163,7 @@ export function LeadRapidoSideover({ open, onClose, onSaved }: Props) {
       title="Novo lead"
       subtitle="Cadastro rápido no funil"
       Icon={UserPlus}
-      accent="#3B82F6"
+      accent="#c9a24a"
       footer={
         <>
           <button

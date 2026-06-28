@@ -1,11 +1,11 @@
 /** Estágios padrão Obra10 (leads e negócios). */
 export const ESTAGIOS_PADRAO = [
   { slug: "novo", label: "Novos", cor: "#6B7280", ordem: 0, tipo_fecho: "aberto" as const },
-  { slug: "qualificando", label: "Qualificando", cor: "#3B82F6", ordem: 1, tipo_fecho: "aberto" as const },
-  { slug: "qualificado", label: "Qualificado", cor: "#06B6D4", ordem: 2, tipo_fecho: "aberto" as const },
+  { slug: "qualificando", label: "Qualificando", cor: "#E0B86A", ordem: 1, tipo_fecho: "aberto" as const },
+  { slug: "qualificado", label: "Qualificado", cor: "#C9A24A", ordem: 2, tipo_fecho: "aberto" as const },
   { slug: "proposta", label: "Proposta", cor: "#EAB308", ordem: 3, tipo_fecho: "aberto" as const },
-  { slug: "negociando", label: "Negociando", cor: "#F97316", ordem: 4, tipo_fecho: "aberto" as const },
-  { slug: "fechamento", label: "Fechamento", cor: "#A855F7", ordem: 5, tipo_fecho: "aberto" as const },
+  { slug: "negociando", label: "Negociando", cor: "#D6A129", ordem: 4, tipo_fecho: "aberto" as const },
+  { slug: "fechamento", label: "Fechamento", cor: "#B8860B", ordem: 5, tipo_fecho: "aberto" as const },
   { slug: "ganho", label: "✓ Ganhos", cor: "#22C55E", ordem: 6, tipo_fecho: "ganho" as const },
   { slug: "perdido", label: "✗ Perdidos", cor: "#EF4444", ordem: 7, tipo_fecho: "perdido" as const },
 ] as const;

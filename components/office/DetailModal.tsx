@@ -35,7 +35,7 @@ function Pill({ label, color }: { label: string; color: string }) {
   );
 }
 
-function ActionBtn({ label, color = "#60a5fa" }: { label: string; color?: string }) {
+function ActionBtn({ label, color = "#c9a24a" }: { label: string; color?: string }) {
   return (
     <button style={{ fontSize: 10, padding: "3px 8px", borderRadius: 5, background: color + "18", border: `1px solid ${color}30`, color, cursor: "pointer", fontWeight: 600 }}>
       {label}
@@ -191,7 +191,7 @@ function ContentByArea({ area }: { area: string }) {
             <span style={{ fontSize: 12, fontWeight: 600, color: "#e2e8f0" }}>{f.lead}</span>
             <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700 }}>{f.ultimo} 🔴</span>
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.mensagem}</span>
-            <ActionBtn label="Disparar" color="#06b6d4" />
+            <ActionBtn label="Disparar" color="#c9a24a" />
           </div>
         ))}
       </div>

@@ -16,11 +16,11 @@ export function crmGlassCardSurface(selecionado: boolean): CSSProperties {
     borderStyle: "solid",
     borderWidth: 1,
     borderColor: selecionado
-      ? "rgba(147, 197, 253, 0.5)"
-      : "rgba(96, 165, 250, 0.22)",
+      ? "rgba(201, 162, 74, 0.5)"
+      : "rgba(201, 162, 74, 0.22)",
     boxShadow: selecionado
-      ? "0 0 28px rgba(59, 130, 246, 0.2), 0 12px 40px rgba(0, 0, 0, 0.4)"
-      : "0 0 20px rgba(59, 130, 246, 0.1), 0 8px 28px rgba(0, 0, 0, 0.3)",
+      ? "0 0 28px rgba(201, 162, 74, 0.2), 0 12px 40px rgba(0, 0, 0, 0.4)"
+      : "0 0 20px rgba(201, 162, 74, 0.1), 0 8px 28px rgba(0, 0, 0, 0.3)",
     padding: 16,
     display: "flex",
     flexDirection: "column",
@@ -44,8 +44,8 @@ export function crmAvatarGlow(accent: string): CSSProperties {
     fontSize: 13,
     fontWeight: 700,
     flexShrink: 0,
-    border: "1px solid rgba(186, 230, 253, 0.4)",
-    boxShadow: `0 0 14px ${accent}99, 0 0 26px rgba(59, 130, 246, 0.22)`,
+    border: "1px solid rgba(224, 184, 106, 0.4)",
+    boxShadow: `0 0 14px ${accent}99, 0 0 26px rgba(201, 162, 74, 0.22)`,
     overflow: "hidden",
   };
 }
@@ -69,10 +69,10 @@ export function crmBtnExecutar(disabled: boolean): CSSProperties {
     fontWeight: 700,
     padding: "8px 14px",
     borderRadius: 10,
-    border: "1px solid rgba(147, 197, 253, 0.45)",
+    border: "1px solid rgba(201, 162, 74, 0.45)",
     background: "rgba(30, 41, 59, 0.65)",
     color: "#e2e8f0",
-    boxShadow: "0 0 12px rgba(59, 130, 246, 0.15)",
+    boxShadow: "0 0 12px rgba(201, 162, 74, 0.15)",
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.45 : 1,
     whiteSpace: "nowrap",

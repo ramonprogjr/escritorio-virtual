@@ -86,8 +86,8 @@ export function SidebarPanel({ painel, metricas }: SidebarPanelProps) {
     return (
       <div>
         <Stat label="Agentes ativos" value={metricas.agentesAtivos} cor="#22c55e" />
-        <Stat label="Leads hoje" value={metricas.leadsHoje} cor="#60a5fa" />
-        <Stat label="Fila mensagens" value={metricas.mensagensFilaPendentes} cor="#a78bfa" />
+        <Stat label="Leads hoje" value={metricas.leadsHoje} cor="#c9a24a" />
+        <Stat label="Fila mensagens" value={metricas.mensagensFilaPendentes} cor="#d6a129" />
         <NavBtn href="/crm/agentes" label="Ver Todos os Agentes" />
       </div>
     );

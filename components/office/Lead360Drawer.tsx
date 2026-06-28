@@ -63,8 +63,8 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
 
   const statusColor = getLeadStatusColor(lead.status);
   const slaStatus = getSlaStatus(lead.sla_tempo, lead.sla_meta);
-  const slaColor = { ok: "#22c55e", atencao: "#eab308", critico: "#f97316", estourado: "#ef4444" }[slaStatus];
-  const prioColor = lead.prioridade >= 90 ? "#ef4444" : lead.prioridade >= 70 ? "#f97316" : lead.prioridade >= 50 ? "#eab308" : "#22c55e";
+  const slaColor = { ok: "#22c55e", atencao: "#eab308", critico: "#c9a24a", estourado: "#ef4444" }[slaStatus];
+  const prioColor = lead.prioridade >= 90 ? "#ef4444" : lead.prioridade >= 70 ? "#c9a24a" : lead.prioridade >= 50 ? "#eab308" : "#22c55e";
 
   const suggestedPartners = PARTNERS_MOCK.filter(
     (p) => p.status === "ativo" && p.fit_score_atual != null
@@ -121,7 +121,7 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
             <ScoreCard
               label="Valor Est."
               value={`R$${(lead.orcamento_estimado / 1000).toFixed(0)}k`}
-              color="#a78bfa"
+              color="#c9a24a"
               sub={lead.categoria.replace("_", " ")}
             />
             <ScoreCard
@@ -133,7 +133,7 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
             <ScoreCard
               label="Match%"
               value={`${lead.fit_score}%`}
-              color="#60a5fa"
+              color="#c9a24a"
               sub="fit score"
             />
           </div>
@@ -153,9 +153,9 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
                 onClick={() => setTab(t)}
                 style={{
                   flex: 1, padding: "9px 0", fontSize: 10, fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "#60a5fa" : "rgba(255,255,255,0.4)",
+                  color: isActive ? "#c9a24a" : "rgba(255,255,255,0.4)",
                   background: "transparent", border: "none",
-                  borderBottom: isActive ? "2px solid #60a5fa" : "2px solid transparent",
+                  borderBottom: isActive ? "2px solid #c9a24a" : "2px solid transparent",
                   cursor: "pointer", transition: "all 150ms",
                 }}
               >
@@ -241,7 +241,7 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: "#60a5fa" }}>{p.fit_score_atual}%</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: "#c9a24a" }}>{p.fit_score_atual}%</span>
                     <span style={{ fontSize: 8, color: "rgba(255,255,255,0.3)" }}>fit</span>
                   </div>
                 </div>
@@ -250,8 +250,8 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
                 onClick={() => onAction?.("realizar_match", lead.id)}
                 style={{
                   marginTop: 8, width: "100%", padding: "9px 0", borderRadius: 8,
-                  background: "rgba(96,165,250,0.12)", border: "1px solid rgba(96,165,250,0.3)",
-                  color: "#60a5fa", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                  background: "rgba(201,162,74,0.12)", border: "1px solid rgba(201,162,74,0.3)",
+                  color: "#c9a24a", fontSize: 11, fontWeight: 600, cursor: "pointer",
                 }}
               >
                 Realizar Match
@@ -269,7 +269,7 @@ export default function Lead360Drawer({ lead, onClose, onAction }: {
               {[
                 { label: "Ligar agora",           acao: "ligar",              color: "#22c55e" },
                 { label: "Enviar WhatsApp",        acao: "whatsapp",           color: "#22c55e" },
-                { label: "Realizar Match",         acao: "realizar_match",     color: "#60a5fa" },
+                { label: "Realizar Match",         acao: "realizar_match",     color: "#c9a24a" },
                 { label: "Escalar para humano",    acao: "escalar",            color: "#eab308" },
                 { label: "Marcar como perdido",    acao: "marcar_perdido",     color: "#ef4444" },
               ].map((btn) => (

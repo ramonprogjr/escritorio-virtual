@@ -103,17 +103,17 @@ export default function Partner360Drawer({ partner, onClose, onAction }: {
           <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
             {partner.status !== "em_homologacao" ? (
               <>
-                <ScoreCard label="Fit Score"    value={`${partner.fit_score_atual ?? "–"}%`} color="#60a5fa" sub="atual" />
+                <ScoreCard label="Fit Score"    value={`${partner.fit_score_atual ?? "–"}%`} color="#c9a24a" sub="atual" />
                 <ScoreCard label="Transparência" value={`${partner.transparency_score}`}     color={transpColor} sub="/100" />
-                <ScoreCard label="NPS"          value={`${partner.nps || "–"}`}             color="#a78bfa" sub="avg" />
+                <ScoreCard label="NPS"          value={`${partner.nps || "–"}`}             color="#c9a24a" sub="avg" />
                 <ScoreCard label="Fechamento"   value={`${partner.taxa_fechamento}%`}        color={capacidadeColor} sub={`${partner.obras_ativas}/${partner.capacidade_simultanea} obras`} />
               </>
             ) : (
               <>
-                <ScoreCard label="Etapa"        value={`${etapaIndex + 1}/10`}              color="#60a5fa" sub={HOMOLOGACAO_ETAPAS[etapaIndex]?.label} />
+                <ScoreCard label="Etapa"        value={`${etapaIndex + 1}/10`}              color="#c9a24a" sub={HOMOLOGACAO_ETAPAS[etapaIndex]?.label} />
                 <ScoreCard label="Progresso"    value={`${partner.homologacao_progresso}%`} color="#eab308" sub="homologação" />
                 <ScoreCard label="Capacidade"   value={`${partner.capacidade_simultanea}`}  color="#22c55e" sub="obras simult." />
-                <ScoreCard label="Ticket Médio" value={`R$${(partner.ticket_medio / 1000).toFixed(0)}k`} color="#a78bfa" sub="estimado" />
+                <ScoreCard label="Ticket Médio" value={`R$${(partner.ticket_medio / 1000).toFixed(0)}k`} color="#c9a24a" sub="estimado" />
               </>
             )}
           </div>
@@ -133,9 +133,9 @@ export default function Partner360Drawer({ partner, onClose, onAction }: {
                 onClick={() => setTab(t)}
                 style={{
                   flex: 1, padding: "9px 0", fontSize: 10, fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "#a78bfa" : "rgba(255,255,255,0.4)",
+                  color: isActive ? "#c9a24a" : "rgba(255,255,255,0.4)",
                   background: "transparent", border: "none",
-                  borderBottom: isActive ? "2px solid #a78bfa" : "2px solid transparent",
+                  borderBottom: isActive ? "2px solid #c9a24a" : "2px solid transparent",
                   cursor: "pointer", transition: "all 150ms",
                 }}
               >
@@ -162,7 +162,7 @@ export default function Partner360Drawer({ partner, onClose, onAction }: {
                 <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Especialidades</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {partner.especialidades.map((e) => (
-                    <span key={e} style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)", color: "#a78bfa" }}>
+                    <span key={e} style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: "rgba(201,162,74,0.1)", border: "1px solid rgba(201,162,74,0.2)", color: "#c9a24a" }}>
                       {e}
                     </span>
                   ))}
@@ -198,7 +198,7 @@ export default function Partner360Drawer({ partner, onClose, onAction }: {
                           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{new Date(m.data).toLocaleDateString("pt-BR")}</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: "#a78bfa" }}>R${m.valor.toLocaleString("pt-BR")}</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "#c9a24a" }}>R${m.valor.toLocaleString("pt-BR")}</div>
                           <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 4, background: `${mColor}22`, color: mColor }}>
                             {m.status === "fechado" ? "Fechado" : m.status === "perdido" ? "Perdido" : "Em andamento"}
                           </span>
@@ -294,8 +294,8 @@ export default function Partner360Drawer({ partner, onClose, onAction }: {
               {[
                 { label: "Aprovar para próxima etapa",     acao: "aprovar_etapa",    color: "#22c55e", show: partner.status === "em_homologacao" },
                 { label: "Ativar parceiro",                acao: "ativar",           color: "#22c55e", show: partner.status !== "ativo" && partner.status !== "em_homologacao" },
-                { label: "Solicitar documentação",         acao: "solicitar_doc",    color: "#60a5fa", show: true },
-                { label: "Agendar entrevista",             acao: "entrevista",       color: "#a78bfa", show: partner.status === "em_homologacao" },
+                { label: "Solicitar documentação",         acao: "solicitar_doc",    color: "#c9a24a", show: true },
+                { label: "Agendar entrevista",             acao: "entrevista",       color: "#c9a24a", show: partner.status === "em_homologacao" },
                 { label: "Pausar parceiro",                acao: "pausar",           color: "#eab308", show: partner.status === "ativo" || partner.status === "ocupado" },
                 { label: "Reprovar e encerrar processo",   acao: "reprovar",         color: "#ef4444", show: true },
               ].filter((btn) => btn.show).map((btn) => (

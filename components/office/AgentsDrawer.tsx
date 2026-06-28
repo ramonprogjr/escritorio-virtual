@@ -24,9 +24,9 @@ const FILTROS: { id: FiltroAgente; label: string }[] = [
 ];
 
 const AREA_COR: Record<string, string> = {
-  Marketing: "#22c55e", Executivo: "#f59e0b", Estratégia: "#60a5fa",
-  Conteúdo: "#a78bfa", Design: "#f472b6", Performance: "#34d399",
-  Atendimento: "#06b6d4", Comercial: "#fb923c",
+  Marketing: "#22c55e", Executivo: "#f59e0b", Estratégia: "#e0b86a",
+  Conteúdo: "#d6a129", Design: "#f472b6", Performance: "#34d399",
+  Atendimento: "#c9a24a", Comercial: "#b8860b",
 };
 
 type AgenteApi = {
@@ -146,7 +146,7 @@ export function AgentsDrawer({ aberto, onFechar, onAgenteClick }: AgentsDrawerPr
             value={busca}
             onChange={e => setBusca(e.target.value)}
             placeholder="Buscar agente..."
-            className="w-full bg-gray-900 text-white text-xs rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-orange-500 placeholder-gray-600"
+            className="w-full bg-gray-900 text-white text-xs rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-amber-500 placeholder-gray-600"
           />
         </div>
 
@@ -158,7 +158,7 @@ export function AgentsDrawer({ aberto, onFechar, onAgenteClick }: AgentsDrawerPr
               onClick={() => setFiltro(f.id)}
               className={`flex-shrink-0 text-[10px] rounded-full px-2.5 py-1 transition-colors font-medium ${
                 filtro === f.id
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   : "bg-gray-900 text-gray-500 hover:text-gray-300 border border-transparent"
               }`}
             >
@@ -229,7 +229,7 @@ export function AgentsDrawer({ aberto, onFechar, onAgenteClick }: AgentsDrawerPr
         <div className="px-4 py-3 border-t border-gray-800 flex-shrink-0">
           <a
             href="/agentes"
-            className="block w-full text-center bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/25 text-orange-400 text-xs font-medium rounded-lg py-2 transition-colors"
+            className="block w-full text-center bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 text-xs font-medium rounded-lg py-2 transition-colors"
           >
             Configurar Agentes →
           </a>

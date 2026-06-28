@@ -124,7 +124,7 @@ const ORIGENS_LABEL: Record<string, string> = {
 };
 const ORIGENS_COLOR: Record<string, string> = {
   whatsapp: "#25D366", instagram: "#E1306C", meta_ads: "#1877F2",
-  google_ads: "#EA4335", linkedin: "#0A66C2", site: "#6366F1",
+  google_ads: "#EA4335", linkedin: "#0A66C2", site: "#c9a24a",
   indicacao: "#F59E0B", outro: "#6B7280",
 };
 const ATIVIDADE_ICON: Record<string, string> = {
@@ -667,7 +667,7 @@ export default function LeadsPage() {
       {/* ─── METRICS ─── */}
       <div className="grid grid-cols-2 gap-px sm:grid-cols-4 flex-shrink-0 bg-[#1d3a2c]">
         {[
-          { label: "Leads Hoje", value: String(leadsDoPipeline.filter(l => new Date(l.criado_em).toDateString() === hoje).length), cor: "#F97316" },
+          { label: "Leads Hoje", value: String(leadsDoPipeline.filter(l => new Date(l.criado_em).toDateString() === hoje).length), cor: "#c9a24a" },
           { label: "Sem Resposta +24h", value: String(semResposta), cor: semResposta > 0 ? "#EF4444" : "#22C55E" },
           { label: "Em Risco +1h", value: emRisco > 0 ? moeda(emRisco) : "—", cor: emRisco > 0 ? "#EAB308" : "#6B7280" },
           { label: "Pipeline Total", value: moeda(pipeline), cor: "#22C55E" },
@@ -762,7 +762,7 @@ export default function LeadsPage() {
                                   <User size={11} strokeWidth={2.5} aria-hidden /> {lead.humano_responsavel}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-sky-300">
+                                <span className="inline-flex items-center gap-1 text-amber-300">
                                   <Bot size={11} strokeWidth={2.5} aria-hidden /> IA
                                   {lead.agente_responsavel ? ` · ${lead.agente_responsavel}` : ""}
                                 </span>

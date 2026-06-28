@@ -220,7 +220,7 @@ export function getPartnerStatusColor(status: PartnerStatus): string {
   const colors: Record<PartnerStatus, string> = {
     ativo: "#22c55e",
     ocupado: "#eab308",
-    em_homologacao: "#60a5fa",
+    em_homologacao: "#c9a24a",
     pausado: "#94a3b8",
     inativo: "#ef4444",
   };

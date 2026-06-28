@@ -31,7 +31,7 @@ const ORIGENS_COLOR: Record<string, string> = {
   meta_ads: "#1877F2",
   google_ads: "#EA4335",
   linkedin: "#0A66C2",
-  site: "#6366F1",
+  site: "#c9a24a",
   indicacao: "#F59E0B",
   outro: "#6B7280",
 };

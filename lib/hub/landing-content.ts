@@ -105,7 +105,7 @@ export const HUB_MODULES: HubModule[] = [
       "Copiloto nas negociações e próximos passos",
     ],
     outcome: "Mais velocidade no atendimento, com controlo humano nas decisões.",
-    accent: "#60a5fa",
+    accent: "#c9a24a",
   },
   {
     id: "gestao",
@@ -141,7 +141,7 @@ export const HUB_MODULES: HubModule[] = [
       "Relatórios exportáveis para partilhar",
     ],
     outcome: "Decisões com dados, não só com feeling.",
-    accent: "#a78bfa",
+    accent: "#d6a129",
   },
   {
     id: "integracoes",
@@ -153,7 +153,7 @@ export const HUB_MODULES: HubModule[] = [
       "WhatsApp e canais conectados à operação",
     ],
     outcome: "Marketing e vendas falando a mesma língua.",
-    accent: "#fb923c",
+    accent: "#e0b86a",
   },
 ];
 

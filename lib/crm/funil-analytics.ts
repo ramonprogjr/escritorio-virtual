@@ -3,11 +3,11 @@ import { ETAPAS_NEGOCIO_POR_MERCADO, MERCADOS_NEGOCIO } from "@/lib/crm/pipeline
 export type FunilBarItem = { id: string; label: string; count: number; color: string };
 
 const NEGOCIO_FUNIL_CORES = [
-  "#3b82f6",
+  "#c9a24a",
   "#f59e0b",
-  "#a855f7",
+  "#d6a129",
   "#22c55e",
-  "#06b6d4",
+  "#e0b86a",
   "#ef4444",
   "#eab308",
   "#6b7280",

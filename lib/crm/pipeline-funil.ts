@@ -1,11 +1,11 @@
 /** Estágios do funil de leads (ordem comercial). */
 export const FUNIL_LEADS = [
   { id: "novo", label: "Novos", short: "Novos", color: "#6B7280" },
-  { id: "qualificando", label: "Qualificando", short: "Qualif.", color: "#3B82F6" },
-  { id: "qualificado", label: "Qualificado", short: "OK", color: "#06B6D4" },
+  { id: "qualificando", label: "Qualificando", short: "Qualif.", color: "#E0B86A" },
+  { id: "qualificado", label: "Qualificado", short: "OK", color: "#C9A24A" },
   { id: "proposta", label: "Proposta", short: "Proposta", color: "#EAB308" },
-  { id: "negociando", label: "Negociando", short: "Negoc.", color: "#F97316" },
-  { id: "fechamento", label: "Fechamento", short: "Fecham.", color: "#A855F7" },
+  { id: "negociando", label: "Negociando", short: "Negoc.", color: "#D6A129" },
+  { id: "fechamento", label: "Fechamento", short: "Fecham.", color: "#B8860B" },
 ] as const;
 
 export const FUNIL_LEADS_OUTCOMES = [
@@ -14,9 +14,9 @@ export const FUNIL_LEADS_OUTCOMES = [
 ] as const;
 
 export const FUNIL_NEGOCIOS = [
-  { id: "briefing", label: "Briefing", color: "#3b82f6" },
+  { id: "briefing", label: "Briefing", color: "#E0B86A" },
   { id: "match", label: "Match", color: "#f59e0b" },
-  { id: "sit-down", label: "Sit-down", color: "#a855f7" },
+  { id: "sit-down", label: "Sit-down", color: "#D6A129" },
   { id: "concluido", label: "Concluído", color: "#22c55e" },
 ] as const;
 

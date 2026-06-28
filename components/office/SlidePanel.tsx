@@ -26,7 +26,7 @@ interface SlidePanelProps {
 const SEV_COLORS = {
   critical: { dot: "#ef4444", bg: "rgba(239,68,68,0.1)",  border: "rgba(239,68,68,0.25)" },
   warning:  { dot: "#eab308", bg: "rgba(234,179,8,0.08)",  border: "rgba(234,179,8,0.2)"  },
-  info:     { dot: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  info:     { dot: "#c9a24a", bg: "rgba(201,162,74,0.08)", border: "rgba(201,162,74,0.2)" },
   ok:       { dot: "#22c55e", bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.15)" },
 };
 
@@ -88,8 +88,8 @@ function C4Item({ item, onAgenteClick }: { item: SlidePanelItem; onAgenteClick?:
               <button
                 style={{
                   padding: "4px 10px", borderRadius: 5, fontSize: 10, fontWeight: 600, cursor: "pointer",
-                  background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.2)",
-                  color: "#60a5fa",
+                  background: "rgba(201,162,74,0.08)", border: "1px solid rgba(201,162,74,0.2)",
+                  color: "#c9a24a",
                 }}
               >
                 Ver tarefa →

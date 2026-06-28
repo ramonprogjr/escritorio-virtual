@@ -37,7 +37,7 @@ export function CriticalStrip({ onResolverAgora }: CriticalStripProps) {
           R${(valorRisco / 1000).toFixed(0)}k em risco
         </span>
         <span className="text-gray-600 text-xs">·</span>
-        <span className="text-orange-400/80 text-xs truncate flex-1">
+        <span className="text-amber-400/80 text-xs truncate flex-1">
           Próxima ação: {CRITICOS[0]?.acao} — {CRITICOS[0]?.titulo}
         </span>
         <button
@@ -84,7 +84,7 @@ export function CriticalStrip({ onResolverAgora }: CriticalStripProps) {
                       </div>
                       <p className="text-gray-300 text-xs leading-relaxed">{item.descricao}</p>
                       {item.valor && (
-                        <p className="text-orange-400 text-xs mt-1 font-medium">
+                        <p className="text-amber-400 text-xs mt-1 font-medium">
                           R${item.valor.toLocaleString("pt-BR")} em jogo
                         </p>
                       )}

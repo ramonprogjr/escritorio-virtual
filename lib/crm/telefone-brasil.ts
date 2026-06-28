@@ -68,10 +68,10 @@ export const REGIAO_CORES: Record<
   { bg: string; text: string; border: string; ring: string }
 > = {
   norte: { bg: "#0e442922", text: "#2dd4bf", border: "#2dd4bf55", ring: "#2dd4bf33" },
-  nordeste: { bg: "#7c2d1222", text: "#fb923c", border: "#fb923c55", ring: "#fb923c33" },
+  nordeste: { bg: "#5c471122", text: "#d6a129", border: "#d6a12955", ring: "#d6a12933" },
   "centro-oeste": { bg: "#713f1222", text: "#fbbf24", border: "#fbbf2455", ring: "#fbbf2433" },
-  sudeste: { bg: "#1e3a8a22", text: "#60a5fa", border: "#60a5fa55", ring: "#60a5fa33" },
-  sul: { bg: "#581c8722", text: "#c084fc", border: "#c084fc55", ring: "#c084fc33" },
+  sudeste: { bg: "#3a2e0822", text: "#c9a24a", border: "#c9a24a55", ring: "#c9a24a33" },
+  sul: { bg: "#3a2c0822", text: "#9a7b1e", border: "#9a7b1e55", ring: "#9a7b1e33" },
 };
 
 /** Matiz extra por DDD dentro da região (variação visual) */

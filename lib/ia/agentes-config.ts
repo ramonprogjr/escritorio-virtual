@@ -84,7 +84,7 @@ export const MERCADOS = {
   imobiliario: {
     id: "imobiliario",
     label: "Imobiliário",
-    cor: "#F97316",
+    cor: "#C9A24A",
     corTexto: "#fff",
     emoji: "🏠",
     palavrasChave: ["imóvel", "imovel", "apartamento", "casa", "terreno", "imobiliária", "imobiliario", "aluguel", "compra", "venda", "lote"],
@@ -92,7 +92,7 @@ export const MERCADOS = {
   arquitetura: {
     id: "arquitetura",
     label: "Arquitetura",
-    cor: "#8B5CF6",
+    cor: "#D6A129",
     corTexto: "#fff",
     emoji: "📐",
     palavrasChave: ["arquitet", "projeto", "planta", "design de interiores", "interiores", "decoração"],
@@ -116,7 +116,7 @@ export const MERCADOS = {
   produto: {
     id: "produto",
     label: "Produto",
-    cor: "#06B6D4",
+    cor: "#E0B86A",
     corTexto: "#fff",
     emoji: "📦",
     palavrasChave: ["produto", "comprar", "adquirir", "quanto custa", "valor", "preço", "catálogo"],

@@ -414,10 +414,10 @@ body {
   to { transform: translateY(0); opacity: 1; }
 }
 
-.agent-sdr { --agent-color: #60a5fa; --agent-glow: rgba(96,165,250,0.4); }
+.agent-sdr { --agent-color: #e0b86a; --agent-glow: rgba(224,184,106,0.4); }
 .agent-atendente { --agent-color: #c9a24a; --agent-glow: rgba(201,162,74,0.4); }
 .agent-gerente { --agent-color: #c0c0c0; --agent-glow: rgba(192,192,192,0.4); }
-.agent-diretor { --agent-color: #a78bfa; --agent-glow: rgba(167,139,250,0.4); }
+.agent-diretor { --agent-color: #d6a129; --agent-glow: rgba(214,161,41,0.4); }
 
 .fft-panel {
   position: relative;

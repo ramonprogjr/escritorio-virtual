@@ -24,13 +24,13 @@ export const MERCADO_ICON: Record<string, LucideIcon> = {
 
 /** Cor do anel/acento por mercado (pipeline global). */
 export const MERCADO_ACCENT: Record<string, string> = {
-  IMB: "#8b5cf6",
+  IMB: "#c9a24a",
   ARQ: "#f59e0b",
-  RFM: "#f97316",
-  MRC: "#06b6d4",
-  ENG: "#3b82f6",
+  RFM: "#d6a129",
+  MRC: "#e0b86a",
+  ENG: "#b8860b",
   SRV: "#22c55e",
-  PRO: "#a855f7",
+  PRO: "#9a7b1e",
   FOR: "#10b981",
 };
 

@@ -226,7 +226,7 @@ export const REVENUE_AT_RISK = {
 
 export function getPriorityColor(prioridade: number): string {
   if (prioridade >= 90) return "#ef4444";
-  if (prioridade >= 70) return "#f97316";
+  if (prioridade >= 70) return "#c9a24a";
   if (prioridade >= 50) return "#eab308";
   return "#22c55e";
 }

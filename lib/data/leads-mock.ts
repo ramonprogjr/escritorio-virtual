@@ -169,10 +169,10 @@ export function getLeadStatusLabel(status: LeadStatus): string {
 
 export function getLeadStatusColor(status: LeadStatus): string {
   const colors: Record<LeadStatus, string> = {
-    novo: "#60a5fa",
+    novo: "#c9a24a",
     em_contato: "#fbbf24",
     qualificado: "#34d399",
-    em_match: "#a78bfa",
+    em_match: "#d6a129",
     pos_match: "#22c55e",
     perdido: "#ef4444",
   };

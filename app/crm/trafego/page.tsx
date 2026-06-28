@@ -62,8 +62,8 @@ export default function TrafegoPage() {
 
   const kpis = [
     { label: "Gasto Total", value: moeda(totalGasto), cor: "#EF4444" },
-    { label: "Cliques", value: num(totalCliques), cor: "#3B82F6" },
-    { label: "CPC Médio", value: moeda(cpcMedio), cor: "#F97316" },
+    { label: "Cliques", value: num(totalCliques), cor: "#c9a24a" },
+    { label: "CPC Médio", value: moeda(cpcMedio), cor: "#d6a129" },
     { label: "Conversões", value: String(totalConversoes), cor: "#22C55E" },
   ];
 
@@ -152,8 +152,8 @@ export default function TrafegoPage() {
                 <p className="mb-2 truncate text-sm font-bold text-[#e6edf3]">{c.campaign_name}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div><span className="text-[#8b949e]">Gasto</span><p className="font-bold text-[#EF4444]">{moeda(c.spend)}</p></div>
-                  <div><span className="text-[#8b949e]">Cliques</span><p className="font-bold text-[#3B82F6]">{num(c.clicks)}</p></div>
-                  <div><span className="text-[#8b949e]">CTR</span><p className="font-bold text-[#F97316]">{(c.ctr * 100).toFixed(2)}%</p></div>
+                  <div><span className="text-[#8b949e]">Cliques</span><p className="font-bold text-[#c9a24a]">{num(c.clicks)}</p></div>
+                  <div><span className="text-[#8b949e]">CTR</span><p className="font-bold text-[#d6a129]">{(c.ctr * 100).toFixed(2)}%</p></div>
                   <div><span className="text-[#8b949e]">Conv.</span><p className="font-bold text-[#22C55E]">{c.conversions || 0}</p></div>
                 </div>
               </li>
@@ -178,9 +178,9 @@ export default function TrafegoPage() {
                       <p className="font-bold text-xs truncate max-w-xs" style={{ color: "#e6edf3" }}>{c.campaign_name}</p>
                     </td>
                     <td className="px-4 py-3 font-bold text-xs" style={{ color: "#EF4444" }}>{moeda(c.spend)}</td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "#3B82F6" }}>{num(c.clicks)}</td>
+                    <td className="px-4 py-3 text-xs" style={{ color: "#c9a24a" }}>{num(c.clicks)}</td>
                     <td className="px-4 py-3 text-xs" style={{ color: "#8b949e" }}>{num(c.impressions)}</td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "#F97316" }}>{(c.ctr * 100).toFixed(2)}%</td>
+                    <td className="px-4 py-3 text-xs" style={{ color: "#d6a129" }}>{(c.ctr * 100).toFixed(2)}%</td>
                     <td className="px-4 py-3 text-xs font-bold" style={{ color: "#c9a24a" }}>{moeda(c.cpc)}</td>
                     <td className="px-4 py-3 text-xs font-bold" style={{ color: "#22C55E" }}>{c.conversions || 0}</td>
                   </tr>

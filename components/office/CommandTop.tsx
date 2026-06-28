@@ -48,7 +48,7 @@ export function CommandTop({ visao, onResolverAgora, onAbrirAgentes, onModoTV, m
       {/* ESQUERDA: Logo + visão */}
       <div className="flex items-center gap-3 min-w-[200px]">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-orange-500 flex items-center justify-center text-white font-black text-xs">O+</div>
+          <div className="w-7 h-7 rounded bg-amber-500 flex items-center justify-center text-white font-black text-xs">O+</div>
           <div>
             <div className="text-white font-bold text-sm leading-tight">OBRA10+</div>
             <div className="text-gray-400 text-xs leading-tight">{VISAO_NOMES[visao] || "Escritório de Growth"}</div>
@@ -78,7 +78,7 @@ export function CommandTop({ visao, onResolverAgora, onAbrirAgentes, onModoTV, m
               onChange={e => setBusca(e.target.value)}
               onBlur={() => { if (!busca) setBuscaAtiva(false); }}
               placeholder="Lead, agente, campanha..."
-              className="bg-gray-800 text-white text-xs rounded-full px-3 py-1.5 w-48 outline-none border border-gray-600 focus:border-orange-500"
+              className="bg-gray-800 text-white text-xs rounded-full px-3 py-1.5 w-48 outline-none border border-gray-600 focus:border-amber-500"
             />
           ) : (
             <button
@@ -118,7 +118,7 @@ export function CommandTop({ visao, onResolverAgora, onAbrirAgentes, onModoTV, m
         {/* Modo TV */}
         <button
           onClick={onModoTV}
-          className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors ${modoTV ? "bg-orange-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-400"}`}
+          className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors ${modoTV ? "bg-amber-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-400"}`}
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

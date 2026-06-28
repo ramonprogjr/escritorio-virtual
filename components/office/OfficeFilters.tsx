@@ -20,8 +20,8 @@ const FILTROS: Filtro[] = [
   { id: "todos", label: "Todos" },
   { id: "criticos", label: "Críticos", color: "#ef4444" },
   { id: "atendimento", label: "Atendimento", color: "#22c55e" },
-  { id: "trafego", label: "Tráfego", color: "#60a5fa" },
-  { id: "conteudo", label: "Conteúdo", color: "#a78bfa" },
+  { id: "trafego", label: "Tráfego", color: "#c9a24a" },
+  { id: "conteudo", label: "Conteúdo", color: "#d6a129" },
   { id: "sites", label: "Sites", color: "#34d399" },
   { id: "ias", label: "IAs", color: "#f59e0b" },
   { id: "humanos", label: "Humanos", color: "#f472b6" },
@@ -47,9 +47,9 @@ export function OfficeFilters({ filtro, onFiltroChange }: OfficeFiltersProps) {
                 : "text-gray-500 hover:text-gray-300 bg-gray-900 hover:bg-gray-800"
             }`}
             style={isActive ? {
-              background: f.color ? `${f.color}20` : "rgba(249,115,22,0.15)",
-              border: `1px solid ${f.color ? `${f.color}40` : "rgba(249,115,22,0.3)"}`,
-              color: f.color ?? "#f97316",
+              background: f.color ? `${f.color}20` : "rgba(201,162,74,0.15)",
+              border: `1px solid ${f.color ? `${f.color}40` : "rgba(201,162,74,0.3)"}`,
+              color: f.color ?? "#c9a24a",
             } : { border: "1px solid transparent" }}
           >
             {f.label}

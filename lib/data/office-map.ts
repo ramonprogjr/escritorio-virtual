@@ -38,15 +38,15 @@ export const MAPA_AGENTES: Record<string, { sala: string; x: number; y: number }
 
 export const CORES_AREA: Record<string, string> = {
   Diretoria:  "#c9a24a",
-  Marketing:  "#8b5cf6",
+  Marketing:  "#c9a24a",
   Conteúdo:   "#10b981",
-  Tráfego:    "#3b82f6",
+  Tráfego:    "#e0b86a",
   Comercial:  "#ef4444",
   Vendas:     "#ef4444",
-  Atendimento:"#f97316",
+  Atendimento:"#d6a129",
   Operações:  "#6b7280",
   Estratégia: "#f59e0b",
-  Gestão:     "#06b6d4",
+  Gestão:     "#b8860b",
 };
 
 export const TAMANHO_NIVEL: Record<number, number> = {

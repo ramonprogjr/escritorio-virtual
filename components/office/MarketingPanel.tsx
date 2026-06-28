@@ -67,14 +67,14 @@ export function MarketingPanel({ onVerTudo, feed = [], onAgenteClick }: Marketin
   const filteredFeed = feed.filter((a) => ["marketing", "campanhas", "criacao"].includes(a.area));
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "rgba(59,130,246,0.02)" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "rgba(201,162,74,0.02)" }}>
 
       {/* Panel header */}
       <div style={{
         height: 28, padding: "0 12px", display: "flex", alignItems: "center",
         flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.05)",
       }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(59,130,246,0.7)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(201,162,74,0.7)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           Marketing
         </span>
       </div>
@@ -106,7 +106,7 @@ export function MarketingPanel({ onVerTudo, feed = [], onAgenteClick }: Marketin
               <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Budget diário</span>
               <span style={{ fontSize: 9, color: "rgba(255,255,255,0.6)" }}>R$4.2k / R$6k</span>
             </div>
-            <ProgressBar value={4200} max={6000} color="#60a5fa" />
+            <ProgressBar value={4200} max={6000} color="#c9a24a" />
             <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textAlign: "right", marginTop: 2 }}>70% utilizado</div>
           </div>
         </PanelItem>
@@ -134,7 +134,7 @@ export function MarketingPanel({ onVerTudo, feed = [], onAgenteClick }: Marketin
                 </span>
               </div>
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{task.agent}</div>
-              {task.pct > 0 && task.pct < 100 && <ProgressBar value={task.pct} max={100} color="#60a5fa" />}
+              {task.pct > 0 && task.pct < 100 && <ProgressBar value={task.pct} max={100} color="#c9a24a" />}
               {task.alert && <div style={{ marginTop: 4 }}><ActionButton label="Solicitar material" variant="warning" /></div>}
             </div>
           ))}
@@ -164,7 +164,7 @@ export function MarketingPanel({ onVerTudo, feed = [], onAgenteClick }: Marketin
               <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Agendados semana</span>
               <span style={{ fontSize: 9, color: "rgba(255,255,255,0.6)" }}>12/20</span>
             </div>
-            <ProgressBar value={12} max={20} color="#8b5cf6" />
+            <ProgressBar value={12} max={20} color="#d6a129" />
           </div>
         </PanelItem>
 

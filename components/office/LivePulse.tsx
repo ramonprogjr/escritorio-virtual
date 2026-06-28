@@ -23,7 +23,7 @@ const EVENTOS: PulseEvent[] = [
 ];
 
 const TIPO_CONFIG = {
-  conversa:  { icone: "💬", cor: "#60a5fa", label: "CONVERSA" },
+  conversa:  { icone: "💬", cor: "#c9a24a", label: "CONVERSA" },
   acao:      { icone: "⚡", cor: "#fbbf24", label: "AÇÃO" },
   resultado: { icone: "✅", cor: "#34d399", label: "RESULTADO" },
   alerta:    { icone: "⚠️", cor: "#f87171", label: "ALERTA" },

@@ -103,7 +103,7 @@ export default function CriticalActionModal({
               <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Riscos</div>
               {riscos.map((r, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 4 }}>
-                  <span style={{ color: "#f97316", fontSize: 10, flexShrink: 0, marginTop: 1 }}>⚠</span>
+                  <span style={{ color: "#c9a24a", fontSize: 10, flexShrink: 0, marginTop: 1 }}>⚠</span>
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>{r}</span>
                 </div>
               ))}
@@ -122,12 +122,12 @@ export default function CriticalActionModal({
                     onClick={() => setAlternativaSelecionada(isSelected ? undefined : alt.id)}
                     style={{
                       padding: "8px 10px", borderRadius: 7, marginBottom: 5, cursor: "pointer",
-                      background: isSelected ? "rgba(96,165,250,0.1)" : "rgba(255,255,255,0.02)",
-                      border: isSelected ? "1px solid rgba(96,165,250,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                      background: isSelected ? "rgba(201,162,74,0.1)" : "rgba(255,255,255,0.02)",
+                      border: isSelected ? "1px solid rgba(201,162,74,0.3)" : "1px solid rgba(255,255,255,0.06)",
                       transition: "all 150ms",
                     }}
                   >
-                    <div style={{ fontSize: 10, fontWeight: 600, color: isSelected ? "#60a5fa" : "#f8fafc", marginBottom: 2 }}>{alt.label}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: isSelected ? "#c9a24a" : "#f8fafc", marginBottom: 2 }}>{alt.label}</div>
                     <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}>{alt.descricao}</div>
                   </div>
                 );

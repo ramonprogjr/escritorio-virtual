@@ -2,9 +2,9 @@
 
 export const FUNIL_LEAD_ETAPAS = [
   { slug: "novo", label: "Novo", ordem: 1, cor: "#6B7280" },
-  { slug: "em_atendimento", label: "Em atendimento", ordem: 2, cor: "#3B82F6" },
-  { slug: "aguardando_resposta", label: "Aguardando resposta", ordem: 3, cor: "#06B6D4" },
-  { slug: "qualificando", label: "Qualificando", ordem: 4, cor: "#8B5CF6" },
+  { slug: "em_atendimento", label: "Em atendimento", ordem: 2, cor: "#C9A24A" },
+  { slug: "aguardando_resposta", label: "Aguardando resposta", ordem: 3, cor: "#E0B86A" },
+  { slug: "qualificando", label: "Qualificando", ordem: 4, cor: "#D6A129" },
   { slug: "encaminhado", label: "Encaminhado", ordem: 5, cor: "#F59E0B" },
   { slug: "convertido_negocio", label: "Convertido em negócio", ordem: 6, cor: "#22C55E" },
   { slug: "perdido", label: "Perdido", ordem: 7, cor: "#EF4444" },

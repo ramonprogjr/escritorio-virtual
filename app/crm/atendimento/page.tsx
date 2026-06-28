@@ -55,8 +55,8 @@ interface Mensagem {
 }
 
 const STATUS_COR: Record<string, string> = {
-  novo: "bg-yellow-500", qualificando: "bg-cyan-500", qualificado: "bg-green-500",
-  atendimento: "bg-blue-500", negociando: "bg-purple-500", fechamento: "bg-orange-500",
+  novo: "bg-yellow-500", qualificando: "bg-amber-400", qualificado: "bg-green-500",
+  atendimento: "bg-amber-500", negociando: "bg-amber-600", fechamento: "bg-amber-700",
   ganho: "bg-emerald-500", perdido: "bg-red-500",
 };
 const STATUS_LABEL: Record<string, string> = {
@@ -475,7 +475,7 @@ function AtendimentoContent() {
     const h = leadSel.humano_responsavel?.trim();
     if (!h) {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-950/50 px-2.5 py-1 text-[11px] text-sky-300 font-medium">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/50 px-2.5 py-1 text-[11px] text-amber-300 font-medium">
           <Bot size={12} strokeWidth={2.5} aria-hidden />
           IA ativa
         </span>
@@ -600,7 +600,7 @@ function AtendimentoContent() {
                         : m === "humano"
                           ? "border-green-600/40 bg-green-950/40 text-green-300"
                           : m === "ia"
-                            ? "border-sky-500/35 bg-sky-950/40 text-sky-300"
+                            ? "border-amber-500/35 bg-amber-950/40 text-amber-300"
                             : "border-white/15 bg-white/8 text-zinc-100"
                       : "border-transparent text-zinc-500 hover:text-zinc-300"
                   }`}
@@ -785,10 +785,10 @@ function AtendimentoContent() {
                   <button
                     type="button"
                     onClick={() => void devolverIA()}
-                    className="flex items-center gap-1.5 bg-sky-950/50 hover:bg-sky-950/70 border border-sky-500/35 text-sky-100 text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    className="flex items-center gap-1.5 bg-amber-950/50 hover:bg-amber-950/70 border border-amber-500/35 text-amber-100 text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                     title="Voltar a responder com IA no WhatsApp"
                   >
-                    <Bot size={14} strokeWidth={2} className="text-sky-300 shrink-0" aria-hidden />
+                    <Bot size={14} strokeWidth={2} className="text-amber-300 shrink-0" aria-hidden />
                     Devolver à IA
                   </button>
                 )}
@@ -805,7 +805,7 @@ function AtendimentoContent() {
                   <button
                     type="button"
                     onClick={() => void devolverIA()}
-                    className="underline underline-offset-2 text-sky-300 hover:text-sky-200 font-medium"
+                    className="underline underline-offset-2 text-amber-300 hover:text-amber-200 font-medium"
                   >
                     Devolver à IA
                   </button>
@@ -991,7 +991,7 @@ function AtendimentoContent() {
               )}
               {!podeEscrever && !outroHumano && (
                 <div className={`mb-2 flex items-center gap-2 rounded-lg border ${C.border} bg-black/25 px-3 py-2`}>
-                  <Bot size={14} strokeWidth={2} className="text-sky-400 shrink-0" />
+                  <Bot size={14} strokeWidth={2} className="text-amber-400 shrink-0" />
                   <span className="text-zinc-500 text-[11px]">IA está respondendo por este lead</span>
                   <button
                     type="button"
@@ -1223,7 +1223,7 @@ function AtendimentoContent() {
                     disabled={!humanoAtual}
                     className={`w-full border ${C.border} bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-40 text-zinc-100 text-[12px] py-2.5 rounded-lg text-left px-3 transition-colors font-medium inline-flex items-center gap-2`}
                   >
-                    <Bot size={15} strokeWidth={2} className="text-sky-400/90 shrink-0" aria-hidden />
+                    <Bot size={15} strokeWidth={2} className="text-amber-400/90 shrink-0" aria-hidden />
                     Devolver à IA
                   </button>
                   <button

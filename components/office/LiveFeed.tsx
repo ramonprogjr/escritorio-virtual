@@ -6,7 +6,7 @@ import { Alert } from "@/lib/alerts-system";
 const SEV_COLOR: Record<string, string> = {
   critical: "#ef4444",
   warning: "#eab308",
-  info: "#60a5fa",
+  info: "#c9a24a",
 };
 
 export function LiveFeed({ feed }: { feed: Alert[] }) {

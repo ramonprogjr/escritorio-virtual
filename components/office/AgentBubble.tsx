@@ -198,10 +198,10 @@ export function AgentBubble({ agent, state, x, y }: Props) {
             }}
           >
             <div style={{ display: "flex", gap: 5, marginBottom: 8, flexWrap: "wrap" }}>
-              <span style={{ background: "rgba(167,139,250,0.14)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.22)", borderRadius: 999, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
+              <span style={{ background: "rgba(201,162,74,0.14)", color: "#e0b86a", border: "1px solid rgba(201,162,74,0.22)", borderRadius: 999, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
                 {agent.perfil.humor}
               </span>
-              <span style={{ background: "rgba(96,165,250,0.12)", color: "#93c5fd", border: "1px solid rgba(96,165,250,0.20)", borderRadius: 999, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
+              <span style={{ background: "rgba(201,162,74,0.12)", color: "#c9a24a", border: "1px solid rgba(201,162,74,0.20)", borderRadius: 999, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
                 {agent.perfil.personalidade}
               </span>
             </div>

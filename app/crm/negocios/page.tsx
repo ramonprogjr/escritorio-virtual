@@ -43,7 +43,7 @@ type EtapaUi = { id: string; label: string; color: string };
 const ETAPA_COR: Record<string, string> = {
   novo: "#6b7280",
   qualificando: "#2f9e8f",
-  qualificado: "#06b6d4",
+  qualificado: "#e0b86a",
   proposta: "#eab308",
   negociando: "#e3b341",
   fechamento: "#b58a63",
@@ -473,8 +473,8 @@ export default function NegociosPage() {
 
       <div className="grid grid-cols-2 gap-px bg-[#1d3a2c] sm:grid-cols-4">
         {[
-          { label: "Negócios Hoje", value: String(negociosHoje), cor: "#F97316" },
-          { label: "Qualificados", value: String(qualificadosCount), cor: "#06B6D4" },
+          { label: "Negócios Hoje", value: String(negociosHoje), cor: "#c9a24a" },
+          { label: "Qualificados", value: String(qualificadosCount), cor: "#e0b86a" },
           { label: "Negociando", value: String(negociandoCount), cor: "#F59E0B" },
           { label: "Pipeline Total", value: moeda(pipelineTotal), cor: "#22C55E" },
         ].map((m) => (

@@ -15,7 +15,7 @@ export interface PanelItemProps {
 const SEV = {
   critical: { dot: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.25)" },
   warning:  { dot: "#eab308", bg: "rgba(234,179,8,0.08)",  border: "rgba(234,179,8,0.2)"  },
-  info:     { dot: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  info:     { dot: "#c9a24a", bg: "rgba(201,162,74,0.08)", border: "rgba(201,162,74,0.2)" },
   ok:       { dot: "#22c55e", bg: "transparent",           border: "transparent"          },
 };
 

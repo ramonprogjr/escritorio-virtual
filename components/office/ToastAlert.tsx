@@ -6,7 +6,7 @@ import { Alert } from "@/lib/alerts-system";
 const SEV = {
   critical: { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.35)",  dot: "#ef4444", label: "CRÍTICO" },
   warning:  { bg: "rgba(234,179,8,0.10)",  border: "rgba(234,179,8,0.3)",   dot: "#eab308", label: "ATENÇÃO" },
-  info:     { bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.25)", dot: "#60a5fa", label: "INFO"    },
+  info:     { bg: "rgba(201,162,74,0.08)", border: "rgba(201,162,74,0.25)", dot: "#c9a24a", label: "INFO"    },
 };
 
 export function ToastAlert({ alert, onDismiss }: { alert: Alert | null; onDismiss: () => void }) {

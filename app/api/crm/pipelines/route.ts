@@ -53,12 +53,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Cores de MARCA por etapa de sistema (verde+dourado). Etapas-padrão usam a cor da marca
+  // de ESTAGIOS_PADRAO mesmo que o banco ainda guarde uma cor legada (azul/roxo/laranja do
+  // seed antigo) — harmonização sem reescrever dados de produção. Etapas customizadas (slug
+  // fora do catálogo) mantêm a cor escolhida pelo usuário.
+  const CORES_MARCA = new Map(ESTAGIOS_PADRAO.map((e) => [e.slug, e.cor]));
+
   const pipelines = (data || []).map((p) => {
     const raw = p as Record<string, unknown>;
     const estagios = (raw.hub_pipeline_estagios as Record<string, unknown>[] | null) || [];
-    const sorted = [...estagios].sort(
-      (a, b) => Number(a.ordem ?? 0) - Number(b.ordem ?? 0)
-    );
+    const sorted = [...estagios]
+      .sort((a, b) => Number(a.ordem ?? 0) - Number(b.ordem ?? 0))
+      .map((e) => ({ ...e, cor: CORES_MARCA.get(String(e.slug)) ?? e.cor }));
     return {
       id: raw.id,
       slug: raw.slug,

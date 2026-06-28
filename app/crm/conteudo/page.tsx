@@ -6,10 +6,10 @@ import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 
 const CATEGORIAS = [
   { icon: "✍️", label: "Copy", descricao: "Scripts, títulos e textos persuasivos", cor: "#c9a24a" },
-  { icon: "📱", label: "Social", descricao: "Posts, stories e reels para redes sociais", cor: "#3B82F6" },
-  { icon: "🎨", label: "Design", descricao: "Criativos, banners e artes gráficas", cor: "#A855F7" },
+  { icon: "📱", label: "Social", descricao: "Posts, stories e reels para redes sociais", cor: "#e0b86a" },
+  { icon: "🎨", label: "Design", descricao: "Criativos, banners e artes gráficas", cor: "#d6a129" },
   { icon: "🎬", label: "Vídeo", descricao: "Roteiros e briefings de vídeo", cor: "#EF4444" },
-  { icon: "📧", label: "Email", descricao: "Sequências e campanhas de e-mail", cor: "#06B6D4" },
+  { icon: "📧", label: "Email", descricao: "Sequências e campanhas de e-mail", cor: "#b8860b" },
   { icon: "📝", label: "Blog", descricao: "Artigos, SEO e conteúdo editorial", cor: "#22C55E" },
 ];
 

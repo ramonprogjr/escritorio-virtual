@@ -106,10 +106,10 @@ export default function AnalyticsPanel() {
   const ESTAGIO_FUNIL = ["novo", "qualificando", "qualificado", "proposta", "negociando", "fechamento"];
 
   const CARGO_CONF: Record<string, { cor: string; simbolo: string }> = {
-    sdr:                 { cor: "#60a5fa", simbolo: "⚡" },
+    sdr:                 { cor: "#e0b86a", simbolo: "⚡" },
     atendente:           { cor: "#c9a24a", simbolo: "✦" },
     gerente_atendimento: { cor: "#c0c0c0", simbolo: "◈" },
-    diretor:             { cor: "#a78bfa", simbolo: "❋" },
+    diretor:             { cor: "#d6a129", simbolo: "❋" },
   };
 
   return (

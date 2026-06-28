@@ -39,7 +39,7 @@ const MOCK_TASKS = [
 ];
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  "Em produção": { bg: "#dbeafe", text: "#1d4ed8" },
+  "Em produção": { bg: "#faf3e0", text: "#8a6d1a" },
   "Revisão":     { bg: "#fef3c7", text: "#92400e" },
   "Planejamento":{ bg: "#f3f4f6", text: "#4b5563" },
 };
@@ -122,7 +122,7 @@ export function AgentPanel({ agent, onClose }: Props) {
               {agent.funcao}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <span style={{ background: "#dbeafe", color: "#1d4ed8", borderRadius: 999, padding: "2px 10px", fontSize: 11, fontWeight: 600 }}>
+              <span style={{ background: "#faf3e0", color: "#8a6d1a", borderRadius: 999, padding: "2px 10px", fontSize: 11, fontWeight: 600 }}>
                 IA
               </span>
               <span style={{

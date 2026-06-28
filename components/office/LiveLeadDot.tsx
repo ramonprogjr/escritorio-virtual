@@ -132,11 +132,11 @@ export default function LiveLeadDot({ lead, scaleX, scaleY, onClick }: LiveLeadD
             width={bolhaW}
             height={20}
             rx={6}
-            fill={lead.ultima_mensagem.de === "lead" ? "rgba(96,165,250,0.95)" : "rgba(34,197,94,0.95)"}
+            fill={lead.ultima_mensagem.de === "lead" ? "rgba(201,162,74,0.95)" : "rgba(34,197,94,0.95)"}
           />
           <polygon
             points="-4,-2 0,-6 0,2"
-            fill={lead.ultima_mensagem.de === "lead" ? "rgba(96,165,250,0.95)" : "rgba(34,197,94,0.95)"}
+            fill={lead.ultima_mensagem.de === "lead" ? "rgba(201,162,74,0.95)" : "rgba(34,197,94,0.95)"}
           />
           <text
             x={bolhaW / 2}

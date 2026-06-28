@@ -131,7 +131,7 @@ export function ComercialPanel({ onVerTudo, feed = [], onAgenteClick }: Comercia
           <div style={{ marginTop: 8, padding: "6px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
             {[
               { label: "✅ Qualificados hoje", valor: "24", color: "#22c55e" },
-              { label: "🔄 Em qualificação",   valor: "5",  color: "#60a5fa" },
+              { label: "🔄 Em qualificação",   valor: "5",  color: "#c9a24a" },
               { label: "📊 Taxa contato",       valor: "93%",color: "#22c55e" },
             ].map((s, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>

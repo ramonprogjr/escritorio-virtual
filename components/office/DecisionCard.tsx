@@ -14,7 +14,7 @@ const STATUS_COLORS = {
   critical: { bg: "rgba(239,68,68,0.08)", border: "#ef4444", text: "#ef4444", label: "Crítico" },
   warning:  { bg: "rgba(234,179,8,0.08)",  border: "#eab308", text: "#eab308", label: "Atenção" },
   info:     { bg: "rgba(34,197,94,0.08)",  border: "#22c55e", text: "#22c55e", label: "Informativo" },
-  system:   { bg: "rgba(96,165,250,0.08)", border: "#60a5fa", text: "#60a5fa", label: "Sistema" },
+  system:   { bg: "rgba(201,162,74,0.08)", border: "#c9a24a", text: "#c9a24a", label: "Sistema" },
 };
 
 const CONFIANCA_COLORS: Record<string, string> = {
@@ -27,7 +27,7 @@ const ACAO_COLORS = {
   primary:  { bg: "rgba(34,197,94,0.15)",  border: "rgba(34,197,94,0.3)",  text: "#22c55e" },
   secondary:{ bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)",text: "rgba(255,255,255,0.7)" },
   danger:   { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)",  text: "#ef4444" },
-  delegate: { bg: "rgba(96,165,250,0.12)", border: "rgba(96,165,250,0.3)", text: "#60a5fa" },
+  delegate: { bg: "rgba(201,162,74,0.12)", border: "rgba(201,162,74,0.3)", text: "#c9a24a" },
 };
 
 export default function DecisionCard({ decision, onAction, onVerLead, onVerParceiro }: DecisionCardProps) {
@@ -85,7 +85,7 @@ export default function DecisionCard({ decision, onAction, onVerLead, onVerParce
             {decision.lead_id && onVerLead && (
               <button
                 onClick={(e) => { e.stopPropagation(); onVerLead(decision.lead_id!); }}
-                style={{ fontSize: 9, color: "#60a5fa", background: "transparent", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                style={{ fontSize: 9, color: "#c9a24a", background: "transparent", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
               >
                 Ver lead
               </button>
@@ -93,7 +93,7 @@ export default function DecisionCard({ decision, onAction, onVerLead, onVerParce
             {decision.parceiro_id && onVerParceiro && (
               <button
                 onClick={(e) => { e.stopPropagation(); onVerParceiro(decision.parceiro_id!); }}
-                style={{ fontSize: 9, color: "#a78bfa", background: "transparent", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                style={{ fontSize: 9, color: "#d6a129", background: "transparent", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
               >
                 Ver parceiro
               </button>

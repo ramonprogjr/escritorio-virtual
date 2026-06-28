@@ -121,9 +121,9 @@ function MessageBubble({ msg }: { msg: ConversationMessage }) {
   const isAlert    = msg.tipo === "alertou";
 
   if (isDecision || isAlert) {
-    const color = isDecision ? "#3b82f6" : "#ef4444";
-    const bg    = isDecision ? "rgba(59,130,246,0.10)" : "rgba(239,68,68,0.10)";
-    const border= isDecision ? "rgba(59,130,246,0.22)" : "rgba(239,68,68,0.22)";
+    const color = isDecision ? "#c9a24a" : "#ef4444";
+    const bg    = isDecision ? "rgba(201,162,74,0.10)" : "rgba(239,68,68,0.10)";
+    const border= isDecision ? "rgba(201,162,74,0.22)" : "rgba(239,68,68,0.22)";
     return (
       <div style={{ marginBottom: 8 }}>
         <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 8, padding: "7px 10px" }}>
@@ -407,9 +407,9 @@ export function AgentLogPanel({ agent, onClose }: Props) {
                       onClick={() => setDraft((prev) => ({ ...prev, personalidade: p }))}
                       style={{
                         padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer", transition: "all 150ms",
-                        background: draft.personalidade === p ? "rgba(96,165,250,0.2)" : "rgba(255,255,255,0.05)",
-                        border: draft.personalidade === p ? "1px solid rgba(96,165,250,0.4)" : "1px solid rgba(255,255,255,0.08)",
-                        color: draft.personalidade === p ? "#60a5fa" : "rgba(255,255,255,0.5)",
+                        background: draft.personalidade === p ? "rgba(201,162,74,0.2)" : "rgba(255,255,255,0.05)",
+                        border: draft.personalidade === p ? "1px solid rgba(201,162,74,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                        color: draft.personalidade === p ? "#c9a24a" : "rgba(255,255,255,0.5)",
                         fontWeight: draft.personalidade === p ? 600 : 400,
                       }}
                     >
@@ -444,7 +444,7 @@ export function AgentLogPanel({ agent, onClose }: Props) {
 
                   <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 7, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontWeight: 700, letterSpacing: "0.07em", marginBottom: 4 }}>EXEMPLO DE FRASE</p>
-                    <p style={{ fontSize: 11, color: "#a78bfa", fontStyle: "italic" }}>"{previewPerfil.frase_trabalhando[0]}"</p>
+                    <p style={{ fontSize: 11, color: "#c9a24a", fontStyle: "italic" }}>"{previewPerfil.frase_trabalhando[0]}"</p>
                   </div>
 
                   <p style={{ fontSize: 9, color: "#eab308", marginTop: 10 }}>⚠️ Mudar a combinação altera o comportamento completo do agente</p>
@@ -477,20 +477,20 @@ export function AgentLogPanel({ agent, onClose }: Props) {
               <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 16px" }}>
                 <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 10 }}>PERSONALIDADE</p>
                 <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-                  <span style={{ background: "rgba(167,139,250,0.14)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.22)", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
+                  <span style={{ background: "rgba(201,162,74,0.14)", color: "#e0b86a", border: "1px solid rgba(201,162,74,0.22)", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
                     {agent.perfil.humor}
                   </span>
-                  <span style={{ background: "rgba(96,165,250,0.12)", color: "#93c5fd", border: "1px solid rgba(96,165,250,0.20)", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
+                  <span style={{ background: "rgba(201,162,74,0.12)", color: "#c9a24a", border: "1px solid rgba(201,162,74,0.20)", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>
                     {agent.perfil.personalidade}
                   </span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "9px 11px", marginBottom: 8 }}>
                   <p style={{ color: "rgba(255,255,255,0.30)", fontSize: 10, marginBottom: 4 }}>Tom de comunicação</p>
-                  <p style={{ color: "#a78bfa", fontSize: 12, fontStyle: "italic", lineHeight: 1.5 }}>"{agent.perfil.tom_comunicacao}"</p>
+                  <p style={{ color: "#c9a24a", fontSize: 12, fontStyle: "italic", lineHeight: 1.5 }}>"{agent.perfil.tom_comunicacao}"</p>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "9px 11px" }}>
                   <p style={{ color: "rgba(255,255,255,0.30)", fontSize: 10, marginBottom: 4 }}>Estilo de trabalho</p>
-                  <p style={{ color: "#93c5fd", fontSize: 12, fontStyle: "italic", lineHeight: 1.5 }}>"{agent.perfil.estilo_trabalho}"</p>
+                  <p style={{ color: "#e0b86a", fontSize: 12, fontStyle: "italic", lineHeight: 1.5 }}>"{agent.perfil.estilo_trabalho}"</p>
                 </div>
               </div>
 
@@ -498,7 +498,7 @@ export function AgentLogPanel({ agent, onClose }: Props) {
               <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 16px" }}>
                 <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 10 }}>HOJE</p>
                 {[
-                  { label: "Em andamento",     value: String(agent.tarefas.ativas),         color: "#60a5fa" },
+                  { label: "Em andamento",     value: String(agent.tarefas.ativas),         color: "#c9a24a" },
                   { label: "Concluídas hoje",  value: String(agent.tarefas.concluidas_hoje), color: "#22c55e" },
                   { label: "Saúde da operação",value: `${score}%`,                           color: sc       },
                 ].map(({ label, value, color }) => (

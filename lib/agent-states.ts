@@ -16,12 +16,12 @@ export interface StateVisual {
 
 export const STATE_VISUALS: Record<AgentState, StateVisual> = {
   trabalhando: { label: "Trabalhando",  icon: "⚡", ringColor: "#22c55e" },
-  revisando:   { label: "Revisando",    icon: "🔍", ringColor: "#3b82f6" },
-  em_reuniao:  { label: "Em reunião",   icon: "🤝", ringColor: "#8b5cf6" },
+  revisando:   { label: "Revisando",    icon: "🔍", ringColor: "#c9a24a" },
+  em_reuniao:  { label: "Em reunião",   icon: "🤝", ringColor: "#d6a129" },
   comemorando: { label: "Comemorando",  icon: "🎉", ringColor: "#f59e0b" },
   alerta:      { label: "Alerta",       icon: "🚨", ringColor: "#ef4444" },
   aguardando:  { label: "Aguardando",   icon: "⏳", ringColor: "#6b7280" },
-  conversando: { label: "Conversando",  icon: "💬", ringColor: "#06b6d4" },
+  conversando: { label: "Conversando",  icon: "💬", ringColor: "#e0b86a" },
   pausado:     { label: "Pausado",      icon: "⏸️", ringColor: "#374151" },
 };
 
@@ -391,7 +391,7 @@ export function randomWorkingState(): AgentState {
 }
 
 export function emitCelebrationParticles(x: number, y: number): Particle[] {
-  const colors = ["#fbbf24", "#22c55e", "#60a5fa", "#f472b6", "#a78bfa", "#34d399"];
+  const colors = ["#fbbf24", "#22c55e", "#c9a24a", "#f472b6", "#d6a129", "#34d399"];
   return Array.from({ length: 12 }, (_, i) => ({
     id: `p-${Date.now()}-${i}`,
     x, y,

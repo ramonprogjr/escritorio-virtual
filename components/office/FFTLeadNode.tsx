@@ -14,11 +14,11 @@ interface Props {
 }
 
 const MERCADO_CONFIG: Record<string, { emoji: string; cor: string }> = {
-  imobiliario: { emoji: "🏠", cor: "#8b5cf6" },
+  imobiliario: { emoji: "🏠", cor: "#c9a24a" },
   arquitetura:  { emoji: "🏛", cor: "#f59e0b" },
-  reforma:      { emoji: "🔨", cor: "#f97316" },
+  reforma:      { emoji: "🔨", cor: "#d6a129" },
   fornecedor:   { emoji: "🤝", cor: "#22c55e" },
-  produto:      { emoji: "📦", cor: "#06b6d4" },
+  produto:      { emoji: "📦", cor: "#e0b86a" },
   geral:        { emoji: "📌", cor: "#6b7280" },
 };
 

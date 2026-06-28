@@ -73,12 +73,12 @@ const LEAD_FLOW = [
 const SPEECH_COLORS: Record<string, string> = {
   "Executivo":   "#f59e0b",
   "Marketing":   "#22c55e",
-  "Estratégia":  "#60a5fa",
-  "Conteúdo":    "#a78bfa",
+  "Estratégia":  "#c9a24a",
+  "Conteúdo":    "#e0b86a",
   "Design":      "#f472b6",
   "Performance": "#34d399",
-  "Atendimento": "#06b6d4",
-  "Comercial":   "#fb923c",
+  "Atendimento": "#10b981",
+  "Comercial":   "#d6a129",
 };
 
 function getActivityText(agent: Agent): string {
@@ -138,7 +138,7 @@ function getRingColor(
     if (elapsed < 1500) return Math.floor(elapsed / 250) % 2 === 0 ? "#fbbf24" : "#22c55e";
     return "#fbbf24";
   }
-  if (state === "em_reuniao") return "#3b82f6";
+  if (state === "em_reuniao") return "#c9a24a";
   if (state === "aguardando") return "#6b7280";
   if (state in STATE_VISUALS && state !== "trabalhando" && state !== "pausado") {
     return STATE_VISUALS[state].ringColor;
@@ -461,9 +461,9 @@ export function OfficeCanvas({
           ctx.save();
           ctx.beginPath();
           ctx.arc(ax, ay, rR + 12 * S, 0, Math.PI * 2);
-          ctx.strokeStyle = "#f97316";
+          ctx.strokeStyle = "#c9a24a";
           ctx.lineWidth = 3 * S;
-          ctx.shadowColor = "#f97316";
+          ctx.shadowColor = "#c9a24a";
           ctx.shadowBlur = 20 * S;
           ctx.stroke();
           ctx.restore();
@@ -482,12 +482,12 @@ export function OfficeCanvas({
           ctx.fill();
         }
 
-        /* em_reuniao: slow pulsing blue outer ring */
+        /* em_reuniao: slow pulsing gold outer ring */
         if (state === "em_reuniao") {
           const mp = (Math.sin(ts * 0.0009 + phase) + 1) / 2;
           ctx.beginPath();
           ctx.arc(ax, ay, rR + (5 + mp * 7) * S, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(59,130,246,${0.18 + mp * 0.28})`;
+          ctx.strokeStyle = `rgba(201,162,74,${0.18 + mp * 0.28})`;
           ctx.lineWidth   = 1.5 * S;
           ctx.stroke();
         }
@@ -516,13 +516,13 @@ export function OfficeCanvas({
 
           ctx.save();
 
-          // 1. HALO NO CHÃO — elipse roxa embaixo dos pés
+          // 1. HALO NO CHÃO — elipse dourada embaixo dos pés
           ctx.beginPath();
           ctx.ellipse(ax, ay + 8 * S, 28 * S, 10 * S, 0, 0, Math.PI * 2);
           const haloGradient = ctx.createRadialGradient(ax, ay + 8 * S, 0, ax, ay + 8 * S, 28 * S);
-          haloGradient.addColorStop(0, 'rgba(139,92,246,0.6)');
-          haloGradient.addColorStop(0.6, 'rgba(139,92,246,0.25)');
-          haloGradient.addColorStop(1, 'rgba(139,92,246,0)');
+          haloGradient.addColorStop(0, 'rgba(201,162,74,0.6)');
+          haloGradient.addColorStop(0.6, 'rgba(201,162,74,0.25)');
+          haloGradient.addColorStop(1, 'rgba(201,162,74,0)');
           ctx.fillStyle = haloGradient;
           ctx.fill();
 
@@ -535,12 +535,12 @@ export function OfficeCanvas({
             const pulso = 0.4 + Math.sin(tempo * 2 + i) * 0.3;
             ctx.beginPath();
             ctx.arc(px, py, 1.5 * S, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(139,92,246,${pulso})`;
+            ctx.fillStyle = `rgba(201,162,74,${pulso})`;
             ctx.fill();
           }
 
           // 3. SOMBRA DO PERSONAGEM
-          ctx.shadowColor = 'rgba(139,92,246,0.5)';
+          ctx.shadowColor = 'rgba(201,162,74,0.5)';
           ctx.shadowBlur = 16 * S;
 
           // 4. AVATAR — maior, SEM clippath, por cima do canvas
@@ -566,11 +566,11 @@ export function OfficeCanvas({
           roundRect(ctx, tagX, tagY, tagW, tagH, 4 * S);
           ctx.fill();
 
-          ctx.strokeStyle = 'rgba(139,92,246,0.7)';
+          ctx.strokeStyle = 'rgba(201,162,74,0.7)';
           ctx.lineWidth = 1 * S;
           ctx.stroke();
 
-          ctx.fillStyle = '#c4b5fd';
+          ctx.fillStyle = '#e0b86a';
           ctx.font = `bold ${Math.max(6, 7.5 * S)}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -679,11 +679,11 @@ export function OfficeCanvas({
             ctx.fillStyle   = "rgba(15,15,30,0.95)";
             roundRect(ctx, apx, apy, apw, aph, 3 * S);
             ctx.fill();
-            ctx.strokeStyle = "rgba(139,92,246,0.5)";
+            ctx.strokeStyle = "rgba(201,162,74,0.5)";
             ctx.lineWidth   = 0.5;
             roundRect(ctx, apx, apy, apw, aph, 3 * S);
             ctx.stroke();
-            ctx.fillStyle    = "#c4b5fd";
+            ctx.fillStyle    = "#e0b86a";
             ctx.textAlign    = "center";
             ctx.textBaseline = "top";
             ctx.fillText(areaLabel, ax, apy + 3 * S);
@@ -737,7 +737,7 @@ export function OfficeCanvas({
             ? ay + (RING_R + 8) * S
             : ay - RING_R * S - bh - 14 * S;
 
-          const areaColor = SPEECH_COLORS[agent.area] ?? "#60a5fa";
+          const areaColor = SPEECH_COLORS[agent.area] ?? "#c9a24a";
 
           ctx.save();
           ctx.globalAlpha = alpha;

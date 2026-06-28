@@ -34,9 +34,9 @@ const defaultConfig = (): AgenteConfig => ({
 });
 
 const AREA_COR: Record<string, string> = {
-  Marketing: "#22c55e", Executivo: "#f59e0b", Estratégia: "#60a5fa",
-  Conteúdo: "#a78bfa", Design: "#f472b6", Performance: "#34d399",
-  Atendimento: "#06b6d4", Comercial: "#fb923c",
+  Marketing: "#22c55e", Executivo: "#f59e0b", Estratégia: "#c9a24a",
+  Conteúdo: "#e0b86a", Design: "#f472b6", Performance: "#34d399",
+  Atendimento: "#d6a129", Comercial: "#b8860b",
 };
 
 type AgenteApi = {
@@ -146,7 +146,7 @@ export default function AgentesPage() {
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
             salvo
               ? "bg-green-600 text-white"
-              : "bg-orange-500 hover:bg-orange-400 text-white"
+              : "bg-amber-500 hover:bg-amber-400 text-white"
           }`}
         >
           {salvo ? "✓ Salvo!" : "Salvar configurações"}
@@ -172,7 +172,7 @@ export default function AgentesPage() {
                 key={a.id}
                 onClick={() => setSelecionado(a.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-800/50 text-left transition-colors ${
-                  isSelected ? "bg-orange-500/10 border-l-2 border-l-orange-500" : "hover:bg-gray-900"
+                  isSelected ? "bg-amber-500/10 border-l-2 border-l-amber-500" : "hover:bg-gray-900"
                 }`}
               >
                 {isAriane ? (
@@ -245,13 +245,13 @@ export default function AgentesPage() {
                   max={5}
                   value={cfg.autonomia}
                   onChange={e => update("autonomia", Number(e.target.value))}
-                  className="w-full accent-orange-500"
+                  className="w-full accent-amber-500"
                 />
                 <div className="flex justify-between mt-1">
                   {NIVEIS.map(n => (
                     <span
                       key={n.nivel}
-                      className={`text-[10px] ${cfg.autonomia === n.nivel ? "text-orange-400 font-bold" : "text-gray-600"}`}
+                      className={`text-[10px] ${cfg.autonomia === n.nivel ? "text-amber-400 font-bold" : "text-gray-600"}`}
                     >
                       {n.nivel}
                     </span>
@@ -269,7 +269,7 @@ export default function AgentesPage() {
                       onClick={() => update("modelo", m)}
                       className={`text-xs rounded-lg px-3 py-2 text-left transition-colors ${
                         cfg.modelo === m
-                          ? "bg-orange-500/20 border border-orange-500/40 text-orange-400"
+                          ? "bg-amber-500/20 border border-amber-500/40 text-amber-400"
                           : "bg-gray-800 hover:bg-gray-700 text-gray-400 border border-transparent"
                       }`}
                     >
@@ -293,7 +293,7 @@ export default function AgentesPage() {
                       <span className="text-gray-300 text-xs">{label}</span>
                       <button
                         onClick={() => update(field, !cfg[field])}
-                        className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${cfg[field] ? "bg-orange-500" : "bg-gray-700"}`}
+                        className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${cfg[field] ? "bg-amber-500" : "bg-gray-700"}`}
                       >
                         <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${cfg[field] ? "left-5" : "left-0.5"}`} />
                       </button>

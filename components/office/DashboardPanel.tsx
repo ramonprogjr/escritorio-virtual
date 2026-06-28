@@ -38,12 +38,12 @@ const CARGO_CURTO: Record<string, string> = {
 const AREA_COLORS: Record<string, string> = {
   "Executivo":    "#f59e0b",
   "Marketing":    "#22c55e",
-  "Estratégia":   "#60a5fa",
-  "Conteúdo":     "#a78bfa",
+  "Estratégia":   "#e0b86a",
+  "Conteúdo":     "#d6a129",
   "Design":       "#f472b6",
   "Performance":  "#34d399",
-  "Atendimento":  "#06b6d4",
-  "Comercial":    "#fb923c",
+  "Atendimento":  "#c9a24a",
+  "Comercial":    "#b8860b",
 };
 
 function getActivityText(agent: Agent): string {
@@ -183,7 +183,7 @@ export function DashboardPanel({ agents, activeMeeting }: Props) {
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {liveAgents.map((agent) => {
-            const color = AREA_COLORS[agent.area] ?? "#60a5fa";
+            const color = AREA_COLORS[agent.area] ?? "#c9a24a";
             return (
               <div
                 key={agent.id}
@@ -258,11 +258,11 @@ export function DashboardPanel({ agents, activeMeeting }: Props) {
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {[
-            { label: "Leads hoje",     value: String(totalLeads),     sub: "recebidos",        color: "#06b6d4" },
+            { label: "Leads hoje",     value: String(totalLeads),     sub: "recebidos",        color: "#e0b86a" },
             { label: "Qualificados",   value: String(leadsQualif),    sub: `de ${totalLeads}`, color: "#22c55e" },
             { label: "Fechamentos",    value: String(fechadosHoje),   sub: "contratos",        color: "#f472b6" },
-            { label: "Em negociação",  value: emNegociacao,           sub: "em aberto",        color: "#fb923c" },
-            { label: "Campanhas",      value: String(campanhasAtivas), sub: "ativas",          color: "#a78bfa" },
+            { label: "Em negociação",  value: emNegociacao,           sub: "em aberto",        color: "#b8860b" },
+            { label: "Campanhas",      value: String(campanhasAtivas), sub: "ativas",          color: "#d6a129" },
             { label: "Investido",      value: investido,               sub: "hoje",            color: "#f59e0b" },
           ].map(({ label, value, sub, color }) => (
             <div

@@ -45,7 +45,7 @@ const TIPO_ICON: Record<string, string> = {
 
 const TIPO_BORDER: Record<string, string> = {
   proposta: "#2f9e8f", campanha: C.gold, conteudo: "#b58a63",
-  site: "#06b6d4", ajuste_agente: "#b58a63", trafego: C.red,
+  site: "#34d399", ajuste_agente: "#b58a63", trafego: C.red,
   contrato: C.green, financeiro: "#16a34a", atendimento_critico: C.red,
   atendimento: C.gold,
 };
