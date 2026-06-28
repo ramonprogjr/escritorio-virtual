@@ -1,7 +1,46 @@
 {
-  "geradoEm": "2026-06-28T02:12:11.444Z",
+  "geradoEm": "2026-06-28T02:23:39.448Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "35d4a43d7b03dde49d7d76bf8ebb4b29a577eb1c",
+      "hashCurto": "35d4a43",
+      "mensagem": "Negocios 'proxima acao' acionavel + Dashboard 'O que precisa de voce'",
+      "mensagemRaw": "feat(F3 batch2): Negocios 'proxima acao' acionavel + Dashboard 'O que precisa de voce'",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T02:23:31.000Z",
+      "hora": "23:23",
+      "arquivos": [
+        "app/api/crm/negocios/[id]/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/negocios/page.tsx",
+        "app/crm/page.tsx",
+        "components/crm/CrmLeadsParados.tsx",
+        "components/crm/CrmOQuePrecisaDeVoce.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx",
+        "hooks/useLeadsParados.ts",
+        "supabase/migrations/20260629120000_hub_negocios_proxima_acao_em.sql"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 3,
+        "components/crm": 3,
+        "outros": 1,
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "41c696124c068f10300c907e4dbdc5594d7f7972",
+      "hashCurto": "41c6961",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T02:13:04.000Z",
+      "hora": "23:13",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "30ecfd739a90ab4ff4df679336445e9b6717f60b",
       "hashCurto": "30ecfd7",
