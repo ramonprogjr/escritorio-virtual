@@ -19,6 +19,15 @@ import {
   setorDoCargo,
   type SetorAgente,
 } from "@/lib/hub/agente-setor";
+import { CONHECIMENTO_TITULO_INSERT } from "@/lib/hub/conhecimento-secoes";
+
+/** Secção de conhecimento/tarefas do agente (hub_agente_conhecimento). */
+type ConhecimentoSecao = {
+  secao: string;
+  titulo: string;
+  conteudo: string;
+  ordem: number;
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -236,6 +245,13 @@ export default function AgentePage() {
   // Setor de trabalho persistido (hub_agente_identidade.setor_ia). "" = sem setor (—).
   const [setorIa, setSetorIa] = useState<SetorAgente | "">("");
 
+  // Conhecimento e tarefas (hub_agente_conhecimento) — gravado na criação, agora editável.
+  // Painel colapsável (fecha por defeito). Best-effort: falha de leitura/gravação não quebra o editor.
+  const [conhecimentoAberto, setConhecimentoAberto] = useState(false);
+  const [conhecimentoSecoes, setConhecimentoSecoes] = useState<ConhecimentoSecao[]>([]);
+  const [conhecimentoCarregado, setConhecimentoCarregado] = useState(false);
+  const [salvandoSecao, setSalvandoSecao] = useState<string | null>(null);
+
   const [motorFerramentasHub, setMotorFerramentasHub] = useState(false);
   const [mistralProvisionar, setMistralProvisionar] = useState(false);
   const [usoFerramentasIa, setUsoFerramentasIa] = useState<Record<string, boolean>>(() =>
@@ -347,6 +363,80 @@ export default function AgentePage() {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  // Carrega o conhecimento/tarefas só quando o dono abre o painel (lazy + tolerante).
+  const carregarConhecimento = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(slug)}/conhecimento`, {
+        headers: internalApiHeaders(),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { secoes?: ConhecimentoSecao[] };
+        const secoes = Array.isArray(data.secoes) ? data.secoes : [];
+        setConhecimentoSecoes(
+          secoes
+            .map((s) => ({
+              secao: String(s.secao || ""),
+              titulo: String(s.titulo || "") || "Conhecimento",
+              conteudo: String(s.conteudo || ""),
+              ordem: typeof s.ordem === "number" ? s.ordem : 999,
+            }))
+            .sort((a, b) => a.ordem - b.ordem)
+        );
+      } else {
+        setConhecimentoSecoes([]);
+      }
+    } catch {
+      // Tolerância: nunca quebra o editor — só mostra o estado vazio.
+      setConhecimentoSecoes([]);
+    } finally {
+      setConhecimentoCarregado(true);
+    }
+  }, [slug]);
+
+  function abrirConhecimento() {
+    const next = !conhecimentoAberto;
+    setConhecimentoAberto(next);
+    if (next && !conhecimentoCarregado) {
+      void carregarConhecimento();
+    }
+  }
+
+  function editarSecaoConteudo(secaoId: string, valor: string) {
+    setConhecimentoSecoes((prev) =>
+      prev.map((s) => (s.secao === secaoId ? { ...s, conteudo: valor } : s))
+    );
+  }
+
+  async function salvarSecaoConhecimento(secaoId: string) {
+    const secao = conhecimentoSecoes.find((s) => s.secao === secaoId);
+    if (!secao) return;
+    setSalvandoSecao(secaoId);
+    setErro("");
+    try {
+      const res = await fetch(`/api/hub/agentes/${encodeURIComponent(slug)}/conhecimento`, {
+        method: "PUT",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secao: secao.secao,
+          titulo: secao.titulo,
+          conteudo: secao.conteudo,
+        }),
+      });
+      if (res.ok) {
+        setToast("✓ Conhecimento salvo");
+        setTimeout(() => setToast(""), 3000);
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { erro?: string; error?: string };
+        setErro(data.erro || data.error || "Não foi possível salvar este bloco.");
+      }
+    } catch {
+      setErro("Falha de rede ao salvar o conhecimento.");
+    } finally {
+      setSalvandoSecao(null);
+    }
+  }
 
   function toggleMercado(m: string) {
     setMercados((prev) =>
@@ -1303,6 +1393,130 @@ export default function AgentePage() {
               rows={6}
               style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
             />
+          </div>
+
+          {/* Conhecimento e tarefas — colapsável (gravado na criação, agora editável) */}
+          <div style={{ border: "1px solid #1d3a2c", borderRadius: 10, overflow: "hidden" }}>
+            <button
+              type="button"
+              onClick={abrirConhecimento}
+              aria-expanded={conhecimentoAberto}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "13px 16px",
+                background: "#0a140f",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <BookOpen size={15} style={{ color: "#c9a24a", flexShrink: 0 }} />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#e6edf3" }}>
+                    Conhecimento e tarefas
+                  </span>
+                  <span style={{ display: "block", fontSize: 11, color: "#8b949e", lineHeight: 1.4 }}>
+                    O que foi escolhido na criação (tarefas, regras, exemplos). Edite e salve cada bloco.
+                  </span>
+                </span>
+              </span>
+              <span style={{ fontSize: 12, color: "#c9a24a", fontWeight: 700, flexShrink: 0 }}>
+                {conhecimentoAberto ? "Fechar ▲" : "Abrir ▼"}
+              </span>
+            </button>
+
+            {conhecimentoAberto && (
+              <div
+                style={{
+                  borderTop: "1px solid #1d3a2c",
+                  padding: 16,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 18,
+                  background: "#0f1d16",
+                }}
+              >
+                {!conhecimentoCarregado ? (
+                  <p style={{ color: "#8b949e", fontSize: 12, margin: 0 }}>Carregando conhecimento…</p>
+                ) : conhecimentoSecoes.length === 0 ? (
+                  <div
+                    style={{
+                      background: "#c9a24a11",
+                      border: "1px solid #c9a24a33",
+                      borderRadius: 8,
+                      padding: "12px 14px",
+                    }}
+                  >
+                    <p style={{ color: "#c9a24a", fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+                      Nenhum conhecimento/tarefa ainda. Use o painel <strong>Playbook — Calibração</strong> ou
+                      o chat <strong>AI — Funcionários</strong> para gerar os blocos deste agente.
+                    </p>
+                  </div>
+                ) : (
+                  conhecimentoSecoes.map((secao) => {
+                    const rotulo =
+                      secao.titulo ||
+                      CONHECIMENTO_TITULO_INSERT[secao.secao as keyof typeof CONHECIMENTO_TITULO_INSERT] ||
+                      "Conhecimento";
+                    const salvandoEste = salvandoSecao === secao.secao;
+                    return (
+                      <div key={secao.secao} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <label
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: "#e6edf3",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {rotulo}
+                          <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>
+                            {secao.secao}
+                          </span>
+                        </label>
+                        <textarea
+                          value={secao.conteudo}
+                          onChange={(e) => editarSecaoConteudo(secao.secao, e.target.value)}
+                          rows={6}
+                          placeholder="Conteúdo em markdown…"
+                          style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void salvarSecaoConhecimento(secao.secao)}
+                          disabled={salvandoEste}
+                          style={{
+                            alignSelf: "flex-start",
+                            padding: "8px 16px",
+                            borderRadius: 8,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            background: "#003b26",
+                            border: "1px solid #1d3a2c",
+                            color: "#c9a24a",
+                            cursor: salvandoEste ? "wait" : "pointer",
+                            opacity: salvandoEste ? 0.6 : 1,
+                          }}
+                        >
+                          {salvandoEste ? "Salvando…" : "Salvar este bloco"}
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+                <p style={{ color: "#484f58", fontSize: 11, margin: 0, lineHeight: 1.45 }}>
+                  Cada bloco é salvo individualmente e alimenta o playbook do agente.
+                </p>
+              </div>
+            )}
           </div>
           </>)}
 
