@@ -7,6 +7,7 @@ import {
   insertParceiroLogCompat,
 } from "@/lib/crm/parceiro-compat";
 import { HUB_PARCEIRO_LIST_SELECT } from "@/lib/crm/parceiro-list-fetch";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 function db() {
@@ -71,12 +72,17 @@ async function buscarParceiroDuplicado(
 }
 
 export async function GET(request: NextRequest) {
+  // Lista parceiros com service-role (ignora RLS) — exige sessão CRM e usa o tenant
+  // do operador logado como escopo de isolamento (não o header, que é forjável).
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
   const mercado = searchParams.get("mercado");
   const busca = searchParams.get("busca");
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   const runList = (select: string, withTenantFilter: boolean) => {
     let query = supabase

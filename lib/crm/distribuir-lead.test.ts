@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { listarCandidatosParceiro, melhorCandidatoParceiro } from "./distribuir-lead";
+import { DEFAULT_OBRA10_TENANT_ID, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 /** Mock encadeável do SupabaseClient: from/select/eq/or → this; limit → Promise<{data,error}>. */
 function mockSupabase(rows: unknown[] | null, error: unknown = null) {
@@ -7,6 +8,19 @@ function mockSupabase(rows: unknown[] | null, error: unknown = null) {
   for (const m of ["from", "select", "eq", "or"]) q[m] = () => q;
   q.limit = () => Promise.resolve({ data: rows, error });
   return q as unknown as Parameters<typeof listarCandidatosParceiro>[0];
+}
+
+/** Como mockSupabase, mas registra todo filtro `.or(...)` aplicado à query (escopo de tenant). */
+function mockSupabaseCapturandoOr(rows: unknown[] | null) {
+  const orFiltros: string[] = [];
+  const q: Record<string, unknown> = {};
+  for (const m of ["from", "select", "eq"]) q[m] = () => q;
+  q.or = (filtro: string) => {
+    orFiltros.push(filtro);
+    return q;
+  };
+  q.limit = () => Promise.resolve({ data: rows, error: null });
+  return { supabase: q as unknown as Parameters<typeof listarCandidatosParceiro>[0], orFiltros };
 }
 
 const INPUT = { mercado: "ARQ", cidade: "São Paulo", estado: "SP" } as const;
@@ -51,6 +65,36 @@ describe("fila de distribuição — top-3 do motor (sem LLM)", () => {
     expect(out.map((c) => c.parceiro_id)).toEqual(["A", "B", "C"]); // D cortado, top-3 ordenado
     expect(out[0].score).toBeGreaterThanOrEqual(out[1].score);
     expect(out[1].score).toBeGreaterThanOrEqual(out[2].score);
+  });
+});
+
+describe("isolamento multi-tenant — motor com service-role (ignora RLS)", () => {
+  it("SEM tenant_id no input aplica o escopo do tenant padrão (nunca lista todos os tenants)", async () => {
+    const { supabase, orFiltros } = mockSupabaseCapturandoOr([A]);
+    await listarCandidatosParceiro(supabase, INPUT); // INPUT não tem tenant_id
+
+    // O filtro de tenant é a única barreira: tem de ser aplicado mesmo sem tenant_id.
+    expect(orFiltros).toHaveLength(1);
+    expect(orFiltros[0]).toBe(tenantScopeOrFilter(DEFAULT_OBRA10_TENANT_ID));
+    expect(orFiltros[0]).toContain(`tenant_id.eq.${DEFAULT_OBRA10_TENANT_ID}`);
+  });
+
+  it("COM tenant_id no input usa o escopo daquele tenant", async () => {
+    const outroTenant = "11111111-1111-4111-8111-111111111111";
+    const { supabase, orFiltros } = mockSupabaseCapturandoOr([A]);
+    await listarCandidatosParceiro(supabase, { ...INPUT, tenant_id: outroTenant });
+
+    expect(orFiltros).toHaveLength(1);
+    expect(orFiltros[0]).toBe(tenantScopeOrFilter(outroTenant));
+    expect(orFiltros[0]).toContain(`tenant_id.eq.${outroTenant}`);
+  });
+
+  it("tenant_id vazio/espaços cai no tenant padrão (não desliga o filtro)", async () => {
+    const { supabase, orFiltros } = mockSupabaseCapturandoOr([A]);
+    await listarCandidatosParceiro(supabase, { ...INPUT, tenant_id: "   " });
+
+    expect(orFiltros).toHaveLength(1);
+    expect(orFiltros[0]).toBe(tenantScopeOrFilter(DEFAULT_OBRA10_TENANT_ID));
   });
 });
 

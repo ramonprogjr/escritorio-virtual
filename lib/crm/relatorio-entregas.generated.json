@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-28T14:32:01.241Z",
+  "geradoEm": "2026-06-28T15:57:07.117Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "601f4acd316a3b4fd203e1960b8849cb66bac924",
+      "hashCurto": "601f4ac",
+      "mensagem": "recebivel nasce do negocio ganho + FIX vazamento cross-tenant no export CSV",
+      "mensagemRaw": "feat(F6): recebivel nasce do negocio ganho + FIX vazamento cross-tenant no export CSV",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T14:32:37.000Z",
+      "hora": "11:32",
+      "arquivos": [
+        "app/api/crm/financeiro/contas/route.ts",
+        "app/crm/financeiro/receber/page.tsx",
+        "app/crm/negocios/[id]/page.tsx",
+        "components/crm/FinanceiroContasList.tsx",
+        "components/crm/FinanceiroNovoLancamentoModal.tsx",
+        "lib/crm/finance-contas.ts",
+        "lib/crm/relatorios-data.ts",
+        "supabase/migrations/20260630120000_hub_contas_receber_negocio_id.sql"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 2,
+        "components/crm": 2,
+        "lib/crm": 2,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "1b73c5ea9885b76861b78c2b8bcced94890c0b37",
       "hashCurto": "1b73c5e",

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
 
 /** Rede — Fornecedores (PJ por área). Formato Membros: status_acesso = homologação. */
@@ -7,10 +8,15 @@ const SELECT =
   "id, codigo, nome, tipo_pessoa, cnpj, cpf, email, telefone, area_atuacao, especialidade, mercados, regiao, cidade, estado, status_acesso, recebe_leads, criado_em";
 
 export async function GET(request: NextRequest) {
+  // Leitura com service-role (ignora RLS): exige sessão CRM e usa o tenant do
+  // operador logado como escopo — alinha com /api/crm/especialistas e /projetos.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const status = request.nextUrl.searchParams.get("status") || "";
 
   let query = crmDb()

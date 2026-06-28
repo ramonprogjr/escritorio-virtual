@@ -1,10 +1,20 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { supabase } from "@/lib/supabase/client";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
+import { toast } from "@/components/crm/toast";
+import { MercadoLeadPicker } from "@/components/crm/leads/MercadoLeadPicker";
+import { crmQueryKeys } from "@/lib/crm/crm-query-keys";
 import { FileText, Layers, Link2, ScrollText, User } from "lucide-react";
+
+const STATUS_EDITAVEL_OPTIONS: { value: "captacao" | "em_homologacao" | "homologado"; label: string }[] = [
+  { value: "captacao", label: "Captação" },
+  { value: "em_homologacao", label: "Em homologação" },
+  { value: "homologado", label: "Homologado" },
+];
 
 interface Modulo { id: string; modulo_numero: number; titulo: string; status: string; nota: number | null; feedback: string | null; concluido_em: string | null; tentativas: number; }
 interface Documento { id: string; tipo: string; nome_arquivo: string | null; status: string; observacoes: string | null; enviado_em: string | null; }
@@ -50,6 +60,13 @@ export default function ParceiroDetalhePage() {
   const [aba, setAba] = useState<"perfil" | "modulos" | "documentos" | "referencias" | "logs">("perfil");
   const [avancando, setAvancando] = useState<number | null>(null);
   const [msgLinkPortal, setMsgLinkPortal] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Editor inline de distribuição (mercado / recebe_leads / status).
+  const [editMercado, setEditMercado] = useState<string>("");
+  const [editRecebeLeads, setEditRecebeLeads] = useState(false);
+  const [editStatus, setEditStatus] = useState<"captacao" | "em_homologacao" | "homologado">("captacao");
+  const [salvandoDistrib, setSalvandoDistrib] = useState(false);
 
   const carregar = useCallback(async () => {
     const [p, m, mt, d, r, l] = await Promise.all([
@@ -69,6 +86,51 @@ export default function ParceiroDetalhePage() {
   }, [id]);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Espelha o parceiro carregado no estado do editor (quando o id muda / recarrega).
+  useEffect(() => {
+    if (!parceiro) return;
+    setEditMercado(parceiro.mercado || "");
+    setEditRecebeLeads(!!parceiro.recebe_leads);
+    const s = parceiro.status;
+    setEditStatus(
+      s === "homologado" || s === "em_homologacao" || s === "captacao" ? s : "captacao"
+    );
+  }, [parceiro]);
+
+  const distribDirty =
+    !!parceiro &&
+    (editMercado !== (parceiro.mercado || "") ||
+      editRecebeLeads !== !!parceiro.recebe_leads ||
+      editStatus !== parceiro.status);
+
+  async function salvarDistribuicao() {
+    if (!parceiro || salvandoDistrib) return;
+    setSalvandoDistrib(true);
+    try {
+      const res = await fetch(`/api/parceiros/${id}`, {
+        method: "PATCH",
+        headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mercado: editMercado,
+          recebe_leads: editRecebeLeads,
+          status: editStatus,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(j.erro || "Não foi possível salvar.");
+        return;
+      }
+      toast.success("Distribuição atualizada.");
+      await carregar();
+      void queryClient.invalidateQueries({ queryKey: crmQueryKeys.parceiros() });
+    } catch {
+      toast.error("Falha de conexão ao salvar.");
+    } finally {
+      setSalvandoDistrib(false);
+    }
+  }
 
   async function copiarLinkPortal() {
     setMsgLinkPortal(null);
@@ -199,7 +261,6 @@ export default function ParceiroDetalhePage() {
                   { label: "Origem", val: parceiro.hub_parceiros_captacao?.origem || "—" },
                   { label: "Canal", val: parceiro.hub_parceiros_captacao?.canal || "—" },
                   { label: "Cadastrado", val: tempoRelativo(parceiro.criado_em) },
-                  { label: "Recebe leads", val: parceiro.recebe_leads ? "Sim" : "Não" },
                 ].map(x => (
                   <div key={x.label} className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: "#484f58" }}>{x.label}</span>
@@ -207,6 +268,112 @@ export default function ParceiroDetalhePage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* DISTRIBUIÇÃO — editor inline que alimenta o motor (hub_parceiros) */}
+            <div className="rounded-xl p-4" style={{ background: "#0f1d16", border: "1px solid #1d3a2c" }}>
+              <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                <p className="text-xs font-bold" style={{ color: "#484f58", textTransform: "uppercase", letterSpacing: "0.08em" }}>Distribuição de leads</p>
+                {editRecebeLeads && editStatus === "homologado" && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: "#003b2630", color: "#34d399" }}>
+                    No motor
+                  </span>
+                )}
+              </div>
+
+              {/* Mercado — SINGLE-SELECT (grava STRING; o motor casa por mercado singular) */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold mb-2" style={{ color: "#8b949e" }}>
+                  Mercado <span style={{ color: "#484f58" }}>(escolha um)</span>
+                </label>
+                <MercadoLeadPicker
+                  mercados={editMercado ? [editMercado] : []}
+                  disabled={salvandoDistrib}
+                  onToggle={(sigla, ativo) => {
+                    // Single-select: marcar troca; desmarcar o ativo limpa.
+                    setEditMercado(ativo ? sigla : editMercado === sigla ? "" : editMercado);
+                  }}
+                />
+              </div>
+
+              {/* Toggle recebe_leads — switch verde */}
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium" style={{ color: "#e6edf3" }}>Recebe leads</p>
+                  <p className="text-xs" style={{ color: "#484f58" }}>Habilita este parceiro a receber leads do motor.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={editRecebeLeads}
+                  aria-label="Recebe leads"
+                  disabled={salvandoDistrib}
+                  onClick={() => setEditRecebeLeads((v) => !v)}
+                  className="relative flex-shrink-0 rounded-full transition-colors"
+                  style={{
+                    width: 44,
+                    height: 24,
+                    background: editRecebeLeads ? "#003b26" : "#16271e",
+                    border: `1px solid ${editRecebeLeads ? "#34d399" : "#1d3a2c"}`,
+                    cursor: salvandoDistrib ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <span
+                    className="absolute top-1/2 rounded-full transition-all"
+                    style={{
+                      width: 16,
+                      height: 16,
+                      transform: "translateY(-50%)",
+                      left: editRecebeLeads ? 23 : 3,
+                      background: editRecebeLeads ? "#34d399" : "#8b949e",
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Status de homologação */}
+              <div className="mb-3">
+                <label className="block text-xs font-semibold mb-2" style={{ color: "#8b949e" }}>Status</label>
+                <select
+                  value={editStatus}
+                  disabled={salvandoDistrib}
+                  onChange={(e) => setEditStatus(e.target.value as typeof editStatus)}
+                  className="w-full rounded-lg px-3 py-2 text-sm"
+                  style={{ background: "#0a140f", border: "1px solid #1d3a2c", color: "#e6edf3" }}
+                >
+                  {STATUS_EDITAVEL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Avisos âmbar */}
+              {editRecebeLeads && !editMercado && (
+                <p className="text-xs rounded-lg px-3 py-2 mb-2" style={{ background: "#c9a24a14", border: "1px solid #c9a24a40", color: "#e0b86a" }}>
+                  Sem mercado o motor não casa este parceiro — escolha um mercado.
+                </p>
+              )}
+              {editStatus === "homologado" && parceiro.status !== "homologado" && (
+                <p className="text-xs rounded-lg px-3 py-2 mb-2" style={{ background: "#c9a24a14", border: "1px solid #c9a24a40", color: "#e0b86a" }}>
+                  Marcar como homologado coloca este parceiro na distribuição de leads.
+                </p>
+              )}
+
+              <button
+                type="button"
+                onClick={() => void salvarDistribuicao()}
+                disabled={!distribDirty || salvandoDistrib}
+                className="w-full rounded-lg py-2.5 text-sm font-bold transition-opacity"
+                style={{
+                  background: "#003b26",
+                  color: "#c9a24a",
+                  border: "1px solid #1d3a2c",
+                  cursor: !distribDirty || salvandoDistrib ? "not-allowed" : "pointer",
+                  opacity: !distribDirty || salvandoDistrib ? 0.5 : 1,
+                }}
+              >
+                {salvandoDistrib ? "Salvando…" : "Salvar distribuição"}
+              </button>
             </div>
 
             {parceiro.bio && (

@@ -15,7 +15,7 @@ import {
   colunasParceiroLista,
   ESTAGIO_CAPTACAO_LABEL,
 } from "@/lib/crm/parceiro-list-columns";
-import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
+import { MERCADOS_PREFIXO_OPTIONS, labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 
 const UFS = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
@@ -286,12 +286,24 @@ export default function ParceirosPage() {
               label: (p) => p.nome,
               title: (p) => p.nome,
               meta: (p) =>
-                p.recebe_leads ? (
-                  <span
-                    className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{ background: "#003b2630", color: "#34d399" }}
-                  >
-                    Recebe leads
+                p.recebe_leads || p.mercado ? (
+                  <span className="mt-1 flex flex-wrap items-center gap-1">
+                    {p.recebe_leads && (
+                      <span
+                        className="inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                        style={{ background: "#003b2630", color: "#34d399" }}
+                      >
+                        Recebe leads
+                      </span>
+                    )}
+                    {p.mercado && (
+                      <span
+                        className="inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                        style={{ background: "#c9a24a1f", color: "#e0b86a" }}
+                      >
+                        {labelMercadoPrefixo(p.mercado)}
+                      </span>
+                    )}
                   </span>
                 ) : null,
             }}

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { tenantScopeOrFilter } from "@/lib/tenant-default";
+import { defaultTenantId, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 export type CandidatoParceiro = {
   parceiro_id: string;
@@ -96,17 +96,17 @@ export async function listarCandidatosParceiro(
   supabase: SupabaseClient,
   input: MatchingInput
 ): Promise<CandidatoParceiro[]> {
-  const tenantId = input.tenant_id?.trim() || undefined;
-  let query = supabase
+  // Isolamento multi-tenant: o motor usa service-role (ignora RLS), então o filtro
+  // por tenant é a ÚNICA barreira. Sem tenant_id no input, cai no tenant padrão e
+  // SEMPRE aplica o escopo — nunca lista parceiros de todos os tenants.
+  const tenantId = input.tenant_id?.trim() || defaultTenantId();
+  const query = supabase
     .from("hub_parceiros")
     .select(
       "id, nome, telefone, mercado, especialidade, cidade, estado, status, recebe_leads, total_leads_recebidos, status_financeiro"
     )
-    .eq("recebe_leads", true);
-
-  if (tenantId) {
-    query = query.or(tenantScopeOrFilter(tenantId));
-  }
+    .eq("recebe_leads", true)
+    .or(tenantScopeOrFilter(tenantId));
 
   const { data, error } = await query.eq("status", "homologado").limit(100);
   if (error || !data?.length) return [];
