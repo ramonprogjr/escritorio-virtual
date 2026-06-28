@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("hub_imoveis")
     .select(
-      "id, codigo, titulo, tipo, finalidade, status, valor, cidade, estado, dormitorios, area_total_m2, ativo, criado_em",
+      "id, codigo, titulo, tipo, finalidade, status, valor, cidade, estado, bairro, dormitorios, banheiros, vagas, area_total_m2, ativo, criado_em",
       { count: "exact" }
     )
     .eq("ativo", ativo)

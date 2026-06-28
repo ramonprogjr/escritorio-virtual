@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Eye, RefreshCw } from "lucide-react";
+import { AlertTriangle, Eye, RefreshCw, Settings } from "lucide-react";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { CrmCanalSideover, type CanalAgenteRow } from "@/components/crm/CrmCanalSideover";
 import { EmptyState } from "@/components/crm/EmptyState";
@@ -18,25 +18,6 @@ const FILTRO_PILLS = [
   { id: "conectados", label: "Conectados" },
   { id: "sem_instancia", label: "Sem instância" },
 ] as const;
-
-const TH: React.CSSProperties = {
-  textAlign: "left",
-  padding: "10px 12px",
-  fontSize: 11,
-  fontWeight: 700,
-  color: "#8b949e",
-  letterSpacing: 0.5,
-  textTransform: "uppercase",
-  borderBottom: "1px solid #1d3a2c",
-  background: "#0f1d16",
-};
-
-const TD: React.CSSProperties = {
-  padding: "12px",
-  fontSize: 13,
-  color: "#e6edf3",
-  verticalAlign: "middle",
-};
 
 const SLUGS_CANAL_PADRAO = new Set(["atendente", "sdr", "gerente_atendimento", "diretor_geral_ia"]);
 
@@ -62,11 +43,24 @@ function statusLabel(status?: string | null): string {
   return status?.trim() || "—";
 }
 
-function statusCores(status?: string | null): { bg: string; fg: string; border: string } {
+function statusCores(
+  status?: string | null,
+  temInstancia?: boolean,
+): { bg: string; fg: string; border: string } {
+  if (temInstancia === false) return { bg: "#1d3a2c", fg: "#8b949e", border: "#484f58" };
   const s = (status || "").toLowerCase();
   if (s === "connected") return { bg: "#23863633", fg: "#3fb950", border: "#3fb95044" };
   if (s === "connecting") return { bg: "#bb800926", fg: "#e6c06a", border: "#bb800966" };
-  return { bg: "#1d3a2c", fg: "#8b949e", border: "#484f58" };
+  // Caído / desconectado com instância: vermelho (na marca, alerta real)
+  return { bg: "#f8514922", fg: "#f85149", border: "#f8514955" };
+}
+
+// Canal "caído": tem instância mas a conexão NÃO está ativa nem conectando.
+function ehCanalCaido(a: CanalAgenteRow): boolean {
+  const temInst = Boolean((a.uazapi_instance_id || "").trim());
+  if (!temInst) return false;
+  const s = (a.uazapi_connection_status || "").toLowerCase();
+  return s !== "connected" && s !== "connecting";
 }
 
 export default function CanaisPage() {
@@ -153,8 +147,12 @@ export default function CanaisPage() {
   const kpis = useMemo(() => {
     const conectados = agentes.filter((a) => (a.uazapi_connection_status || "").toLowerCase() === "connected").length;
     const comInstancia = agentes.filter((a) => (a.uazapi_instance_id || "").trim()).length;
-    return { total: agentes.length, conectados, comInstancia };
+    const caidos = agentes.filter(ehCanalCaido).length;
+    return { total: agentes.length, conectados, comInstancia, caidos };
   }, [agentes]);
+
+  const canaisCaidos = useMemo(() => filtrados.filter(ehCanalCaido), [filtrados]);
+  const primeiroCaido = canaisCaidos[0] ?? null;
 
   return (
     <div style={{ height: "100%", overflowY: "auto", background: "#0a140f", padding: 24 }}>
@@ -205,11 +203,113 @@ export default function CanaisPage() {
       </div>
 
       {erro ? (
-        <p style={{ color: "#f85149", fontSize: 13, marginBottom: 16 }}>{erro}</p>
+        <div
+          role="alert"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            padding: "12px 14px",
+            borderRadius: 10,
+            background: "#f8514922",
+            border: "1px solid #f8514955",
+            marginBottom: 16,
+          }}
+        >
+          <AlertTriangle size={18} style={{ color: "#f85149", flexShrink: 0 }} />
+          <span style={{ color: "#f85149", fontSize: 13, fontWeight: 600, flex: 1, minWidth: 180 }}>{erro}</span>
+          <button
+            type="button"
+            onClick={() => void carregar({ silent: true })}
+            disabled={refreshing}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: "1px solid #f8514955",
+              background: "#f8514922",
+              color: "#f85149",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: refreshing ? "wait" : "pointer",
+            }}
+          >
+            <RefreshCw size={13} className={refreshing ? "animate-spin" : undefined} />
+            Tentar de novo
+          </button>
+        </div>
+      ) : null}
+
+      {!loadingInicial && !erro && primeiroCaido ? (
+        <div
+          role="alert"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            padding: "12px 14px",
+            borderRadius: 10,
+            background: "#f8514922",
+            border: "1px solid #f8514955",
+            marginBottom: 16,
+          }}
+        >
+          <AlertTriangle size={18} style={{ color: "#f85149", flexShrink: 0 }} />
+          <span style={{ color: "#ffb3ad", fontSize: 13, fontWeight: 600, flex: 1, minWidth: 180 }}>
+            {canaisCaidos.length === 1
+              ? "1 canal desconectado — reconecte para não perder mensagens."
+              : `${canaisCaidos.length} canais desconectados — reconecte para não perder mensagens.`}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSideover(primeiroCaido)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: "1px solid #f85149",
+              background: "#f85149",
+              color: "#0a140f",
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            <RefreshCw size={13} />
+            {canaisCaidos.length === 1 ? "Reconectar agora" : "Reconectar o 1º"}
+          </button>
+        </div>
       ) : null}
 
       {loadingInicial ? (
-        <p style={{ color: "#8b949e", fontSize: 13 }}>Carregando canais…</p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              aria-hidden
+              style={{
+                height: 168,
+                borderRadius: 14,
+                background: "#0f1d16",
+                border: "1px solid #1d3a2c",
+                opacity: 0.6,
+                animation: "canalPulse 1.2s ease-in-out infinite",
+              }}
+            />
+          ))}
+        </div>
       ) : filtrados.length === 0 ? (
         <EmptyState
           message={
@@ -217,83 +317,155 @@ export default function CanaisPage() {
               ? "Nenhum agente em modo WhatsApp sem instância."
               : modoLista === "conectados"
                 ? "Nenhum canal conectado no momento."
-                : "Nenhum canal WhatsApp encontrado para agentes ativos."
+                : "Nenhum canal configurado. Cadastre uma instância na ficha do agente para conectar o WhatsApp."
           }
         />
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
-            <thead>
-              <tr>
-                <th style={TH}>Agente</th>
-                <th style={TH}>Slug</th>
-                <th style={TH}>Instância</th>
-                <th style={TH}>Conexão</th>
-                <th style={TH}>Modo</th>
-                <th style={{ ...TH, width: 72, textAlign: "center" }} aria-label="Ações" />
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((a) => {
-                const st = statusCores(a.uazapi_connection_status);
-                const modo =
-                  a.modo_operacao && a.modo_operacao in MODO_OPERACAO_LABEL
-                    ? MODO_OPERACAO_LABEL[a.modo_operacao as ModoOperacaoAgente]
-                    : a.modo_operacao || "—";
-                const temInst = Boolean((a.uazapi_instance_id || "").trim());
-                return (
-                  <tr key={a.agente_slug} style={{ borderBottom: "1px solid #16271e" }}>
-                    <td style={{ ...TD, fontWeight: 600 }}>{a.nome}</td>
-                    <td style={{ ...TD, color: "#8b949e", fontSize: 12 }}>
-                      <code>{a.agente_slug}</code>
-                    </td>
-                    <td style={{ ...TD, color: "#8b949e", fontSize: 12 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {filtrados.map((a) => {
+            const temInst = Boolean((a.uazapi_instance_id || "").trim());
+            const caido = ehCanalCaido(a);
+            const st = statusCores(a.uazapi_connection_status, temInst);
+            const modo =
+              a.modo_operacao && a.modo_operacao in MODO_OPERACAO_LABEL
+                ? MODO_OPERACAO_LABEL[a.modo_operacao as ModoOperacaoAgente]
+                : a.modo_operacao || "—";
+            const rotuloStatus = temInst ? statusLabel(a.uazapi_connection_status) : "Sem instância";
+            const ctaReconectar = caido;
+            return (
+              <div
+                key={a.agente_slug}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14,
+                  padding: 16,
+                  borderRadius: 14,
+                  background: "#0f1d16",
+                  border: `1px solid ${caido ? "#f8514955" : "#1d3a2c"}`,
+                  boxShadow: caido ? "0 0 0 1px #f8514922" : "none",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: "#e6edf3",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {a.nome}
+                    </h3>
+                    <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8b949e" }}>
+                      <code style={{ color: "#93cdd4", fontSize: 11 }}>{a.agente_slug}</code>
+                    </p>
+                  </div>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "4px 10px",
+                      borderRadius: 20,
+                      background: st.bg,
+                      color: st.fg,
+                      border: `1px solid ${st.border}`,
+                      letterSpacing: 0.3,
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: st.fg }} />
+                    {rotuloStatus}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+                  <div style={{ display: "flex", gap: 8, color: "#8b949e" }}>
+                    <span style={{ flexShrink: 0, minWidth: 72, fontWeight: 600 }}>Instância</span>
+                    <span style={{ color: "#e6edf3", wordBreak: "break-word" }}>
                       {temInst ? a.uazapi_instance_name || a.uazapi_instance_id : "—"}
-                    </td>
-                    <td style={TD}>
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "3px 10px",
-                          borderRadius: 20,
-                          background: st.bg,
-                          color: st.fg,
-                          border: `1px solid ${st.border}`,
-                        }}
-                      >
-                        {temInst ? statusLabel(a.uazapi_connection_status) : "Sem instância"}
-                      </span>
-                    </td>
-                    <td style={{ ...TD, color: "#8b949e", fontSize: 12, maxWidth: 200 }}>{modo}</td>
-                    <td style={{ ...TD, textAlign: "center" }}>
-                      <button
-                        type="button"
-                        aria-label={`Gerenciar canal de ${a.nome}`}
-                        onClick={() => setSideover(a)}
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 8,
-                          border: "1px solid #1d3a2c",
-                          background: "#16271e",
-                          color: "#c9a24a",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Eye size={18} strokeWidth={1.75} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, color: "#8b949e" }}>
+                    <span style={{ flexShrink: 0, minWidth: 72, fontWeight: 600 }}>Modo</span>
+                    <span style={{ color: "#e6edf3", wordBreak: "break-word" }}>{modo}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
+                  <button
+                    type="button"
+                    aria-label={`${ctaReconectar ? "Reconectar" : "Configurar"} canal de ${a.nome}`}
+                    onClick={() => setSideover(a)}
+                    style={{
+                      flex: 1,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 7,
+                      padding: "9px 12px",
+                      borderRadius: 9,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      border: ctaReconectar ? "1px solid #f85149" : "1px solid #1d3a2c",
+                      background: ctaReconectar ? "#f85149" : "#16271e",
+                      color: ctaReconectar ? "#0a140f" : "#c9a24a",
+                    }}
+                  >
+                    {ctaReconectar ? <RefreshCw size={14} /> : <Settings size={14} />}
+                    {ctaReconectar ? "Reconectar" : "Configurar"}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Ver detalhes do canal de ${a.nome}`}
+                    onClick={() => setSideover(a)}
+                    style={{
+                      flexShrink: 0,
+                      width: 38,
+                      borderRadius: 9,
+                      border: "1px solid #1d3a2c",
+                      background: "#16271e",
+                      color: "#c9a24a",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Eye size={17} strokeWidth={1.75} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes canalPulse {
+          0%,
+          100% {
+            opacity: 0.35;
+          }
+          50% {
+            opacity: 0.7;
+          }
+        }
+      `}</style>
 
       <CrmCanalSideover agente={sideover} onClose={() => setSideover(null)} />
     </div>

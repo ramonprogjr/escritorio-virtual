@@ -19,6 +19,8 @@ import { MERCADOS_PREFIXO_OPTIONS } from "@/lib/crm/negocio-cadastro";
 import {
   colunasEmpresaLista,
   colunasPessoaLista,
+  COLUNAS_EMPRESA_OCULTAS_PADRAO,
+  COLUNAS_PESSOA_OCULTAS_PADRAO,
   type EmpresaListaRow,
   type PessoaListaRow,
 } from "@/lib/crm/cadastro-list-columns";
@@ -144,8 +146,8 @@ export default function CadastroPage() {
 
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [busca, setBusca] = useState("");
-  const colsPessoas = useColunasVisiveis("crm:cols:pessoas");
-  const colsEmpresas = useColunasVisiveis("crm:cols:empresas");
+  const colsPessoas = useColunasVisiveis("crm:cols:pessoas", COLUNAS_PESSOA_OCULTAS_PADRAO);
+  const colsEmpresas = useColunasVisiveis("crm:cols:empresas", COLUNAS_EMPRESA_OCULTAS_PADRAO);
   const colunasPessoasVis = COLUNAS_PESSOAS.filter((c) => colsPessoas.isVisivel(c.id));
   const colunasEmpresasVis = COLUNAS_EMPRESAS.filter((c) => colsEmpresas.isVisivel(c.id));
   const buscaDebounced = useDebouncedValue(busca);

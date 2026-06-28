@@ -16,6 +16,8 @@ export type CadastroListaColumn<T> = {
   label: string;
   minWidth?: number;
   mono?: boolean;
+  /** Coluna de "ruído" (Tenant, endereço detalhado, JSON, auditoria): nasce OCULTA (opt-in). */
+  defaultOff?: boolean;
   render: (row: T) => ReactNode;
 };
 
@@ -154,36 +156,42 @@ const COLUNAS_PESSOA_LISTA: CadastroListaColumn<PessoaListaRow>[] = [
       id: "cep",
       label: "CEP",
       minWidth: 100,
+      defaultOff: true,
       render: (p) => cell(p.cep),
     },
     {
       id: "logradouro",
       label: "Logradouro",
       minWidth: 160,
+      defaultOff: true,
       render: (p) => cell(p.logradouro),
     },
     {
       id: "numero",
       label: "Número",
       minWidth: 72,
+      defaultOff: true,
       render: (p) => cell(p.numero),
     },
     {
       id: "complemento",
       label: "Complemento",
       minWidth: 120,
+      defaultOff: true,
       render: (p) => cell(p.complemento),
     },
     {
       id: "bairro",
       label: "Bairro",
       minWidth: 120,
+      defaultOff: true,
       render: (p) => cell(p.bairro),
     },
     {
       id: "cidade",
       label: "Cidade",
       minWidth: 120,
+      defaultOff: true,
       render: (p) => cell(p.cidade),
     },
     {
@@ -197,24 +205,28 @@ const COLUNAS_PESSOA_LISTA: CadastroListaColumn<PessoaListaRow>[] = [
       label: "Tenant",
       minWidth: 280,
       mono: true,
+      defaultOff: true,
       render: (p) => cell(p.tenant_id, true),
     },
     {
       id: "dados_extras",
       label: "Extras",
       minWidth: 160,
+      defaultOff: true,
       render: (p) => formatDadosExtras(p.dados_extras),
     },
     {
       id: "criado_em",
       label: "Criado em",
       minWidth: 140,
+      defaultOff: true,
       render: (p) => formatData(p.criado_em),
     },
     {
       id: "atualizado_em",
       label: "Atualizado",
       minWidth: 140,
+      defaultOff: true,
       render: (p) => formatData(p.atualizado_em),
     },
 ];
@@ -222,6 +234,11 @@ const COLUNAS_PESSOA_LISTA: CadastroListaColumn<PessoaListaRow>[] = [
 export function colunasPessoaLista(): CadastroListaColumn<PessoaListaRow>[] {
   return COLUNAS_PESSOA_LISTA;
 }
+
+/** Colunas de ruído da lista de pessoas que nascem ocultas (opt-in no seletor "Colunas"). */
+export const COLUNAS_PESSOA_OCULTAS_PADRAO: readonly string[] = COLUNAS_PESSOA_LISTA.filter(
+  (c) => c.defaultOff
+).map((c) => c.id);
 
 const COLUNAS_EMPRESA_LISTA: CadastroListaColumn<EmpresaListaRow>[] = [
     {
@@ -274,36 +291,42 @@ const COLUNAS_EMPRESA_LISTA: CadastroListaColumn<EmpresaListaRow>[] = [
       id: "cep",
       label: "CEP",
       minWidth: 100,
+      defaultOff: true,
       render: (e) => cell(e.cep),
     },
     {
       id: "logradouro",
       label: "Logradouro",
       minWidth: 160,
+      defaultOff: true,
       render: (e) => cell(e.logradouro),
     },
     {
       id: "numero",
       label: "Número",
       minWidth: 72,
+      defaultOff: true,
       render: (e) => cell(e.numero),
     },
     {
       id: "complemento",
       label: "Complemento",
       minWidth: 120,
+      defaultOff: true,
       render: (e) => cell(e.complemento),
     },
     {
       id: "bairro",
       label: "Bairro",
       minWidth: 120,
+      defaultOff: true,
       render: (e) => cell(e.bairro),
     },
     {
       id: "cidade",
       label: "Cidade",
       minWidth: 120,
+      defaultOff: true,
       render: (e) => cell(e.cidade),
     },
     {
@@ -322,12 +345,14 @@ const COLUNAS_EMPRESA_LISTA: CadastroListaColumn<EmpresaListaRow>[] = [
       id: "acesso_habilitado",
       label: "Acesso",
       minWidth: 72,
+      defaultOff: true,
       render: (e) => cell(e.acesso_habilitado),
     },
     {
       id: "acesso_habilitado_em",
       label: "Acesso em",
       minWidth: 140,
+      defaultOff: true,
       render: (e) => formatData(e.acesso_habilitado_em),
     },
     {
@@ -335,18 +360,21 @@ const COLUNAS_EMPRESA_LISTA: CadastroListaColumn<EmpresaListaRow>[] = [
       label: "Tenant",
       minWidth: 280,
       mono: true,
+      defaultOff: true,
       render: (e) => cell(e.tenant_id, true),
     },
     {
       id: "criado_em",
       label: "Criado em",
       minWidth: 140,
+      defaultOff: true,
       render: (e) => formatData(e.criado_em),
     },
     {
       id: "atualizado_em",
       label: "Atualizado",
       minWidth: 140,
+      defaultOff: true,
       render: (e) => formatData(e.atualizado_em),
     },
 ];
@@ -354,3 +382,8 @@ const COLUNAS_EMPRESA_LISTA: CadastroListaColumn<EmpresaListaRow>[] = [
 export function colunasEmpresaLista(): CadastroListaColumn<EmpresaListaRow>[] {
   return COLUNAS_EMPRESA_LISTA;
 }
+
+/** Colunas de ruído da lista de empresas que nascem ocultas (opt-in no seletor "Colunas"). */
+export const COLUNAS_EMPRESA_OCULTAS_PADRAO: readonly string[] = COLUNAS_EMPRESA_LISTA.filter(
+  (c) => c.defaultOff
+).map((c) => c.id);

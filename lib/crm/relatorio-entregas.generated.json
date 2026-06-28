@@ -1,7 +1,40 @@
 {
-  "geradoEm": "2026-06-28T14:05:26.805Z",
+  "geradoEm": "2026-06-28T14:14:56.838Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "35dddefa1090c01e527b83cf0a56e05bf9acef94",
+      "hashCurto": "35dddef",
+      "mensagem": "ignora temporários de build e screenshots de QA (.tmp_*, *.png de scratch)",
+      "mensagemRaw": "chore: ignora temporários de build e screenshots de QA (.tmp_*, *.png de scratch)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T14:06:53.000Z",
+      "hora": "11:06",
+      "arquivos": [
+        ".gitignore",
+        ".tmp_fix.log"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
+    {
+      "hash": "38b90cd2dfab448c4d1e1d021a6614b4995b8cec",
+      "hashCurto": "38b90cd",
+      "mensagem": "tipa Map de cores de etapa como <string,string> (corrige tsc/build)",
+      "mensagemRaw": "fix(F4-A): tipa Map de cores de etapa como <string,string> (corrige tsc/build)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T14:06:01.000Z",
+      "hora": "11:06",
+      "arquivos": [
+        ".tmp_fix.log",
+        "app/api/crm/pipelines/route.ts"
+      ],
+      "areas": {
+        "outros": 1,
+        "app/api": 1
+      }
+    },
     {
       "hash": "894f746f7751cad5b536c40e8880d24fba8b3c56",
       "hashCurto": "894f746",
