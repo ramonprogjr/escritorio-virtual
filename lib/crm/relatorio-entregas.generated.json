@@ -1,7 +1,40 @@
 {
-  "geradoEm": "2026-06-28T23:21:52.915Z",
+  "geradoEm": "2026-06-28T23:31:15.847Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "e9ebaa3541547b7a30774da8c677427959501a0e",
+      "hashCurto": "e9ebaa3",
+      "mensagem": "security(crm): fecha vazamento/escrita cross-tenant em rotas sem guard + relatorios total real",
+      "mensagemRaw": "security(crm): fecha vazamento/escrita cross-tenant em rotas sem guard + relatorios total real",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T23:25:17.000Z",
+      "hora": "20:25",
+      "arquivos": [
+        "app/api/crm/dashboard/route.ts",
+        "app/api/crm/especialistas/route.ts",
+        "app/api/crm/metricas/route.ts",
+        "app/api/crm/pipelines/[id]/estagios/route.ts",
+        "app/api/crm/pipelines/route.ts",
+        "app/api/crm/relatorios/complementos/route.ts",
+        "app/api/crm/relatorios/export/route.ts",
+        "app/api/hub/agentes/[slug]/route.ts",
+        "app/api/hub/agentes/route.ts",
+        "app/api/windsor/campanhas/route.ts",
+        "app/crm/agentes/page.tsx",
+        "app/crm/especialistas/page.tsx",
+        "app/crm/relatorios/page.tsx",
+        "docs/HANDOFF-DEV-ACOES-PENDENTES.md",
+        "lib/crm/dashboard-aggregate.ts",
+        "lib/crm/relatorios-data.ts"
+      ],
+      "areas": {
+        "app/api": 10,
+        "app/crm": 3,
+        "outros": 1,
+        "lib/crm": 2
+      }
+    },
     {
       "hash": "0999a5886d1291a29fb58e8d8c7fb84c224ec0fd",
       "hashCurto": "0999a58",

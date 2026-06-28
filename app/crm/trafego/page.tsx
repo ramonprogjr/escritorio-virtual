@@ -46,8 +46,17 @@ export default function TrafegoPage() {
     setLoading(true);
     setErro(null);
     fetch(`/api/windsor/campanhas?periodo=${periodo}`, { headers: internalApiHeaders() })
-      .then(r => r.json())
+      .then(async (r) => {
+        // Tráfego da rede = dado global → owner-only (decisão do dono). 403 vira aviso amigável.
+        if (r.status === 403) {
+          setErro("Tráfego da rede — disponível apenas para o administrador da rede.");
+          setCampanhas([]);
+          return null;
+        }
+        return r.json();
+      })
       .then(d => {
+        if (!d) return;
         if (d.error) { setErro(d.error); setCampanhas([]); }
         else setCampanhas(Array.isArray(d) ? d : []);
       })
