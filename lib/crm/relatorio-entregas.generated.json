@@ -1,7 +1,55 @@
 {
-  "geradoEm": "2026-06-28T00:42:22.081Z",
+  "geradoEm": "2026-06-28T01:04:46.081Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "ec506eb4393de721a9fc1046427c14c52776d871",
+      "hashCurto": "ec506eb",
+      "mensagem": "persiste o SETOR do agente (coluna setor_ia + wizard/API/editor)",
+      "mensagemRaw": "feat(agentes): persiste o SETOR do agente (coluna setor_ia + wizard/API/editor)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T01:04:35.000Z",
+      "hora": "22:04",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/route.ts",
+        "app/api/hub/agentes/route.ts",
+        "app/crm/agentes/[slug]/page.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "supabase/migrations/20260628120000_hub_agente_setor_ia.sql"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 1,
+        "components/crm": 1,
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "03de04137f68a09967883024748e97868fb296b2",
+      "hashCurto": "03de041",
+      "mensagem": "salva workflow reutilizável 'auditoria-validacao' (auditoria adversarial de validação)",
+      "mensagemRaw": "chore(workflows): salva workflow reutilizável 'auditoria-validacao' (auditoria adversarial de validação)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T00:50:30.000Z",
+      "hora": "21:50",
+      "arquivos": [
+        ".claude/workflows/auditoria-validacao.js"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "f3f60a0adf03bc58dc39bf165b4614fec1604a57",
+      "hashCurto": "f3f60a0",
+      "mensagem": "artefatos pós-build (consistência Render)",
+      "mensagemRaw": "chore(build): artefatos pós-build (consistência Render)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T00:43:38.000Z",
+      "hora": "21:43",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "e344da540a5ae65fe40e36dcef50a30b34b4cc22",
       "hashCurto": "e344da5",
