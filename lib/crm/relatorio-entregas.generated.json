@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-27T23:58:04.406Z",
+  "geradoEm": "2026-06-28T00:06:21.101Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "e73a78e64606963412629a907b6ffa247ee162ad",
+      "hashCurto": "e73a78e",
+      "mensagem": "/crm/tarefas vira 'Caixa de Próximas Ações' (era stub vazio)",
+      "mensagemRaw": "feat(tarefas): /crm/tarefas vira 'Caixa de Próximas Ações' (era stub vazio)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T00:06:05.000Z",
+      "hora": "21:06",
+      "arquivos": [
+        "app/crm/tarefas/page.tsx"
+      ],
+      "areas": {
+        "app/crm": 1
+      }
+    },
+    {
+      "hash": "f2489aaeb04abf05f9018b44281f6e54d0631934",
+      "hashCurto": "f2489aa",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-27T23:59:48.000Z",
+      "hora": "20:59",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "ba90c85c5fa838c3fcba54bf47d1a266b0176c1e",
       "hashCurto": "ba90c85",
