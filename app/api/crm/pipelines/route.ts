@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
   // de ESTAGIOS_PADRAO mesmo que o banco ainda guarde uma cor legada (azul/roxo/laranja do
   // seed antigo) — harmonização sem reescrever dados de produção. Etapas customizadas (slug
   // fora do catálogo) mantêm a cor escolhida pelo usuário.
-  const CORES_MARCA = new Map(ESTAGIOS_PADRAO.map((e) => [e.slug, e.cor]));
+  const CORES_MARCA = new Map<string, string>(ESTAGIOS_PADRAO.map((e) => [e.slug, e.cor] as [string, string]));
 
   const pipelines = (data || []).map((p) => {
     const raw = p as Record<string, unknown>;
