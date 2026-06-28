@@ -1,7 +1,46 @@
 {
-  "geradoEm": "2026-06-28T01:23:32.343Z",
+  "geradoEm": "2026-06-28T01:50:42.777Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "1293b99f5337dc7d575ddb0c9cb3e1900bedb917",
+      "hashCurto": "1293b99",
+      "mensagem": "linguagem de dono no wizard — fim do jargao tecnico + WhatsApp claro",
+      "mensagemRaw": "fix(agentes): linguagem de dono no wizard — fim do jargao tecnico + WhatsApp claro",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T01:50:34.000Z",
+      "hora": "22:50",
+      "arquivos": [
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/AgenteNovoWizard.tsx",
+        "components/crm/AgenteUazapiBlock.tsx",
+        "components/crm/CrmCargosCatalogDrawer.tsx",
+        "components/crm/CrmFerramentasCustomDrawer.tsx",
+        "components/crm/cadastro/CadastroComercialSecao.tsx",
+        "lib/crm/persistir-lead-whatsapp.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/agente-modo-operacao.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/whatsapp/playbook-flow-maria.ts"
+      ],
+      "areas": {
+        "components/crm": 6,
+        "lib/crm": 1,
+        "lib/hub": 3,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "9b9a8479867e77e92007113d49964670740193b4",
+      "hashCurto": "9b9a847",
+      "mensagem": "artefatos",
+      "mensagemRaw": "chore(build): artefatos",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T01:24:37.000Z",
+      "hora": "22:24",
+      "arquivos": [],
+      "areas": {}
+    },
     {
       "hash": "2eff0b2af8638d70b8546348fe9efccc92112e60",
       "hashCurto": "2eff0b2",
