@@ -54,9 +54,9 @@ Faz o motor de distribuição ler `hub_fornecedores` (entidade consolidada) em v
 
 ---
 
-## 4. 🔐 NO FIM — rotacionar o token do Supabase
+## 4. 🔐 token do Supabase — rotação ADIADA pelo dono (não fazer agora)
 
-Um Personal Access Token do Supabase (`sbp_...`) foi usado nesta sessão (colado em texto). Por higiene: **revogar/rotacionar** no painel do Supabase → Account → Access Tokens, quando concluir os passos acima.
+Um Personal Access Token do Supabase (`sbp_...`) foi usado nesta sessão (colado em texto). O dono decidiu em 28/jun **NÃO rotacionar agora** (vai cuidar no futuro). Quando for o momento: **revogar/rotacionar** no painel do Supabase → Account → Access Tokens. Princípio que segue valendo: nunca commitar/salvar o token.
 
 ---
 

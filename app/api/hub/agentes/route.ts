@@ -1,7 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse, after } from "next/server";
 import { runPlaybookPipeline } from "@/lib/playbook/orchestrate";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { defaultTenantId } from "@/lib/tenant-default";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { validateAndNormalizeCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
 import {
   forceMistralModeloTripleForDb,
@@ -282,13 +283,17 @@ function montarBioDoCargo(params: {
 }
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const ativo = searchParams.get("ativo");
   const todos = searchParams.get("todos") === "true";
   /** `somente` = linhas com arquivado_em preenchido (exclui ativos/inativos “de produção”). */
   const arquivados = searchParams.get("arquivados");
-  const tenantId = tenantIdFromRequest(request.headers);
+  // Tenant SEMPRE da sessão (cookie httpOnly), nunca do header x-tenant-id (forjável).
+  const tenantId = g.ctx.tenantId;
 
   async function executarConsulta(aplicarTenant: boolean, filtrarArquivados: boolean) {
     let query = supabase
@@ -346,8 +351,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  // Tenant SEMPRE da sessão; ignora header forjável. Criar agente exige gestor/owner.
+  const tenantId = g.ctx.tenantId;
 
   let body: Record<string, unknown>;
   try {

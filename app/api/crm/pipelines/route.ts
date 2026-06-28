@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ESTAGIOS_PADRAO } from "@/lib/crm/pipeline-defaults";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -11,6 +15,8 @@ export async function GET(request: NextRequest) {
   const mercado = request.nextUrl.searchParams.get("mercado") || "";
   const supabase = crmDb();
 
+  // Isolamento multi-tenant: tenant do caller + registos legados (tenant_id NULL/Obra10).
+  // RLS está bypassada (service-role) — a proteção é o filtro explícito.
   let query = supabase
     .from("hub_pipelines")
     .select(
@@ -18,6 +24,7 @@ export async function GET(request: NextRequest) {
     )
     .eq("tipo", tipo)
     .eq("ativo", true)
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("ordem", { ascending: true });
 
   if (mercado) {
@@ -103,6 +110,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
@@ -125,7 +135,7 @@ export async function POST(request: NextRequest) {
   if (!nome) return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
 
   const supabase = crmDb();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   const { data: pipeline, error } = await supabase
     .from("hub_pipelines")

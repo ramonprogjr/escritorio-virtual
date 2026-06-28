@@ -67,7 +67,10 @@ export async function GET(request: NextRequest) {
         entidade: dataset.entidade,
         headers: dataset.headers,
         rows: dataset.rows,
-        total: dataset.rows.length,
+        // total = total REAL no banco (pode ser > rows.length quando truncado).
+        total: dataset.totalCount,
+        exibidos: dataset.rows.length,
+        truncado: dataset.truncado,
         ...(dataset.aviso ? { aviso: dataset.aviso } : {}),
       });
     }

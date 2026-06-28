@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useCallback, useRef, useMemo, type React
 import { Activity, ChevronRight, Clock, MessageCircle, Pencil, Power, Trash2, Webhook, X, Zap } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { toast } from "@/components/crm/toast";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { AgenteNovoWizard } from "@/components/crm/AgenteNovoWizard";
 import { CrmCargosCatalogDrawer } from "@/components/crm/CrmCargosCatalogDrawer";
@@ -701,7 +702,14 @@ function AgentesView() {
         headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ ativo: proximo }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        // Falha (rede/permissão/500): avisa e revalida para o card refletir o estado REAL.
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(j.error || "Não foi possível alterar o estado do agente.");
+        listaCacheRef.current = null;
+        carregarAgentes();
+        return;
+      }
 
       if ((modoLista === "ativos" && !proximo) || (modoLista === "inativos" && proximo)) {
         setAgentes((prev) => prev.filter((a) => a.agente_slug !== agente.agente_slug));
@@ -714,6 +722,11 @@ function AgentesView() {
       if (detailAgente?.agente_slug === agente.agente_slug) setEditAtivo(proximo);
       listaCacheRef.current = null;
       detalheCacheRef.current.delete(agente.agente_slug);
+      toast.success(proximo ? "Agente ativado." : "Agente pausado.");
+    } catch {
+      toast.error("Erro de rede ao alterar o estado do agente.");
+      listaCacheRef.current = null;
+      carregarAgentes();
     } finally {
       setAlternandoAtivoSlug(null);
     }

@@ -11,6 +11,20 @@ import {
   isHubAgenteFerramentasColumnsMissing,
   omitHubAgenteFerramentasMigrationKeys,
 } from "@/lib/hub/hub-agente-ferramentas-columns";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+
+/**
+ * Isolamento de tenant para o agente identificado por slug. A linha tem `tenant_id`
+ * (null em legado). Service-role bypassa RLS → checagem explícita é a única proteção.
+ * Retorna 404 se a linha pertence a outro tenant.
+ */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
 
 function parseBoolPatch(v: unknown): boolean | undefined {
   if (v === true || v === "true") return true;
@@ -46,12 +60,15 @@ function db() {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  const g = await requireCrmSessao(req);
+  if ("error" in g) return g.error;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
@@ -66,7 +83,7 @@ export async function GET(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  if (!data) {
+  if (!data || agenteForaDoTenant(data as { tenant_id?: string | null }, g.ctx.tenantId)) {
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
@@ -116,6 +133,9 @@ export async function PATCH(
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
@@ -179,16 +199,35 @@ export async function PATCH(
   }
 
   const supabase = db();
-  const { data: current, error: currentError } = await supabase
+  type CurrentRow = {
+    agente_slug?: string;
+    ativo?: boolean | null;
+    arquivado_em?: string | null;
+    tenant_id?: string | null;
+  };
+  let currentRes = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug, ativo, arquivado_em")
+    .select("agente_slug, ativo, arquivado_em, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
-  if (currentError) {
-    return NextResponse.json({ error: currentError.message }, { status: 500 });
+  // Base legada sem coluna tenant_id → repete sem ela (isolamento degrada p/ legado).
+  if (currentRes.error && /tenant_id/i.test(currentRes.error.message || "")) {
+    currentRes = await supabase
+      .from("hub_agente_identidade")
+      .select("agente_slug, ativo, arquivado_em")
+      .eq("agente_slug", slug)
+      .maybeSingle();
   }
+
+  if (currentRes.error) {
+    return NextResponse.json({ error: currentRes.error.message }, { status: 500 });
+  }
+  const current = currentRes.data as CurrentRow | null;
   if (!current) {
+    return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+  }
+  if (agenteForaDoTenant(current, g.ctx.tenantId)) {
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
@@ -283,17 +322,42 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  const g = await requireCrmGestor(req);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
   const supabase = db();
+
+  // Isolamento de tenant ANTES da exclusão em cascata (irreversível): só apaga agente do tenant.
+  {
+    let alvoRes = await supabase
+      .from("hub_agente_identidade")
+      .select("agente_slug, tenant_id")
+      .eq("agente_slug", slug)
+      .maybeSingle();
+    if (alvoRes.error && /tenant_id/i.test(alvoRes.error.message || "")) {
+      alvoRes = await supabase
+        .from("hub_agente_identidade")
+        .select("agente_slug")
+        .eq("agente_slug", slug)
+        .maybeSingle();
+    }
+    if (alvoRes.error) return NextResponse.json({ error: alvoRes.error.message }, { status: 500 });
+    const alvo = alvoRes.data as { tenant_id?: string | null } | null;
+    if (!alvo || agenteForaDoTenant(alvo, g.ctx.tenantId)) {
+      return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+    }
+  }
+
   const result = await deleteAgenteHubCompleto(supabase, slug);
 
   if (!result.ok) {

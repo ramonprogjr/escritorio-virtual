@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 /** Rede — Especialistas / mão de obra (sem login; cadastro interno). Formato Membros. */
 const SELECT =
@@ -44,20 +45,27 @@ export async function POST(request: NextRequest) {
   if (telefone.replace(/\D/g, "").length < 10)
     return NextResponse.json({ error: "Telefone com DDD obrigatório" }, { status: 400 });
 
+  const tenantId = g.ctx.tenantId;
+
+  // Dedup de CPF POR TENANT (null-safe p/ legado). Não vaza o nome de especialista de
+  // outra empresa: a verificação fica restrita ao escopo do caller.
   const cpf = String(body.cpf || "").replace(/\D/g, "") || null;
   if (cpf) {
     const { data: dup } = await crmDb()
       .from("hub_especialistas")
       .select("id, nome")
       .eq("cpf", cpf)
+      .or(tenantScopeOrFilter(tenantId))
       .maybeSingle();
     if (dup)
       return NextResponse.json({ error: `Já existe um especialista com este CPF (${dup.nome}).` }, { status: 409 });
   }
 
-  const tenantId = g.ctx.tenantId;
   const year = new Date().getFullYear();
-  const { count } = await crmDb().from("hub_especialistas").select("*", { count: "exact", head: true });
+  const { count } = await crmDb()
+    .from("hub_especialistas")
+    .select("*", { count: "exact", head: true })
+    .or(tenantScopeOrFilter(tenantId));
   const codigo = `ESP-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
 
   const especialidades = Array.isArray(body.especialidades) ? (body.especialidades as unknown[]) : null;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { HardHat, Plus, BadgeCheck, Link2, Check } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { toast } from "@/components/crm/toast";
 import { ESPECIALIDADES, EXPERIENCIAS, UFS } from "@/lib/crm/especialidades";
 
 type Especialista = {
@@ -102,7 +103,14 @@ export default function EspecialistasPage() {
     try {
       const res = await fetch("/api/crm/especialistas", { headers: internalApiHeaders() });
       const json = (await res.json().catch(() => ({}))) as { data?: Especialista[] };
-      if (res.ok) setLista(json.data ?? []);
+      if (res.ok) {
+        setLista(json.data ?? []);
+      } else {
+        // Não engole o erro em silêncio: a lista antiga ficaria parecendo "não salvou".
+        toast.error("Não foi possível atualizar a lista. Recarregue a página.");
+      }
+    } catch {
+      toast.error("Erro de rede ao carregar especialistas.");
     } finally {
       setCarregando(false);
     }
@@ -131,6 +139,7 @@ export default function EspecialistasPage() {
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) { setErro(json.error || "Falha ao salvar."); return; }
+      toast.success(editId ? "Alterações salvas." : "Especialista salvo.");
       fecharForm();
       void carregar();
     } catch {

@@ -11,7 +11,6 @@ import {
   type RelatorioEntidade,
 } from "@/lib/crm/relatorios-data";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
-import { supabase } from "@/lib/supabase/client";
 
 type LinhaResumo = {
   titulo: string;
@@ -24,6 +23,8 @@ type RelatorioJson = {
   headers: string[];
   rows: Record<string, unknown>[];
   total: number;
+  exibidos?: number;
+  truncado?: boolean;
   aviso?: string;
 };
 
@@ -38,16 +39,17 @@ export default function Relatorios() {
 
   useEffect(() => {
     async function carregarComplementos() {
-      const [aprovacoes, kpis] = await Promise.all([
-        supabase.from("hub_aprovacoes").select("id", { count: "exact", head: true }).eq("status", "pendente"),
-        supabase
-          .from("hub_kpis_resultados")
-          .select("id", { count: "exact", head: true })
-          .neq("nivel_alerta", "ok")
-          .gte("criado_em", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-      ]);
-      setDecisoesPendentes(aprovacoes.count ?? 0);
-      setKpisForaMeta(kpis.count ?? 0);
+      // Endpoint server guardado (tenant da sessão + filtro explícito). Substitui a
+      // consulta anon direta que dependia só de RLS e podia somar entre tenants.
+      try {
+        const res = await fetch("/api/crm/relatorios/complementos", { headers: internalApiHeaders() });
+        if (!res.ok) return;
+        const json = (await res.json()) as { decisoesPendentes?: number; kpisForaMeta?: number };
+        setDecisoesPendentes(json.decisoesPendentes ?? 0);
+        setKpisForaMeta(json.kpisForaMeta ?? 0);
+      } catch {
+        // mantém zeros; a tabela principal de relatórios continua funcionando.
+      }
     }
 
     void carregarComplementos();
@@ -143,8 +145,15 @@ export default function Relatorios() {
             <div>
               <p className="text-sm font-bold text-[#e6edf3]">Detalhamento — {entidadeLabel}</p>
               <p className="mt-1 text-xs text-[#8b949e]">
-                {dataset ? `${dataset.total} registo(s) (máx. 500)` : "Selecione uma aba para ver os dados"}
+                {dataset
+                  ? dataset.truncado
+                    ? `${dataset.exibidos ?? dataset.rows.length} de ${dataset.total} registo(s) — exibição limitada a 500`
+                    : `${dataset.total} registo(s)`
+                  : "Selecione uma aba para ver os dados"}
               </p>
+              {dataset?.truncado && dataset.aviso ? (
+                <p className="mt-1 text-[11px] font-medium text-[#e3b341]">{dataset.aviso}</p>
+              ) : null}
             </div>
             <button
               type="button"

@@ -1,7 +1,25 @@
 {
-  "geradoEm": "2026-06-28T22:57:22.459Z",
+  "geradoEm": "2026-06-28T23:21:52.915Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "0999a5886d1291a29fb58e8d8c7fb84c224ec0fd",
+      "hashCurto": "0999a58",
+      "mensagem": "filtro real de Obras por negocio + confirm na marca em Canais",
+      "mensagemRaw": "fix(crm): filtro real de Obras por negocio + confirm na marca em Canais",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T22:58:21.000Z",
+      "hora": "19:58",
+      "arquivos": [
+        "app/api/crm/obras/route.ts",
+        "app/crm/canais-entrada/page.tsx",
+        "app/crm/obras/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 2
+      }
+    },
     {
       "hash": "61b09bdf26642364583a589504dc394749bd342a",
       "hashCurto": "61b09bd",

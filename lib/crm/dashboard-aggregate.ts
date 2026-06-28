@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { legacyToFunil } from "@/lib/crm/estagio-map";
 import { ESTAGIOS_LEAD_TERMINAIS, metricasLeadsFromRows } from "@/lib/crm/estagio-filters";
 import { safeCount } from "@/lib/crm/metricas-safe";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 export type CrmMetricas = {
   leadsHoje: number;
@@ -82,13 +83,20 @@ export async function fetchCrmMetricas(
       .from("hub_leads_crm")
       .select("estagio, valor_estimado")
       .eq("tenant_id", tenantId),
-    safeCount(supabase.from("hub_aprovacoes").select("id", { count: "exact", head: true }).eq("status", "pendente")),
+    safeCount(
+      supabase
+        .from("hub_aprovacoes")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pendente")
+        .or(tenantScopeOrFilter(tenantId))
+    ),
     safeCount(
       supabase
         .from("hub_fila_mensagens")
         .select("id", { count: "exact", head: true })
         .eq("direcao", "entrada")
         .eq("status", "pendente")
+        .or(tenantScopeOrFilter(tenantId))
     ),
     safeCount(
       supabase
@@ -98,12 +106,17 @@ export async function fetchCrmMetricas(
         .eq("tenant_id", tenantId)
     ),
     safeCount(
-      supabase.from("hub_parceiros").select("id", { count: "exact", head: true }).eq("status", "homologado")
+      supabase
+        .from("hub_parceiros")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "homologado")
+        .or(tenantScopeOrFilter(tenantId))
     ),
     supabase
       .from("hub_encaminhamentos")
       .select("lead_id")
-      .gte("encaminhado_em", sinceIso),
+      .gte("encaminhado_em", sinceIso)
+      .or(tenantScopeOrFilter(tenantId)),
   ]);
 
   const leadsRows = (leadsRowsRes.error ? [] : (leadsRowsRes.data ?? [])) as {

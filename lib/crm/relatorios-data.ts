@@ -14,10 +14,15 @@ export type RelatorioDataset = {
   entidade: RelatorioEntidade;
   headers: string[];
   rows: Record<string, unknown>[];
+  /** Total REAL de registos no banco (pode ser > rows.length quando truncado por LIMIT). */
+  totalCount: number;
+  /** true quando rows foi truncado (totalCount > LIMIT). */
+  truncado: boolean;
   aviso?: string;
 };
 
-const LIMIT = 500;
+export const RELATORIO_LIMIT = 500;
+const LIMIT = RELATORIO_LIMIT;
 
 const SQL_FIX_HINT =
   "docs/sql/relatorios-schema-fix.sql (SQL Editor Supabase → Run → API Reload schema)";
@@ -36,6 +41,8 @@ function isTableMissing(error: PostgrestError | null): boolean {
 
 type QueryOutcome = {
   rows: Record<string, unknown>[];
+  /** Total exato no banco (head count). undefined se não foi possível obter. */
+  total?: number;
   error?: string;
   aviso?: string;
 };
@@ -57,9 +64,10 @@ async function selectSimple(
 
   for (const select of selectCandidates) {
     // 1ª tentativa: COM filtro de tenant (caminho normal e seguro).
+    // count:'exact' devolve o total REAL no banco mesmo com .limit() aplicado às linhas.
     const scoped = await supabase
       .from(table)
-      .select(select)
+      .select(select, { count: "exact" })
       .eq("tenant_id", tenantId)
       .order(order.column, {
         ascending: order.ascending,
@@ -68,21 +76,23 @@ async function selectSimple(
       .limit(LIMIT);
 
     if (!scoped.error) {
-      return { rows: (scoped.data ?? []) as unknown as Record<string, unknown>[] };
+      const rows = (scoped.data ?? []) as unknown as Record<string, unknown>[];
+      return { rows, total: scoped.count ?? rows.length };
     }
 
     // Base legada sem a coluna tenant_id: cai para consulta sem o filtro.
     if (isMissingPgColumn(scoped.error) && /tenant_id/i.test(errorText(scoped.error))) {
       const unscoped = await supabase
         .from(table)
-        .select(select)
+        .select(select, { count: "exact" })
         .order(order.column, {
           ascending: order.ascending,
           nullsFirst: order.nullsFirst ?? false,
         })
         .limit(LIMIT);
       if (!unscoped.error) {
-        return { rows: (unscoped.data ?? []) as unknown as Record<string, unknown>[] };
+        const rows = (unscoped.data ?? []) as unknown as Record<string, unknown>[];
+        return { rows, total: unscoped.count ?? rows.length };
       }
       lastError = unscoped.error;
       if (!isMissingPgColumn(unscoped.error)) break;
@@ -94,17 +104,33 @@ async function selectSimple(
   }
 
   if (!lastError) {
-    return { rows: [] };
+    return { rows: [], total: 0 };
   }
 
   if (isTableMissing(lastError)) {
     return {
       rows: [],
+      total: 0,
       aviso: `Tabela ${table} não existe no Supabase. Execute: ${SQL_FIX_HINT}`,
     };
   }
 
-  return { rows: [], error: errorText(lastError) || "Erro ao consultar dados" };
+  return { rows: [], total: 0, error: errorText(lastError) || "Erro ao consultar dados" };
+}
+
+/** Monta o RelatorioDataset com total real + flag de truncamento + aviso automático. */
+function montarDataset(
+  entidade: RelatorioEntidade,
+  headers: string[],
+  out: QueryOutcome
+): RelatorioDataset {
+  const total = out.total ?? out.rows.length;
+  const truncado = total > out.rows.length;
+  const avisoTrunc = truncado
+    ? `Exibindo ${out.rows.length} de ${total} registos (limite de ${LIMIT}). Refine os filtros para ver o restante.`
+    : "";
+  const aviso = [out.aviso, avisoTrunc].filter(Boolean).join(" ") || undefined;
+  return { entidade, headers, rows: out.rows, totalCount: total, truncado, aviso };
 }
 
 export async function carregarRelatorio(
@@ -134,7 +160,7 @@ export async function carregarRelatorio(
       "valor_estimado",
       "criado_em",
     ];
-    return { entidade, headers, rows: out.rows, aviso: out.aviso };
+    return montarDataset(entidade, headers, out);
   }
 
   if (entidade === "negocios") {
@@ -150,7 +176,7 @@ export async function carregarRelatorio(
     );
     if (out.error) throw new Error(out.error);
     const headers = ["codigo", "titulo", "prefixo_mercado", "etapa", "status", "valor_estimado", "criado_em"];
-    return { entidade, headers, rows: out.rows, aviso: out.aviso };
+    return montarDataset(entidade, headers, out);
   }
 
   if (entidade === "empresas") {
@@ -169,7 +195,7 @@ export async function carregarRelatorio(
     const headers = out.rows[0]
       ? Object.keys(out.rows[0] as object)
       : ["razao_social", "nome_fantasia", "cnpj", "segmento", "prefixo_mercado", "criado_em"];
-    return { entidade, headers, rows: out.rows, aviso: out.aviso };
+    return montarDataset(entidade, headers, out);
   }
 
   if (entidade === "imoveis") {
@@ -182,7 +208,7 @@ export async function carregarRelatorio(
     );
     if (out.error) throw new Error(out.error);
     const headers = ["codigo", "titulo", "tipo", "status", "valor", "cidade", "estado", "criado_em"];
-    return { entidade, headers, rows: out.rows, aviso: out.aviso };
+    return montarDataset(entidade, headers, out);
   }
 
   if (entidade === "contas_pagar") {
@@ -195,7 +221,7 @@ export async function carregarRelatorio(
     );
     if (out.error) throw new Error(out.error);
     const headers = ["descricao", "valor", "vencimento", "status", "criado_em"];
-    return { entidade, headers, rows: out.rows, aviso: out.aviso };
+    return montarDataset(entidade, headers, out);
   }
 
   if (entidade === "contas_receber") {
@@ -208,7 +234,7 @@ export async function carregarRelatorio(
     );
     if (out.error) throw new Error(out.error);
     const headers = ["descricao", "valor", "vencimento", "status", "criado_em"];
-    return { entidade, headers, rows: out.rows, aviso: out.aviso };
+    return montarDataset(entidade, headers, out);
   }
 
   if (entidade === "financeiro") {
@@ -238,9 +264,14 @@ export async function carregarRelatorio(
       ...receberOut.rows.map((r) => ({ tipo: "receber", ...r })),
     ];
 
-    const aviso = [pagarOut.aviso, receberOut.aviso].filter(Boolean).join(" ");
+    const totalCount = (pagarOut.total ?? pagarOut.rows.length) + (receberOut.total ?? receberOut.rows.length);
+    const truncado = totalCount > rows.length;
+    const avisoTrunc = truncado
+      ? `Exibindo ${rows.length} de ${totalCount} lançamentos (limite de ${LIMIT} por conta). Refine os filtros.`
+      : "";
+    const aviso = [pagarOut.aviso, receberOut.aviso, avisoTrunc].filter(Boolean).join(" ") || undefined;
 
-    return { entidade, headers, rows, ...(aviso ? { aviso } : {}) };
+    return { entidade, headers, rows, totalCount, truncado, ...(aviso ? { aviso } : {}) };
   }
 
   throw new Error(

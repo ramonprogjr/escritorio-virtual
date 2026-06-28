@@ -1,13 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
+/**
+ * Confirma que o pipeline pertence ao tenant do caller (null-safe p/ legado).
+ * Retorna NextResponse de erro (404) se não pertence; null se OK.
+ * RLS está bypassada (service-role) — checagem explícita é a única proteção.
+ */
+async function assertPipelineDoTenant(
+  pipelineId: string,
+  tenantId: string
+): Promise<NextResponse | null> {
+  const { data } = await crmDb()
+    .from("hub_pipelines")
+    .select("id, tenant_id")
+    .eq("id", pipelineId)
+    .maybeSingle();
+  if (!data) return NextResponse.json({ error: "Pipeline não encontrado" }, { status: 404 });
+  if (data.tenant_id && data.tenant_id !== tenantId) {
+    return NextResponse.json({ error: "Pipeline não encontrado" }, { status: 404 });
+  }
+  return null;
+}
+
 export async function PATCH(request: NextRequest, { params }: Params) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
   const { id: pipelineId } = await params;
+
+  const tenantErr = await assertPipelineDoTenant(pipelineId, g.ctx.tenantId);
+  if (tenantErr) return tenantErr;
+
   let body: Record<string, unknown> = {};
   try {
     body = await request.json();
@@ -40,10 +69,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
   const { id: pipelineId } = await params;
+
+  const tenantErr = await assertPipelineDoTenant(pipelineId, g.ctx.tenantId);
+  if (tenantErr) return tenantErr;
+
   let body: Record<string, unknown> = {};
   try {
     body = await request.json();
