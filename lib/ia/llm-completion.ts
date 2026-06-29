@@ -6,6 +6,7 @@ import {
   resolveInferenceModelId,
 } from "./hub-model-defaults";
 import { mistralChatCompletion } from "./mistral-chat";
+import { groqChatCompletion } from "./groq-chat";
 
 /**
  * Testa se um erro Anthropic pode ser recuperado tentando o Mistral.
@@ -134,10 +135,28 @@ export async function completarChatPreferindoMistral(params: {
     }
   }
 
+  const groqKey = process.env.GROQ_API_KEY?.trim();
+  if (groqKey) {
+    const groqOut = await groqChatCompletion({
+      system: params.systemPrompt,
+      messages: params.mensagens,
+      maxTokens,
+    });
+    if (groqOut.ok) {
+      return {
+        ok: true,
+        texto: groqOut.text,
+        tokensEntrada: groqOut.inputTokens,
+        tokensSaida: groqOut.outputTokens,
+        modeloLog: groqOut.model,
+      };
+    }
+  }
+
   return {
     ok: false,
     erro:
       mistralOut.erro ||
-      "Nenhum provedor IA configurado: defina MISTRAL_API_KEY (preferencial) ou ANTHROPIC_API_KEY",
+      "Nenhum provedor IA configurado: defina MISTRAL_API_KEY, ANTHROPIC_API_KEY ou GROQ_API_KEY",
   };
 }

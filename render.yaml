@@ -52,6 +52,8 @@ services:
         sync: false
       - key: MISTRAL_API_KEY
         sync: false
+      - key: GROQ_API_KEY
+        sync: false
       - key: UAZAPI_BASE_URL
         sync: false
       - key: UAZAPI_ADMIN_TOKEN
