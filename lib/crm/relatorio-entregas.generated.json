@@ -1,7 +1,44 @@
 {
-  "geradoEm": "2026-06-29T08:27:45.515Z",
+  "geradoEm": "2026-06-29T11:22:50.046Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "fc74df02e3abf927b0f4183cf070c221a054dd9b",
+      "hashCurto": "fc74df0",
+      "mensagem": "E2 — Item × Subitem (Situação automática × Andamento manual)",
+      "mensagemRaw": "feat(eng): E2 — Item × Subitem (Situação automática × Andamento manual)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T08:28:31.000Z",
+      "hora": "05:28",
+      "arquivos": [
+        "app/api/crm/obras/[id]/itens/route.ts",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/obras/[id]/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/obras/ObraItensSecao.tsx",
+        "docs/A2-DESIGN.md",
+        "docs/E5-DESIGN.md",
+        "docs/RELATORIO-NOITE.md",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/hub/executar-ferramenta-obra-itens.ts",
+        "lib/obras/itens-situacao.test.ts",
+        "lib/obras/itens-situacao.ts",
+        "supabase/migrations/20260705130000_e0_obra_eap_catalogo.sql",
+        "supabase/migrations/20260705140000_a0_arquitetura_projeto.sql",
+        "supabase/migrations/20260710120000_e2_obra_itens.sql"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 2,
+        "components/crm": 2,
+        "outros": 7,
+        "lib/hub": 3,
+        "supabase/migrations": 3
+      }
+    },
     {
       "hash": "0dae8dc11c3b2339724336625da8974f04ad97ef",
       "hashCurto": "0dae8dc",

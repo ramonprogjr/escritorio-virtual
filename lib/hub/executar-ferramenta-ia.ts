@@ -16,6 +16,7 @@ import { iaCriarCadastroCrm } from "@/lib/crm/ia-criar-cadastro";
 import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
 import { executarFerramentaObra } from "@/lib/hub/executar-ferramenta-obra";
 import { executarFerramentaObraItem } from "@/lib/hub/executar-ferramenta-obra-itens";
+import { executarFerramentaObraRestricao } from "@/lib/hub/executar-ferramenta-obra-restricoes";
 import { executarFerramentaArq } from "@/lib/hub/executar-ferramenta-arq";
 
 export type FerramentaHubContexto = {
@@ -552,6 +553,12 @@ async function executarFerramentaHubBuiltin(
     case "hub_obra_item_avanco":
     case "hub_obra_item_andamento":
       return executarFerramentaObraItem(toolName, args, ctx, supabase);
+
+    // ── E3: Restrições/Bloqueios (SEM gate canal_whatsapp — copiloto global) ──
+    case "hub_obra_bloqueios_listar":
+    case "hub_obra_bloqueio_criar":
+    case "hub_obra_bloqueio_resolver":
+      return executarFerramentaObraRestricao(toolName, args, ctx, supabase);
 
     // ── A0: Arquitetura / Projeto (SEM gate canal_whatsapp — copiloto global) ──
     case "arq_resumo":
