@@ -27,6 +27,10 @@ export type HubAgenteFerramentaId =
   | "hub_obra_item_listar"
   | "hub_obra_item_avanco"
   | "hub_obra_item_andamento"
+  // ── E3: Restrições/Bloqueios de 1ª classe ──
+  | "hub_obra_bloqueios_listar"
+  | "hub_obra_bloqueio_criar"
+  | "hub_obra_bloqueio_resolver"
   // ── A0: Arquitetura/Projeto (não dependem de canal WhatsApp) ──
   | "arq_resumo"
   | "arq_criar_projeto"
@@ -593,6 +597,92 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── E3: Restrições / Bloqueios de 1ª classe ─────────────────────────────────
+  {
+    id: "hub_obra_bloqueios_listar",
+    categoria: "obra",
+    titulo: "Listar bloqueios do dia (restrições)",
+    descricao:
+      "Lista o que trava as obras agora: faltas (material/pessoa/documento/ferramenta/equipamento) com impacto e responsável. Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_bloqueios_listar",
+      description:
+        "Lista os bloqueios (restrições) ativos das obras: tipo (material/pessoa/documento/ferramenta/equipamento), impacto (trava/atrasa/observa), responsável e prazo. Use para 'o que trava hoje', 'o que está bloqueado na obra X', 'o que falta na elétrica'. Não altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (opcional; sem ele lista de todas as obras)." },
+          tipo: {
+            type: "string",
+            enum: ["material", "pessoa", "documento", "ferramenta", "equipamento", "outro"],
+            description: "Filtro opcional pelo tipo de falta.",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_bloqueio_criar",
+    categoria: "obra",
+    titulo: "Registrar bloqueio (falta material/pessoa…)",
+    descricao:
+      "Registra uma restrição num item ou na obra (falta material/pessoa/documento/ferramenta/equipamento). Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_bloqueio_criar",
+      description:
+        "Registra um bloqueio (restrição) num item da obra ou na obra inteira. Identifique o item por item_id (preferido) OU nome+andar; sem item, cria bloqueio da frente/obra. Use para 'tá faltando cimento no andar 9', 'falta pedreiro na alvenaria'. Liga o bloqueio ao item (boolean falta_*). Se houver mais de um item com o mesmo nome, o sistema pede para escolher. Só propõe; o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          tipo: {
+            type: "string",
+            enum: ["material", "pessoa", "documento", "ferramenta", "equipamento", "outro"],
+            description: "O que falta (material, pessoa, documento, ferramenta, equipamento).",
+          },
+          item_id: { type: "string", description: "ID exato do item, se conhecido (preferido)." },
+          nome: { type: "string", description: "Nome do item, se não tiver o id (ex.: 'Alvenaria')." },
+          area_codigo: { type: "string", description: "Andar/área para desambiguar (ex.: ANDAR9)." },
+          frente_id: { type: "string", description: "ID da frente, para bloqueio da frente inteira (sem item)." },
+          titulo: { type: "string", description: "Resumo curto do bloqueio (ex.: 'falta cimento CP-II')." },
+        },
+        required: ["tipo"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_bloqueio_resolver",
+    categoria: "obra",
+    titulo: "Resolver bloqueio (chegou/destravou)",
+    descricao:
+      "Marca um bloqueio como resolvido e limpa a falta no item. Escrita — gate reforçado (decisão forte). SST de documento não resolve por voz.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_bloqueio_resolver",
+      description:
+        "Resolve um bloqueio (restrição) da obra: marca resolvida e limpa o falta_* do item. Identifique por restricao_id (preferido) OU item (nome/id) + tipo. Use para 'o cimento do 9 chegou', 'já tem pedreiro na alvenaria'. Documento de SST NÃO é resolvido por voz (regularização auditada). Só propõe; o dono confirma (gate reforçado).",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          restricao_id: { type: "string", description: "ID da restrição, se conhecido (preferido)." },
+          tipo: {
+            type: "string",
+            enum: ["material", "pessoa", "documento", "ferramenta", "equipamento", "outro"],
+            description: "Tipo do bloqueio a resolver (quando identificar por item).",
+          },
+          item_id: { type: "string", description: "ID do item, se identificar por item." },
+          nome: { type: "string", description: "Nome do item, se não tiver o id." },
+          area_codigo: { type: "string", description: "Andar/área para desambiguar." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
   // ── A0: Arquitetura / Projeto ───────────────────────────────────────────────
   {
     id: "arq_resumo",
@@ -820,6 +910,9 @@ export function mergeUsoFerramentasComPadrao(
     hub_obra_item_listar: false,
     hub_obra_item_avanco: false,
     hub_obra_item_andamento: false,
+    hub_obra_bloqueios_listar: false,
+    hub_obra_bloqueio_criar: false,
+    hub_obra_bloqueio_resolver: false,
     arq_resumo: false,
     arq_criar_projeto: false,
     arq_mover_estagio: false,
@@ -879,6 +972,9 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_obra_item_listar: "leitura",
   hub_obra_item_avanco: "escrita",
   hub_obra_item_andamento: "escrita",
+  hub_obra_bloqueios_listar: "leitura",
+  hub_obra_bloqueio_criar: "escrita",
+  hub_obra_bloqueio_resolver: "escrita",
   arq_resumo: "leitura",
   arq_criar_projeto: "escrita",
   arq_mover_estagio: "escrita",
