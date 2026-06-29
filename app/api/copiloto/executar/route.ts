@@ -4,6 +4,7 @@ import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 import {
   COPILOTO_AGENTE_SLUG,
   CopilotoSegredoAusenteError,
+  escritaSemLead,
   ferramentaExecutavel,
   nivelDaFerramenta,
   validarConfirmacao,
@@ -76,9 +77,11 @@ export async function POST(request: NextRequest) {
   }
 
   const ehEscrita = nivelDaFerramenta(ferramenta) === "escrita";
+  const semLead = escritaSemLead(ferramenta);
 
-  // Escrita sobre lead exige um lead aberto (as tools de escrita operam sobre ctx.leadId).
-  if (ehEscrita && !leadId) {
+  // Escrita SOBRE LEAD exige um lead aberto (essas tools operam em ctx.leadId).
+  // Escrita de obra/EAP opera sobre obra_id nos params — não precisa de lead.
+  if (ehEscrita && !semLead && !leadId) {
     return NextResponse.json(
       { error: "Abra um lead para registrar nota ou atualizar." },
       { status: 400 }
@@ -91,10 +94,11 @@ export async function POST(request: NextRequest) {
       leadId,
       agenteSlug: COPILOTO_AGENTE_SLUG,
       tenantId: auth.tenantId,
-      // As tools de escrita exigem modoOperacao="canal_whatsapp" por construção interna.
+      // As tools de escrita de LEAD exigem modoOperacao="canal_whatsapp" por construção interna.
       // O copiloto é o DONO autenticado confirmando manualmente — gate equivalente/superior ao
-      // do atendimento automático — então liberamos esse modo apenas para a escrita allowlist.
-      ...(ehEscrita ? { modoOperacao: "canal_whatsapp" } : {}),
+      // do atendimento automático — então liberamos esse modo só para a escrita allowlist de lead.
+      // As tools de obra/EAP NÃO têm esse gate — não injetamos o modo nelas.
+      ...(ehEscrita && !semLead ? { modoOperacao: "canal_whatsapp" } : {}),
     });
   } catch (e) {
     return NextResponse.json(

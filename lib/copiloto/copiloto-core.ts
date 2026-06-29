@@ -37,7 +37,32 @@ export function nivelDaFerramenta(tool: string): HubFerramentaNivelAcesso | null
 export const COPILOTO_FERRAMENTAS_ESCRITA_FASE3: HubAgenteFerramentaId[] = [
   "hub_registar_nota_lead",
   "hub_atualizar_lead",
+  // E0 — escrita de obra/EAP (operam sobre obra_id nos params, não sobre lead aberto).
+  "hub_obra_criar",
+  "hub_obra_eap_montar",
+  // A0 — escrita de projeto/arquitetura (operam sobre projeto_id nos params, não sobre lead).
+  "arq_criar_projeto",
+  "arq_mover_estagio",
+  "arq_programa_item",
 ];
+
+/**
+ * Ferramentas de ESCRITA que operam sobre os PRÓPRIOS params (obra_id no body), não sobre
+ * o lead aberto. O copiloto não deve exigir leadId para elas, nem injetar o modoOperacao
+ * "canal_whatsapp" (elas não têm — e não devem ter — esse gate; são da Engenharia/global).
+ */
+export const COPILOTO_FERRAMENTAS_ESCRITA_SEM_LEAD: HubAgenteFerramentaId[] = [
+  "hub_obra_criar",
+  "hub_obra_eap_montar",
+  "arq_criar_projeto",
+  "arq_mover_estagio",
+  "arq_programa_item",
+];
+
+/** True se a ferramenta de escrita opera sem lead aberto (Engenharia/obra). */
+export function escritaSemLead(tool: string): boolean {
+  return (COPILOTO_FERRAMENTAS_ESCRITA_SEM_LEAD as string[]).includes(tool);
+}
 
 /**
  * Uma ferramenta é executável pelo copiloto se for de LEITURA (auto-exec) OU
@@ -69,13 +94,29 @@ const FERRAMENTAS_ESCRITA_DOC = `Ferramentas de ESCRITA (acao="escrever" — ALT
       "tags_adicionar": ["tag"] }.
     NÃO mude estágio para "ganho", "perdido", "convertido_negocio" nem "spam_invalido" (isso é decisão humana no CRM).`;
 
+/** Ferramentas de Engenharia/Obra — injetadas só quando a rota é de obras/engenharia. */
+const FERRAMENTAS_OBRA_DOC = `Ferramentas de ENGENHARIA/OBRA (use quando a tela for de obras):
+- hub_obra_listar (LEITURA): lista as obras da carteira. Params: { "status"?: "<status>", "tipo_obra"?: "construcao|reforma|servico|…" }.
+- hub_obra_resumo (LEITURA): resumo de UMA obra (status, tipo, nº de frentes). Params: { "obra_id": "<id da obra da tela>" }.
+- hub_obra_criar (ESCRITA): cria obra nova com código automático e a EAP do preset. Params: { "titulo": "<nome>", "tipo_obra": "construcao|reforma|servico|…", "cliente_pessoa_id"?: "<id>", "cliente_empresa_id"?: "<id>" }. Em descricao_humana explique: "Vou criar a obra <titulo> (<tipo>) com a EAP padrão".
+- hub_obra_eap_montar (ESCRITA): adiciona uma frente (disciplina) à EAP de uma obra. Params: { "obra_id": "<id>", "disciplina_slug": "eletrica|hidraulica|civil|…", "nome"?: "<texto>" }.`;
+
+/** Ferramentas de Arquitetura/Projeto — injetadas só quando a rota é de arquitetura. */
+const FERRAMENTAS_ARQ_DOC = `Ferramentas de ARQUITETURA/PROJETO (use quando a tela for de arquitetura/projetos):
+- arq_resumo (LEITURA): lista os projetos da carteira (estágio, cliente, tipologia, aprovação). Params: { "estagio"?: "<slug>" }.
+- arq_criar_projeto (ESCRITA): cria um projeto novo (código automático) em Briefing. Params: { "titulo"?: "<nome>", "tipologia"?: "residencial|corporativo|interiores|reforma|comercial|paisagismo", "cliente_nome"?: "<texto>", "area_m2"?: <número> }. Em descricao_humana explique: "Vou criar o projeto <titulo> (<tipologia>)".
+- arq_mover_estagio (ESCRITA): move um projeto de estágio. Params: { "projeto_id": "<id do projeto da tela>", "estagio": "briefing|estudo|anteprojeto|executivo|aprovacao|entregue|arquivado" }.
+- arq_programa_item (ESCRITA): monta o programa (cômodos) do projeto. Params: { "projeto_id": "<id>", "itens": ["sala","3 suítes","cozinha"] ou [{"nome":"Suíte máster","metragem_m2":18}] }.`;
+
 export function construirPromptCopiloto(ctx: { rota: string; temLead: boolean }): string {
+  const rotaObra = /\/(obras|engenharia)/i.test(ctx.rota || "");
+  const rotaArq = /\/arquitetura/i.test(ctx.rota || "");
   return `És o Copiloto de voz do Obra10+ (CRM de arquitetura/obra/imobiliário, Brasil). O dono fala um comando e tu classificas a INTENÇÃO numa ferramenta. NÃO executas nada — só propões. TODA escrita só acontece depois de o dono CONFIRMAR.
 
 ${FERRAMENTAS_LEITURA_DOC}
 
 ${FERRAMENTAS_ESCRITA_DOC}
-
+${rotaObra ? `\n${FERRAMENTAS_OBRA_DOC}\n` : ""}${rotaArq ? `\n${FERRAMENTAS_ARQ_DOC}\n` : ""}
 Contexto atual: rota="${ctx.rota}"${ctx.temLead ? " (há um lead aberto nesta tela — use {} ou opere sobre ele)" : " (sem lead aberto — escrita sobre lead não é possível sem lead aberto)"}.
 
 Devolve APENAS um objeto JSON (sem markdown), com:
@@ -88,8 +129,8 @@ Devolve APENAS um objeto JSON (sem markdown), com:
 }
 Regras:
 - LEITURA → acao="ler".
-- ESCRITA (registar nota OU atualizar lead) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
-- Escrita sobre lead exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.
+- ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
+- Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP NÃO exigem lead aberto. Se faltar o nome/cliente da obra, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa NÃO exigem lead aberto. Para mover/programa use o projeto_id da tela. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
 - Qualquer outra ação (criar cadastro, enviar WhatsApp, apagar) → acao="nao_entendi" dizendo que ainda não está disponível por voz.`;
 }
 

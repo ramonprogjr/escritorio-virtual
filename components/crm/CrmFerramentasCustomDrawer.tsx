@@ -51,6 +51,8 @@ const CATEGORIA_SECAO: Record<
   cliente: { label: "Dados do cliente nesta conversa", cor: "#10b981" },
   analise: { label: "Análise e compartilhamento", cor: "#2f9e8f" },
   registos: { label: "Registos", cor: "#f59e0b" },
+  obra: { label: "Engenharia e obras", cor: "#c9a24a" },
+  arquitetura: { label: "Arquitetura e projetos", cor: "#d6a129" },
 };
 
 type ToolbarIconVariant = "green" | "red" | "slate" | "emphasis" | "gold" | "ia";

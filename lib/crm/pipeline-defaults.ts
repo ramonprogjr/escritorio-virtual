@@ -10,7 +10,7 @@ export const ESTAGIOS_PADRAO = [
   { slug: "perdido", label: "✗ Perdidos", cor: "#EF4444", ordem: 7, tipo_fecho: "perdido" as const },
 ] as const;
 
-export type PipelineTipo = "lead" | "negocio";
+export type PipelineTipo = "lead" | "negocio" | "projeto";
 
 /**
  * Limpa o nome do pipeline para exibição em cabeçalhos: remove o prefixo redundante

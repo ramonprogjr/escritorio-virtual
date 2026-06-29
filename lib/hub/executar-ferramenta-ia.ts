@@ -14,6 +14,8 @@ import {
 } from "@/lib/crm/isolamento-conversa-lead";
 import { iaCriarCadastroCrm } from "@/lib/crm/ia-criar-cadastro";
 import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
+import { executarFerramentaObra } from "@/lib/hub/executar-ferramenta-obra";
+import { executarFerramentaArq } from "@/lib/hub/executar-ferramenta-arq";
 
 export type FerramentaHubContexto = {
   leadId: string;
@@ -536,6 +538,20 @@ async function executarFerramentaHubBuiltin(
         resposta: resMenu.data,
       });
     }
+    // ── E0: Engenharia / Obra (SEM gate canal_whatsapp — operam pelo copiloto global) ──
+    case "hub_obra_listar":
+    case "hub_obra_resumo":
+    case "hub_obra_criar":
+    case "hub_obra_eap_montar":
+      return executarFerramentaObra(toolName, args, ctx, supabase);
+
+    // ── A0: Arquitetura / Projeto (SEM gate canal_whatsapp — copiloto global) ──
+    case "arq_resumo":
+    case "arq_criar_projeto":
+    case "arq_mover_estagio":
+    case "arq_programa_item":
+      return executarFerramentaArq(toolName, args, ctx, supabase);
+
     default:
       return JSON.stringify({ erro: "ferramenta_builtin_desconhecida", nome: toolName });
   }

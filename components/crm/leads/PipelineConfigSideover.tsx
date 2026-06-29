@@ -23,7 +23,7 @@ type PipelineComEstagios = {
 type Props = {
   open: boolean;
   onClose: () => void;
-  tipo: "lead" | "negocio";
+  tipo: "lead" | "negocio" | "projeto";
   pipelineId: string | null;
   onUpdated?: () => void;
   onSelectPipeline?: (pipelineId: string) => void;
@@ -167,11 +167,14 @@ export function PipelineConfigSideover({
       onClose={onClose}
       kindLabel="Pipeline"
       title="Configurar pipeline"
-      subtitle={pipeline?.nome || (tipo === "lead" ? "Funil de leads" : "Funil de negócios")}
+      subtitle={
+        pipeline?.nome ||
+        (tipo === "lead" ? "Funil de leads" : tipo === "projeto" ? "Funil de projeto" : "Funil de negócios")
+      }
       Icon={Settings2}
       badge={
         <CadastroTipoBadge
-          label={tipo === "lead" ? "CRM Leads" : "CRM Negócios"}
+          label={tipo === "lead" ? "CRM Leads" : tipo === "projeto" ? "Arquitetura" : "CRM Negócios"}
           tone="gold"
         />
       }

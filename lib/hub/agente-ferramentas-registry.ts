@@ -5,7 +5,7 @@
 
 import type { MistralChatToolDefinition } from "@/lib/ia/mistral-chat-tools";
 
-export type HubFerramentaCategoria = "cliente" | "analise" | "registos";
+export type HubFerramentaCategoria = "cliente" | "analise" | "registos" | "obra" | "arquitetura";
 
 export type HubAgenteFerramentaId =
   | "hub_lead_resumo"
@@ -16,7 +16,17 @@ export type HubAgenteFerramentaId =
   | "hub_registar_nota_lead"
   | "hub_whatsapp_menu"
   | "hub_atualizar_lead"
-  | "hub_crm_criar_cadastro";
+  | "hub_crm_criar_cadastro"
+  // ── E0: Engenharia/Obra (não dependem de canal WhatsApp) ──
+  | "hub_obra_listar"
+  | "hub_obra_resumo"
+  | "hub_obra_criar"
+  | "hub_obra_eap_montar"
+  // ── A0: Arquitetura/Projeto (não dependem de canal WhatsApp) ──
+  | "arq_resumo"
+  | "arq_criar_projeto"
+  | "arq_mover_estagio"
+  | "arq_programa_item";
 
 export type HubAgenteFerramentaCatalogo = {
   id: HubAgenteFerramentaId;
@@ -360,6 +370,214 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── E0: Engenharia / Obra ──────────────────────────────────────────────────
+  {
+    id: "hub_obra_listar",
+    categoria: "obra",
+    titulo: "Listar obras da carteira",
+    descricao: "Lista as obras do escritório (código, título, tipo, status). Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_listar",
+      description:
+        "Lista as obras da carteira do tenant (código, título, tipo, status). Use para responder 'quais obras', 'obras em andamento', etc. Não cria nem altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", description: "Filtro opcional por status (ex.: ativa, pausada)." },
+          tipo_obra: {
+            type: "string",
+            description: "Filtro opcional por tipo (construcao, reforma, servico…).",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_resumo",
+    categoria: "obra",
+    titulo: "Resumo de uma obra",
+    descricao: "Resumo de UMA obra (dados + nº de frentes da EAP). Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_resumo",
+      description:
+        "Obtém o resumo factual de uma obra (status, tipo, cliente, frentes da EAP). Use o obra_id da tela quando houver. Não altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (opcional; usa a da tela se omitido)." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_criar",
+    categoria: "obra",
+    titulo: "Criar obra (com EAP do preset)",
+    descricao:
+      "Cria uma obra nova com código automático e a EAP pré-montada do preset do tipo. Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_criar",
+      description:
+        "Cria uma obra nova (código automático por tenant) e monta a EAP do preset do tipo. Só propõe — o dono confirma. Não duplica obras com o mesmo título em menos de 1 minuto.",
+      parameters: {
+        type: "object",
+        properties: {
+          titulo: { type: "string", description: "Nome curto da obra (ex.: 'Reforma do Consulado')." },
+          tipo_obra: {
+            type: "string",
+            enum: ["construcao", "reforma", "servico", "manutencao", "consultoria", "projeto", "assistencia"],
+            description: "Tipo da obra (reforma por padrão).",
+          },
+          cliente_pessoa_id: { type: "string", description: "ID da pessoa cliente, se conhecido." },
+          cliente_empresa_id: { type: "string", description: "ID da empresa cliente, se conhecido." },
+          negocio_id: { type: "string", description: "Negócio de origem, se houver." },
+        },
+        required: ["titulo"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_eap_montar",
+    categoria: "obra",
+    titulo: "Montar/adicionar frente na EAP",
+    descricao:
+      "Adiciona uma frente (disciplina) à EAP de uma obra existente. Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_eap_montar",
+      description:
+        "Adiciona uma frente (disciplina) à EAP de uma obra existente. A frente entra ativa, no fim da ordem. Só propõe — o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use a da tela se houver)." },
+          disciplina_slug: {
+            type: "string",
+            description: "Slug da disciplina do catálogo (ex.: eletrica, hidraulica, civil).",
+          },
+          nome: { type: "string", description: "Nome da frente (opcional; deriva da disciplina)." },
+        },
+        required: ["disciplina_slug"],
+        additionalProperties: false,
+      },
+    },
+  },
+  // ── A0: Arquitetura / Projeto ───────────────────────────────────────────────
+  {
+    id: "arq_resumo",
+    categoria: "arquitetura",
+    titulo: "Resumo dos projetos (Arquitetura)",
+    descricao: "Lista os projetos da carteira (código, cliente, tipologia, estágio, aprovação). Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_resumo",
+      description:
+        "Lista os projetos de arquitetura do tenant (código, cliente, tipologia, estágio, status de aprovação). Use para responder 'o que está parado em aprovação', 'projetos em andamento', etc. Não cria nem altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          estagio: {
+            type: "string",
+            description: "Filtro opcional por estágio (ex.: aprovacao, anteprojeto, executivo).",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "arq_criar_projeto",
+    categoria: "arquitetura",
+    titulo: "Criar projeto de arquitetura",
+    descricao:
+      "Cria um projeto novo com código automático (PRJ-AAAA-NNNN por tenant), em Briefing. Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_criar_projeto",
+      description:
+        "Cria um projeto de arquitetura novo (código automático por tenant) em Briefing. Só propõe — o dono confirma. Não duplica projetos com o mesmo título em menos de 1 minuto.",
+      parameters: {
+        type: "object",
+        properties: {
+          titulo: { type: "string", description: "Nome do projeto (opcional; deriva do cliente/tipologia)." },
+          tipologia: {
+            type: "string",
+            description: "Tipologia (residencial, corporativo, interiores, reforma, comercial, paisagismo). Residencial por padrão.",
+          },
+          cliente_nome: { type: "string", description: "Nome do cliente (desnormalizado para o card)." },
+          cliente_pessoa_id: { type: "string", description: "ID da pessoa cliente, se conhecido." },
+          cliente_empresa_id: { type: "string", description: "ID da empresa cliente, se conhecido." },
+          area_m2: { type: "number", description: "Área em m² (opcional)." },
+          negocio_id: { type: "string", description: "Negócio de origem, se houver." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "arq_mover_estagio",
+    categoria: "arquitetura",
+    titulo: "Mover projeto de estágio",
+    descricao: "Move um projeto para outro estágio do funil. Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_mover_estagio",
+      description:
+        "Move um projeto para outro estágio do funil de arquitetura (briefing, estudo, anteprojeto, executivo, aprovacao, entregue, arquivado). Valida o estágio contra o funil. Só propõe — o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          projeto_id: { type: "string", description: "ID do projeto (use o da tela se houver)." },
+          estagio: {
+            type: "string",
+            description: "Estágio de destino (briefing, estudo, anteprojeto, executivo, aprovacao, entregue, arquivado).",
+          },
+        },
+        required: ["projeto_id", "estagio"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "arq_programa_item",
+    categoria: "arquitetura",
+    titulo: "Montar programa (cômodos)",
+    descricao:
+      "Adiciona cômodos ao programa do projeto (sala, suítes, cozinha…). Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_programa_item",
+      description:
+        "Adiciona um ou mais cômodos ao Programa do projeto (ambientes). Aceita uma lista de nomes ou objetos {nome, metragem_m2?, categoria?}. Só propõe — o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          projeto_id: { type: "string", description: "ID do projeto (use o da tela)." },
+          itens: {
+            type: "array",
+            description: "Cômodos a adicionar. Cada item: string (nome) OU objeto {nome, metragem_m2?, categoria?}.",
+            items: {
+              type: "object",
+              properties: {
+                nome: { type: "string", description: "Nome do cômodo (ex.: Suíte máster)." },
+                metragem_m2: { type: "number", description: "Metragem em m² (opcional)." },
+                categoria: { type: "string", description: "ambiente | servico | lazer | tecnico (opcional)." },
+              },
+              required: ["nome"],
+            },
+          },
+        },
+        required: ["projeto_id", "itens"],
+        additionalProperties: false,
+      },
+    },
+  },
 ] as const;
 
 const IDS = new Set(HUB_AGENTE_FERRAMENTAS_CATALOGO.map((t) => t.id));
@@ -469,6 +687,14 @@ export function mergeUsoFerramentasComPadrao(
     hub_whatsapp_menu: false,
     hub_atualizar_lead: false,
     hub_crm_criar_cadastro: false,
+    hub_obra_listar: false,
+    hub_obra_resumo: false,
+    hub_obra_criar: false,
+    hub_obra_eap_montar: false,
+    arq_resumo: false,
+    arq_criar_projeto: false,
+    arq_mover_estagio: false,
+    arq_programa_item: false,
   };
   for (const id of Object.keys(base) as HubAgenteFerramentaId[]) {
     if (coalesceFerramentaBool(uso[id]) === true) base[id] = true;
@@ -499,6 +725,8 @@ export const HUB_FERRAMENTA_SECAO_LABEL: Record<HubFerramentaCategoria, string> 
   cliente: "Dados do cliente nesta conversa",
   analise: "Análise e partilha",
   registos: "Registos no CRM",
+  obra: "Engenharia e obras",
+  arquitetura: "Arquitetura e projetos",
 };
 
 /** Efeito em dados ou storage (UI / CRM — catálogo fixo no código). */
@@ -514,4 +742,12 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_whatsapp_menu: "escrita",
   hub_atualizar_lead: "escrita",
   hub_crm_criar_cadastro: "escrita",
+  hub_obra_listar: "leitura",
+  hub_obra_resumo: "leitura",
+  hub_obra_criar: "escrita",
+  hub_obra_eap_montar: "escrita",
+  arq_resumo: "leitura",
+  arq_criar_projeto: "escrita",
+  arq_mover_estagio: "escrita",
+  arq_programa_item: "escrita",
 };

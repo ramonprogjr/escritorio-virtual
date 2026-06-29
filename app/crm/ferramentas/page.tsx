@@ -8,7 +8,10 @@ import {
   BarChart3,
   Brain,
   ClipboardPenLine,
+  Compass,
   FileCode2,
+  HardHat,
+  Layers,
   ListOrdered,
   PieChart,
   Search,
@@ -32,12 +35,14 @@ import {
   mergeUsoFerramentasComPadraoPreservandoCustom,
 } from "@/lib/hub/agente-ferramentas-registry";
 
-const ORDEM_SECOES: HubFerramentaCategoria[] = ["cliente", "analise", "registos"];
+const ORDEM_SECOES: HubFerramentaCategoria[] = ["cliente", "analise", "registos", "obra", "arquitetura"];
 
 const ICONE_SECAO: Record<HubFerramentaCategoria, LucideIcon> = {
   cliente: Users,
   analise: PieChart,
   registos: ClipboardPenLine,
+  obra: HardHat,
+  arquitetura: Compass,
 };
 
 const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
@@ -50,6 +55,14 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_whatsapp_menu: ListOrdered,
   hub_atualizar_lead: UserPen,
   hub_crm_criar_cadastro: UserRound,
+  hub_obra_listar: ListOrdered,
+  hub_obra_resumo: HardHat,
+  hub_obra_criar: HardHat,
+  hub_obra_eap_montar: Layers,
+  arq_resumo: Compass,
+  arq_criar_projeto: Compass,
+  arq_mover_estagio: ListOrdered,
+  arq_programa_item: Layers,
 };
 
 type AgenteLista = {

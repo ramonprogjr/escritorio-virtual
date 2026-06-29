@@ -12,16 +12,21 @@ import {
 } from "./copiloto-core";
 
 describe("copiloto-core — gate de nível de acesso", () => {
-  it("só as 4 ferramentas de leitura entram na fase 1", () => {
+  it("inclui as 4 leituras de lead + 2 de obra (E0) + 1 de arquitetura (A0)", () => {
     expect(COPILOTO_FERRAMENTAS_LEITURA).toEqual(
       expect.arrayContaining([
         "hub_lead_resumo",
         "hub_lead_memorias",
         "hub_lead_lookup_por_telefone",
         "hub_metricas_escritorio",
+        // E0 — Engenharia/Obra (leitura, auto-executável)
+        "hub_obra_listar",
+        "hub_obra_resumo",
+        // A0 — Arquitetura/Projeto (leitura, auto-executável)
+        "arq_resumo",
       ])
     );
-    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(4);
+    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(7);
   });
 
   it("classifica leitura vs escrita corretamente", () => {
@@ -32,11 +37,30 @@ describe("copiloto-core — gate de nível de acesso", () => {
 });
 
 describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
-  it("allowlist de escrita tem exatamente as 2 ferramentas previstas", () => {
+  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 3 de arquitetura (A0)", () => {
     expect(COPILOTO_FERRAMENTAS_ESCRITA_FASE3).toEqual([
       "hub_registar_nota_lead",
       "hub_atualizar_lead",
+      // E0 — escrita de obra/EAP (operam sobre obra_id, não sobre lead aberto)
+      "hub_obra_criar",
+      "hub_obra_eap_montar",
+      // A0 — escrita de projeto/arquitetura (operam sobre projeto_id, não sobre lead)
+      "arq_criar_projeto",
+      "arq_mover_estagio",
+      "arq_programa_item",
     ]);
+  });
+
+  it("escrita de obra (E0) é executável e dispensa lead aberto", () => {
+    expect(ferramentaExecutavel("hub_obra_criar")).toBe(true);
+    expect(ferramentaExecutavel("hub_obra_eap_montar")).toBe(true);
+  });
+
+  it("escrita de arquitetura (A0) é executável e dispensa lead aberto", () => {
+    expect(ferramentaExecutavel("arq_criar_projeto")).toBe(true);
+    expect(ferramentaExecutavel("arq_mover_estagio")).toBe(true);
+    expect(ferramentaExecutavel("arq_programa_item")).toBe(true);
+    expect(ferramentaExecutavel("arq_resumo")).toBe(true);
   });
 
   it("leitura é executável", () => {
