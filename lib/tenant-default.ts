@@ -57,16 +57,29 @@ export function tenantScopeOrFilter(tenantId: string): string {
   return [...parts].join(",");
 }
 
+/**
+ * Tenant para chamadores INTERNOS (cron/worker) que passaram pelo gate `x-api-key`.
+ * O header `x-tenant-id` SÓ é honrado quando acompanhado da chave interna do servidor
+ * (`INTERNAL_API_KEY`) — caso contrário é IGNORADO (o header é forjável pelo browser,
+ * pois a chave pública vai ao cliente). Sem chave interna válida → cai no tenant padrão.
+ *
+ * IMPORTANTE: rotas com sessão de usuário NÃO devem usar esta função como fonte de
+ * tenant — devem derivar de `getCallerContext`/`requireCrm*` (`g.ctx.tenantId`). Esta
+ * função é a fonte de tenant apenas para o caminho de cron/worker (sem sessão).
+ */
 export function tenantIdFromRequest(headers: Headers): string {
   const internalKey = process.env.INTERNAL_API_KEY?.trim();
   const requestKey = headers.get("x-api-key")?.trim();
   const requestedTenant = headers.get("x-tenant-id")?.trim();
 
-  if (internalKey && requestKey === internalKey && requestedTenant) {
-    return requestedTenant;
-  }
-
-  if (requestedTenant && headerUuidValido(requestedTenant)) {
+  // Só confia no header de tenant quando vem com a chave interna do servidor.
+  // (Sem a chave, o header é forjável — ignora e usa o default.)
+  if (
+    internalKey &&
+    requestKey === internalKey &&
+    requestedTenant &&
+    headerUuidValido(requestedTenant)
+  ) {
     return requestedTenant;
   }
 

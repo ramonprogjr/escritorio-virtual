@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 /**
  * rf-alerta-parado — leads "parados" (precisam de ação): não terminados e SEM
@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
+  const tenantId = g.ctx.tenantId;
   const limit = Math.min(parseInt(request.nextUrl.searchParams.get("limit") || "50", 10), 100);
 
   const { data, error } = await crmDb()

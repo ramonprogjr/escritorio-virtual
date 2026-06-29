@@ -3,7 +3,7 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { aggregateAnalytics } from "@/lib/crm/analytics-aggregate";
 import { parseAnalyticsPeriodo } from "@/lib/crm/analytics-period";
 import { MERCADOS_PREFIXO } from "@/lib/crm/negocio-cadastro";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function errorMessage(e: unknown): string {
   if (e instanceof Error && e.message) return e.message;
@@ -21,8 +21,11 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const periodo = parseAnalyticsPeriodo(request.nextUrl.searchParams.get("periodo"));
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
   const mercadoRaw = request.nextUrl.searchParams.get("mercado")?.trim().toUpperCase() ?? "";
   const mercado =
     mercadoRaw && (MERCADOS_PREFIXO as readonly string[]).includes(mercadoRaw) ? mercadoRaw : undefined;
