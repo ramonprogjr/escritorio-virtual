@@ -31,6 +31,9 @@ type Params = { params: Promise<{ id: string }> };
 const SELECT_VIEW =
   "id, obra_id, frente_id, parent_id, codigo, nome, descricao, disciplina_slug, area_codigo, area_label, tipo, data_inicio, data_termino, pct_avanco, situacao_override, andamento, falta_pessoa, falta_documento, falta_material, falta_ferramenta, falta_equipamento, bloqueio_obs, quantidade, unidade, valor_contrato, responsavel_nome, tem_evidencia, evidencia_url, observacoes, peso, ordem, ativo, origem, situacao, dias_atraso";
 
+/** E0.5 (aditivo): mesma view + as colunas ambiente/taxonomia_id (existem só após a migração E0.5). */
+const SELECT_VIEW_E0B = `${SELECT_VIEW}, ambiente, taxonomia_id`;
+
 /** Colunas da tabela base (sem os derivados da view) — usado no insert/update returning. */
 const SELECT_BASE =
   "id, obra_id, frente_id, parent_id, codigo, nome, descricao, disciplina_slug, area_codigo, area_label, tipo, data_inicio, data_termino, pct_avanco, situacao_override, andamento, falta_pessoa, falta_documento, falta_material, falta_ferramenta, falta_equipamento, bloqueio_obs, quantidade, unidade, valor_contrato, responsavel_nome, tem_evidencia, evidencia_url, observacoes, peso, ordem, ativo, origem";
@@ -73,23 +76,38 @@ export async function GET(request: NextRequest, { params }: Params) {
   const tenantErr = await assertObraDoTenant(obraId, g.ctx.tenantId);
   if (tenantErr) return tenantErr;
 
+  const tenantId = g.ctx.tenantId;
   const url = new URL(request.url);
   const disciplina = url.searchParams.get("disciplina")?.trim() || "";
   const area = url.searchParams.get("area")?.trim() || "";
   const situacao = url.searchParams.get("situacao")?.trim() || "";
 
-  let q = crmDb()
-    .from("vw_hub_obra_itens_situacao")
-    .select(SELECT_VIEW)
-    .eq("obra_id", obraId)
-    .eq("tenant_id", g.ctx.tenantId) // defesa em profundidade (itens nunca são globais)
-    .order("ordem", { ascending: true })
-    .limit(1000);
-  if (disciplina) q = q.eq("disciplina_slug", disciplina);
-  if (area) q = q.eq("area_codigo", area);
-  if (situacao && isSituacaoItem(situacao)) q = q.eq("situacao", situacao);
+  const ambiente = url.searchParams.get("ambiente")?.trim() || "";
 
-  const { data, error } = await q;
+  // Monta a query com o select escolhido (extraído p/ poder repetir no retry sem colunas E0.5).
+  // `comE0b` controla se as colunas E0.5 (ambiente) entram no select E no filtro — no retro-fallback
+  // ambas saem juntas, senão filtrar por `ambiente` toparia de novo na coluna ausente.
+  function montar(comE0b: boolean) {
+    let q = crmDb()
+      .from("vw_hub_obra_itens_situacao")
+      .select(comE0b ? SELECT_VIEW_E0B : SELECT_VIEW)
+      .eq("obra_id", obraId)
+      .eq("tenant_id", tenantId) // defesa em profundidade (itens nunca são globais)
+      .order("ordem", { ascending: true })
+      .limit(1000);
+    if (disciplina) q = q.eq("disciplina_slug", disciplina);
+    if (area) q = q.eq("area_codigo", area);
+    if (comE0b && ambiente) q = q.eq("ambiente", ambiente);
+    if (situacao && isSituacaoItem(situacao)) q = q.eq("situacao", situacao);
+    return q;
+  }
+
+  // Tenta com ambiente/taxonomia_id (E0.5). Se a coluna não existe (migração E0.5 pendente),
+  // repete com o select base — a UI degrada o eixo "Ambiente" mas o resto segue idêntico.
+  let { data, error } = await montar(true);
+  if (error && (isMissingPgColumn(error, "ambiente") || isMissingPgColumn(error, "taxonomia_id"))) {
+    ({ data, error } = await montar(false));
+  }
 
   if (error) {
     if (ehTabelaAusente(error)) {
@@ -188,11 +206,29 @@ export async function POST(request: NextRequest, { params }: Params) {
     origem: "manual",
   };
 
-  const { data, error } = await supabase
+  // E0.5 (aditivo): ambiente + taxonomia_id só entram se vierem no body. Em schema sem essas
+  // colunas (migração E0.5 pendente), o insert falha com missing-column → retry sem elas (abaixo).
+  const camposE0b: Record<string, unknown> = {};
+  if (typeof body.ambiente === "string" && body.ambiente.trim()) camposE0b.ambiente = body.ambiente.trim();
+  if (typeof body.taxonomia_id === "string" && body.taxonomia_id.trim()) camposE0b.taxonomia_id = body.taxonomia_id.trim();
+
+  let { data, error } = await supabase
     .from("hub_obra_itens")
-    .insert(insert)
+    .insert({ ...insert, ...camposE0b })
     .select(SELECT_BASE)
     .single();
+  // Retry sem os campos E0.5 quando a coluna não existe ainda (não bloqueia a criação do item).
+  if (
+    error &&
+    Object.keys(camposE0b).length > 0 &&
+    (isMissingPgColumn(error, "ambiente") || isMissingPgColumn(error, "taxonomia_id"))
+  ) {
+    ({ data, error } = await supabase
+      .from("hub_obra_itens")
+      .insert(insert)
+      .select(SELECT_BASE)
+      .single());
+  }
 
   if (error) {
     if (ehTabelaAusente(error)) {

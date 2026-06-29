@@ -9,6 +9,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_OBRA10_TENANT_ID } from "@/lib/tenant-default";
+import type { SegmentoSlug } from "@/lib/obras/taxonomia";
 
 // ── Tipos de obra (espelham o CHECK de hub_obras.tipo_obra) ──────────────────
 export const TIPOS_OBRA = [
@@ -76,11 +77,33 @@ export function codigoFrenteFromNome(nome: string, disciplinaSlug?: string): str
 }
 
 // ── Frente de preset e presets de EAP ────────────────────────────────────────
+/**
+ * E0.5 (aditivo): uma atividade default de um ambiente no preset por segmento.
+ * `codigo` referencia hub_obra_taxonomia.codigo; `qtd` é a sugestão POR CONTEXTO
+ * (o contexto vive no preset, não na taxonomia). null = humano confirma (v1 do dono).
+ */
+export type AtividadeDefaultPreset = {
+  codigo: string;
+  qtd: number | null;
+};
+
+/** E0.5 (aditivo): um ambiente do preset por segmento, com suas atividades sugeridas. */
+export type AmbientePreset = {
+  codigo: string;
+  label: string;
+  atividades_default: AtividadeDefaultPreset[];
+};
+
 export type FrentePreset = {
   disciplina_slug: string;
   nome: string;
   peso_fisico: number;
   peso_financeiro: number;
+  /**
+   * E0.5 (aditivo, OPCIONAL): ambientes desta frente quando o preset é por segmento.
+   * Ausente nos 3 presets genéricos atuais → caminho flat (disciplina-first) intocado.
+   */
+  ambientes?: AmbientePreset[];
 };
 
 export type EapPreset = {
@@ -89,6 +112,11 @@ export type EapPreset = {
   tipo_obra: TipoObraSlug;
   sistema: boolean;
   ordem: number;
+  /**
+   * E0.5 (aditivo, OPCIONAL): segmento do preset. Ausente = genérico (os 3 atuais).
+   * Quando presente, o preset entrega ambientes + atividades_default (ambiente-first).
+   */
+  segmento?: SegmentoSlug;
   frentes: FrentePreset[];
 };
 
@@ -167,7 +195,294 @@ export const EAP_PRESETS: EapPreset[] = [
 
 /** Retorna o preset adequado ao tipo de obra (ou undefined se for "outros" sem preset). */
 export function getPresetPorTipo(tipoObra: string): EapPreset | undefined {
-  return EAP_PRESETS.find((p) => p.tipo_obra === tipoObra);
+  return EAP_PRESETS.find((p) => p.tipo_obra === tipoObra && !p.segmento);
+}
+
+// ── E0.5 — 5 presets por SEGMENTO (ambiente-first, OPT-IN) ────────────────────
+// Aditivos: os 3 presets acima ficam SEM `segmento` (genéricos, intocados). Estes 5
+// trazem `ambientes` + `atividades_default` (refs a hub_obra_taxonomia.codigo). qtd=null
+// em todos = humano confirma (v1 do dono: a quantidade vem da planta, não do memorial).
+// frentes[].peso_* herda os pesos do preset genérico da mesma disciplina (ordem de grandeza).
+
+/** Açúcar: monta uma frente por-segmento com ambientes (peso só p/ ordem de grandeza). */
+function frenteSeg(
+  disciplina_slug: string,
+  peso_fisico: number,
+  peso_financeiro: number,
+  ambientes: AmbientePreset[]
+): FrentePreset {
+  const d = DISCIPLINA_POR_SLUG.get(disciplina_slug);
+  return {
+    disciplina_slug,
+    nome: d?.label ?? disciplina_slug,
+    peso_fisico,
+    peso_financeiro,
+    ambientes,
+  };
+}
+
+export const EAP_PRESETS_SEGMENTO: EapPreset[] = [
+  {
+    slug: "residencial-padrao",
+    nome: "Residencial Padrão",
+    tipo_obra: "reforma",
+    segmento: "residencial",
+    sistema: true,
+    ordem: 10,
+    frentes: [
+      frenteSeg("eletrica", 12, 13, [
+        {
+          codigo: "SALA",
+          label: "Sala",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-ILUM-LED", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+          ],
+        },
+        {
+          codigo: "COZINHA",
+          label: "Cozinha",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-TOMADA-030", qtd: null },
+            { codigo: "ELET-ILUM-LED", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("hidraulica", 9, 10, [
+        {
+          codigo: "BANHEIRO",
+          label: "Banheiro",
+          atividades_default: [
+            { codigo: "HIDR-PONTO-AGUA", qtd: null },
+            { codigo: "HIDR-PONTO-ESGOTO", qtd: null },
+            { codigo: "HIDR-LOUCA-METAL", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("revestimento", 11, 11, [
+        {
+          codigo: "COZINHA",
+          label: "Cozinha",
+          atividades_default: [{ codigo: "REVEST-PISO-PORC", qtd: null }],
+        },
+        {
+          codigo: "BANHEIRO",
+          label: "Banheiro",
+          atividades_default: [{ codigo: "REVEST-PAREDE-AZUL", qtd: null }],
+        },
+      ]),
+      frenteSeg("pintura", 8, 4, [
+        {
+          codigo: "SALA",
+          label: "Sala",
+          atividades_default: [
+            { codigo: "PINT-PAREDE-ACRIL", qtd: null },
+            { codigo: "PINT-TETO", qtd: null },
+          ],
+        },
+      ]),
+    ],
+  },
+  {
+    slug: "comercial-padrao",
+    nome: "Comercial Padrão",
+    tipo_obra: "reforma",
+    segmento: "comercial",
+    sistema: true,
+    ordem: 11,
+    frentes: [
+      frenteSeg("eletrica", 13, 14, [
+        {
+          codigo: "LOJA",
+          label: "Loja",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-ILUM-LED", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+          ],
+        },
+        {
+          codigo: "CAIXA",
+          label: "Caixa",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("revestimento", 11, 11, [
+        {
+          codigo: "LOJA",
+          label: "Loja",
+          atividades_default: [{ codigo: "REVEST-PISO-PORC", qtd: null }],
+        },
+      ]),
+      frenteSeg("pintura", 8, 4, [
+        {
+          codigo: "LOJA",
+          label: "Loja",
+          atividades_default: [
+            { codigo: "PINT-PAREDE-ACRIL", qtd: null },
+            { codigo: "PINT-TETO", qtd: null },
+          ],
+        },
+      ]),
+    ],
+  },
+  {
+    slug: "corporativo-padrao",
+    nome: "Corporativo Padrão",
+    tipo_obra: "reforma",
+    segmento: "corporativo",
+    sistema: true,
+    ordem: 12,
+    frentes: [
+      frenteSeg("eletrica", 14, 15, [
+        {
+          codigo: "RECEPCAO",
+          label: "Recepção",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+            { codigo: "ELET-ILUM-LED", qtd: null },
+          ],
+        },
+        {
+          codigo: "ESCRITORIO",
+          label: "Escritório / Open space",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+            { codigo: "ELET-ILUM-LED", qtd: null },
+          ],
+        },
+        {
+          codigo: "SALA_REUNIAO",
+          label: "Sala de reunião",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("civil", 12, 13, [
+        {
+          codigo: "ESCRITORIO",
+          label: "Escritório / Open space",
+          atividades_default: [{ codigo: "CIVIL-DRYWALL", qtd: null }],
+        },
+        {
+          codigo: "SALA_REUNIAO",
+          label: "Sala de reunião",
+          atividades_default: [{ codigo: "CIVIL-DRYWALL", qtd: null }],
+        },
+      ]),
+      frenteSeg("pintura", 8, 4, [
+        {
+          codigo: "RECEPCAO",
+          label: "Recepção",
+          atividades_default: [
+            { codigo: "PINT-PAREDE-ACRIL", qtd: null },
+            { codigo: "PINT-TETO", qtd: null },
+          ],
+        },
+      ]),
+    ],
+  },
+  {
+    slug: "clinicas-padrao",
+    nome: "Clínicas Padrão",
+    tipo_obra: "reforma",
+    segmento: "clinicas",
+    sistema: true,
+    ordem: 13,
+    frentes: [
+      frenteSeg("eletrica", 13, 14, [
+        {
+          codigo: "CONSULTORIO",
+          label: "Consultório",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+            { codigo: "ELET-ILUM-LED", qtd: null },
+          ],
+        },
+        {
+          codigo: "RECEPCAO",
+          label: "Recepção",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("hidraulica", 10, 11, [
+        {
+          codigo: "ESTERILIZACAO",
+          label: "Esterilização",
+          atividades_default: [
+            { codigo: "HIDR-PONTO-AGUA", qtd: null },
+            { codigo: "HIDR-PONTO-ESGOTO", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("revestimento", 12, 12, [
+        {
+          codigo: "SALA_PROCEDIMENTO",
+          label: "Sala de procedimento",
+          atividades_default: [
+            { codigo: "REVEST-PISO-PORC", qtd: null },
+            { codigo: "REVEST-PAREDE-AZUL", qtd: null },
+          ],
+        },
+      ]),
+    ],
+  },
+  {
+    slug: "pdv-padrao",
+    nome: "PDV Padrão",
+    tipo_obra: "servico",
+    segmento: "pdv",
+    sistema: true,
+    ordem: 14,
+    frentes: [
+      frenteSeg("eletrica", 16, 16, [
+        {
+          codigo: "FRENTE_LOJA",
+          label: "Frente de loja",
+          atividades_default: [
+            { codigo: "ELET-ILUM-LED", qtd: null },
+            { codigo: "ELET-TOMADA-110", qtd: null },
+          ],
+        },
+        {
+          codigo: "CHECKOUT",
+          label: "Checkout",
+          atividades_default: [
+            { codigo: "ELET-TOMADA-110", qtd: null },
+            { codigo: "ELET-DADOS-VOZ", qtd: null },
+          ],
+        },
+      ]),
+      frenteSeg("revestimento", 12, 12, [
+        {
+          codigo: "EXPOSICAO",
+          label: "Área de exposição",
+          atividades_default: [{ codigo: "REVEST-PISO-PORC", qtd: null }],
+        },
+      ]),
+    ],
+  },
+];
+
+/** Todos os presets (genéricos + por segmento) — para a tela/seed listarem juntos. */
+export const TODOS_PRESETS: EapPreset[] = [...EAP_PRESETS, ...EAP_PRESETS_SEGMENTO];
+
+/** Retorna o preset por segmento (ou undefined se o segmento não tiver preset). */
+export function getPresetPorSegmento(segmento: string): EapPreset | undefined {
+  return EAP_PRESETS_SEGMENTO.find((p) => p.segmento === segmento);
 }
 
 /**

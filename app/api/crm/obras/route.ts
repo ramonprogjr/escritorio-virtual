@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
   const res = await criarObraComEAP(supabase, tenantId, {
     titulo,
     tipo_obra: typeof body.tipo_obra === "string" ? body.tipo_obra : null,
+    segmento: typeof body.segmento === "string" ? body.segmento : null,
     negocio_id: typeof body.negocio_id === "string" ? body.negocio_id : null,
     imovel_id: typeof body.imovel_id === "string" ? body.imovel_id : null,
     cliente_pessoa_id: typeof body.cliente_pessoa_id === "string" ? body.cliente_pessoa_id : null,
@@ -101,7 +102,12 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { data: res.obra, frentes_criadas: res.frentes_criadas, aviso: res.aviso },
+    {
+      data: res.obra,
+      frentes_criadas: res.frentes_criadas,
+      itens_criados: res.itens_criados ?? 0,
+      aviso: res.aviso,
+    },
     { status: 201 }
   );
 }

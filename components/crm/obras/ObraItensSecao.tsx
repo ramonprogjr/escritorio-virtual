@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   Layers,
   Building2,
+  DoorOpen,
 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { abrirCopilotoVoz } from "@/lib/crm/direcionamento-ui";
@@ -47,7 +48,14 @@ const DOURADO = "#c9a24a";
 const BORDA = "#1d3a2c";
 const BG_CARD = "#0f1d16";
 
-type Agrupar = "disciplina" | "andar";
+type Agrupar = "disciplina" | "andar" | "ambiente";
+
+/** Rótulo legível de um código de ambiente (slug → Title Case com acento básico). */
+function rotuloAmbiente(codigo: string): string {
+  const base = codigo.replace(/_/g, " ").trim();
+  if (!base) return "Sem ambiente definido";
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
 
 /** Situação efetiva: a da view, ou derivada localmente como fallback. */
 function situacaoDe(it: ItemObraRow): SituacaoItem {
@@ -129,6 +137,28 @@ function CardItem({
             {it.codigo}
             {it.area_label ? ` · ${it.area_label}` : ""}
           </p>
+          {/* E0.5: tag de ambiente (quando agrupado por outro eixo) + vínculo à taxonomia. */}
+          {it.ambiente || it.taxonomia_id ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              {it.ambiente ? (
+                <span
+                  className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
+                  style={{ background: `${DOURADO}1a`, color: DOURADO, border: `1px solid ${DOURADO}33` }}
+                >
+                  <DoorOpen className="h-2.5 w-2.5" /> {rotuloAmbiente(it.ambiente)}
+                </span>
+              ) : null}
+              {it.taxonomia_id ? (
+                <span
+                  className="rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                  style={{ background: "#16271e", color: "#6e9e8a", border: `1px solid ${BORDA}` }}
+                  title="Atividade vinculada ao descritivo padrão (taxonomia)"
+                >
+                  📐 padrão
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#5c6b62]" />
       </div>
@@ -513,15 +543,31 @@ export function ObraItensSecao({ obraId }: { obraId: string }) {
     [nivel0]
   );
 
-  // Agrupamento (disciplina OU andar) — mesmo dado, eixo diferente, sem recarregar.
+  // E0.5: o eixo "Ambiente" só faz sentido se algum item tiver `ambiente` preenchido.
+  // Sem nenhum (legado ou migração E0.5 pendente), o eixo degrada: o botão mostra aviso e,
+  // se selecionado, tudo cai em "Sem ambiente definido" (nunca tela morta).
+  const temAmbiente = useMemo(
+    () => nivel0.some((i) => typeof i.ambiente === "string" && i.ambiente.trim().length > 0),
+    [nivel0]
+  );
+
+  // Agrupamento (disciplina / andar / ambiente) — mesmo dado, eixo diferente, sem recarregar.
   const grupos = useMemo(() => {
     const m = new Map<string, { label: string; itens: ItemObraRow[] }>();
     for (const i of nivel0) {
-      const chave = agrupar === "disciplina" ? i.disciplina_slug || "sem" : i.area_codigo || "sem";
-      const label =
-        agrupar === "disciplina"
-          ? i.disciplina_slug || "Sem disciplina"
-          : i.area_label || "Sem andar";
+      let chave: string;
+      let label: string;
+      if (agrupar === "ambiente") {
+        const amb = (i.ambiente || "").trim();
+        chave = amb || "sem";
+        label = amb ? rotuloAmbiente(amb) : "Sem ambiente definido";
+      } else if (agrupar === "andar") {
+        chave = i.area_codigo || "sem";
+        label = i.area_label || "Sem andar";
+      } else {
+        chave = i.disciplina_slug || "sem";
+        label = i.disciplina_slug || "Sem disciplina";
+      }
       const g = m.get(chave) ?? { label, itens: [] };
       g.itens.push(i);
       m.set(chave, g);
@@ -565,18 +611,22 @@ export function ObraItensSecao({ obraId }: { obraId: string }) {
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border p-0.5" style={{ borderColor: BORDA, background: BG_CARD }}>
             {([
+              { id: "ambiente", rotulo: "Ambiente", Icone: DoorOpen },
               { id: "disciplina", rotulo: "Disciplina", Icone: Layers },
               { id: "andar", rotulo: "Andar", Icone: Building2 },
             ] as const).map(({ id, rotulo, Icone }) => {
               const ativo = agrupar === id;
+              // Eixo Ambiente sem dados: clicável (degrada p/ "Sem ambiente"), mas sinalizado.
+              const semDados = id === "ambiente" && !temAmbiente;
               return (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setAgrupar(id)}
+                  title={semDados ? "Defina o ambiente dos itens (ou use um preset por segmento)" : undefined}
                   className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[12px] font-semibold"
                   style={{
-                    color: ativo ? "#f0c869" : "#8aa99a",
+                    color: ativo ? "#f0c869" : semDados ? "#5c6b62" : "#8aa99a",
                     background: ativo ? "linear-gradient(180deg, #1d5c3c, #003b26)" : "transparent",
                     border: ativo ? `1px solid ${DOURADO}` : "1px solid transparent",
                   }}
@@ -597,6 +647,20 @@ export function ObraItensSecao({ obraId }: { obraId: string }) {
           </button>
         </div>
       </div>
+
+      {/* E0.5: dica não-bloqueante quando o eixo Ambiente está ativo mas nenhum item tem ambiente. */}
+      {agrupar === "ambiente" && !temAmbiente && nivel0.length > 0 ? (
+        <div className="rounded-lg border px-3 py-2 text-[12px]" style={{ borderColor: `${DOURADO}44`, background: `${DOURADO}12` }}>
+          <p style={{ color: "#f0c869" }}>
+            Estes itens ainda não têm <strong>ambiente</strong> definido — aparecem em
+            “Sem ambiente definido”.
+          </p>
+          <p className="mt-0.5 text-[#8aa99a]">
+            Defina o ambiente na ficha de cada item, ou comece novas obras com um preset por
+            segmento (a IA já distribui por ambiente).
+          </p>
+        </div>
+      ) : null}
 
       {nivel0.length === 0 ? (
         <div className="rounded-xl border p-6 text-center" style={{ borderColor: BORDA, background: BG_CARD }}>
