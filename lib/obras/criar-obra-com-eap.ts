@@ -149,7 +149,9 @@ async function semearItensPorAmbiente(
           nome,
           descricao: tax?.descricao_padrao ?? null,
           disciplina_slug: fr.disciplina_slug,
-          ambiente: amb.codigo.toLowerCase(),
+          // R3 (ESTRUTURA-UNIFICADA §7): mesma canonicalização do endpoint (trim+lowercase) p/ os
+          // subtotais por ambiente baterem (preset e digitação manual gravam a MESMA forma).
+          ambiente: amb.codigo.trim().toLowerCase(),
           taxonomia_id: taxIdPorCodigo.get(a.codigo) ?? null,
           unidade: tax?.unidade ?? null,
           quantidade: a.qtd ?? tax?.qtd_padrao ?? null,

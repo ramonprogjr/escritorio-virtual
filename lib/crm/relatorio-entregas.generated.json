@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-29T19:07:20.419Z",
+  "geradoEm": "2026-06-29T21:10:27.986Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "6a26c0c4fa5840c872b77932e662d48346239185",
+      "hashCurto": "6a26c0c",
+      "mensagem": "cadastros funcionam no MOBILE + bug do MISTRAL (copiloto)",
+      "mensagemRaw": "fix(mobile+ia): cadastros funcionam no MOBILE + bug do MISTRAL (copiloto)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T19:08:33.000Z",
+      "hora": "16:08",
+      "arquivos": [
+        "app/api/copiloto/interpretar/route.ts",
+        "app/crm/layout.tsx",
+        "components/crm/cadastro/CadastroFiltrosBar.tsx",
+        "components/crm/cadastro/CadastroPremiumSideover.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "docs/MASTERPLAN.md",
+        "docs/SIDEQUEST-mistral-ia.md",
+        "docs/insumos-do-dono/crm-cross-conta-visibilidade-permissao.md",
+        "lib/ia/llm-completion.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1,
+        "components/crm": 3,
+        "outros": 4
+      }
+    },
     {
       "hash": "2bdc7eec25e06f69799688d9e04ecd91649ddd5e",
       "hashCurto": "2bdc7ee",

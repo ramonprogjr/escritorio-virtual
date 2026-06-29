@@ -3,13 +3,32 @@
 // Tudo que precisa de humano chega aqui como card completo
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
-import { defaultTenantId } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 
 function supabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+}
+
+/**
+ * Grava no log de decisões SEMPRE com `tenant_id` (log de dinheiro nunca órfão — service_role
+ * bypassa RLS). TOLERÂNCIA: a coluna `tenant_id` é adicionada a hub_decision_logs pela migração E7
+ * (ESTRUTURA-UNIFICADA §7); enquanto ela não é aplicada, o INSERT com tenant_id falharia
+ * (PGRST204/42703). Detectamos isso e repetimos SEM o tenant_id — o log continua sendo gravado
+ * (degrade honesto), nunca quebra o fluxo de aprovação.
+ */
+async function registrarDecisao(
+  db: ReturnType<typeof supabase>,
+  tenant: string,
+  linha: Record<string, unknown>
+): Promise<void> {
+  const comTenant = { tenant_id: tenant, ...linha };
+  const { error } = await db.from("hub_decision_logs").insert(comTenant);
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    await db.from("hub_decision_logs").insert(linha); // migração E7 ainda não aplicada
+  }
 }
 
 export type TipoAprovacao =
@@ -213,8 +232,10 @@ export async function aprovar(
     .eq("id", aprovacaoId)
     .eq("tenant_id", tenant);
 
-  // Registra no log de decisões
-  await db.from("hub_decision_logs").insert({
+  // Registra no log de decisões. SEGURANÇA (ESTRUTURA-UNIFICADA §7): grava `tenant_id` SEMPRE —
+  // log de decisão de DINHEIRO (escrow/pagamento) não pode ficar fora do tenant. supabase() é
+  // service_role e bypassa RLS; sem o tenant, o log nasce órfão (invisível/auditável por ninguém).
+  await registrarDecisao(db, tenant, {
     agente_slug: aprovacao.agente_slug,
     tipo: "aprovacao_humana",
     descricao: `Aprovado: ${aprovacao.descricao}`,
@@ -270,7 +291,8 @@ export async function rejeitar(
       .eq("id", dados.pedido_id as string);
   }
 
-  await db.from("hub_decision_logs").insert({
+  // Log de decisão com tenant_id SEMPRE (mesma regra do aprovar — nada de log de dinheiro órfão).
+  await registrarDecisao(db, tenant, {
     agente_slug: aprovacao.agente_slug,
     tipo: "rejeicao_humana",
     descricao: `Rejeitado: ${aprovacao.descricao}`,

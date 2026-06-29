@@ -19,7 +19,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn } from "@/lib/tenant-default";
-import { TIPOS_OBRA, mapTipologiaParaTipoObra } from "@/lib/obras/eap-presets";
+import {
+  TIPOS_OBRA,
+  mapTipologiaParaTipoObra,
+  mapTipologiaParaSegmento,
+} from "@/lib/obras/eap-presets";
+import { isSegmentoValido } from "@/lib/obras/taxonomia";
 import { criarObraComEAP } from "@/lib/obras/criar-obra-com-eap";
 
 const UUID_RE =
@@ -106,9 +111,19 @@ export async function POST(
   const titulo = tituloOverride ?? String(proj.titulo ?? "").trim() ?? "";
   const areaM2 = typeof proj.area_m2 === "number" && Number.isFinite(proj.area_m2) ? proj.area_m2 : null;
 
+  // R1 (ESTRUTURA-UNIFICADA §7 Fase 0): deriva o SEGMENTO da tipologia do projeto e o passa ao
+  // criador. SÓ assim `criarObraComEAP` roda `semearItensPorAmbiente` — a obra nasce com a árvore
+  // ambiente→item herdada do arquiteto, não OCA. override do body (se válido) tem prioridade; sem
+  // mapeamento, fica null e a obra cai no preset genérico por tipo_obra (degrade idêntico ao antigo).
+  const segmentoOverride =
+    typeof body.segmento === "string" && isSegmentoValido(body.segmento) ? body.segmento : null;
+  const segmento =
+    segmentoOverride ?? mapTipologiaParaSegmento(proj.tipologia as string | null | undefined);
+
   const res = await criarObraComEAP(supabase, tenantId, {
     titulo: titulo || `Obra — ${proj.codigo ?? "projeto"}`,
     tipo_obra: tipoObra,
+    segmento,
     area_total_m2: areaM2,
     cliente_pessoa_id: (proj.cliente_pessoa_id as string | null) ?? null,
     cliente_empresa_id: (proj.cliente_empresa_id as string | null) ?? null,
@@ -147,8 +162,11 @@ export async function POST(
     {
       data: obra,
       frentes_criadas: res.frentes_criadas,
+      // R1: itens semeados por ambiente (>0 só quando a tipologia mapeou para um segmento com preset).
+      itens_criados: res.itens_criados ?? 0,
       aviso: res.aviso,
       tipo_obra: tipoObra,
+      segmento: segmento ?? null,
       elo_ok: true,
     },
     { status: 201 }
