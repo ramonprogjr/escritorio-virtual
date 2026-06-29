@@ -71,6 +71,7 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   arq_programa_item: Layers,
   arq_enviar_aprovacao: Send,
   arq_registrar_aprovacao: CheckCheck,
+  arq_gerar_obra: HardHat,
 };
 
 function ToggleSwitch({

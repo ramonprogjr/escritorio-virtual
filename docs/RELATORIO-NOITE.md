@@ -1,37 +1,33 @@
-# 🌙 Relatório da Noite — Maratona Arquitetura & Engenharia
+# 🌙→☀️ Relatório da Maratona — Arquitetura & Engenharia
 
-> Para o CEO ver às 10h. Método de cada bloco: **mesa redonda detalhada (4 especialistas) → auditoria adversarial (4 lentes céticas) → correção → gates verdes (tsc + ~418 testes + build) → deploy.** Nada subiu sem isso.
+> Para o CEO. Método de cada bloco: **mesa redonda (4 especialistas) → auditoria adversarial (4 lentes céticas) → correção → gates verdes (tsc + 451 testes + build) → deploy.** Nada subiu sem isso. Norte do produto: **`docs/MASTERPLAN.md`**.
 
-## ✅ JÁ NO AR (Render — pode abrir e clicar)
+## ✅ NO AR (Render — pode abrir e clicar) — 6 deploys
+| # | Bloco | Commit | O que ver |
+|---|---|---|---|
+| 1 | **E0 + A0** | `4d0fa37` | "Nova obra" Click-and-Go (EAP disciplina×andar, preset Reforma = 15 disciplinas do Consulado) + editor EAP; **Arquitetura** `/crm/arquitetura` (funil de projeto, ficha em abas) |
+| 2 | **E1 cockpit** | `0dae8dc` | `/crm/obras` = **[Carteira][Hoje]**; o "Hoje" = sua fila de decisões. 🟢 **funciona AO VIVO** (sem migração) |
+| 3 | **E2 item×subitem** | `fc74df0` | Situação automática (prazo) × Andamento manual, por disciplina×andar |
+| 4 | **E3 restrições** | `f539d19` | os 5 "falta…" como bloqueio de 1ª classe (SST readonly) |
+| 5 | **A1 programa+aprovações** | `220beca` | programa de necessidades editável + aprovações do cliente (o gargalo do arquiteto) |
+| 6 | **E5 compras→estoque** | `91c1cab` | SC→Inventário (cascata, append-only), elo "falta material"→pedido — **fundação do iFood** |
 
-| Deploy | Bloco | O que ver |
-|---|---|---|
-| `4d0fa37` | **E0 + A0** | "Nova obra" Click-and-Go (EAP por disciplina; preset "Reforma" = 15 disciplinas do Consulado) + editor de EAP + carteira; **Arquitetura** `/crm/arquitetura` (funil de projeto editável, ficha em abas, "Novo projeto") |
-| `0dae8dc` | **E1 cockpit** | `/crm/obras` virou **[Carteira] [Hoje]**. O painel **"Hoje" = sua fila de decisões** (Atrasados · Próximos 15d · Bloqueios · Pagamentos). 🟢 **FUNCIONA AO VIVO** (sem migração) — é o que melhor mostra a ideia |
-| `fc74df0` | **E2 item×subitem** | Aba "Itens & Avanço": a separação genial da planilha **Situação automática (prazo) × Andamento manual**, por disciplina×andar; KPI "Finalizados" = Andamento (item 100% paralisado não conta) |
-| `f539d19` | **E3 restrições** | Subsistema dos 5 bloqueios "falta pessoa/material/…" como restrição de 1ª classe (tabela + view de união + RPC; SST readonly; isolamento tenant exemplar). Fiação no cockpit/itens = E3.5 |
+## ✅ DESENHADO (solução ideal, auditado) — pronto pra construir
+- **MASTERPLAN** (`docs/MASTERPLAN.md`) — 7 camadas, status, roadmap em 3 fases.
+- **5 superfícies estratégicas** (suas visões da manhã, desenhadas): **Portal do Cliente** (medos→cura) · **Financeiro+Escrow** (= E6 reescrito: 2 modelos de contrato + custódia/dupla-aprovação) · **Marketplace/iFood** · **Operação de Campo** (tablet/totem/IA-campo) · **Plataforma** (negócio-espinha + nada-se-perde + mensageria). Docs: `docs/*-DESIGN.md`.
+- **Blocos:** E4 (Curva S), A2 (Gerar Obra — construindo agora), E6 (financeiro+escrow).
 
-## 📐 DESENHADOS + AUDITADOS (prontos pra construir/deployar) — em `docs/*-DESIGN.md`
-- **A1** — Programa de necessidades + **Aprovações do cliente** (o gargalo nº1 do arquiteto).
-- **E5** — Compras → Estoque (a cascata **SC → Inventário** da planilha; estoque automático).
-- **A2** — elo **"Gerar Obra"** (projeto pronto → obra de engenharia, sem redigitar).
-- **E6** — Orçamento → Pagamento + **Compatibilização** (cobertura 🟢🟡🔴; "Aprovado libera pagamento", gate humano).
+## 🔒 Segurança
+- Fechei o padrão de vazamento cross-tenant (`tenant_id` NULL legado) — virou regra fixa + blindei `current_user_tenant_id()` nas migrações.
+- ⚠️ **Achado a fechar no E6 (pré-req do financeiro):** `lib/ia/aprovacoes.ts` não filtra tenant — com o escrow, isso leva *dinheiro* ao gate. Já mapeado.
 
-## 🔒 Segurança (a auditoria adversarial pagou por si)
-- Fechei um **vazamento cross-tenant real** (registros antigos com dono nulo). Virou **regra fixa** em todo bloco (filtro rígido, guarda de posse, backfill, RLS) — e blindei a `current_user_tenant_id()` nas migrações pro seu apply não enfraquecer o RLS.
-- Corrigi o gerador de **código** (global → atômico por escritório) e a **autenticação** de obras/projetos.
-- ⚠️ **Achado a corrigir (vou fechar no E6):** a fila de **Aprovações** atual (`lib/ia/aprovacoes.ts`) **não filtra tenant** — um escritório vê aprovações de outro. Latente hoje (prod ~1 tenant), mas é pré-requisito do multi-tenant. Já mapeado.
+## 🤝 Precisa de VOCÊ
+1. **Aplicar as migrações** (aditivas/reversíveis, com backup), na ordem **E0→A0→E2→E3→A1→E5** (→ E6 depois). Aí as telas "acendem" 100%.
+2. **Validar** o preset "Reforma Padrão" vs sua planilha do Consulado.
+3. **MISTRAL_API_KEY** no Render (conversacional pleno; sem ela tudo funciona manual).
+4. **Smoke visual** juntos (desktop+mobile).
+5. **GitHub próprio** de backup.
+6. **Checkpoints de negócio (das mesas)** pra decidir: tablet-comodato é condição de entrada ou começa celular/kiosk? · frete (Lalamove) repassado ao cliente ou no spread? · KPIs iniciais do fornecedor (quais 3-4)? · spread por modelo de contrato (preço-de-rede vs taxa transparente).
 
-## ⏸️ Sobre a noite (honesto)
-Por volta das 7h a infra bateu um **limite de sessão** (resetou 7h20) e cortou o build do E3 no meio. **Nada quebrou** — os 3 deploys estavam sólidos; o E3 era trabalho local. Retomei às 8h, completei o E3 (gates verdes) e segui. Os designs e a memória ficaram todos salvos; backups protegem o rumo.
-
-## 🤝 O que precisa de VOCÊ (nossa janela das 10h)
-1. **Aplicar as migrações** (aditivas, reversíveis, com backup) — aí as telas "acendem" 100%.
-   **Ordem obrigatória:** E0 (`20260705130000`) → A0 (`20260705140000`) → E2 (`20260710120000`) → E3 (`20260712120000`). (A ordem cronológica do diretório já respeita.)
-2. **Validar** o preset "Reforma Padrão" vs sua planilha do Consulado (ajustamos juntos).
-3. **MISTRAL_API_KEY** no Render — acende o conversacional pleno (sem ela, tudo funciona manual/clicando).
-4. **Smoke visual** juntos (desktop + mobile) — eu não abri o navegador ainda.
-5. Decidir sobre o **GitHub próprio** de backup (lembrete de ontem).
-
-## 🗺️ O que ainda falta na visão Arq+Eng (próximos blocos)
-E3.5 (fiar restrições no cockpit/itens) · E4 (Cronograma + Curva S com baseline) · E7 (Medição com gate) · E8 (RDO voz/foto) · E9 (Fornecedores+score / SST) · E10 (copiloto executivo + agentes) → depois a **camada Hub** (gestão-da-gestão/auditoria, que agrega os tenants).
+## 🧭 A régua (o que nunca muda)
+Retirar dores reais · a tela cura os 5 medos · honesto e justo (sem mentiras) · o Hub é juiz (auditoria + escrow) · nada se perde · asset-light · preditivo (o cérebro é o moat) · Click-and-Go/IA-first · visão curada por papel.

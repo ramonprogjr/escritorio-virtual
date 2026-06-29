@@ -41,7 +41,9 @@ export type HubAgenteFerramentaId =
   | "arq_programa_item"
   // ── A1: Aprovação do cliente (escrita crítica) ──
   | "arq_enviar_aprovacao"
-  | "arq_registrar_aprovacao";
+  | "arq_registrar_aprovacao"
+  // ── A2: Elo Gerar Obra (projeto → obra; escrita, gate dourado) ──
+  | "arq_gerar_obra";
 
 export type HubAgenteFerramentaCatalogo = {
   id: HubAgenteFerramentaId;
@@ -912,6 +914,34 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── A2: Elo Gerar Obra (projeto → obra) ─────────────────────────────────────
+  {
+    id: "arq_gerar_obra",
+    categoria: "arquitetura",
+    titulo: "Gerar obra do projeto",
+    descricao:
+      "Cria a obra de engenharia a partir de um projeto ENTREGUE/APROVADO, herdando título, tipo, cliente, área e negócio, e vincula projeto↔obra. Idempotente (1 obra por projeto). Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_gerar_obra",
+      description:
+        "Gera a obra de engenharia a partir de um projeto de arquitetura. Identifique o projeto por projeto_id (use o da tela) OU por título. O projeto precisa estar ENTREGUE ou com aprovação APROVADA — senão o sistema avisa. Se o projeto JÁ tem obra, devolve a existente (não duplica). A obra herda título, cliente, área e negócio; o tipo_obra é derivado da tipologia (pode sobrepor). Só propõe — o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          projeto_id: { type: "string", description: "ID do projeto (use o da tela se houver)." },
+          titulo: { type: "string", description: "Nome do projeto, se não tiver o id (resolve por título, tenant-scoped)." },
+          tipo_obra: {
+            type: "string",
+            enum: ["construcao", "reforma", "servico", "manutencao", "consultoria", "projeto", "assistencia"],
+            description: "Sobrepõe o tipo derivado da tipologia (opcional).",
+          },
+          nome_obra: { type: "string", description: "Nome da obra, se diferente do título do projeto (opcional)." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
 ] as const;
 
 const IDS = new Set(HUB_AGENTE_FERRAMENTAS_CATALOGO.map((t) => t.id));
@@ -1040,6 +1070,7 @@ export function mergeUsoFerramentasComPadrao(
     arq_programa_item: false,
     arq_enviar_aprovacao: false,
     arq_registrar_aprovacao: false,
+    arq_gerar_obra: false,
   };
   for (const id of Object.keys(base) as HubAgenteFerramentaId[]) {
     if (coalesceFerramentaBool(uso[id]) === true) base[id] = true;
@@ -1106,4 +1137,5 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   arq_programa_item: "escrita",
   arq_enviar_aprovacao: "escrita",
   arq_registrar_aprovacao: "escrita",
+  arq_gerar_obra: "escrita",
 };

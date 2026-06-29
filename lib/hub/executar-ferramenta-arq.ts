@@ -30,6 +30,10 @@ import {
   projetoDoTenant as projetoDoTenantDb,
   recalcularAgregadoProjeto,
 } from "@/lib/crm/aprovacao-projeto-db";
+import { TIPOS_OBRA, mapTipologiaParaTipoObra } from "@/lib/obras/eap-presets";
+import { criarObraComEAP } from "@/lib/obras/criar-obra-com-eap";
+
+const TIPOS_OBRA_VALIDOS = new Set<string>(TIPOS_OBRA.map((t) => t.slug));
 
 type ArqCtx = { tenantId?: string };
 
@@ -39,7 +43,8 @@ export type ArqToolName =
   | "arq_mover_estagio"
   | "arq_programa_item"
   | "arq_enviar_aprovacao"
-  | "arq_registrar_aprovacao";
+  | "arq_registrar_aprovacao"
+  | "arq_gerar_obra";
 
 async function gerarCodigo(supabase: SupabaseClient, tenant: string): Promise<string> {
   try {
@@ -391,6 +396,110 @@ export async function executarFerramentaArq(
           ? "Todos os entregáveis aprovados. Quer mover o projeto para “Entregue”?"
           : undefined;
       return JSON.stringify({ ok: true, entregavel: upd.data, decisao, aprovacao_projeto: agregado, sugestao });
+    }
+
+    case "arq_gerar_obra": {
+      // Resolve o projeto por id (preferido) OU por título (ILIKE, tenant-scoped).
+      const projetoId = typeof args.projeto_id === "string" ? args.projeto_id.trim() : "";
+      const tituloBusca = typeof args.titulo === "string" ? args.titulo.trim() : "";
+
+      const SELECT_PROJ =
+        "id, codigo, titulo, estagio, status, tipologia, area_m2, cliente_pessoa_id, cliente_empresa_id, cliente_nome, aprovacao_status, negocio_id, obra_id";
+
+      let proj: Record<string, unknown> | null = null;
+      if (projetoId) {
+        const { data } = await supabase
+          .from("hub_projetos")
+          .select(SELECT_PROJ)
+          .eq("id", projetoId)
+          .eq("tenant_id", tenant)
+          .maybeSingle();
+        proj = (data as Record<string, unknown> | null) ?? null;
+        if (!proj) return JSON.stringify({ erro: "projeto_nao_encontrado", projeto_id: projetoId });
+      } else if (tituloBusca) {
+        const { data } = await supabase
+          .from("hub_projetos")
+          .select(SELECT_PROJ)
+          .eq("tenant_id", tenant)
+          .ilike("titulo", `%${tituloBusca}%`)
+          .order("criado_em", { ascending: false })
+          .limit(6);
+        const candidatos = (data ?? []) as Record<string, unknown>[];
+        if (candidatos.length === 0) {
+          return JSON.stringify({ erro: "projeto_nao_encontrado", nota: `Não encontrei projeto com "${tituloBusca}".` });
+        }
+        if (candidatos.length > 1) {
+          return JSON.stringify({
+            erro: "varios_projetos",
+            nota: "Há mais de um projeto com esse nome — qual deles?",
+            candidatos: candidatos.map((c) => ({ id: c.id, codigo: c.codigo, titulo: c.titulo, cliente: c.cliente_nome })),
+          });
+        }
+        proj = candidatos[0];
+      } else {
+        return JSON.stringify({ erro: "projeto_ausente", nota: "Informe o projeto (abra a ficha ou diga o nome)." });
+      }
+
+      // Guard 1 (idempotência — o lock): já vinculado → devolve a obra, não cria.
+      const obraIdExistente = typeof proj.obra_id === "string" && proj.obra_id ? proj.obra_id : null;
+      if (obraIdExistente) {
+        return JSON.stringify({
+          ok: true,
+          ja_vinculada: true,
+          obra_id: obraIdExistente,
+          nota: `O projeto ${proj.titulo ?? ""} já tem uma obra vinculada. Quer abrir?`,
+        });
+      }
+
+      // Guard 2 (gate): entregue OU aprovado.
+      const estagioProj = String(proj.estagio ?? proj.status ?? "").trim();
+      const aprovProj = String(proj.aprovacao_status ?? "").trim();
+      if (estagioProj !== "entregue" && aprovProj !== "aprovado") {
+        return JSON.stringify({
+          erro: "projeto_nao_entregue",
+          estagio: estagioProj,
+          nota: `O projeto está em "${estagioProj || "andamento"}". Entregue/aprove primeiro para gerar a obra.`,
+        });
+      }
+
+      // Mapeia projeto → obra (tipo override opcional, senão derivado da tipologia).
+      const tipoOverride =
+        typeof args.tipo_obra === "string" && TIPOS_OBRA_VALIDOS.has(args.tipo_obra) ? args.tipo_obra : null;
+      const tipoObra = tipoOverride ?? mapTipologiaParaTipoObra(proj.tipologia as string | null | undefined);
+      const nomeObra =
+        typeof args.nome_obra === "string" && args.nome_obra.trim()
+          ? args.nome_obra.trim()
+          : String(proj.titulo ?? "").trim() || `Obra — ${proj.codigo ?? "projeto"}`;
+      const areaM2 = typeof proj.area_m2 === "number" && Number.isFinite(proj.area_m2) ? proj.area_m2 : null;
+
+      const criada = await criarObraComEAP(supabase, tenant, {
+        titulo: nomeObra,
+        tipo_obra: tipoObra,
+        area_total_m2: areaM2,
+        cliente_pessoa_id: (proj.cliente_pessoa_id as string | null) ?? null,
+        cliente_empresa_id: (proj.cliente_empresa_id as string | null) ?? null,
+        negocio_id: (proj.negocio_id as string | null) ?? null,
+      });
+      if (!criada.ok) return JSON.stringify({ erro: "supabase", detalhe: criada.erro });
+
+      const obraId = String(criada.obra.id);
+      // Grava o elo de volta (tenant-scoped). Falha não destrói a obra — sinaliza para retry.
+      const { error: patchErr } = await supabase
+        .from("hub_projetos")
+        .update({ obra_id: obraId, atualizado_em: new Date().toISOString() })
+        .eq("id", String(proj.id))
+        .eq("tenant_id", tenant);
+
+      return JSON.stringify({
+        ok: true,
+        obra: criada.obra,
+        obra_id: obraId,
+        frentes_criadas: criada.frentes_criadas,
+        tipo_obra: tipoObra,
+        elo_ok: !patchErr,
+        ...(patchErr ? { aviso: "Obra criada; o vínculo ao projeto falhou — tente de novo para revincular." } : {}),
+        ...(patchErr ? { detalhe_patch: patchErr.message } : {}),
+      });
     }
 
     default:

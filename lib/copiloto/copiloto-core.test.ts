@@ -46,7 +46,7 @@ describe("copiloto-core — gate de nível de acesso", () => {
 });
 
 describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
-  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 2 de item (E2) + 2 de bloqueio (E3) + 1 de SC (E5) + 3 de arquitetura (A0) + 2 de aprovação (A1)", () => {
+  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 2 de item (E2) + 2 de bloqueio (E3) + 1 de SC (E5) + 3 de arquitetura (A0) + 2 de aprovação (A1) + 1 de gerar obra (A2)", () => {
     expect(COPILOTO_FERRAMENTAS_ESCRITA_FASE3).toEqual([
       "hub_registar_nota_lead",
       "hub_atualizar_lead",
@@ -68,6 +68,8 @@ describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
       // A1 — aprovação do cliente (operam sobre projeto_id/fase_id, não sobre lead)
       "arq_enviar_aprovacao",
       "arq_registrar_aprovacao",
+      // A2 — elo Gerar Obra (opera sobre projeto_id, não sobre lead)
+      "arq_gerar_obra",
     ]);
   });
 
@@ -107,6 +109,12 @@ describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
     expect(ferramentaExecutavel("arq_registrar_aprovacao")).toBe(true);
     expect(escritaSemLead("arq_enviar_aprovacao")).toBe(true);
     expect(escritaSemLead("arq_registrar_aprovacao")).toBe(true);
+  });
+
+  it("gerar obra (A2) é executável, é escrita e dispensa lead aberto", () => {
+    expect(ferramentaExecutavel("arq_gerar_obra")).toBe(true);
+    expect(escritaSemLead("arq_gerar_obra")).toBe(true);
+    expect(nivelDaFerramenta("arq_gerar_obra")).toBe("escrita");
   });
 
   it("leitura é executável", () => {
