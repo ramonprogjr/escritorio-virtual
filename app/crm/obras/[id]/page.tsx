@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { ObraItensSecao } from "@/components/crm/obras/ObraItensSecao";
 import { ObraComprasEstoqueSecao } from "@/components/crm/obras/ObraComprasEstoqueSecao";
+import { ObraFinanceiroSecao } from "@/components/crm/obras/ObraFinanceiroSecao";
 
 type ObraPainel = {
   id: string;
@@ -20,7 +21,7 @@ const BORDA = "#1d3a2c";
 const BG_CARD = "#0f1d16";
 const DOURADO = "#c9a24a";
 
-type Aba = "painel" | "itens" | "compras";
+type Aba = "painel" | "itens" | "compras" | "financeiro";
 
 export default function ObraPainelPage() {
   const { id } = useParams<{ id: string }>();
@@ -75,6 +76,7 @@ export default function ObraPainelPage() {
         {([
           { id: "itens", rotulo: "Itens & Avanço" },
           { id: "compras", rotulo: "Compras & Estoque" },
+          { id: "financeiro", rotulo: "Financeiro" },
           { id: "painel", rotulo: "Painel" },
         ] as const).map(({ id: tabId, rotulo }) => {
           const ativo = aba === tabId;
@@ -106,6 +108,8 @@ export default function ObraPainelPage() {
         <ObraItensSecao obraId={id} />
       ) : aba === "compras" ? (
         <ObraComprasEstoqueSecao obraId={id} />
+      ) : aba === "financeiro" ? (
+        <ObraFinanceiroSecao obraId={id} />
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           <section style={{ background: BG_CARD, borderRadius: 10, padding: 16, border: `1px solid ${BORDA}` }}>

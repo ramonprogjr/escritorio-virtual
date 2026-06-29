@@ -2,6 +2,14 @@
 
 > Respostas do dono (eng. civil + corretor) às perguntas do Portal do Cliente. **Reescreve o financeiro (E6) e o Portal do Cliente.** Ver [[portal-cliente-medos-cura]].
 
+## ⭐ ESCROW = BANCARIZAÇÃO / BaaS (refinamento do dono, 29/jun)
+O escrow vai **conectar a um serviço de bancarização (Banking-as-a-Service)**. Modelo:
+- **O dinheiro fica na conta da INSTITUIÇÃO financeira** (o BaaS parceiro), **não na Obra10** — regulado, compliant, **asset-light** (não custodiamos dinheiro nem viramos instituição financeira).
+- **A Obra10 só dá o OK** para **prosseguir com os pagamentos** ou aplicar **retenções**. Somos a camada de **orquestração/aprovação**, não de custódia.
+- O gatilho do OK = a **aprovação dupla** (arquitetura + Hub) do E6 → chama a API do BaaS para **liberar** (pagar) ou **reter**.
+- **Implantação:** o E6 (MVP) já modela o escrow como **extrato append-only + `provedor='interno'`** (virtual/contábil — entrega a confiança e o fluxo sem o banco). A **integração BaaS é a fase 2**: trocar `provedor` para o parceiro, mapear conta/movimentos para a API, e o OK da dupla-aprovação vira a chamada de release/retain. O modelo de dados (escrow_contas/movimentos) já está pronto pra isso.
+- **Pendência p/ o dono:** escolher o parceiro de bancarização (BaaS) + KYC/compliance + contas-escrow por obra/negócio.
+
 ## 1. DOIS modelos de execução (definidos no FECHAMENTO do contrato — IMUTÁVEIS)
 O que o cliente vê no financeiro **DEPENDE do tipo de contrato**. São dois formatos que **não podem ser alterados** depois:
 

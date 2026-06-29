@@ -3,6 +3,7 @@
 // Tudo que precisa de humano chega aqui como card completo
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
+import { defaultTenantId } from "@/lib/tenant-default";
 
 function supabase() {
   return createClient(
@@ -21,7 +22,11 @@ export type TipoAprovacao =
   | "contrato"
   | "financeiro"
   | "atendimento_critico"
-  | "cotacao_fornecedor";
+  | "cotacao_fornecedor"
+  // E6 (dinheiro) — gate dourado: orçamento da frente + as 2 chaves do pagamento.
+  | "orcamento_frente"
+  | "pagamento_obra_arq"
+  | "pagamento_obra_hub";
 
 export interface CardAprovacao {
   id: string;
@@ -50,12 +55,22 @@ export interface AcaoCard {
 }
 
 // ── BUSCAR APROVAÇÕES PENDENTES ───────────────────────────────
-export async function buscarAprovacoesPendentes(): Promise<CardAprovacao[]> {
+// SEGURANÇA (F0/E6): filtro de tenant OBRIGATÓRIO. supabase() usa service_role e BYPASSA RLS,
+// então o `.eq("tenant_id")` no código é a ÚNICA barreira contra um tenant ver/aprovar a fila
+// de outro. `tenantId` vem SEMPRE da sessão do chamador (nunca do body/header). Sem ele, a função
+// recusa-se a vazar tudo: devolve [] (fail-closed), em vez de varrer a tabela inteira.
+export async function buscarAprovacoesPendentes(
+  tenantId?: string | null
+): Promise<CardAprovacao[]> {
+  const tenant = (tenantId ?? "").trim();
+  if (!tenant) return []; // fail-closed: sem tenant, nada de fila global
+
   const db = supabase();
 
   const { data } = await db
     .from("hub_aprovacoes")
     .select("*")
+    .eq("tenant_id", tenant)
     .eq("status", "pendente")
     .order("criado_em", { ascending: false });
 
@@ -120,6 +135,22 @@ function montarCard(item: Record<string, unknown>): CardAprovacao {
       { label: "Ver propostas", tipo: "ver_mais", estilo: "neutro" },
       { label: "Recusar", tipo: "rejeitar", estilo: "perigo" },
     ],
+    // E6 — gate dourado do dinheiro (humano aprova; a IA nunca chega aqui).
+    orcamento_frente: [
+      { label: "Aprovar orçamento", tipo: "aprovar", estilo: "primario" },
+      { label: "Ver itens", tipo: "ver_mais", estilo: "neutro" },
+      { label: "Recusar", tipo: "rejeitar", estilo: "perigo" },
+    ],
+    pagamento_obra_arq: [
+      { label: "Autorizar (Arquitetura)", tipo: "aprovar", estilo: "primario" },
+      { label: "Ver pagamento", tipo: "ver_mais", estilo: "neutro" },
+      { label: "Recusar", tipo: "rejeitar", estilo: "perigo" },
+    ],
+    pagamento_obra_hub: [
+      { label: "Autorizar (Hub)", tipo: "aprovar", estilo: "primario" },
+      { label: "Ver pagamento", tipo: "ver_mais", estilo: "neutro" },
+      { label: "Recusar", tipo: "rejeitar", estilo: "perigo" },
+    ],
   };
 
   return {
@@ -147,21 +178,30 @@ function montarCard(item: Record<string, unknown>): CardAprovacao {
 }
 
 // ── APROVAR ───────────────────────────────────────────────────
+// SEGURANÇA (F0/E6): `tenantId` da sessão escopa a leitura E o update. O escrow leva DINHEIRO por
+// este gate — sem o filtro, um tenant aprovaria a aprovação de outro (service_role bypassa RLS).
+// Fail-closed: sem tenant → recusa. O update reaplica `.eq("tenant_id")` (defesa em profundidade:
+// nunca confia só na leitura).
 export async function aprovar(
   aprovacaoId: string,
-  observacao?: string
+  observacao?: string,
+  tenantId?: string | null
 ): Promise<{ sucesso: boolean; erro?: string }> {
+  const tenant = (tenantId ?? "").trim();
+  if (!tenant) return { sucesso: false, erro: "Tenant ausente" };
+
   const db = supabase();
 
   const { data: aprovacao } = await db
     .from("hub_aprovacoes")
     .select("*")
     .eq("id", aprovacaoId)
+    .eq("tenant_id", tenant)
     .single();
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
 
-  // Atualiza status
+  // Atualiza status (reaplica o filtro de tenant no UPDATE — defesa em profundidade)
   await db
     .from("hub_aprovacoes")
     .update({
@@ -170,7 +210,8 @@ export async function aprovar(
       aprovado_em: new Date().toISOString(),
       observacao,
     })
-    .eq("id", aprovacaoId);
+    .eq("id", aprovacaoId)
+    .eq("tenant_id", tenant);
 
   // Registra no log de decisões
   await db.from("hub_decision_logs").insert({
@@ -183,23 +224,29 @@ export async function aprovar(
     resultado: "aprovado",
   });
 
-  // Executa a ação aprovada
-  await executarAcaoAprovada(aprovacao);
+  // Executa a ação aprovada (cascata do gate dourado — escopada ao tenant da sessão)
+  await executarAcaoAprovada(aprovacao, tenant);
 
   return { sucesso: true };
 }
 
 // ── REJEITAR ──────────────────────────────────────────────────
+// SEGURANÇA (F0/E6): mesmo escopo de tenant da aprovação — leitura e update filtrados.
 export async function rejeitar(
   aprovacaoId: string,
-  motivo: string
+  motivo: string,
+  tenantId?: string | null
 ): Promise<{ sucesso: boolean; erro?: string }> {
+  const tenant = (tenantId ?? "").trim();
+  if (!tenant) return { sucesso: false, erro: "Tenant ausente" };
+
   const db = supabase();
 
   const { data: aprovacao } = await db
     .from("hub_aprovacoes")
     .select("*")
     .eq("id", aprovacaoId)
+    .eq("tenant_id", tenant)
     .single();
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
@@ -212,7 +259,8 @@ export async function rejeitar(
       rejeitado_em: new Date().toISOString(),
       motivo_rejeicao: motivo,
     })
-    .eq("id", aprovacaoId);
+    .eq("id", aprovacaoId)
+    .eq("tenant_id", tenant);
 
   const dados = (aprovacao.dados as Record<string, unknown>) || {};
   if (aprovacao.tipo === "cotacao_fornecedor" && dados.pedido_id) {
@@ -247,6 +295,9 @@ export async function rejeitar(
 }
 
 // ── CRIAR APROVAÇÃO ───────────────────────────────────────────
+// SEGURANÇA/FILA (A1): grava SEMPRE `tenant_id`. A fila (buscarAprovacoesPendentes) filtra por tenant —
+// sem ele, a aprovação criada pela IA (engine.ts/ml.ts) nasce INVISÍVEL ao humano. `tenantId` vem do
+// caller; quando ausente (crons sem sessão) cai no defaultTenantId() — nunca grava sem tenant.
 export async function criarAprovacao(dados: {
   tipo: TipoAprovacao;
   agenteSlug: string;
@@ -259,13 +310,16 @@ export async function criarAprovacao(dados: {
   valorEnvolvido?: number;
   prazo?: string;
   dados?: Record<string, unknown>;
+  tenantId?: string | null;
 }): Promise<string | null> {
   const db = supabase();
+  const tenant = (dados.tenantId ?? "").trim() || defaultTenantId();
 
   const { data, error } = await db
     .from("hub_aprovacoes")
     .insert({
       tipo: dados.tipo,
+      tenant_id: tenant,
       agente_slug: dados.agenteSlug,
       descricao: dados.descricao,
       motivo: dados.motivo,
@@ -290,7 +344,14 @@ export async function criarAprovacao(dados: {
 }
 
 // ── EXECUTAR AÇÃO APROVADA ────────────────────────────────────
-async function executarAcaoAprovada(aprovacao: Record<string, unknown>): Promise<void> {
+// SEGURANÇA/DINHEIRO (C1/E6): a cascata do gate dourado (escrow) executa AQUI — este é o único ponto
+// que o caminho real da UI percorre (page.tsx → /api/hub/aprovacoes/[id] → aprovar → aqui). As RPCs
+// recebem o `tenantId` da SESSÃO (já validado em aprovar()) como guard explícito (service_role bypassa
+// RLS). A IA nunca chega a aprovar dinheiro: estes branches só rodam quando um HUMANO aprovou o card.
+async function executarAcaoAprovada(
+  aprovacao: Record<string, unknown>,
+  tenantId: string
+): Promise<void> {
   const dados = aprovacao.dados as Record<string, unknown> || {};
   const tipo = aprovacao.tipo as string;
 
@@ -302,6 +363,33 @@ async function executarAcaoAprovada(aprovacao: Record<string, unknown>): Promise
       .from("hub_cotacoes_pedidos")
       .update({ status: "aprovado", atualizado_em: new Date().toISOString() })
       .eq("id", dados.pedido_id as string);
+  }
+
+  // ── E6: cascata do gate dourado (espelha /api/aprovacoes/[id]) — só com tenant da sessão ──
+  // GATE 1: orçamento da frente aprovado → libera (bloqueado→liberado) os pagamentos vinculados.
+  if (tipo === "orcamento_frente") {
+    const orcamentoId = dados.orcamento_id as string | undefined;
+    if (orcamentoId && tenantId) {
+      const db = supabase();
+      await db.rpc("rpc_aprovar_orcamento_frente", {
+        p_orcamento_id: orcamentoId,
+        p_aprovacao_id: aprovacao.id as string,
+        p_tenant_id: tenantId,
+      });
+    }
+  }
+
+  // GATE 2 (qualquer das 2 chaves aprovada): tenta liberar o escrow — a RPC só libera se AMBAS aprovadas
+  // (fail-closed). Disparar nas duas chaves é seguro: a primeira não move o dinheiro, a segunda libera.
+  if (tipo === "pagamento_obra_arq" || tipo === "pagamento_obra_hub") {
+    const pagamentoId = dados.pagamento_id as string | undefined;
+    if (pagamentoId && tenantId) {
+      const db = supabase();
+      await db.rpc("rpc_liberar_escrow", {
+        p_pagamento_id: pagamentoId,
+        p_tenant_id: tenantId,
+      });
+    }
   }
 
   // Aqui cada tipo de aprovação tem sua execução específica

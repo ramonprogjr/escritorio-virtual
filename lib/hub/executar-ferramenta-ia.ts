@@ -18,6 +18,7 @@ import { executarFerramentaObra } from "@/lib/hub/executar-ferramenta-obra";
 import { executarFerramentaObraItem } from "@/lib/hub/executar-ferramenta-obra-itens";
 import { executarFerramentaObraRestricao } from "@/lib/hub/executar-ferramenta-obra-restricoes";
 import { executarFerramentaEstoque } from "@/lib/hub/executar-ferramenta-estoque";
+import { executarFerramentaFinanceiro } from "@/lib/hub/executar-ferramenta-financeiro";
 import { executarFerramentaArq } from "@/lib/hub/executar-ferramenta-arq";
 
 export type FerramentaHubContexto = {
@@ -565,6 +566,12 @@ async function executarFerramentaHubBuiltin(
     case "hub_obra_sc_criar":
     case "hub_obra_estoque_consultar":
       return executarFerramentaEstoque(toolName, args, ctx, supabase);
+
+    // ── E6: Financeiro (SEM gate canal_whatsapp — copiloto global). Escrita só PREPARA: a aprovação
+    //    dupla (arquitetura + Hub) e a liberação do escrow são decisão humana na tela, nunca por voz. ──
+    case "hub_obra_financeiro_resumo":
+    case "hub_obra_pagamento_preparar":
+      return executarFerramentaFinanceiro(toolName, args, ctx, supabase);
 
     // ── A0: Arquitetura / Projeto (SEM gate canal_whatsapp — copiloto global) ──
     case "arq_resumo":

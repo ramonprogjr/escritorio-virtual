@@ -25,11 +25,17 @@ export async function PATCH(
   };
 
   const supabase = db();
+  // SEGURANÇA (F0/E6): a aprovação é SEMPRE do tenant da sessão. service_role bypassa RLS, então o
+  // filtro de tenant no SELECT/UPDATE é a barreira contra aprovar a fila de outro (E6 leva dinheiro aqui).
   const { data: aprovacaoRow } = await supabase
     .from("hub_aprovacoes")
-    .select("tipo, dados")
+    .select("tipo, dados, obra_id")
     .eq("id", id)
+    .eq("tenant_id", ctx.tenantId)
     .single();
+  if (!aprovacaoRow) {
+    return NextResponse.json({ error: "Aprovação não encontrada" }, { status: 404 });
+  }
 
   const updates: Record<string, unknown> = {
     status,
@@ -45,7 +51,11 @@ export async function PATCH(
     if (observacao) updates.observacao = observacao;
   }
 
-  const { error } = await supabase.from("hub_aprovacoes").update(updates).eq("id", id);
+  const { error } = await supabase
+    .from("hub_aprovacoes")
+    .update(updates)
+    .eq("id", id)
+    .eq("tenant_id", ctx.tenantId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const dados = (aprovacaoRow?.dados as Record<string, unknown>) || {};
@@ -60,5 +70,36 @@ export async function PATCH(
       .eq("id", pedidoId);
   }
 
-  return NextResponse.json({ ok: true });
+  // ── E6: cascata do gate dourado (só quando APROVADO; a IA nunca chega aqui — humano aprova o dinheiro) ──
+  let escrow: Record<string, unknown> | undefined;
+  if (status === "aprovado") {
+    const tipo = aprovacaoRow.tipo as string;
+
+    // GATE 1: orçamento da frente aprovado → libera os pagamentos vinculados.
+    if (tipo === "orcamento_frente") {
+      const orcId = dados.orcamento_id as string | undefined;
+      if (orcId) {
+        const { data: rpc } = await supabase.rpc("rpc_aprovar_orcamento_frente", {
+          p_orcamento_id: orcId,
+          p_aprovacao_id: id,
+          p_tenant_id: ctx.tenantId,
+        });
+        escrow = { gate: "orcamento_frente", resultado: rpc };
+      }
+    }
+
+    // GATE 2 (qualquer das 2 chaves aprovada): tenta liberar o escrow — só vai se AMBAS aprovadas.
+    if (tipo === "pagamento_obra_arq" || tipo === "pagamento_obra_hub") {
+      const pagamentoId = dados.pagamento_id as string | undefined;
+      if (pagamentoId) {
+        const { data: rpc } = await supabase.rpc("rpc_liberar_escrow", {
+          p_pagamento_id: pagamentoId,
+          p_tenant_id: ctx.tenantId,
+        });
+        escrow = { gate: "pagamento_obra", resultado: rpc };
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, ...(escrow ? { escrow } : {}) });
 }
