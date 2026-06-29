@@ -13,8 +13,10 @@ import {
   TIPOS_OBRA,
   TIPOS_OBRA_PRINCIPAIS,
   getPresetPorTipo,
+  getPresetPorSegmento,
   type TipoObraSlug,
 } from "@/lib/obras/eap-presets";
+import { SEGMENTOS, type SegmentoSlug } from "@/lib/obras/taxonomia";
 
 type ClienteOpt = EntitySelectOption & { kind: "pessoa" | "empresa" };
 
@@ -53,6 +55,8 @@ export function NovaObraSideover({
   const [clienteValue, setClienteValue] = useState(""); // formato "pessoa:<id>" | "empresa:<id>"
   const [tipoObra, setTipoObra] = useState<TipoObraSlug>("reforma");
   const [mostrarOutrosTipos, setMostrarOutrosTipos] = useState(false);
+  // E0.5: segmento opcional (null = Geral → preset genérico do tipo, comportamento atual).
+  const [segmento, setSegmento] = useState<SegmentoSlug | null>(null);
   const [frentes, setFrentes] = useState<FrentePreview[]>([]);
   const [titulo, setTitulo] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -65,6 +69,7 @@ export function NovaObraSideover({
     setClienteValue("");
     setTipoObra("reforma");
     setMostrarOutrosTipos(false);
+    setSegmento(null);
     setTitulo(tituloSugerido?.trim() || "");
     setErro(null);
   }, [open, negocioId, tituloSugerido]);
@@ -107,17 +112,22 @@ export function NovaObraSideover({
     if (open && !negocioId) void carregarClientes();
   }, [open, negocioId, carregarClientes]);
 
-  // Pré-monta a EAP do preset quando o tipo muda (IA-first: já vem marcado).
+  // Preset efetivo: por segmento (se escolhido) ou genérico do tipo (Geral / comportamento atual).
+  const presetEfetivo = useMemo(
+    () => (segmento ? getPresetPorSegmento(segmento) : undefined) ?? getPresetPorTipo(tipoObra),
+    [segmento, tipoObra]
+  );
+
+  // Pré-monta a EAP do preset quando o tipo/segmento muda (IA-first: já vem marcado).
   useEffect(() => {
-    const preset = getPresetPorTipo(tipoObra);
     setFrentes(
-      (preset?.frentes ?? []).map((f) => ({
+      (presetEfetivo?.frentes ?? []).map((f) => ({
         disciplina_slug: f.disciplina_slug,
         nome: f.nome,
         on: true,
       }))
     );
-  }, [tipoObra]);
+  }, [presetEfetivo]);
 
   const clienteSelecionado = useMemo(
     () => clientes.find((c) => c.value === clienteValue) || null,
@@ -144,6 +154,8 @@ export function NovaObraSideover({
       // Se TODAS estiverem marcadas, mandamos a lista cheia — a API trata vazio/ausente como "todas".
       frentes_selecionadas: frentes.filter((f) => f.on).map((f) => f.disciplina_slug),
     };
+    // E0.5: só envia segmento quando escolhido (Geral = ausente = preset genérico, intocado).
+    if (segmento) payload.segmento = segmento;
     if (negocioId) payload.negocio_id = negocioId;
     if (kind === "pessoa" && id) payload.cliente_pessoa_id = id;
     if (kind === "empresa" && id) payload.cliente_empresa_id = id;
@@ -295,6 +307,49 @@ export function NovaObraSideover({
                   outros tipos ⌄
                 </button>
               )}
+
+              {/* E0.5 — Segmento (opcional): entrega ambientes típicos pré-distribuídos. */}
+              <div className="pt-1">
+                <label className="mb-1 block text-[11px] font-bold text-[#8b949e]">
+                  Segmento (opcional — a IA distribui por ambiente)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSegmento(null)}
+                    className="rounded-xl border px-3 py-2 text-sm font-bold"
+                    style={{
+                      borderColor: segmento === null ? DOURADO : "#1d3a2c",
+                      background: segmento === null ? "rgba(201,162,74,0.12)" : "#0a140f",
+                      color: segmento === null ? "#e6edf3" : "#8b949e",
+                    }}
+                  >
+                    Geral
+                  </button>
+                  {SEGMENTOS.map((s) => {
+                    const ativo = segmento === s.slug;
+                    return (
+                      <button
+                        key={s.slug}
+                        type="button"
+                        onClick={() => setSegmento(s.slug)}
+                        className="rounded-xl border px-3 py-2 text-sm font-bold"
+                        style={{
+                          borderColor: ativo ? DOURADO : "#1d3a2c",
+                          background: ativo ? "rgba(201,162,74,0.12)" : "#0a140f",
+                          color: ativo ? "#e6edf3" : "#8b949e",
+                        }}
+                      >
+                        <span className="mr-1" aria-hidden>
+                          {s.icone}
+                        </span>
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="pt-1">
                 <label className="mb-1 block text-[11px] font-bold text-[#8b949e]">
                   Nome da obra (opcional)
@@ -326,7 +381,8 @@ export function NovaObraSideover({
               </div>
               <p className="text-xs text-[#8b949e]">
                 A IA já montou a EAP ({frentesAtivas} frentes do preset{" "}
-                {getPresetPorTipo(tipoObra)?.nome ?? "—"}):
+                {presetEfetivo?.nome ?? "—"}
+                {segmento ? " · ambiente-first" : ""}):
               </p>
               <div className="flex flex-wrap gap-2">
                 {frentes.length === 0 ? (

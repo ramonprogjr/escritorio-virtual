@@ -1,7 +1,45 @@
 {
-  "geradoEm": "2026-06-29T13:16:00.891Z",
+  "geradoEm": "2026-06-29T13:41:36.282Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "35fe4f52b60a13e1d7f157c796feabfd58a3fe7b",
+      "hashCurto": "35fe4f5",
+      "mensagem": "A2 — elo \"Gerar Obra\" (projeto da Arquitetura → obra da Engenharia)",
+      "mensagemRaw": "feat(arq): A2 — elo \"Gerar Obra\" (projeto da Arquitetura → obra da Engenharia)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T13:16:51.000Z",
+      "hora": "10:16",
+      "arquivos": [
+        "app/api/crm/obras/route.ts",
+        "app/api/crm/projetos/[id]/gerar-obra/route.ts",
+        "app/crm/arquitetura/[id]/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/gerar-obra-sideover.tsx",
+        "docs/EAP-REFINADA-DESIGN.md",
+        "docs/ORCAMENTO-IA-DESIGN.md",
+        "docs/RELATORIO-NOITE.md",
+        "docs/VISAO-EAP-ORCAMENTO-IA-IMPLANTACAO.md",
+        "docs/insumos-do-dono/crm-cross-conta-visibilidade-permissao.md",
+        "docs/insumos-do-dono/eap-ambiente-disciplina-e-orcamento-ia.md",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-arq.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/obras/criar-obra-com-eap.ts",
+        "lib/obras/eap-presets.test.ts",
+        "lib/obras/eap-presets.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 2,
+        "components/crm": 2,
+        "outros": 11,
+        "lib/hub": 3
+      }
+    },
     {
       "hash": "91c1cab8a6213bab9da15a740e9449ade5cd0a32",
       "hashCurto": "91c1cab",

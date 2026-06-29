@@ -260,6 +260,10 @@ export type ItemObraRow = {
   disciplina_slug: string | null;
   area_codigo: string | null;
   area_label: string | null;
+  /** E0.5 (aditivo, opcional): ambiente desnorm. p/ o toggle ambiente-first. Ausente em itens legados. */
+  ambiente?: string | null;
+  /** E0.5 (aditivo, opcional): vínculo à atividade-padrão da taxonomia. */
+  taxonomia_id?: string | null;
   tipo: TipoItem;
   data_inicio: string | null;
   data_termino: string | null;
