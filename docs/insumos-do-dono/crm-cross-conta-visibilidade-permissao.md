@@ -35,5 +35,11 @@ Diretriz do dono: ele precisa **enxergar isso fácil na tela do Hub**. Os **dash
 - Para a visibilidade cross-conta: o Hub vê **todos os negócios/leads/envolvimentos** de forma cristalina — quem é dono, quem está envolvido, em que mercado, em que etapa, com a cor do mercado de origem; filtrar por mercado/escritório/etapa/saúde; ver o avanço da rede num olhar.
 - **Régua:** clareza > densidade; cada número acionável; nada de tabela-bruta como tela (relatórios densos só em `/crm/relatorios`); o dashboard responde a pergunta antes de o dono formular. Liga ao blueprint de métricas já existente ([[central-performance-metricas]], docs/CENTRAL-PERFORMANCE-METRICAS.md) — agora elevado a "absurdamente bom".
 
-## 7. Pendência: MESA REDONDA quando chegar a hora
+## 7. ⭐ MESMO CORE, telas DIFERENTES por contexto e por persona (princípio, dono 29/jun)
+- **Mesmo CORE (a coluna):** negócio/funil/copiloto/engine/kanban/RBAC/multi-tenant/elos — reusado por todos.
+- **Telas diferentes por CONTEXTO:** **Projetos (Arquitetura)** ≠ **Obras (Engenharia)** — mesmo core, JOBs e interfaces diferentes (projeto = briefing/programa/aprovações/entregáveis, leve; obra = EAP/cronograma/medição/compras/RDO/financeiro, executivo).
+- **Telas diferentes por PERSONA:** **Hub** (audita/controla/2ª chave/distribuição — não executa) ≠ **executor** (engenharia/obra opera) ≠ **prestador de serviço** (só o seu escopo, sem ver a obra inteira nem a margem).
+- **Implicação de build:** nunca uma tela genérica "serve todos". Cada contexto/persona ganha a sua interface curada sobre o mesmo motor (anti-poluição). Vale p/ Portal, Marketplace, Hub, Tarefas, Aprovações.
+
+## 8. Pendência: MESA REDONDA quando chegar a hora
 O dono pediu **mesa redonda específica** para este ponto quando for construir (provável: ao avançar a camada Plataforma/Hub do masterplan). Pontos a fechar: o que é "atribuir informações" (campos? anexos?), notificação ao dono quando o envolvido comenta, como o envolvimento é criado (quem adiciona quem ao negócio), e a herança de cor por mercado.

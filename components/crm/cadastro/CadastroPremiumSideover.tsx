@@ -69,6 +69,7 @@ export function CadastroPremiumSideover({
           style={{
             borderBottom: "1px solid #2d394b",
             padding: 16,
+            paddingTop: "max(16px, env(safe-area-inset-top))",
             background: "linear-gradient(180deg,#121a26 0%, #101722 100%)",
             flexShrink: 0,
           }}
@@ -127,6 +128,7 @@ export function CadastroPremiumSideover({
             style={{
               flexShrink: 0,
               padding: "14px 20px",
+              paddingBottom: "max(14px, env(safe-area-inset-bottom))",
               borderTop: "1px solid #2d394b",
               display: "flex",
               gap: 10,
