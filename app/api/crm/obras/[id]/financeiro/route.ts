@@ -307,6 +307,26 @@ async function criarOrcamento(
   if (!titulo) return NextResponse.json({ error: "Informe o título do orçamento." }, { status: 400 });
 
   const itensRaw = Array.isArray(body.itens) ? (body.itens as OrcamentoItemEntrada[]) : [];
+
+  // R2 (ESTRUTURA-UNIFICADA §7 Fase 0): todo item de orçamento NASCE ligado ao item de escopo (E2).
+  // Sem `item_id`, a linha some da vw_hub_obra_compatibilizacao (`WHERE oi.item_id IS NOT NULL`) e o
+  // gate de cobertura mente para o gestor (bug em produção). Falha cedo, clara: qualquer linha com
+  // descrição mas sem item_id válido → 400. (Linha sem descrição é ignorada adiante, como antes.)
+  const temLinhaSemItem = itensRaw.some((i) => {
+    const desc = (i.descricao ?? "").trim();
+    const itemId = typeof i.item_id === "string" ? i.item_id.trim() : "";
+    return desc.length > 0 && itemId.length === 0;
+  });
+  if (temLinhaSemItem) {
+    return NextResponse.json(
+      {
+        error: "Selecione o item de escopo antes de lançar custo.",
+        codigo: "item_escopo_obrigatorio",
+      },
+      { status: 400 }
+    );
+  }
+
   // Status do caller é restrito a rascunho/enviado — aprovar é gate humano (cascata de aprovação).
   const statusEntrada = typeof body.status === "string" ? body.status.trim() : "rascunho";
   const status = statusEntrada === "enviado" ? "enviado" : "rascunho";

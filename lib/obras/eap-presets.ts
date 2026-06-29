@@ -512,6 +512,33 @@ export function mapTipologiaParaTipoObra(tipologia: string | null | undefined): 
 }
 
 /**
+ * Mapa tipologia (Arquitetura, A0 — texto livre) → SEGMENTO (Engenharia, E0.5 — CHECK de 5).
+ * R1 (ESTRUTURA-UNIFICADA §7 Fase 0): "Gerar Obra" precisa passar um `segmento` válido para que
+ * `criarObraComEAP` rode `semearItensPorAmbiente` (a obra nasce com a árvore ambiente→item, não oca).
+ *
+ * Decisão de produto (heurística, fiel ao dono): só mapeia o que tem preset por segmento
+ * (EAP_PRESETS_SEGMENTO = residencial/comercial/corporativo/clinicas/pdv). Tipologias sem
+ * correspondência (`interiores`, `reforma`, `paisagismo`, desconhecida) → `null`: a obra cai no
+ * caminho genérico por tipo_obra (frentes sem ambientes), exatamente como antes do R1. Nunca força
+ * um segmento errado — null é o degrade seguro. O humano ainda pode escolher o segmento depois.
+ */
+const TIPOLOGIA_PARA_SEGMENTO: Record<string, SegmentoSlug> = {
+  residencial: "residencial",
+  comercial: "comercial",
+  corporativo: "corporativo",
+  clinicas: "clinicas",
+  clinica: "clinicas",
+  pdv: "pdv",
+};
+
+export function mapTipologiaParaSegmento(
+  tipologia: string | null | undefined
+): SegmentoSlug | null {
+  const slug = (tipologia ?? "").trim().toLowerCase();
+  return TIPOLOGIA_PARA_SEGMENTO[slug] ?? null;
+}
+
+/**
  * Fallback de UI quando a migração E0 não foi aplicada (espelha ESTAGIOS_FALLBACK_UI).
  * Lista plana das frentes do preset Reforma — a tela mostra "personalização ainda não
  * ativa" mas já exibe a estrutura esperada, sem tela morta.

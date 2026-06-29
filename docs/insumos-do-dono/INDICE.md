@@ -16,7 +16,8 @@
 
 ## Engenharia (gestão de obras) — base técnica
 - **[especificacao-plataforma-gestao-obras.md](especificacao-plataforma-gestao-obras.md)** — a spec canônica (Obra=central, EAP=espinha, IA-first, humano aprova crítico).
-- **[ANALISE-planilha-gestao-obra.md](ANALISE-planilha-gestao-obra.md)** — a planilha REAL do dono (Consulado Itália) analisada: EAP disciplina×andar, Situação×Andamento, bloqueios, cascatas. + `planilha-DUMP.md`, `planilha-gestao-obra-2906.xlsx`.
+- **[ANALISE-planilha-gestao-obra.md](ANALISE-planilha-gestao-obra.md)** — a planilha REAL de GESTÃO do dono (Consulado Itália) analisada: EAP disciplina×andar, Situação×Andamento, bloqueios, cascatas. + `planilha-DUMP.md`, `planilha-gestao-obra-2906.xlsx`.
+- **[ANALISE-planilha-orcamento-dono.md](ANALISE-planilha-orcamento-dono.md)** — a planilha REAL de ORÇAMENTO do dono (reforma residencial) analisada: hierarquia **ambiente → disciplina/frente → item**; duas zonas (custo K–O / orçado E–I) com **fator BDI** `$J$7`=1.06; `total=(locação+material+MO)×BDI×quant`; **a planilha É o escopo** (quant 0 = aditivo); GAP vs nosso schema (ambiente não é nível da EAP; E2/E6 paralelos; falta BDI global, custo_total, status_escopo). Espelha a [estrutura unificada](estrutura-unificada-orcamento-cronograma-escopo.md).
 
 ## Como isto vira produto
 Plano por blocos: **[../PLANO-BLOCOS-ARQ-ENG.md](../PLANO-BLOCOS-ARQ-ENG.md)** · Designs auditados por bloco: `docs/E*-DESIGN.md` / `docs/A*-DESIGN.md` · Progresso da noite: **[../RELATORIO-NOITE.md](../RELATORIO-NOITE.md)**.

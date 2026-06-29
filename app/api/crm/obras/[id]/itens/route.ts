@@ -208,8 +208,13 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   // E0.5 (aditivo): ambiente + taxonomia_id só entram se vierem no body. Em schema sem essas
   // colunas (migração E0.5 pendente), o insert falha com missing-column → retry sem elas (abaixo).
+  // R3 (ESTRUTURA-UNIFICADA §7 Fase 0): CANONICALIZA `ambiente` (trim + lowercase) no write — sem
+  // lista fechada — para "Sala"/"sala "/"SALA" agregarem no MESMO subtotal por ambiente (a fonte da
+  // fragmentação dos subtotais). Toda escrita em hub_obra_itens.ambiente passa por aqui.
   const camposE0b: Record<string, unknown> = {};
-  if (typeof body.ambiente === "string" && body.ambiente.trim()) camposE0b.ambiente = body.ambiente.trim();
+  if (typeof body.ambiente === "string" && body.ambiente.trim()) {
+    camposE0b.ambiente = body.ambiente.trim().toLowerCase();
+  }
   if (typeof body.taxonomia_id === "string" && body.taxonomia_id.trim()) camposE0b.taxonomia_id = body.taxonomia_id.trim();
 
   let { data, error } = await supabase
