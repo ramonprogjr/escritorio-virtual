@@ -6,8 +6,39 @@ import {
   getPresetPorTipo,
   codigoFrenteFromNome,
   frentesDoPresetParaInsert,
+  mapTipologiaParaTipoObra,
   TIPOS_OBRA,
 } from "./eap-presets";
+
+describe("eap-presets — mapTipologiaParaTipoObra (A2)", () => {
+  it("mapeia os 6 slugs canônicos de tipologia", () => {
+    expect(mapTipologiaParaTipoObra("residencial")).toBe("construcao");
+    expect(mapTipologiaParaTipoObra("corporativo")).toBe("construcao");
+    expect(mapTipologiaParaTipoObra("interiores")).toBe("reforma");
+    expect(mapTipologiaParaTipoObra("reforma")).toBe("reforma");
+    expect(mapTipologiaParaTipoObra("comercial")).toBe("servico");
+    expect(mapTipologiaParaTipoObra("paisagismo")).toBe("servico");
+  });
+
+  it("é case-insensitive e tolera espaços", () => {
+    expect(mapTipologiaParaTipoObra("  Residencial  ")).toBe("construcao");
+    expect(mapTipologiaParaTipoObra("COMERCIAL")).toBe("servico");
+  });
+
+  it("default seguro 'reforma' para null/desconhecido (campo livre)", () => {
+    expect(mapTipologiaParaTipoObra(null)).toBe("reforma");
+    expect(mapTipologiaParaTipoObra(undefined)).toBe("reforma");
+    expect(mapTipologiaParaTipoObra("")).toBe("reforma");
+    expect(mapTipologiaParaTipoObra("loft futurista")).toBe("reforma");
+  });
+
+  it("o tipo derivado sempre tem preset de EAP", () => {
+    for (const slug of ["residencial", "corporativo", "interiores", "reforma", "comercial", "paisagismo", "xpto"]) {
+      const tipo = mapTipologiaParaTipoObra(slug);
+      expect(getPresetPorTipo(tipo)).toBeDefined();
+    }
+  });
+});
 
 describe("eap-presets — disciplinas e presets", () => {
   it("tem exatamente as 15 disciplinas reais da planilha", () => {

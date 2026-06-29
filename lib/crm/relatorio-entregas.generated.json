@@ -1,7 +1,51 @@
 {
-  "geradoEm": "2026-06-29T12:52:56.666Z",
+  "geradoEm": "2026-06-29T13:16:00.891Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "91c1cab8a6213bab9da15a740e9449ade5cd0a32",
+      "hashCurto": "91c1cab",
+      "mensagem": "E5 — Compras → Estoque (SC → Inventário, fundação do marketplace/iFood)",
+      "mensagemRaw": "feat(eng): E5 — Compras → Estoque (SC → Inventário, fundação do marketplace/iFood)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T12:53:44.000Z",
+      "hora": "09:53",
+      "arquivos": [
+        "app/api/crm/obras/[id]/estoque/route.ts",
+        "app/api/crm/obras/[id]/inventario/route.ts",
+        "app/api/crm/obras/[id]/restricoes/[rid]/gerar-sc/route.ts",
+        "app/api/crm/obras/[id]/sc/[scid]/route.ts",
+        "app/api/crm/obras/[id]/sc/route.ts",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/obras/[id]/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/obras/ObraComprasEstoqueSecao.tsx",
+        "docs/CAMPO-DESIGN.md",
+        "docs/E6-DESIGN.md",
+        "docs/MARKETPLACE-DESIGN.md",
+        "docs/MASTERPLAN.md",
+        "docs/PLATAFORMA-DESIGN.md",
+        "docs/PORTAL-CLIENTE-DESIGN.md",
+        "docs/insumos-do-dono/INDICE.md",
+        "docs/insumos-do-dono/campo-tablet-totem-entrega.md",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-estoque.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/obras/estoque.test.ts",
+        "lib/obras/estoque.ts",
+        "supabase/migrations/20260720120000_e5_compras_estoque.sql"
+      ],
+      "areas": {
+        "app/api": 5,
+        "app/crm": 2,
+        "components/crm": 2,
+        "outros": 12,
+        "lib/hub": 3,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "220beca2f84ccf3311396a3bfd19d042fc0e3842",
       "hashCurto": "220beca",

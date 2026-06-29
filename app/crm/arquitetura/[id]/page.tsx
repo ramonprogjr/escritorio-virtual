@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { toast } from "@/components/crm/toast";
+import { GerarObraSideover } from "@/components/crm/gerar-obra-sideover";
 import {
   ESTAGIOS_PROJETO_FALLBACK_UI,
   COR_ESTAGIO_PROJETO,
@@ -98,6 +99,9 @@ export default function ProjetoFichaPage({ params }: { params: Promise<{ id: str
   // Desfazer remoção de cômodo (5s).
   const undoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [removidoUndo, setRemovidoUndo] = useState<Fase | null>(null);
+
+  // A2 — sideover de geração de obra (handoff projeto → obra).
+  const [gerarObraAberto, setGerarObraAberto] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -244,7 +248,10 @@ export default function ProjetoFichaPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  const podeGerarObra = estagio === "entregue";
+  // A2 (gate de habilitação — espelha o guard server-side): entregue OU aprovação aprovada.
+  // O server é o guard definitivo; este só decide o ESTADO visual da aba Engenharia.
+  const podeGerarObra = estagio === "entregue" || projeto.aprovacao_status === "aprovado";
+  const obraVinculada = Boolean(projeto.obra_id);
 
   return (
     <div className="min-h-full bg-[#0a140f]">
@@ -494,35 +501,102 @@ export default function ProjetoFichaPage({ params }: { params: Promise<{ id: str
           />
         ) : null}
 
-        {/* ENGENHARIA (ponte E0 · stub) */}
+        {/* ENGENHARIA (A2 · ponte projeto → obra) — 3 estados */}
         {aba === "engenharia" ? (
           <div className="space-y-3">
-            <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
-              <p className="text-sm text-[#e6edf3]">
-                Executivo aprovado? Gere a obra para orçar e executar.
-              </p>
-              <p className="mt-1 text-xs text-[#8b949e]">
-                Disponível ao entregar o projeto. A obra é criada uma única vez por projeto.
-              </p>
-              <button
-                type="button"
-                disabled={!podeGerarObra}
-                title={podeGerarObra ? "Gerar obra a partir deste projeto" : "Disponível ao entregar o projeto"}
-                onClick={() => toast.success("Geração de obra entra no Bloco A2 (ponte E0).")}
-                className="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ background: podeGerarObra ? "#238636" : "#16271e", color: podeGerarObra ? "#fff" : "#6e7681", border: "1px solid #1d3a2c" }}
-              >
-                <HardHat size={16} /> Gerar obra
-              </button>
-            </div>
-            {projeto.obra_id ? (
-              <Link href={`/crm/obras/${projeto.obra_id}`} className="inline-flex text-xs font-bold text-[#c9a24a]">
-                Ver obra vinculada →
-              </Link>
-            ) : null}
+            {obraVinculada ? (
+              /* ESTADO 3 — já gerada: borda dourada, botão de gerar some. */
+              <div className="rounded-xl p-4" style={{ border: "1px solid #c9a24a", background: "#1a1405" }}>
+                <p className="inline-flex items-center gap-2 text-sm font-bold text-[#f0c869]">
+                  🔗 Obra vinculada
+                </p>
+                <p className="mt-1 text-xs text-[#f3e6c4]">
+                  Este projeto já passou para a engenharia. A obra é criada uma única vez por projeto.
+                </p>
+                <Link
+                  href={`/crm/obras/${projeto.obra_id}`}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold"
+                  style={{ background: "linear-gradient(180deg, #1d5c3c, #003b26)", color: "#f0c869", border: "1px solid #c9a24a" }}
+                >
+                  <HardHat size={16} /> Abrir obra →
+                </Link>
+              </div>
+            ) : podeGerarObra ? (
+              /* ESTADO 2 — pode gerar: preview do que vira obra + CTA verde. */
+              <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
+                <p className="inline-flex items-center gap-2 text-sm font-bold text-[#22c55e]">
+                  <Check size={15} /> Projeto entregue · pronto para executar
+                </p>
+                <p className="mt-1.5 text-xs text-[#94a3b8]">
+                  {projeto.titulo}
+                  {projeto.tipologia ? ` · ${tipologiaLabel(projeto.tipologia)}` : ""}
+                  {projeto.area_m2 ? ` · ${projeto.area_m2}m²` : ""}
+                  {projeto.cliente_nome?.trim() ? ` · ${projeto.cliente_nome.trim()}` : ""}
+                </p>
+                {comodos.length > 0 ? (
+                  <p className="mt-1 text-[11px] text-[#6e7681]">
+                    Programa: {comodos.length} ambiente{comodos.length === 1 ? "" : "s"} (fica vinculado ao projeto)
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setGerarObraAberto(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold sm:w-auto"
+                  style={{ background: "linear-gradient(180deg, #1d5c3c, #003b26)", color: "#f0c869", border: "1px solid #c9a24a" }}
+                >
+                  <HardHat size={16} /> Gerar obra deste projeto →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (typeof window !== "undefined") window.dispatchEvent(new Event("copiloto:abrir")); }}
+                  className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[#6e7681]"
+                >
+                  <Mic size={12} className="text-[#c9a24a]" /> ou diga “gera a obra do {projeto.titulo}”
+                </button>
+              </div>
+            ) : (
+              /* ESTADO 1 — não pode: card âmbar com atalho (não botão morto). */
+              <div className="rounded-xl p-4" style={{ border: "1px solid #c9a24a44", background: "#16120a" }}>
+                <p className="inline-flex items-center gap-2 text-sm font-bold text-[#f0c869]">
+                  <Clock size={15} /> Aguardando entrega do projeto
+                </p>
+                <p className="mt-1 text-xs text-[#f3e6c4]">
+                  A obra é gerada ao entregar (ou aprovar) o executivo do projeto.
+                </p>
+                <p className="mt-2 text-[11px] text-[#8b949e]">
+                  Estágio atual: <span className="font-bold" style={{ color: corEstagio }}>● {estagio}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void moverEstagio("entregue")}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold"
+                  style={{ background: "#16271e", color: "#c9a24a", border: "1px solid #1d3a2c" }}
+                >
+                  Marcar como entregue →
+                </button>
+              </div>
+            )}
           </div>
         ) : null}
       </div>
+
+      {/* A2 — Sideover de geração de obra (handoff projeto → obra) */}
+      <GerarObraSideover
+        open={gerarObraAberto}
+        onClose={() => setGerarObraAberto(false)}
+        projeto={{
+          id: projeto.id,
+          titulo: projeto.titulo,
+          tipologia: projeto.tipologia,
+          area_m2: projeto.area_m2,
+          cliente_nome: projeto.cliente_nome,
+        }}
+        programaCount={comodos.length}
+        onCriada={(obraId) => {
+          setGerarObraAberto(false);
+          router.push(`/crm/obras/${obraId}`);
+        }}
+      />
 
       {/* Catálogo de ambientes (bottom-sheet/popover) */}
       {catalogoAberto ? (

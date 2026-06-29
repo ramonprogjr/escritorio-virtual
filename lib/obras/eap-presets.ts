@@ -171,6 +171,32 @@ export function getPresetPorTipo(tipoObra: string): EapPreset | undefined {
 }
 
 /**
+ * Mapa tipologia (Arquitetura, A0 — campo LIVRE, sem CHECK) → tipo_obra (Engenharia, E0 — CHECK de 7).
+ * A2: usado ao gerar a obra a partir de um projeto. É HEURÍSTICA de produto (R1 do A2-DESIGN):
+ * o resultado pré-marca o chip no sideover, mas o humano sempre pode trocar antes de confirmar.
+ *
+ * Decisão CEO (A2-DESIGN, validar com o dono): os 6 slugs canônicos de TIPOLOGIAS_PROJETO +
+ * default seguro `reforma` para qualquer valor fora do mapa (a tipologia é texto livre).
+ *   residencial → construcao    corporativo → construcao
+ *   interiores  → reforma        reforma     → reforma
+ *   comercial   → servico        paisagismo  → servico
+ *   null/desconhecida → reforma (default seguro; humano troca o chip)
+ */
+const TIPOLOGIA_PARA_TIPO_OBRA: Record<string, TipoObraSlug> = {
+  residencial: "construcao",
+  corporativo: "construcao",
+  interiores: "reforma",
+  reforma: "reforma",
+  comercial: "servico",
+  paisagismo: "servico",
+};
+
+export function mapTipologiaParaTipoObra(tipologia: string | null | undefined): TipoObraSlug {
+  const slug = (tipologia ?? "").trim().toLowerCase();
+  return TIPOLOGIA_PARA_TIPO_OBRA[slug] ?? "reforma";
+}
+
+/**
  * Fallback de UI quando a migração E0 não foi aplicada (espelha ESTAGIOS_FALLBACK_UI).
  * Lista plana das frentes do preset Reforma — a tela mostra "personalização ainda não
  * ativa" mas já exibe a estrutura esperada, sem tela morta.
