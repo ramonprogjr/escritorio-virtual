@@ -40,6 +40,9 @@ export const COPILOTO_FERRAMENTAS_ESCRITA_FASE3: HubAgenteFerramentaId[] = [
   // E0 — escrita de obra/EAP (operam sobre obra_id nos params, não sobre lead aberto).
   "hub_obra_criar",
   "hub_obra_eap_montar",
+  // E2 — escrita de item (avanço/andamento; operam sobre obra_id/item_id, não sobre lead).
+  "hub_obra_item_avanco",
+  "hub_obra_item_andamento",
   // A0 — escrita de projeto/arquitetura (operam sobre projeto_id nos params, não sobre lead).
   "arq_criar_projeto",
   "arq_mover_estagio",
@@ -54,6 +57,8 @@ export const COPILOTO_FERRAMENTAS_ESCRITA_FASE3: HubAgenteFerramentaId[] = [
 export const COPILOTO_FERRAMENTAS_ESCRITA_SEM_LEAD: HubAgenteFerramentaId[] = [
   "hub_obra_criar",
   "hub_obra_eap_montar",
+  "hub_obra_item_avanco",
+  "hub_obra_item_andamento",
   "arq_criar_projeto",
   "arq_mover_estagio",
   "arq_programa_item",
@@ -100,7 +105,10 @@ const FERRAMENTAS_OBRA_DOC = `Ferramentas de ENGENHARIA/OBRA (use quando a tela 
 - hub_obra_resumo (LEITURA): resumo de UMA obra (status, tipo, nº de frentes). Params: { "obra_id": "<id da obra da tela>" }.
 - hub_obra_hoje (LEITURA): fila de decisões do dia — atrasados, marcos dos próximos 15 dias e bloqueios das obras. Use para "o que pede decisão hoje", "o que está atrasado", "tem bloqueio". Params: {} (ou { "negocio_id"?: "<id>" }).
 - hub_obra_criar (ESCRITA): cria obra nova com código automático e a EAP do preset. Params: { "titulo": "<nome>", "tipo_obra": "construcao|reforma|servico|…", "cliente_pessoa_id"?: "<id>", "cliente_empresa_id"?: "<id>" }. Em descricao_humana explique: "Vou criar a obra <titulo> (<tipo>) com a EAP padrão".
-- hub_obra_eap_montar (ESCRITA): adiciona uma frente (disciplina) à EAP de uma obra. Params: { "obra_id": "<id>", "disciplina_slug": "eletrica|hidraulica|civil|…", "nome"?: "<texto>" }.`;
+- hub_obra_eap_montar (ESCRITA): adiciona uma frente (disciplina) à EAP de uma obra. Params: { "obra_id": "<id>", "disciplina_slug": "eletrica|hidraulica|civil|…", "nome"?: "<texto>" }.
+- hub_obra_item_listar (LEITURA): lista os itens de contrato da obra (avanço, situação automática pelo prazo, andamento, bloqueios). Filtra por disciplina/andar/situação. Use para "o que está atrasado na elétrica do andar 8", "itens da pintura", "o que está bloqueado". Params: { "obra_id": "<id da tela>", "disciplina_slug"?: "<slug>", "area_codigo"?: "ANDAR8|ROOFTOP|…", "situacao"?: "atrasado|em_andamento|…" }.
+- hub_obra_item_avanco (ESCRITA): marca o % de avanço de UM item. Params: { "obra_id": "<id>", "item_id"?: "<id do item>", "nome"?: "<nome do item>", "area_codigo"?: "<andar p/ desambiguar>", "pct_avanco": 0..100 }. Se o nome existir em vários andares, NÃO aplique a vários — o sistema vai pedir para escolher. A Situação se recalcula sozinha (não a defina). Em descricao_humana: "Vou marcar <pct>% no item <nome> (<andar>)".
+- hub_obra_item_andamento (ESCRITA): muda o andamento manual de um item e/ou marca bloqueios. Params: { "obra_id": "<id>", "item_id"?: "<id>", "nome"?: "<nome>", "area_codigo"?: "<andar>", "andamento"?: "nao_iniciado|iniciado|paralisado|finalizado|cancelado", "falta_material"?: true, "falta_pessoa"?: true, "falta_documento"?: true, "falta_ferramenta"?: true, "falta_equipamento"?: true }. "finalizado"/"cancelado" são decisões fortes — descreva com clareza. NUNCA escreva a Situação (é automática pelo prazo).`;
 
 /** Ferramentas de Arquitetura/Projeto — injetadas só quando a rota é de arquitetura. */
 const FERRAMENTAS_ARQ_DOC = `Ferramentas de ARQUITETURA/PROJETO (use quando a tela for de arquitetura/projetos):
@@ -130,8 +138,8 @@ Devolve APENAS um objeto JSON (sem markdown), com:
 }
 Regras:
 - LEITURA → acao="ler".
-- ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
-- Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP NÃO exigem lead aberto. Se faltar o nome/cliente da obra, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa NÃO exigem lead aberto. Para mover/programa use o projeto_id da tela. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
+- ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP, marcar avanço de item, mudar andamento de item" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
+- Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP / marcar avanço de item / mudar andamento de item NÃO exigem lead aberto (usam o obra_id da tela). Se faltar o item ou o valor, pergunte UMA coisa (acao=\"nao_entendi\"), não invente. NUNCA escreva a Situação (é automática)." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa NÃO exigem lead aberto. Para mover/programa use o projeto_id da tela. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
 - Qualquer outra ação (criar cadastro, enviar WhatsApp, apagar) → acao="nao_entendi" dizendo que ainda não está disponível por voz.`;
 }
 

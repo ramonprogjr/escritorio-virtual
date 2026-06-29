@@ -15,6 +15,7 @@ import {
 import { iaCriarCadastroCrm } from "@/lib/crm/ia-criar-cadastro";
 import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
 import { executarFerramentaObra } from "@/lib/hub/executar-ferramenta-obra";
+import { executarFerramentaObraItem } from "@/lib/hub/executar-ferramenta-obra-itens";
 import { executarFerramentaArq } from "@/lib/hub/executar-ferramenta-arq";
 
 export type FerramentaHubContexto = {
@@ -545,6 +546,12 @@ async function executarFerramentaHubBuiltin(
     case "hub_obra_criar":
     case "hub_obra_eap_montar":
       return executarFerramentaObra(toolName, args, ctx, supabase);
+
+    // ── E2: Itens × Subitens (SEM gate canal_whatsapp — copiloto global) ──
+    case "hub_obra_item_listar":
+    case "hub_obra_item_avanco":
+    case "hub_obra_item_andamento":
+      return executarFerramentaObraItem(toolName, args, ctx, supabase);
 
     // ── A0: Arquitetura / Projeto (SEM gate canal_whatsapp — copiloto global) ──
     case "arq_resumo":

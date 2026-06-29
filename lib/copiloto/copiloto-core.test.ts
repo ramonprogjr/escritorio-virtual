@@ -12,7 +12,7 @@ import {
 } from "./copiloto-core";
 
 describe("copiloto-core — gate de nível de acesso", () => {
-  it("inclui as 4 leituras de lead + 3 de obra (E0/E1) + 1 de arquitetura (A0)", () => {
+  it("inclui as 4 leituras de lead + 3 de obra (E0/E1) + 1 de item (E2) + 1 de arquitetura (A0)", () => {
     expect(COPILOTO_FERRAMENTAS_LEITURA).toEqual(
       expect.arrayContaining([
         "hub_lead_resumo",
@@ -24,11 +24,13 @@ describe("copiloto-core — gate de nível de acesso", () => {
         "hub_obra_resumo",
         // E1 — cockpit "Hoje" (fila de decisões, leitura, auto-executável)
         "hub_obra_hoje",
+        // E2 — Itens × Subitens (leitura, auto-executável)
+        "hub_obra_item_listar",
         // A0 — Arquitetura/Projeto (leitura, auto-executável)
         "arq_resumo",
       ])
     );
-    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(8);
+    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(9);
   });
 
   it("classifica leitura vs escrita corretamente", () => {
@@ -39,13 +41,16 @@ describe("copiloto-core — gate de nível de acesso", () => {
 });
 
 describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
-  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 3 de arquitetura (A0)", () => {
+  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 2 de item (E2) + 3 de arquitetura (A0)", () => {
     expect(COPILOTO_FERRAMENTAS_ESCRITA_FASE3).toEqual([
       "hub_registar_nota_lead",
       "hub_atualizar_lead",
       // E0 — escrita de obra/EAP (operam sobre obra_id, não sobre lead aberto)
       "hub_obra_criar",
       "hub_obra_eap_montar",
+      // E2 — escrita de item (avanço/andamento; operam sobre obra_id/item_id, não sobre lead)
+      "hub_obra_item_avanco",
+      "hub_obra_item_andamento",
       // A0 — escrita de projeto/arquitetura (operam sobre projeto_id, não sobre lead)
       "arq_criar_projeto",
       "arq_mover_estagio",
@@ -56,6 +61,11 @@ describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
   it("escrita de obra (E0) é executável e dispensa lead aberto", () => {
     expect(ferramentaExecutavel("hub_obra_criar")).toBe(true);
     expect(ferramentaExecutavel("hub_obra_eap_montar")).toBe(true);
+  });
+
+  it("escrita de item (E2) é executável e dispensa lead aberto", () => {
+    expect(ferramentaExecutavel("hub_obra_item_avanco")).toBe(true);
+    expect(ferramentaExecutavel("hub_obra_item_andamento")).toBe(true);
   });
 
   it("escrita de arquitetura (A0) é executável e dispensa lead aberto", () => {

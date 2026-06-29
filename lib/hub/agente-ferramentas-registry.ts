@@ -23,6 +23,10 @@ export type HubAgenteFerramentaId =
   | "hub_obra_hoje"
   | "hub_obra_criar"
   | "hub_obra_eap_montar"
+  // ── E2: Itens × Subitens (Situação auto × Andamento manual) ──
+  | "hub_obra_item_listar"
+  | "hub_obra_item_avanco"
+  | "hub_obra_item_andamento"
   // ── A0: Arquitetura/Projeto (não dependem de canal WhatsApp) ──
   | "arq_resumo"
   | "arq_criar_projeto"
@@ -492,6 +496,103 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── E2: Itens × Subitens (Situação auto × Andamento manual) ─────────────────
+  {
+    id: "hub_obra_item_listar",
+    categoria: "obra",
+    titulo: "Listar itens da obra (avanço/situação)",
+    descricao:
+      "Lista os itens de contrato da obra por disciplina/andar/situação (avanço, situação automática, andamento manual, bloqueios). Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_item_listar",
+      description:
+        "Lista itens de uma obra com avanço, situação (calculada pelo prazo) e andamento. Filtra por disciplina, andar/área ou situação (ex.: 'atrasado'). Use para 'o que está atrasado na elétrica do andar 8', 'itens da pintura', 'o que está bloqueado'. Não altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela se houver)." },
+          disciplina_slug: {
+            type: "string",
+            description: "Filtro por disciplina (ex.: eletrica, hidraulica, civil, pintura).",
+          },
+          area_codigo: {
+            type: "string",
+            description: "Filtro por andar/área (ex.: ANDAR8, ROOFTOP, HALLS).",
+          },
+          situacao: {
+            type: "string",
+            enum: ["a_iniciar", "em_andamento", "atencao", "atrasado", "concluido", "sem_data", "cancelado"],
+            description: "Filtro pela situação automática (prazo).",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_item_avanco",
+    categoria: "obra",
+    titulo: "Marcar avanço de um item (%)",
+    descricao:
+      "Define o % de avanço de um item da obra (slider via voz). Escrita — exige confirmação do dono. A situação é recalculada sozinha pelo prazo.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_item_avanco",
+      description:
+        "Define o percentual de avanço (0–100) de um item da obra. Identifique o item por item_id (preferido) OU por nome+obra. Use para 'marca 60% na alvenaria do andar 8'. Se houver mais de um item com o mesmo nome (andares diferentes), peça para o dono escolher antes — não aplique a vários. Só propõe; o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          item_id: { type: "string", description: "ID exato do item, se conhecido (preferido)." },
+          nome: { type: "string", description: "Nome do item, se não tiver o id (ex.: 'Alvenaria')." },
+          area_codigo: { type: "string", description: "Andar/área para desambiguar (ex.: ANDAR8)." },
+          pct_avanco: {
+            type: "number",
+            description: "Percentual de 0 a 100.",
+            minimum: 0,
+            maximum: 100,
+          },
+        },
+        required: ["pct_avanco"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_item_andamento",
+    categoria: "obra",
+    titulo: "Mudar andamento de um item",
+    descricao:
+      "Declara o andamento manual de um item (iniciado/paralisado/finalizado/cancelado) e marca bloqueios (falta material/pessoa…). Escrita — exige confirmação; finalizado/cancelado têm gate reforçado.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_item_andamento",
+      description:
+        "Muda o andamento manual de um item (nao_iniciado, iniciado, paralisado, finalizado, cancelado) e/ou marca bloqueios (falta material/pessoa/documento/ferramenta/equipamento). Use para 'item 3.2 paralisado, falta cimento'. Identifique por item_id (preferido) OU nome+andar. finalizado/cancelado são decisões fortes — descreva claramente. Só propõe; o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          item_id: { type: "string", description: "ID exato do item, se conhecido (preferido)." },
+          nome: { type: "string", description: "Nome do item, se não tiver o id." },
+          area_codigo: { type: "string", description: "Andar/área para desambiguar." },
+          andamento: {
+            type: "string",
+            enum: ["nao_iniciado", "iniciado", "paralisado", "finalizado", "cancelado"],
+            description: "Novo andamento manual.",
+          },
+          falta_pessoa: { type: "boolean", description: "Marca bloqueio: falta pessoa." },
+          falta_documento: { type: "boolean", description: "Marca bloqueio: falta documento." },
+          falta_material: { type: "boolean", description: "Marca bloqueio: falta material." },
+          falta_ferramenta: { type: "boolean", description: "Marca bloqueio: falta ferramenta." },
+          falta_equipamento: { type: "boolean", description: "Marca bloqueio: falta equipamento." },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
   // ── A0: Arquitetura / Projeto ───────────────────────────────────────────────
   {
     id: "arq_resumo",
@@ -716,6 +817,9 @@ export function mergeUsoFerramentasComPadrao(
     hub_obra_hoje: false,
     hub_obra_criar: false,
     hub_obra_eap_montar: false,
+    hub_obra_item_listar: false,
+    hub_obra_item_avanco: false,
+    hub_obra_item_andamento: false,
     arq_resumo: false,
     arq_criar_projeto: false,
     arq_mover_estagio: false,
@@ -772,6 +876,9 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_obra_hoje: "leitura",
   hub_obra_criar: "escrita",
   hub_obra_eap_montar: "escrita",
+  hub_obra_item_listar: "leitura",
+  hub_obra_item_avanco: "escrita",
+  hub_obra_item_andamento: "escrita",
   arq_resumo: "leitura",
   arq_criar_projeto: "escrita",
   arq_mover_estagio: "escrita",
