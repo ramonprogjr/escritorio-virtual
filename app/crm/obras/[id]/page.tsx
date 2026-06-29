@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { ArvoreEscopo } from "@/components/crm/obras/ArvoreEscopo";
 import { ObraItensSecao } from "@/components/crm/obras/ObraItensSecao";
 import { ObraComprasEstoqueSecao } from "@/components/crm/obras/ObraComprasEstoqueSecao";
 import { ObraFinanceiroSecao } from "@/components/crm/obras/ObraFinanceiroSecao";
@@ -21,7 +22,7 @@ const BORDA = "#1d3a2c";
 const BG_CARD = "#0f1d16";
 const DOURADO = "#c9a24a";
 
-type Aba = "painel" | "itens" | "compras" | "financeiro";
+type Aba = "escopo" | "painel" | "itens" | "compras" | "financeiro";
 
 export default function ObraPainelPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +31,7 @@ export default function ObraPainelPage() {
   const [pedidos, setPedidos] = useState<Record<string, unknown>[]>([]);
   const [checkins, setCheckins] = useState<Record<string, unknown>[]>([]);
   const [diario, setDiario] = useState<Record<string, unknown>[]>([]);
-  const [aba, setAba] = useState<Aba>("itens"); // o JOB do gestor: itens & avanço primeiro
+  const [aba, setAba] = useState<Aba>("escopo"); // Escopo é 1ª classe (decisão #8): a planilha viva primeiro
 
   const carregar = useCallback(async () => {
     const res = await fetch(`/api/crm/obras/${encodeURIComponent(id)}`, {
@@ -74,6 +75,7 @@ export default function ObraPainelPage() {
         style={{ display: "flex", gap: 4, marginTop: 24, marginBottom: 16, borderBottom: `1px solid ${BORDA}` }}
       >
         {([
+          { id: "escopo", rotulo: "Escopo" },
           { id: "itens", rotulo: "Itens & Avanço" },
           { id: "compras", rotulo: "Compras & Estoque" },
           { id: "financeiro", rotulo: "Financeiro" },
@@ -104,7 +106,9 @@ export default function ObraPainelPage() {
         })}
       </div>
 
-      {aba === "itens" ? (
+      {aba === "escopo" ? (
+        <ArvoreEscopo obraId={id} />
+      ) : aba === "itens" ? (
         <ObraItensSecao obraId={id} />
       ) : aba === "compras" ? (
         <ObraComprasEstoqueSecao obraId={id} />

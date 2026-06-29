@@ -91,6 +91,15 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (key in body) patch[key] = body[key];
   }
 
+  // E7 (aditivo): BDI da obra (fator único da empresa) — persistido à parte para a tolerância de
+  // coluna ausente. Aceita só número > 0 (é um fator). Vai em `patchBdi`; se a coluna não existir
+  // (migração E7 pendente), o update repete sem ele e a resposta sinaliza honestamente.
+  const patchBdi: Record<string, unknown> = {};
+  if ("bdi_fator" in body) {
+    const b = body.bdi_fator;
+    if (typeof b === "number" && Number.isFinite(b) && b > 0) patchBdi.bdi_fator = b;
+  }
+
   // E6: tipo_contrato é IMUTÁVEL pós-1º orçamento aprovado (guard no endpoint, sem trigger).
   if ("tipo_contrato" in patch) {
     const valor = String(patch.tipo_contrato ?? "");
@@ -119,13 +128,35 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     }
   }
 
-  const { data, error } = await supabase
-    .from("hub_obras")
-    .update(patch)
-    .eq("id", id)
-    .eq("tenant_id", g.ctx.tenantId)
-    .select()
-    .single();
+  const temBdi = Object.keys(patchBdi).length > 0;
+  const tenantId = g.ctx.tenantId; // capturado fora da closure (TS estreita o union do guard)
+
+  function atualizar(comBdi: boolean) {
+    const corpo = comBdi ? { ...patch, ...patchBdi } : patch;
+    return supabase
+      .from("hub_obras")
+      .update(corpo)
+      .eq("id", id)
+      .eq("tenant_id", tenantId)
+      .select()
+      .single();
+  }
+
+  let { data, error } = await atualizar(temBdi);
+
+  // TOLERÂNCIA E7: se bdi_fator não existe ainda, repete sem ele (os demais campos gravam) e avisa.
+  let bdiPendenteMigracao = false;
+  if (error && temBdi && isMissingPgColumn(error, "bdi_fator")) {
+    bdiPendenteMigracao = true;
+    ({ data, error } = await atualizar(false));
+  }
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ data });
+  return NextResponse.json({
+    data,
+    bdi_gravado: temBdi && !bdiPendenteMigracao,
+    ...(bdiPendenteMigracao
+      ? { aviso: "BDI ainda não persiste (migração E7 pendente). Usando como simulação até aplicar." }
+      : {}),
+  });
 }
