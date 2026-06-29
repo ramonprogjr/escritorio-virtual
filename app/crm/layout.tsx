@@ -27,7 +27,6 @@ import { CrmQuickAdd } from "@/components/crm/CrmQuickAdd";
 import { CRM_CHROME_SOLID } from "@/lib/crm-shell-theme";
 
 import { shouldHideCrmUniversalHeader } from "@/lib/crm-universal-header-visibility";
-import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import dynamic from "next/dynamic";
 
 // Copiloto de voz: usa SpeechRecognition/window — só no cliente (ssr:false).
@@ -87,8 +86,6 @@ function getNestedGroupMenu(groupId: string, groupLabel: string, items: CrmNavIt
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const narrow = useNarrowViewport();
-  const slimMobile = narrow !== false;
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState("");
@@ -205,26 +202,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
   function toggleDrawer(id: string) {
     setOpenGroups(prev => ({ ...prev, [id]: !prev[id] }));
-  }
-
-  if (slimMobile) {
-    return (
-      <CrmQueryProvider>
-        <CrmTenantProvider>
-        <CrmHeaderProvider>
-          <CrmShellProvider value={{ sidebarExpanded: false, toggleSidebar: () => {} }}>
-            <div
-              className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#0a140f]"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              {children}
-            </div>
-            <CopilotoVoz />
-          </CrmShellProvider>
-        </CrmHeaderProvider>
-        </CrmTenantProvider>
-      </CrmQueryProvider>
-    );
   }
 
   return (

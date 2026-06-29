@@ -520,6 +520,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
           style={{
             borderBottom: `1px solid ${OB.borda}`,
             padding: 16,
+            paddingTop: "max(16px, env(safe-area-inset-top))",
             background: "linear-gradient(180deg,#121a26 0%, #101722 100%)",
             flexShrink: 0,
           }}
@@ -989,6 +990,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
         <div
           style={{
             padding: "14px 20px",
+            paddingBottom: "max(14px, env(safe-area-inset-bottom))",
             borderTop: `1px solid ${OB.borda}`,
             display: "flex",
             gap: 10,

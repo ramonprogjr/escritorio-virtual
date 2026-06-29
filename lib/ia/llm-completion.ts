@@ -7,11 +7,23 @@ import {
 } from "./hub-model-defaults";
 import { mistralChatCompletion } from "./mistral-chat";
 
-function anthropicErroProvavelmenteRecuperavelComMistral(raw: string): boolean {
+/**
+ * Testa se um erro Anthropic pode ser recuperado tentando o Mistral.
+ *
+ * Recebe `raw` (e.message) E `type` (APIError.type / error.error.type da resposta).
+ * IMPORTANTE: o SDK Anthropic coloca o `error.type` em `APIError.type`, NÃO em
+ * `APIError.message` — checar só `raw` perde os casos de `invalid_request_error`
+ * onde o message é apenas "400 model 'claude-haiku' does not exist".
+ */
+function anthropicErroProvavelmenteRecuperavelComMistral(raw: string, type?: string | null): boolean {
   const s = raw.toLowerCase();
+  const t = (type ?? "").toLowerCase();
   return (
     /credit balance|too low|billing|plan|purchase credit/.test(s) ||
     /invalid_request_error/.test(s) ||
+    t === "invalid_request_error" ||
+    // model ID inválido/inexistente — fallback ao Mistral faz sentido
+    /model.*does not exist|unknown model|model.*not found|no such model/.test(s) ||
     /rate.?limit|429/.test(s) ||
     /overloaded|529/.test(s) ||
     /status code 402/.test(s)
@@ -76,7 +88,11 @@ export async function completarChatPreferindoMistral(params: {
       };
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e);
-      if (mistralKey && anthropicErroProvavelmenteRecuperavelComMistral(raw)) {
+      // APIError.type contém "invalid_request_error" mas NÃO aparece em e.message
+      const errType = (e != null && typeof e === "object" && "type" in e)
+        ? String((e as { type?: unknown }).type ?? "")
+        : "";
+      if (mistralKey && anthropicErroProvavelmenteRecuperavelComMistral(raw, errType)) {
         const m = await viaMistral();
         if (m.ok) return m;
       }
@@ -107,7 +123,10 @@ export async function completarChatPreferindoMistral(params: {
       };
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e);
-      if (mistralKey && anthropicErroProvavelmenteRecuperavelComMistral(raw)) {
+      const errType = (e != null && typeof e === "object" && "type" in e)
+        ? String((e as { type?: unknown }).type ?? "")
+        : "";
+      if (mistralKey && anthropicErroProvavelmenteRecuperavelComMistral(raw, errType)) {
         const m = await viaMistral();
         if (m.ok) return m;
       }
