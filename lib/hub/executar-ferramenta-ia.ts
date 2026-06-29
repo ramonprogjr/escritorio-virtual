@@ -565,6 +565,8 @@ async function executarFerramentaHubBuiltin(
     case "arq_criar_projeto":
     case "arq_mover_estagio":
     case "arq_programa_item":
+    case "arq_enviar_aprovacao":
+    case "arq_registrar_aprovacao":
       return executarFerramentaArq(toolName, args, ctx, supabase);
 
     default:

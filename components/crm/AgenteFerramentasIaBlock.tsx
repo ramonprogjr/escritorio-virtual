@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Brain,
+  CheckCheck,
   Cloud,
   Compass,
   Cpu,
@@ -13,6 +14,7 @@ import {
   Layers,
   ListOrdered,
   PieChart,
+  Send,
   StickyNote,
   Search,
   UserPen,
@@ -63,6 +65,8 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   arq_criar_projeto: Compass,
   arq_mover_estagio: ListOrdered,
   arq_programa_item: Layers,
+  arq_enviar_aprovacao: Send,
+  arq_registrar_aprovacao: CheckCheck,
 };
 
 function ToggleSwitch({

@@ -50,6 +50,9 @@ export const COPILOTO_FERRAMENTAS_ESCRITA_FASE3: HubAgenteFerramentaId[] = [
   "arq_criar_projeto",
   "arq_mover_estagio",
   "arq_programa_item",
+  // A1 — aprovação do cliente (escrita CRÍTICA; operam sobre projeto_id/fase_id, não sobre lead).
+  "arq_enviar_aprovacao",
+  "arq_registrar_aprovacao",
 ];
 
 /**
@@ -67,6 +70,8 @@ export const COPILOTO_FERRAMENTAS_ESCRITA_SEM_LEAD: HubAgenteFerramentaId[] = [
   "arq_criar_projeto",
   "arq_mover_estagio",
   "arq_programa_item",
+  "arq_enviar_aprovacao",
+  "arq_registrar_aprovacao",
 ];
 
 /** True se a ferramenta de escrita opera sem lead aberto (Engenharia/obra). */
@@ -123,7 +128,9 @@ const FERRAMENTAS_ARQ_DOC = `Ferramentas de ARQUITETURA/PROJETO (use quando a te
 - arq_resumo (LEITURA): lista os projetos da carteira (estágio, cliente, tipologia, aprovação). Params: { "estagio"?: "<slug>" }.
 - arq_criar_projeto (ESCRITA): cria um projeto novo (código automático) em Briefing. Params: { "titulo"?: "<nome>", "tipologia"?: "residencial|corporativo|interiores|reforma|comercial|paisagismo", "cliente_nome"?: "<texto>", "area_m2"?: <número> }. Em descricao_humana explique: "Vou criar o projeto <titulo> (<tipologia>)".
 - arq_mover_estagio (ESCRITA): move um projeto de estágio. Params: { "projeto_id": "<id do projeto da tela>", "estagio": "briefing|estudo|anteprojeto|executivo|aprovacao|entregue|arquivado" }.
-- arq_programa_item (ESCRITA): monta o programa (cômodos) do projeto. Params: { "projeto_id": "<id>", "itens": ["sala","3 suítes","cozinha"] ou [{"nome":"Suíte máster","metragem_m2":18}] }.`;
+- arq_programa_item (ESCRITA): monta o programa (cômodos) do projeto. Params: { "projeto_id": "<id>", "itens": ["sala","3 suítes","cozinha"] ou [{"nome":"Suíte máster","metragem_m2":18}] }.
+- arq_enviar_aprovacao (ESCRITA): envia um entregável para o cliente aprovar. Params: { "projeto_id": "<id>", "fase_id": "<id do entregável>", "entregavel_url"?: "<url do arquivo, se anexar agora>" }. Use para "envia o executivo pro cliente aprovar". Se o entregável não tiver arquivo, o sistema pede para anexar a URL primeiro. Em descricao_humana: "Vou enviar <entregável> para o cliente aprovar".
+- arq_registrar_aprovacao (ESCRITA): lança a resposta do cliente sobre um entregável aguardando. Params: { "projeto_id": "<id>", "fase_id": "<id>", "decisao": "aprovado|rejeitado", "motivo_rejeicao"?: "<obrigatório se rejeitado>" }. Use para "o cliente aprovou o anteprojeto", "o cliente reprovou o estudo, quer mudar a fachada". Rejeitar SEM motivo não é permitido — pergunte o motivo. Em descricao_humana: "Vou registrar que o cliente <aprovou|reprovou> <entregável>".`;
 
 export function construirPromptCopiloto(ctx: { rota: string; temLead: boolean }): string {
   const rotaObra = /\/(obras|engenharia)/i.test(ctx.rota || "");
@@ -146,8 +153,8 @@ Devolve APENAS um objeto JSON (sem markdown), com:
 }
 Regras:
 - LEITURA → acao="ler".
-- ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP, marcar avanço de item, mudar andamento de item, registrar bloqueio, resolver bloqueio" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
-- Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP / marcar avanço de item / mudar andamento de item / registrar bloqueio / resolver bloqueio NÃO exigem lead aberto (usam o obra_id da tela). Se faltar o item ou o valor, pergunte UMA coisa (acao=\"nao_entendi\"), não invente. NUNCA escreva a Situação (é automática)." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa NÃO exigem lead aberto. Para mover/programa use o projeto_id da tela. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
+- ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP, marcar avanço de item, mudar andamento de item, registrar bloqueio, resolver bloqueio" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa, enviar entregável para aprovação, registrar resposta do cliente" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
+- Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP / marcar avanço de item / mudar andamento de item / registrar bloqueio / resolver bloqueio NÃO exigem lead aberto (usam o obra_id da tela). Se faltar o item ou o valor, pergunte UMA coisa (acao=\"nao_entendi\"), não invente. NUNCA escreva a Situação (é automática)." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa / enviar para aprovação / registrar resposta NÃO exigem lead aberto. Para mover/programa/aprovação use o projeto_id da tela e o fase_id do entregável. Registrar reprovação SEM motivo não é permitido — pergunte o motivo. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
 - Qualquer outra ação (criar cadastro, enviar WhatsApp, apagar) → acao="nao_entendi" dizendo que ainda não está disponível por voz.`;
 }
 
