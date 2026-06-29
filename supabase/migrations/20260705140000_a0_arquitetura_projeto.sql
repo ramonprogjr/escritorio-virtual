@@ -28,10 +28,22 @@
 -- ============================================================================
 
 -- ─── 0) Helper de tenant para RLS (idempotente; já existe via E0/20260626130000) ──
+-- AUDITORIA-FIX: alinhado à canônica (20260626130000_multitenant_foundation) — NÃO enfraquecer
+-- current_user_tenant_id(). Definição IDÊNTICA à canônica (SECURITY DEFINER + search_path +
+-- COALESCE com fallback ao tenant default). A canônica (20260626) roda ANTES num apply limpo;
+-- este CREATE OR REPLACE só garante paridade sem rebaixar a função à versão fraca.
 CREATE OR REPLACE FUNCTION public.current_user_tenant_id()
-RETURNS uuid LANGUAGE sql STABLE AS $$
-  SELECT u.tenant_id FROM public.users u WHERE u.auth_id = auth.uid() LIMIT 1;
-$$;
+RETURNS uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+  SELECT COALESCE(
+    (SELECT u.tenant_id FROM public.users u WHERE u.auth_id = auth.uid() LIMIT 1),
+    '00000000-0000-4000-8000-000000000001'::uuid
+  )
+$function$;
 GRANT EXECUTE ON FUNCTION public.current_user_tenant_id() TO anon, authenticated;
 
 -- ─── 1) Relax do status de hub_projetos (funil editável exige) ────────────────

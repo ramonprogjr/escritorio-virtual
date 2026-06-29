@@ -1,0 +1,293 @@
+/**
+ * E2 — Itens × Subitens da obra (Situação auto × Andamento manual).
+ *
+ * SEGURANÇA (regra sistêmica E0/E1/A0): crmDb() é service-role e BYPASSA RLS — o isolamento
+ * depende 100% do filtro no código. Toda query filtra `.eq("tenant_id", g.ctx.tenantId)` PURO
+ * (nunca `.or('...is.null')`) E `.eq("obra_id", obraId)`. A obra é validada por posse (404 se
+ * o tenant_id não bate). tenant_id vem SEMPRE da sessão (requireCrm*), nunca do body.
+ *
+ * TOLERÂNCIA: se a tabela/view ainda não existe (migração E2 pendente), devolve
+ * { data: [], migracao_pendente: true, aviso } — a UI mostra aviso honesto, não quebra.
+ *
+ * Situação NUNCA é escrita (é derivada na vw_hub_obra_itens_situacao). O PATCH só toca
+ * avanço/andamento/datas/bloqueios/evidência. A leitura usa a VIEW para trazer `situacao`.
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
+import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { isMissingPgColumn } from "@/lib/tenant-default";
+import {
+  isAndamentoItem,
+  isSituacaoItem,
+  isTipoItem,
+  codigoItemFromNome,
+  BLOQUEIOS,
+} from "@/lib/obras/itens-situacao";
+
+type Params = { params: Promise<{ id: string }> };
+
+/** Colunas devolvidas (da view, que inclui i.* + situacao + dias_atraso). */
+const SELECT_VIEW =
+  "id, obra_id, frente_id, parent_id, codigo, nome, descricao, disciplina_slug, area_codigo, area_label, tipo, data_inicio, data_termino, pct_avanco, situacao_override, andamento, falta_pessoa, falta_documento, falta_material, falta_ferramenta, falta_equipamento, bloqueio_obs, quantidade, unidade, valor_contrato, responsavel_nome, tem_evidencia, evidencia_url, observacoes, peso, ordem, ativo, origem, situacao, dias_atraso";
+
+/** Colunas da tabela base (sem os derivados da view) — usado no insert/update returning. */
+const SELECT_BASE =
+  "id, obra_id, frente_id, parent_id, codigo, nome, descricao, disciplina_slug, area_codigo, area_label, tipo, data_inicio, data_termino, pct_avanco, situacao_override, andamento, falta_pessoa, falta_documento, falta_material, falta_ferramenta, falta_equipamento, bloqueio_obs, quantidade, unidade, valor_contrato, responsavel_nome, tem_evidencia, evidencia_url, observacoes, peso, ordem, ativo, origem";
+
+const AVISO_PENDENTE =
+  "Itens & avanço ainda não ativos (migração E2 pendente — janela do dono).";
+
+function ehTabelaAusente(error: { message?: string } | null): boolean {
+  if (!error) return false;
+  return isMissingPgColumn(error) || /relation .*does not exist/i.test(error.message ?? "");
+}
+
+/**
+ * Confirma que a obra pertence ao tenant do caller. crmDb() é service-role (RLS bypassada),
+ * então a checagem explícita é a única proteção. tenant_id NULL não pertence a ninguém → 404.
+ */
+async function assertObraDoTenant(
+  obraId: string,
+  tenantId: string
+): Promise<NextResponse | null> {
+  const { data } = await crmDb()
+    .from("hub_obras")
+    .select("id, tenant_id")
+    .eq("id", obraId)
+    .maybeSingle();
+  if (!data || data.tenant_id !== tenantId) {
+    return NextResponse.json({ error: "Obra não encontrada" }, { status: 404 });
+  }
+  return null;
+}
+
+export async function GET(request: NextRequest, { params }: Params) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
+  const configErr = crmConfigError();
+  if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
+
+  const { id: obraId } = await params;
+  const tenantErr = await assertObraDoTenant(obraId, g.ctx.tenantId);
+  if (tenantErr) return tenantErr;
+
+  const url = new URL(request.url);
+  const disciplina = url.searchParams.get("disciplina")?.trim() || "";
+  const area = url.searchParams.get("area")?.trim() || "";
+  const situacao = url.searchParams.get("situacao")?.trim() || "";
+
+  let q = crmDb()
+    .from("vw_hub_obra_itens_situacao")
+    .select(SELECT_VIEW)
+    .eq("obra_id", obraId)
+    .eq("tenant_id", g.ctx.tenantId) // defesa em profundidade (itens nunca são globais)
+    .order("ordem", { ascending: true })
+    .limit(1000);
+  if (disciplina) q = q.eq("disciplina_slug", disciplina);
+  if (area) q = q.eq("area_codigo", area);
+  if (situacao && isSituacaoItem(situacao)) q = q.eq("situacao", situacao);
+
+  const { data, error } = await q;
+
+  if (error) {
+    if (ehTabelaAusente(error)) {
+      return NextResponse.json({ data: [], migracao_pendente: true, aviso: AVISO_PENDENTE });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ data: data ?? [], migracao_pendente: false });
+}
+
+/** POST = criar item (parent_id null) ou subitem (parent_id setado). Click-and-Go: código auto. */
+export async function POST(request: NextRequest, { params }: Params) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
+  const configErr = crmConfigError();
+  if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
+
+  const { id: obraId } = await params;
+  const tenantErr = await assertObraDoTenant(obraId, g.ctx.tenantId);
+  if (tenantErr) return tenantErr;
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const nome = String(body.nome || "").trim();
+  if (!nome) return NextResponse.json({ error: "Informe o nome do item." }, { status: 400 });
+
+  const supabase = crmDb();
+
+  // parent_id (subitem) — se vier, confirma que o pai é da mesma obra/tenant.
+  const parentId = typeof body.parent_id === "string" && body.parent_id.trim() ? body.parent_id.trim() : null;
+  if (parentId) {
+    const { data: pai } = await supabase
+      .from("hub_obra_itens")
+      .select("id, obra_id, tenant_id")
+      .eq("id", parentId)
+      .maybeSingle();
+    if (!pai || pai.obra_id !== obraId || pai.tenant_id !== g.ctx.tenantId) {
+      return NextResponse.json({ error: "Item pai não encontrado nesta obra." }, { status: 404 });
+    }
+  }
+
+  // Código único na obra (Click-and-Go: gera do nome, sufixa se colidir).
+  const { data: existentes, error: errList } = await supabase
+    .from("hub_obra_itens")
+    .select("codigo, ordem")
+    .eq("obra_id", obraId)
+    .eq("tenant_id", g.ctx.tenantId);
+  if (errList && ehTabelaAusente(errList)) {
+    return NextResponse.json({ error: AVISO_PENDENTE, migracao_pendente: true }, { status: 503 });
+  }
+  const usados = new Set<string>((existentes ?? []).map((r) => String(r.codigo)));
+  const maxOrdem = (existentes ?? []).reduce((m, r) => Math.max(m, Number(r.ordem ?? 0)), -1);
+
+  let codigo = typeof body.codigo === "string" && body.codigo.trim()
+    ? body.codigo.trim()
+    : codigoItemFromNome(nome, typeof body.codigo_prefixo === "string" ? body.codigo_prefixo : undefined);
+  const base = codigo;
+  let n = 2;
+  while (usados.has(codigo)) {
+    codigo = `${base}-${n}`;
+    n += 1;
+  }
+
+  const tipo = typeof body.tipo === "string" && isTipoItem(body.tipo) ? body.tipo : "contrato";
+  const andamento =
+    typeof body.andamento === "string" && isAndamentoItem(body.andamento) ? body.andamento : "nao_iniciado";
+
+  const insert: Record<string, unknown> = {
+    obra_id: obraId,
+    tenant_id: g.ctx.tenantId,
+    parent_id: parentId,
+    frente_id: typeof body.frente_id === "string" && body.frente_id.trim() ? body.frente_id.trim() : null,
+    codigo,
+    nome,
+    descricao: typeof body.descricao === "string" ? body.descricao.trim() || null : null,
+    disciplina_slug: typeof body.disciplina_slug === "string" ? body.disciplina_slug.trim() || null : null,
+    area_codigo: typeof body.area_codigo === "string" ? body.area_codigo.trim() || null : null,
+    area_label: typeof body.area_label === "string" ? body.area_label.trim() || null : null,
+    tipo,
+    data_inicio: typeof body.data_inicio === "string" && body.data_inicio.trim() ? body.data_inicio.trim() : null,
+    data_termino: typeof body.data_termino === "string" && body.data_termino.trim() ? body.data_termino.trim() : null,
+    pct_avanco: typeof body.pct_avanco === "number" ? Math.max(0, Math.min(100, body.pct_avanco)) : 0,
+    andamento,
+    quantidade: typeof body.quantidade === "number" ? body.quantidade : null,
+    unidade: typeof body.unidade === "string" ? body.unidade.trim() || null : null,
+    valor_contrato: typeof body.valor_contrato === "number" ? body.valor_contrato : null,
+    responsavel_nome: typeof body.responsavel_nome === "string" ? body.responsavel_nome.trim() || null : null,
+    peso: typeof body.peso === "number" ? body.peso : 0,
+    ordem: maxOrdem + 1,
+    origem: "manual",
+  };
+
+  const { data, error } = await supabase
+    .from("hub_obra_itens")
+    .insert(insert)
+    .select(SELECT_BASE)
+    .single();
+
+  if (error) {
+    if (ehTabelaAusente(error)) {
+      return NextResponse.json({ error: AVISO_PENDENTE, migracao_pendente: true }, { status: 503 });
+    }
+    if (/duplicate key|unique/i.test(error.message)) {
+      return NextResponse.json(
+        { error: `Já existe um item com o código "${codigo}" nesta obra.` },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ data }, { status: 201 });
+}
+
+/**
+ * PATCH = atualizar avanço / andamento / datas / bloqueios / evidência de um item (por id).
+ * Situação NÃO é aceita aqui (é derivada). situacao_override é aceito (aditivo de prazo).
+ */
+export async function PATCH(request: NextRequest, { params }: Params) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
+  const configErr = crmConfigError();
+  if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
+
+  const { id: obraId } = await params;
+  const tenantErr = await assertObraDoTenant(obraId, g.ctx.tenantId);
+  if (tenantErr) return tenantErr;
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const itemId = String(body.id || "").trim();
+  if (!itemId) return NextResponse.json({ error: "id do item é obrigatório" }, { status: 400 });
+
+  const patch: Record<string, unknown> = { atualizado_em: new Date().toISOString() };
+
+  if (typeof body.pct_avanco === "number") {
+    patch.pct_avanco = Math.max(0, Math.min(100, body.pct_avanco));
+  }
+  if (typeof body.andamento === "string" && isAndamentoItem(body.andamento)) {
+    patch.andamento = body.andamento;
+  }
+  if ("situacao_override" in body) {
+    const so = body.situacao_override;
+    if (so === null) patch.situacao_override = null;
+    else if (typeof so === "string" && isSituacaoItem(so) && so !== "sem_data" && so !== "atencao") {
+      patch.situacao_override = so; // só os 5 do CHECK da coluna (sem_data/atencao são só derivados)
+    }
+  }
+  if ("data_inicio" in body) {
+    patch.data_inicio = typeof body.data_inicio === "string" && body.data_inicio.trim() ? body.data_inicio.trim() : null;
+  }
+  if ("data_termino" in body) {
+    patch.data_termino = typeof body.data_termino === "string" && body.data_termino.trim() ? body.data_termino.trim() : null;
+  }
+  if (typeof body.nome === "string" && body.nome.trim()) patch.nome = body.nome.trim();
+  if ("descricao" in body) patch.descricao = typeof body.descricao === "string" ? body.descricao.trim() || null : null;
+  if ("observacoes" in body) patch.observacoes = typeof body.observacoes === "string" ? body.observacoes.trim() || null : null;
+  if ("bloqueio_obs" in body) patch.bloqueio_obs = typeof body.bloqueio_obs === "string" ? body.bloqueio_obs.trim() || null : null;
+  if ("responsavel_nome" in body) patch.responsavel_nome = typeof body.responsavel_nome === "string" ? body.responsavel_nome.trim() || null : null;
+  if ("evidencia_url" in body) {
+    const url = typeof body.evidencia_url === "string" ? body.evidencia_url.trim() || null : null;
+    patch.evidencia_url = url;
+    patch.tem_evidencia = !!url;
+  }
+  if (typeof body.ativo === "boolean") patch.ativo = body.ativo;
+  if (typeof body.ordem === "number") patch.ordem = body.ordem;
+  if (typeof body.frente_id === "string") patch.frente_id = body.frente_id.trim() || null;
+  // Os 5 bloqueios (booleans).
+  for (const b of BLOQUEIOS) {
+    if (typeof body[b.campo] === "boolean") patch[b.campo] = body[b.campo];
+  }
+
+  const { data, error } = await crmDb()
+    .from("hub_obra_itens")
+    .update(patch)
+    .eq("id", itemId)
+    .eq("obra_id", obraId) // garante que o item é da obra do tenant validado
+    .eq("tenant_id", g.ctx.tenantId)
+    .select(SELECT_BASE)
+    .maybeSingle();
+
+  if (error) {
+    if (ehTabelaAusente(error)) {
+      return NextResponse.json({ error: AVISO_PENDENTE, migracao_pendente: true }, { status: 503 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
+  return NextResponse.json({ data });
+}

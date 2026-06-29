@@ -1,7 +1,39 @@
 {
-  "geradoEm": "2026-06-29T07:58:27.311Z",
+  "geradoEm": "2026-06-29T08:27:45.515Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "0dae8dc11c3b2339724336625da8974f04ad97ef",
+      "hashCurto": "0dae8dc",
+      "mensagem": "E1 — cockpit \"Hoje\" + Carteira de obras (fila de decisões IA-first)",
+      "mensagemRaw": "feat(eng): E1 — cockpit \"Hoje\" + Carteira de obras (fila de decisões IA-first)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T07:59:11.000Z",
+      "hora": "04:59",
+      "arquivos": [
+        "app/api/crm/obras/cockpit/route.ts",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/obras/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "docs/A1-DESIGN.md",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/crm/cockpit-aggregate.ts",
+        "lib/crm/cockpit-classificar.test.ts",
+        "lib/crm/cockpit-classificar.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/hub/executar-ferramenta-obra.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 2,
+        "components/crm": 1,
+        "outros": 3,
+        "lib/crm": 3,
+        "lib/hub": 3
+      }
+    },
     {
       "hash": "4d0fa37dfa039d0927dec99066a412909d248c69",
       "hashCurto": "4d0fa37",
