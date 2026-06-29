@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Brain,
+  CheckCheck,
   ClipboardPenLine,
   Compass,
   FileCode2,
@@ -15,6 +16,7 @@ import {
   ListOrdered,
   PieChart,
   Search,
+  Send,
   StickyNote,
   UserPen,
   UserRound,
@@ -70,6 +72,8 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   arq_criar_projeto: Compass,
   arq_mover_estagio: ListOrdered,
   arq_programa_item: Layers,
+  arq_enviar_aprovacao: Send,
+  arq_registrar_aprovacao: CheckCheck,
 };
 
 type AgenteLista = {

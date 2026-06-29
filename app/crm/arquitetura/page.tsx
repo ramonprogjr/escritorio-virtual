@@ -26,6 +26,18 @@ type PipelineUi = {
 
 type EtapaUi = { id: string; label: string; color: string };
 
+type FilaItem = {
+  fase_id: string;
+  projeto_id: string;
+  entregavel: string;
+  entregavel_url: string | null;
+  projeto_titulo: string;
+  projeto_codigo: string | null;
+  cliente_nome: string | null;
+  enviado_em: string | null;
+  dias_esperando: number | null;
+};
+
 const ETAPAS_FALLBACK: EtapaUi[] = ESTAGIOS_PROJETO_FALLBACK_UI.map((e) => ({
   id: e.id,
   label: e.label,
@@ -52,6 +64,9 @@ function ArquiteturaInner() {
   const [pipelineId, setPipelineId] = useState<string | null>(null);
   const [etapasKanban, setEtapasKanban] = useState<EtapaUi[]>(ETAPAS_FALLBACK);
   const [negocioOrigem, setNegocioOrigem] = useState<string | null>(null);
+  const [filaAberta, setFilaAberta] = useState(false);
+  const [fila, setFila] = useState<FilaItem[]>([]);
+  const [filaCarregando, setFilaCarregando] = useState(false);
 
   const carregarPipelines = useCallback(async () => {
     try {
@@ -163,6 +178,20 @@ function ArquiteturaInner() {
     void carregarLista();
   }
 
+  const abrirFila = useCallback(async () => {
+    setFilaAberta(true);
+    setFilaCarregando(true);
+    try {
+      const res = await fetch("/api/crm/arquitetura/fila", { headers: internalApiHeaders() });
+      const json = await res.json().catch(() => ({ data: [] }));
+      setFila((json.data ?? []) as FilaItem[]);
+    } catch {
+      setFila([]);
+    } finally {
+      setFilaCarregando(false);
+    }
+  }, []);
+
   const projetosFiltrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
     if (!q) return projetos;
@@ -180,7 +209,8 @@ function ArquiteturaInner() {
     return !Number.isNaN(d.getTime()) &&
       new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() === hoje0;
   }).length;
-  const emAprovacao = projetos.filter((p) => p.estagio === "aprovacao").length; // keystone
+  // A1: "Em aprovação" passa a contar o AGREGADO real (aguardando), não o estágio.
+  const emAprovacao = projetos.filter((p) => p.aprovacao_status === "aguardando").length; // keystone
   const atrasados = projetos.filter((p) => {
     if (!p.proxima_entrega_em || p.estagio === "entregue" || p.estagio === "arquivado") return false;
     const d = new Date(p.proxima_entrega_em);
@@ -193,9 +223,9 @@ function ArquiteturaInner() {
     return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
   }).length;
 
-  const kpis = [
+  const kpis: { label: string; value: string; cor: string; onClick?: () => void; sufixo?: string }[] = [
     { label: "Entregas hoje", value: String(entregasHoje), cor: "#c9a24a" },
-    { label: "Em aprovação", value: String(emAprovacao), cor: "#d6a129" },
+    { label: "Em aprovação", value: String(emAprovacao), cor: "#d6a129", onClick: () => void abrirFila(), sufixo: "◷" },
     { label: "Atrasados", value: String(atrasados), cor: atrasados > 0 ? "#f85149" : "#8b949e" },
     { label: "Entregues/mês", value: String(entreguesMes), cor: "#22c55e" },
   ];
@@ -272,6 +302,63 @@ function ArquiteturaInner() {
         </div>
       ) : null}
 
+      {/* Fila "Em aprovação" — pior tempo de espera no topo */}
+      {filaAberta ? (
+        <div className="fixed inset-0 z-[130] flex items-end justify-center sm:items-center md:p-4">
+          <button type="button" className="absolute inset-0 bg-black/60" aria-label="Fechar" onClick={() => setFilaAberta(false)} />
+          <div className="relative max-h-[82vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4 sm:rounded-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="flex items-center gap-1.5 text-sm font-bold text-[#e6edf3]">
+                  <span className="text-[#c9a24a]">◷</span> Em aprovação · {fila.length}
+                </h2>
+                <p className="text-[11px] text-[#8b949e]">Entregáveis aguardando o cliente — pior espera no topo.</p>
+              </div>
+              <button type="button" onClick={() => setFilaAberta(false)} className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#16271e] text-[#8b949e]" aria-label="Fechar">✕</button>
+            </div>
+            {filaCarregando ? (
+              <p className="py-6 text-center text-sm text-[#8b949e]">Carregando fila…</p>
+            ) : fila.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-[#1d3a2c] bg-[#0a140f] p-6 text-center text-sm text-[#8b949e]">
+                Nada aguardando o cliente agora. 👌
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {fila.map((f) => {
+                  const dias = f.dias_esperando ?? 0;
+                  const alerta = dias >= 7;
+                  return (
+                    <button
+                      key={f.fase_id}
+                      type="button"
+                      onClick={() => { setFilaAberta(false); router.push(`/crm/arquitetura/${f.projeto_id}?aba=entregaveis`); }}
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#1d3a2c] bg-[#0a140f] px-3 py-2.5 text-left hover:border-[#c9a24a55]"
+                      style={{ borderLeft: `3px solid ${alerta ? "#f85149" : "#c9a24a"}` }}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-[#e6edf3]">
+                          {f.projeto_titulo} <span className="text-[#6e7681]">›</span> {f.entregavel}
+                        </p>
+                        <p className="truncate text-[11px] text-[#8b949e]">
+                          {f.cliente_nome?.trim() || "Sem cliente"}
+                          {f.dias_esperando != null ? ` · há ${f.dias_esperando}d` : ""}
+                        </p>
+                      </div>
+                      <span
+                        className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                        style={{ background: alerta ? "#f8514922" : "#c9a24a22", color: alerta ? "#f85149" : "#c9a24a" }}
+                      >
+                        {alerta ? "🔴 cobrar" : "abrir →"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       {/* Cabeçalho */}
       <div className="sticky top-0 z-20 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3 sm:px-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -309,12 +396,34 @@ function ArquiteturaInner() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-px bg-[#1d3a2c] sm:grid-cols-4">
-        {kpis.map((m) => (
-          <div key={m.label} className="bg-[#0f1d16] px-3 py-2.5 sm:px-5">
-            <p className="mb-0.5 text-xs text-[#8b949e]">{m.label}</p>
-            <p className="text-base font-black sm:text-lg" style={{ color: m.cor }}>{m.value}</p>
-          </div>
-        ))}
+        {kpis.map((m) => {
+          const clicavel = Boolean(m.onClick) && Number(m.value) > 0;
+          const conteudo = (
+            <>
+              <p className="mb-0.5 flex items-center gap-1 text-xs text-[#8b949e]">
+                {m.label}
+                {clicavel ? <span className="text-[10px] text-[#c9a24a]">ver fila →</span> : null}
+              </p>
+              <p className="text-base font-black sm:text-lg" style={{ color: m.cor }}>
+                {m.value}{m.sufixo && Number(m.value) > 0 ? <span className="ml-1 text-sm">{m.sufixo}</span> : null}
+              </p>
+            </>
+          );
+          return clicavel ? (
+            <button
+              key={m.label}
+              type="button"
+              onClick={m.onClick}
+              className="bg-[#0f1d16] px-3 py-2.5 text-left transition-colors hover:bg-[#16271e] sm:px-5"
+            >
+              {conteudo}
+            </button>
+          ) : (
+            <div key={m.label} className="bg-[#0f1d16] px-3 py-2.5 sm:px-5">
+              {conteudo}
+            </div>
+          );
+        })}
       </div>
 
       {/* Board */}
@@ -361,6 +470,7 @@ function ArquiteturaInner() {
                         onDragEnd={() => { setDragId(null); setDragOver(null); }}
                         onOpen={() => router.push(`/crm/arquitetura/${projeto.id}`)}
                         onEdit={() => router.push(`/crm/arquitetura/${projeto.id}`)}
+                        onAprovacao={() => router.push(`/crm/arquitetura/${projeto.id}?aba=entregaveis`)}
                         onMove={isMobile ? () => setMoverAlvo(projeto) : undefined}
                       />
                     ))}

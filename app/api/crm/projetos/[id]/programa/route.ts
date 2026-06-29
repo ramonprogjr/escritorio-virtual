@@ -6,6 +6,10 @@ import { isMissingPgColumn } from "@/lib/tenant-default";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// A1 acrescenta as colunas de SLA/motivo (aprovacao_enviado_em/respondido_em/motivo).
+const SELECT_A1 =
+  "id, projeto_id, nome, ordem, status, tipo, categoria, metragem_m2, observacao, aprovacao_status, " +
+  "entregavel_url, aprovacao_enviado_em, aprovacao_respondido_em, aprovacao_motivo";
 const SELECT_A0 =
   "id, projeto_id, nome, ordem, status, tipo, categoria, metragem_m2, observacao, aprovacao_status, entregavel_url";
 const SELECT_LEGADO = "id, projeto_id, nome, ordem, status";
@@ -58,7 +62,9 @@ export async function GET(
     return q;
   }
 
-  let { data, error } = await buscar(SELECT_A0, true);
+  // 3 níveis tolerantes: A1 (com SLA) → A0 → legado. Cada queda só ocorre se a coluna faltar.
+  let { data, error } = await buscar(SELECT_A1, true);
+  if (error && isMissingPgColumn(error)) ({ data, error } = await buscar(SELECT_A0, true));
   if (error && isMissingPgColumn(error)) ({ data, error } = await buscar(SELECT_LEGADO, false));
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

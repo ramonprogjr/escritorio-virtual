@@ -35,7 +35,10 @@ export type HubAgenteFerramentaId =
   | "arq_resumo"
   | "arq_criar_projeto"
   | "arq_mover_estagio"
-  | "arq_programa_item";
+  | "arq_programa_item"
+  // ── A1: Aprovação do cliente (escrita crítica) ──
+  | "arq_enviar_aprovacao"
+  | "arq_registrar_aprovacao";
 
 export type HubAgenteFerramentaCatalogo = {
   id: HubAgenteFerramentaId;
@@ -793,6 +796,62 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── A1: Aprovação do cliente (escrita CRÍTICA — gate dourado obrigatório) ────
+  {
+    id: "arq_enviar_aprovacao",
+    categoria: "arquitetura",
+    titulo: "Enviar entregável para aprovação",
+    descricao:
+      "Marca um entregável (estudo, anteprojeto, executivo) como enviado ao cliente para aprovação. Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_enviar_aprovacao",
+      description:
+        "Envia (ou reenvia com revisão) um entregável do projeto para o cliente aprovar. Exige que o entregável tenha arquivo (entregavel_url) — se faltar, devolve aviso para anexar primeiro. Recalcula a situação de aprovação do projeto. Só propõe — o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          projeto_id: { type: "string", description: "ID do projeto (use o da tela)." },
+          fase_id: { type: "string", description: "ID do entregável (fase tipo='fase') a enviar." },
+          entregavel_url: { type: "string", description: "URL do arquivo do entregável, se for anexar agora (opcional)." },
+          observacao: { type: "string", description: "Observação opcional para o histórico do envio." },
+        },
+        required: ["projeto_id", "fase_id"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "arq_registrar_aprovacao",
+    categoria: "arquitetura",
+    titulo: "Registrar resposta do cliente",
+    descricao:
+      "Lança a decisão do cliente (aprovado ou rejeitado) sobre um entregável que está aguardando. Reprovação exige motivo. Escrita — exige confirmação do dono.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "arq_registrar_aprovacao",
+      description:
+        "Registra a resposta do cliente sobre um entregável que está aguardando (enviado): 'aprovado' ou 'rejeitado'. Rejeitado EXIGE motivo_rejeicao. Recalcula a situação de aprovação do projeto; se tudo ficar aprovado, sugere mover o projeto para Entregue (não move sozinho). Só propõe — o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          projeto_id: { type: "string", description: "ID do projeto (use o da tela)." },
+          fase_id: { type: "string", description: "ID do entregável (fase tipo='fase') respondido." },
+          decisao: {
+            type: "string",
+            enum: ["aprovado", "rejeitado"],
+            description: "A decisão do cliente.",
+          },
+          motivo_rejeicao: {
+            type: "string",
+            description: "Motivo da reprovação (OBRIGATÓRIO quando decisao='rejeitado').",
+          },
+        },
+        required: ["projeto_id", "fase_id", "decisao"],
+        additionalProperties: false,
+      },
+    },
+  },
 ] as const;
 
 const IDS = new Set(HUB_AGENTE_FERRAMENTAS_CATALOGO.map((t) => t.id));
@@ -917,6 +976,8 @@ export function mergeUsoFerramentasComPadrao(
     arq_criar_projeto: false,
     arq_mover_estagio: false,
     arq_programa_item: false,
+    arq_enviar_aprovacao: false,
+    arq_registrar_aprovacao: false,
   };
   for (const id of Object.keys(base) as HubAgenteFerramentaId[]) {
     if (coalesceFerramentaBool(uso[id]) === true) base[id] = true;
@@ -979,4 +1040,6 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   arq_criar_projeto: "escrita",
   arq_mover_estagio: "escrita",
   arq_programa_item: "escrita",
+  arq_enviar_aprovacao: "escrita",
+  arq_registrar_aprovacao: "escrita",
 };

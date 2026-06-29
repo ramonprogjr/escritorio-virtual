@@ -1,7 +1,39 @@
 {
-  "geradoEm": "2026-06-29T11:22:50.046Z",
+  "geradoEm": "2026-06-29T12:09:02.199Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "f539d19c207206901e2148855eb4606d2d288d15",
+      "hashCurto": "f539d19",
+      "mensagem": "E3 — Restrições/Bloqueios de 1ª classe (subsistema)",
+      "mensagemRaw": "feat(eng): E3 — Restrições/Bloqueios de 1ª classe (subsistema)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T11:23:39.000Z",
+      "hora": "08:23",
+      "arquivos": [
+        "app/api/crm/obras/[id]/restricoes/route.ts",
+        "app/crm/ferramentas/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "docs/E6-DESIGN.md",
+        "docs/RELATORIO-NOITE.md",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/hub/executar-ferramenta-obra-restricoes.ts",
+        "lib/obras/restricoes.test.ts",
+        "lib/obras/restricoes.ts",
+        "supabase/migrations/20260712120000_e3_obra_restricoes.sql"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 6,
+        "lib/hub": 3,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "fc74df02e3abf927b0f4183cf070c221a054dd9b",
       "hashCurto": "fc74df0",

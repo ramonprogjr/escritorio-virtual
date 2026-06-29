@@ -89,6 +89,32 @@ export const COMODOS_SUGERIDOS = [
   "Closet", "Escritório", "Lavabo", "Área de serviço", "Garagem",
 ] as const;
 
+/**
+ * Catálogo de cômodos POR CATEGORIA (A1) — alimenta o bottom-sheet/popover do
+ * "Adicionar ambiente". É ESCOLHER do catálogo, nunca input livre (Click-and-Go).
+ * In-code de propósito (decisão CEO no A1-DESIGN.md: hub_catalogo fica fase 2).
+ * Cada item nasce com a `categoria` certa quando vai pro POST lote.
+ */
+export const CATALOGO_COMODOS: Record<string, readonly string[]> = {
+  ambiente: [
+    "Sala de estar", "Sala de jantar", "Suíte master", "Suíte", "Quarto",
+    "Cozinha", "Banheiro", "Lavabo", "Closet", "Escritório", "Varanda",
+    "Hall de entrada", "Sacada",
+  ],
+  servico: [
+    "Área de serviço", "Cozinha gourmet", "Despensa", "Garagem",
+    "Depósito", "Lavanderia",
+  ],
+  lazer: [
+    "Varanda gourmet", "Piscina", "Churrasqueira", "Home theater",
+    "Espaço fitness", "Jardim", "Deck",
+  ],
+  tecnico: [
+    "Casa de máquinas", "Reservatório", "Quadro elétrico",
+    "Shaft", "Ático técnico",
+  ],
+};
+
 /** Status de aprovação do projeto (eixo separado do funil — o gargalo do arquiteto). */
 export const APROVACAO_PROJETO = {
   sem_aprovacao: { label: "Sem envio",   cor: "#94a3b8" },

@@ -57,6 +57,7 @@ type Props = {
   onOpen: () => void;
   onEdit?: () => void;
   onMove?: () => void;
+  onAprovacao?: () => void; // atalho do chip de aprovação → ficha na aba Entregáveis
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
 };
@@ -81,6 +82,7 @@ export function ProjetoKanbanCard({
   onOpen,
   onEdit,
   onMove,
+  onAprovacao,
   onDragStart,
   onDragEnd,
 }: Props) {
@@ -109,7 +111,7 @@ export function ProjetoKanbanCard({
         padding: 12,
       }}
     >
-      {/* L1 — título + selo ATRASOU (auto) */}
+      {/* L1 — título + selos (ATRASOU auto · AGUARD. aprovação) — empilham, não sobrepõem */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6, marginBottom: 4 }}>
         <strong
           style={{
@@ -122,22 +124,38 @@ export function ProjetoKanbanCard({
         >
           {projeto.titulo}
         </strong>
-        {entrega.atrasou ? (
-          <span
-            style={{
-              flexShrink: 0,
-              borderRadius: 999,
-              padding: "1px 7px",
-              fontSize: 9,
-              fontWeight: 800,
-              letterSpacing: 0.3,
-              background: "#f8514922",
-              color: "#f85149",
-            }}
-          >
-            ATRASOU
-          </span>
-        ) : null}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3, flexShrink: 0 }}>
+          {entrega.atrasou ? (
+            <span
+              style={{
+                borderRadius: 999,
+                padding: "1px 7px",
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: 0.3,
+                background: "#f8514922",
+                color: "#f85149",
+              }}
+            >
+              ATRASOU
+            </span>
+          ) : null}
+          {projeto.aprovacao_status === "aguardando" ? (
+            <span
+              style={{
+                borderRadius: 999,
+                padding: "1px 7px",
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: 0.3,
+                background: "#c9a24a22",
+                color: "#c9a24a",
+              }}
+            >
+              ◷ AGUARD.
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {/* L2 — código mono dourado + responsável */}
@@ -205,19 +223,45 @@ export function ProjetoKanbanCard({
 
       {/* L5 — footer: chip aprovação + ações */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            padding: "3px 8px",
-            borderRadius: 6,
-            background: `${aprov.cor}18`,
-            color: aprov.cor,
-            border: `1px solid ${aprov.cor}40`,
-          }}
-        >
-          {aprov.label}
-        </span>
+        {onAprovacao ? (
+          // Atalho útil: leva à ficha na aba Entregáveis (onde mora a aprovação).
+          // stopPropagation p/ o clique não cair no onOpen genérico do card.
+          <button
+            type="button"
+            title="Abrir Entregáveis (aprovação)"
+            aria-label={`Aprovação: ${aprov.label}. Abrir Entregáveis`}
+            onClick={(e) => { stop(e); onAprovacao(); }}
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "3px 8px",
+              borderRadius: 6,
+              background: `${aprov.cor}18`,
+              color: aprov.cor,
+              border: `1px solid ${aprov.cor}40`,
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = `${aprov.cor}33`; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = `${aprov.cor}18`; }}
+          >
+            {aprov.label}
+          </button>
+        ) : (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "3px 8px",
+              borderRadius: 6,
+              background: `${aprov.cor}18`,
+              color: aprov.cor,
+              border: `1px solid ${aprov.cor}40`,
+            }}
+          >
+            {aprov.label}
+          </span>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {onMove ? (
             <button type="button" title="Mover etapa" aria-label="Mover etapa" onClick={(e) => { stop(e); onMove(); }} style={actionBtn}>

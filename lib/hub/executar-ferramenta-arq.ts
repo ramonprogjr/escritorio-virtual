@@ -14,12 +14,22 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { defaultTenantId } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import {
   ESTAGIO_PROJETO_INICIAL,
   PIPELINE_PROJETO_SLUG,
   SLUGS_PROJETO_PADRAO,
 } from "@/lib/crm/projeto-funil-defaults";
+import {
+  isFaseAprovacaoStatus,
+  proximaFaseAprovacao,
+  type FaseAprovacaoStatus,
+} from "@/lib/crm/aprovacao-projeto";
+import {
+  carregarFaseDoProjetoTenant,
+  projetoDoTenant as projetoDoTenantDb,
+  recalcularAgregadoProjeto,
+} from "@/lib/crm/aprovacao-projeto-db";
 
 type ArqCtx = { tenantId?: string };
 
@@ -27,7 +37,9 @@ export type ArqToolName =
   | "arq_resumo"
   | "arq_criar_projeto"
   | "arq_mover_estagio"
-  | "arq_programa_item";
+  | "arq_programa_item"
+  | "arq_enviar_aprovacao"
+  | "arq_registrar_aprovacao";
 
 async function gerarCodigo(supabase: SupabaseClient, tenant: string): Promise<string> {
   try {
@@ -262,6 +274,123 @@ export async function executarFerramentaArq(
         .select("id, nome, metragem_m2, categoria, tipo, ordem");
       if (error) return JSON.stringify({ erro: "supabase", detalhe: error.message });
       return JSON.stringify({ ok: true, itens: data ?? [], criados: (data ?? []).length });
+    }
+
+    case "arq_enviar_aprovacao": {
+      const projetoId = typeof args.projeto_id === "string" ? args.projeto_id.trim() : "";
+      const faseId = typeof args.fase_id === "string" ? args.fase_id.trim() : "";
+      if (!projetoId) return JSON.stringify({ erro: "projeto_id_ausente", nota: "Informe o projeto (ou abra a ficha)." });
+      if (!faseId) return JSON.stringify({ erro: "fase_id_ausente", nota: "Qual entregável quer enviar para aprovação?" });
+
+      if (!(await projetoDoTenantDb(supabase, projetoId, tenant))) {
+        return JSON.stringify({ erro: "projeto_nao_encontrado", projeto_id: projetoId });
+      }
+      const fase = await carregarFaseDoProjetoTenant(supabase, faseId, projetoId, tenant);
+      if (fase === "sem_tenant") return JSON.stringify({ erro: "aprovacao_indisponivel", nota: "Ambiente sem a migração A0/A1." });
+      if (!fase) return JSON.stringify({ erro: "entregavel_nao_encontrado", fase_id: faseId });
+      if ((fase.row.tipo ?? "fase") !== "fase") {
+        return JSON.stringify({ erro: "nao_e_entregavel", nota: "Aprovação só se aplica a entregáveis, não a cômodos." });
+      }
+
+      const urlEnviada =
+        typeof args.entregavel_url === "string" && args.entregavel_url.trim()
+          ? args.entregavel_url.trim().slice(0, 2000)
+          : null;
+      const temUrl = Boolean(urlEnviada || fase.row.entregavel_url);
+      const atual: FaseAprovacaoStatus = isFaseAprovacaoStatus(fase.row.aprovacao_status)
+        ? fase.row.aprovacao_status
+        : "pendente";
+      // 'reenviar' se já foi rejeitado/aprovado; senão 'enviar' (1ª volta).
+      const acao = atual === "rejeitado" || atual === "aprovado" ? "reenviar" : "enviar";
+      const transicao = proximaFaseAprovacao(acao, atual, { temUrl });
+      if (!transicao.ok) {
+        if (transicao.erro === "entregavel_sem_arquivo") {
+          return JSON.stringify({ erro: "sem_arquivo", nota: "Precisamos do arquivo do entregável primeiro (cole a URL)." });
+        }
+        return JSON.stringify({ erro: transicao.erro });
+      }
+
+      const agora = new Date().toISOString();
+      const patchBase: Record<string, unknown> = { aprovacao_status: "enviado", atualizado_em: agora };
+      if (urlEnviada) patchBase.entregavel_url = urlEnviada;
+      const patchSla = { ...patchBase, aprovacao_enviado_em: agora, aprovacao_respondido_em: null, aprovacao_motivo: null };
+
+      let upd = fase.slaDisponivel
+        ? await supabase.from("hub_projetos_fases").update(patchSla).eq("id", faseId).eq("projeto_id", projetoId).eq("tenant_id", tenant).select("id, nome, aprovacao_status").maybeSingle()
+        : await supabase.from("hub_projetos_fases").update(patchBase).eq("id", faseId).eq("projeto_id", projetoId).eq("tenant_id", tenant).select("id, nome, aprovacao_status").maybeSingle();
+      if (upd.error && isMissingPgColumn(upd.error)) {
+        upd = await supabase.from("hub_projetos_fases").update(patchBase).eq("id", faseId).eq("projeto_id", projetoId).eq("tenant_id", tenant).select("id, nome, aprovacao_status").maybeSingle();
+      }
+      if (upd.error) return JSON.stringify({ erro: "supabase", detalhe: upd.error.message });
+      const agregado = await recalcularAgregadoProjeto(supabase, projetoId, tenant);
+      // Auditabilidade: reenviar a partir de 'aprovado' reabre um entregável já aceito.
+      // Sinaliza no retorno (espelha o `de:'aprovado'` da rota REST) p/ a IA/timeline citar.
+      const reabertura = acao === "reenviar" && atual === "aprovado";
+      return JSON.stringify({
+        ok: true,
+        entregavel: upd.data,
+        acao,
+        aprovacao_projeto: agregado,
+        ...(reabertura ? { nota: "reabertura de entregável aprovado" } : {}),
+      });
+    }
+
+    case "arq_registrar_aprovacao": {
+      const projetoId = typeof args.projeto_id === "string" ? args.projeto_id.trim() : "";
+      const faseId = typeof args.fase_id === "string" ? args.fase_id.trim() : "";
+      if (!projetoId) return JSON.stringify({ erro: "projeto_id_ausente", nota: "Informe o projeto (ou abra a ficha)." });
+      if (!faseId) return JSON.stringify({ erro: "fase_id_ausente", nota: "De qual entregável é a resposta do cliente?" });
+
+      const decisaoRaw = typeof args.decisao === "string" ? args.decisao.trim().toLowerCase() : "";
+      const decisao = decisaoRaw === "aprovado" ? "aprovado" : decisaoRaw === "rejeitado" ? "rejeitado" : undefined;
+      if (!decisao) return JSON.stringify({ erro: "decisao_invalida", nota: "A decisão do cliente foi 'aprovado' ou 'rejeitado'?" });
+      const motivo =
+        typeof args.motivo_rejeicao === "string" && args.motivo_rejeicao.trim()
+          ? args.motivo_rejeicao.trim().slice(0, 2000)
+          : undefined;
+      if (decisao === "rejeitado" && !motivo) {
+        return JSON.stringify({ erro: "motivo_obrigatorio", nota: "Qual o motivo da reprovação do cliente?" });
+      }
+
+      if (!(await projetoDoTenantDb(supabase, projetoId, tenant))) {
+        return JSON.stringify({ erro: "projeto_nao_encontrado", projeto_id: projetoId });
+      }
+      const fase = await carregarFaseDoProjetoTenant(supabase, faseId, projetoId, tenant);
+      if (fase === "sem_tenant") return JSON.stringify({ erro: "aprovacao_indisponivel", nota: "Ambiente sem a migração A0/A1." });
+      if (!fase) return JSON.stringify({ erro: "entregavel_nao_encontrado", fase_id: faseId });
+      if ((fase.row.tipo ?? "fase") !== "fase") {
+        return JSON.stringify({ erro: "nao_e_entregavel", nota: "Aprovação só se aplica a entregáveis, não a cômodos." });
+      }
+
+      const atual: FaseAprovacaoStatus = isFaseAprovacaoStatus(fase.row.aprovacao_status)
+        ? fase.row.aprovacao_status
+        : "pendente";
+      const transicao = proximaFaseAprovacao("responder", atual, { temUrl: true, decisao, motivo });
+      if (!transicao.ok) {
+        if (transicao.erro === "resposta_so_de_enviado") {
+          return JSON.stringify({ erro: "nao_esta_aguardando", nota: "Esse entregável não está aguardando o cliente (envie-o primeiro)." });
+        }
+        return JSON.stringify({ erro: transicao.erro });
+      }
+
+      const agora = new Date().toISOString();
+      const patchBase: Record<string, unknown> = { aprovacao_status: decisao, atualizado_em: agora };
+      const patchSla = { ...patchBase, aprovacao_respondido_em: agora, aprovacao_motivo: decisao === "rejeitado" ? motivo : null };
+
+      let upd = fase.slaDisponivel
+        ? await supabase.from("hub_projetos_fases").update(patchSla).eq("id", faseId).eq("projeto_id", projetoId).eq("tenant_id", tenant).select("id, nome, aprovacao_status").maybeSingle()
+        : await supabase.from("hub_projetos_fases").update(patchBase).eq("id", faseId).eq("projeto_id", projetoId).eq("tenant_id", tenant).select("id, nome, aprovacao_status").maybeSingle();
+      if (upd.error && isMissingPgColumn(upd.error)) {
+        upd = await supabase.from("hub_projetos_fases").update(patchBase).eq("id", faseId).eq("projeto_id", projetoId).eq("tenant_id", tenant).select("id, nome, aprovacao_status").maybeSingle();
+      }
+      if (upd.error) return JSON.stringify({ erro: "supabase", detalhe: upd.error.message });
+      const agregado = await recalcularAgregadoProjeto(supabase, projetoId, tenant);
+      // Se tudo aprovado, SUGERE mover para 'entregue' (não move sozinho — decisão humana).
+      const sugestao =
+        agregado === "aprovado"
+          ? "Todos os entregáveis aprovados. Quer mover o projeto para “Entregue”?"
+          : undefined;
+      return JSON.stringify({ ok: true, entregavel: upd.data, decisao, aprovacao_projeto: agregado, sugestao });
     }
 
     default:

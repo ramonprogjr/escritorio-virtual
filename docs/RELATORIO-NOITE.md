@@ -9,7 +9,7 @@
 | `4d0fa37` | **E0 + A0** | "Nova obra" Click-and-Go (EAP por disciplina; preset "Reforma" = 15 disciplinas do Consulado) + editor de EAP + carteira; **Arquitetura** `/crm/arquitetura` (funil de projeto editável, ficha em abas, "Novo projeto") |
 | `0dae8dc` | **E1 cockpit** | `/crm/obras` virou **[Carteira] [Hoje]**. O painel **"Hoje" = sua fila de decisões** (Atrasados · Próximos 15d · Bloqueios · Pagamentos). 🟢 **FUNCIONA AO VIVO** (sem migração) — é o que melhor mostra a ideia |
 | `fc74df0` | **E2 item×subitem** | Aba "Itens & Avanço": a separação genial da planilha **Situação automática (prazo) × Andamento manual**, por disciplina×andar; KPI "Finalizados" = Andamento (item 100% paralisado não conta) |
-| _em deploy_ | **E3 restrições** | Subsistema dos 5 bloqueios "falta pessoa/material/…" como restrição de 1ª classe (em auditoria final agora) |
+| `f539d19` | **E3 restrições** | Subsistema dos 5 bloqueios "falta pessoa/material/…" como restrição de 1ª classe (tabela + view de união + RPC; SST readonly; isolamento tenant exemplar). Fiação no cockpit/itens = E3.5 |
 
 ## 📐 DESENHADOS + AUDITADOS (prontos pra construir/deployar) — em `docs/*-DESIGN.md`
 - **A1** — Programa de necessidades + **Aprovações do cliente** (o gargalo nº1 do arquiteto).
