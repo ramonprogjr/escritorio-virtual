@@ -87,6 +87,18 @@ export type ItemBloqueio = {
   id: string;
 };
 
+/**
+ * Detalhe financeiro do dia (E6) — campo NOVO aditivo. A assinatura `pagamentosAVencer: number | null`
+ * é PRESERVADA (consumidores de E1 não quebram); este objeto traz os baldes só quando há financeiro real.
+ */
+export type CockpitFinanceiro = {
+  a_pagar: number;
+  vencendo_7d: number;
+  atrasado: number;
+  em_custodia: number;
+  aguarda_2a_chave: number;
+};
+
 export type CockpitContadores = {
   obras: number;
   pedemAtencao: number; // obras com saúde crítica/atrasada/atenção
@@ -94,6 +106,8 @@ export type CockpitContadores = {
   proximos15: number;
   bloqueios: number;
   pagamentosAVencer: number | null; // null = financeiro não estruturado ("em breve")
+  // E6: detalhe aditivo (undefined quando a migração financeira não existe — degrada).
+  financeiro?: CockpitFinanceiro;
 };
 
 export type CockpitResumoIa = {
@@ -227,6 +241,74 @@ async function lerPedidosAbertos(
   return (data ?? []) as { id: string; obra_id: string | null; descricao: string }[];
 }
 
+/**
+ * E6 — Resumo financeiro dos pagamentos do tenant (degradável). Lê hub_obra_pagamentos no molde de
+ * lerPedidosAbertos: `.eq("tenant_id")` PURO + `.in("obra_id")`. Schema ausente (migração E6 pendente)
+ * → ehAusenciaDeSchema → null (e o cockpit segue com temFinanceiro=false → §4 "chega em breve"). Erro
+ * REAL (rede/RLS) propaga (não mascara). Os baldes (a_pagar/vencendo_7d/atrasado) são DERIVADOS aqui
+ * com a MESMA regra da UI (status liberável + vencimento), uma só fonte de verdade.
+ */
+async function lerPagamentosResumo(
+  supabase: SupabaseClient,
+  tenantId: string,
+  obraIds: string[],
+  hojeISO: string
+): Promise<CockpitFinanceiro | null> {
+  if (!obraIds.length) return null;
+  const { data, error } = await supabase
+    .from("hub_obra_pagamentos")
+    .select("status, valor, valor_retencao, data_vencimento, escrow_liberado, aprovacao_arq_id, aprovacao_hub_id")
+    .eq("tenant_id", tenantId) // mandatório: service-role bypassa RLS
+    .in("obra_id", obraIds)
+    .in("status", ["liberado", "autorizado", "em_custodia"])
+    .limit(2000);
+  if (error) {
+    if (ehAusenciaDeSchema(error)) return null; // migração E6 pendente → §4 "em breve"
+    throw error; // erro real: não mascarar como "sem financeiro"
+  }
+
+  const resumo: CockpitFinanceiro = {
+    a_pagar: 0,
+    vencendo_7d: 0,
+    atrasado: 0,
+    em_custodia: 0,
+    aguarda_2a_chave: 0,
+  };
+  const hoje = hojeISO.slice(0, 10);
+  for (const row of data ?? []) {
+    const status = String(row.status ?? "");
+    const liquido = Number(row.valor ?? 0) - Number(row.valor_retencao ?? 0);
+    const valor = Number.isFinite(liquido) ? liquido : 0;
+    const venc = row.data_vencimento ? String(row.data_vencimento).slice(0, 10) : null;
+
+    // CLAREZA PRO GESTOR: baldes MUTUAMENTE EXCLUSIVOS — classifica por STATUS primeiro.
+    // 'em_custodia' = já no cofre (aguarda repasse), NÃO entra nos baldes de prazo (não é "a pagar"
+    // — o dinheiro já saiu do bolso do cliente e está em custódia). Só os realmente liberáveis a
+    // pagar (liberado/autorizado, ainda fora da custódia) caem em a_pagar/vencendo_7d/atrasado.
+    if (status === "em_custodia") {
+      resumo.em_custodia += valor;
+      continue; // não soma em prazo — fim deste pagamento
+    }
+
+    // 'liberado' sem escrow liberado = passou o Gate 1, aguarda a 2ª chave (dupla aprovação).
+    if (status === "liberado" && !row.escrow_liberado) resumo.aguarda_2a_chave += valor;
+
+    // Baldes de prazo (só os liberáveis fora da custódia: liberado/autorizado).
+    if (venc && venc < hoje) {
+      resumo.atrasado += valor;
+    } else if (venc) {
+      const dias = Math.round(
+        (new Date(`${venc}T00:00:00Z`).getTime() - new Date(`${hoje}T00:00:00Z`).getTime()) / 86_400_000
+      );
+      if (dias <= 7) resumo.vencendo_7d += valor;
+      else resumo.a_pagar += valor;
+    } else {
+      resumo.a_pagar += valor;
+    }
+  }
+  return resumo;
+}
+
 export async function aggregateCockpit(
   supabase: SupabaseClient,
   tenantId: string,
@@ -236,11 +318,12 @@ export async function aggregateCockpit(
   const obras = await lerObras(supabase, tenantId, opts?.negocioId);
   const obraIds = obras.map((o) => o.id);
 
-  // Blocos independentes em paralelo — cada um degrada para []/0 isoladamente.
-  const [cronograma, ocorrencias, pedidos] = await Promise.all([
+  // Blocos independentes em paralelo — cada um degrada para []/0/null isoladamente.
+  const [cronograma, ocorrencias, pedidos, financeiro] = await Promise.all([
     lerCronograma(supabase, tenantId, obraIds),
     lerOcorrenciasCriticas(supabase, tenantId, obraIds),
     lerPedidosAbertos(supabase, tenantId, obraIds),
+    lerPagamentosResumo(supabase, tenantId, obraIds, hojeISO),
   ]);
 
   // Indexa por obra.
@@ -366,13 +449,19 @@ export async function aggregateCockpit(
   ).length;
   const obrasCriticas = carteira.filter((c) => c.saude === "critica").length;
 
+  // E6: pagamentosAVencer preserva a assinatura (number | null) = total a vencer/atrasado;
+  // o detalhe vai no campo aditivo `financeiro`. Null mantém o "chega em breve" quando ausente.
+  const pagamentosAVencer =
+    financeiro != null ? financeiro.a_pagar + financeiro.vencendo_7d + financeiro.atrasado : null;
+
   const contadores: CockpitContadores = {
     obras: carteira.length,
     pedemAtencao,
     atrasados: atrasados.length,
     proximos15: proximos15.length,
     bloqueios: bloqueiosTop.length,
-    pagamentosAVencer: null, // financeiro estruturado não existe → "chega em breve"
+    pagamentosAVencer,
+    ...(financeiro != null ? { financeiro } : {}),
   };
 
   // Tudo que pede decisão HOJE: vencidos + bloqueios + marcos chegando (próximos 15d).
@@ -387,7 +476,8 @@ export async function aggregateCockpit(
 
   const flags: CockpitFlags = {
     temCronograma: cronograma.length > 0,
-    temFinanceiro: false, // sem tabela financeira estruturada hoje
+    // E6: acende quando o financeiro estruturado existe (migração aplicada). Null = ausente → "em breve".
+    temFinanceiro: financeiro != null,
     temOcorrencias: ocorrencias.length > 0,
   };
 

@@ -1,7 +1,37 @@
 {
-  "geradoEm": "2026-06-29T13:41:36.282Z",
+  "geradoEm": "2026-06-29T17:50:05.543Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "37d576b700cac4aeb99dcd567a784b9f3a8b7b42",
+      "hashCurto": "37d576b",
+      "mensagem": "E0.5 — EAP refinada (segmento→ambiente→atividade) + taxonomia (vocabulário da IA)",
+      "mensagemRaw": "feat(eng): E0.5 — EAP refinada (segmento→ambiente→atividade) + taxonomia (vocabulário da IA)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T16:15:09.000Z",
+      "hora": "13:15",
+      "arquivos": [
+        "app/api/crm/obras/[id]/itens/route.ts",
+        "app/api/crm/obras/route.ts",
+        "app/api/crm/taxonomia/route.ts",
+        "components/crm/obras/NovaObraSideover.tsx",
+        "components/crm/obras/ObraItensSecao.tsx",
+        "docs/CENTRAL-APROVACOES-DESIGN.md",
+        "docs/insumos-do-dono/central-aprovacoes-requisito.md",
+        "lib/obras/criar-obra-com-eap.ts",
+        "lib/obras/eap-presets.ts",
+        "lib/obras/itens-situacao.ts",
+        "lib/obras/taxonomia.test.ts",
+        "lib/obras/taxonomia.ts",
+        "supabase/migrations/20260711120000_e0b_taxonomia_ambiente_segmento.sql"
+      ],
+      "areas": {
+        "app/api": 3,
+        "components/crm": 2,
+        "outros": 7,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "35fe4f52b60a13e1d7f157c796feabfd58a3fe7b",
       "hashCurto": "35fe4f5",

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { getCallerContext } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -13,12 +14,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // SEGURANÇA (F0/E6): a fila de aprovações é SEMPRE do tenant da sessão. service_role bypassa RLS,
+  // então o `.eq("tenant_id")` no código é a única barreira contra ler a fila de outro tenant.
+  const g = await getCallerContext(request);
+  if ("error" in g) return g.error;
+  const tenantId = g.ctx.tenantId;
+
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || "pendente";
 
   const query = db()
     .from("hub_aprovacoes")
     .select("*")
+    .eq("tenant_id", tenantId)
     .eq("status", status)
     .order("criado_em", { ascending: false });
 

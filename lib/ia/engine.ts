@@ -126,6 +126,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
         leadId: ctx.leadId,
         valorEnvolvido: ctx.valorEstimado,
         dados: { mensagem: ctx.mensagem, canal: ctx.canal },
+        tenantId: ctx.tenantId,
       });
 
       return {
@@ -618,6 +619,7 @@ export async function processarDemandaInterna(demanda: Demanda & {
         motivo: autonomia.motivo,
         impacto: "Aguardando aprovação para executar",
         dados: demanda.dados,
+        // demanda interna sem sessão → criarAprovacao cai no defaultTenantId() (tenant legado Obra10).
       });
 
       return { sucesso: true, precisaAprovacao: true, aprovacaoId: aprovacaoId || undefined };
@@ -658,6 +660,7 @@ export async function processarDemandaInterna(demanda: Demanda & {
         recomendacao: textoResposta.slice(0, 200),
         confiancaIA: 85,
         dados: { resultado: textoResposta, demanda: demanda.dados },
+        // demanda interna sem sessão → criarAprovacao cai no defaultTenantId() (tenant legado Obra10).
       });
     }
 

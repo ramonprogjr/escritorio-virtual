@@ -34,6 +34,9 @@ export type HubAgenteFerramentaId =
   // ── E5: Compras → Estoque (SC + Inventário) ──
   | "hub_obra_sc_criar"
   | "hub_obra_estoque_consultar"
+  // ── E6: Financeiro (orçamento/pagamento/escrow/compatibilização) ──
+  | "hub_obra_financeiro_resumo"
+  | "hub_obra_pagamento_preparar"
   // ── A0: Arquitetura/Projeto (não dependem de canal WhatsApp) ──
   | "arq_resumo"
   | "arq_criar_projeto"
@@ -748,6 +751,62 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── E6: Financeiro (orçamento · pagamento · escrow · compatibilização) ──────
+  {
+    id: "hub_obra_financeiro_resumo",
+    categoria: "obra",
+    titulo: "Resumo financeiro da obra",
+    descricao:
+      "Resumo financeiro de uma obra: previsto/orçado/aprovado, pagamentos (a pagar/vencendo/atrasado), escrow em custódia e o que aguarda a 2ª chave, cobertura. Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_financeiro_resumo",
+      description:
+        "Resume o financeiro de uma obra (orçado, aprovado, a pagar, vencendo, atrasado, em custódia, aguardando 2ª chave, % de cobertura). Use para 'como está o financeiro da obra', 'quanto falta aprovar', 'o que está atrasado para pagar', 'quanto tem em custódia'. Respeita o tipo de contrato (administração mostra unitário; preço fechado só totais). Não altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+        },
+        required: ["obra_id"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_pagamento_preparar",
+    categoria: "obra",
+    titulo: "Preparar pagamento (enfileira dupla aprovação)",
+    descricao:
+      "Cria um pagamento/medição e o coloca na fila de APROVAÇÃO DUPLA (arquitetura + Hub). A IA PREPARA — liberar o dinheiro é decisão humana com as DUAS chaves na tela. Nunca aprova nem libera.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_pagamento_preparar",
+      description:
+        "Prepara um pagamento/medição de uma obra e o enfileira para a APROVAÇÃO DUPLA (arquitetura + Hub). Use para 'lança a medição 3 de R$84 mil da elétrica', 'prepara o pagamento da fundação'. O pagamento NÃO é aprovado nem o escrow liberado por aqui — isso é decisão HUMANA com as duas chaves na tela (NUNCA por voz). Se o pagamento depender de um orçamento ainda não aprovado, o sistema avisa (nasce bloqueado). Só propõe; o dono confirma na tela.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          titulo: { type: "string", description: "Descrição curta (ex.: 'Medição 3 — Elétrica')." },
+          valor: { type: "number", description: "Valor do pagamento (ex.: 84000).", minimum: 0 },
+          data_vencimento: { type: "string", description: "Data de vencimento (AAAA-MM-DD)." },
+          tipo: {
+            type: "string",
+            enum: ["medicao", "adiantamento", "retencao", "aditivo", "reembolso", "avulso"],
+            description: "Tipo do pagamento (medicao por padrão). 'adiantamento' exige justificativa.",
+          },
+          orcamento_id: { type: "string", description: "ID do orçamento da frente, se houver (libera se aprovado)." },
+          adiantamento_justificativa: {
+            type: "string",
+            description: "Justificativa (OBRIGATÓRIA quando tipo='adiantamento').",
+          },
+        },
+        required: ["obra_id", "titulo", "valor", "data_vencimento"],
+        additionalProperties: false,
+      },
+    },
+  },
   // ── A0: Arquitetura / Projeto ───────────────────────────────────────────────
   {
     id: "arq_resumo",
@@ -1064,6 +1123,8 @@ export function mergeUsoFerramentasComPadrao(
     hub_obra_bloqueio_resolver: false,
     hub_obra_sc_criar: false,
     hub_obra_estoque_consultar: false,
+    hub_obra_financeiro_resumo: false,
+    hub_obra_pagamento_preparar: false,
     arq_resumo: false,
     arq_criar_projeto: false,
     arq_mover_estagio: false,
@@ -1131,6 +1192,8 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_obra_bloqueio_resolver: "escrita",
   hub_obra_estoque_consultar: "leitura",
   hub_obra_sc_criar: "escrita",
+  hub_obra_financeiro_resumo: "leitura",
+  hub_obra_pagamento_preparar: "escrita",
   arq_resumo: "leitura",
   arq_criar_projeto: "escrita",
   arq_mover_estagio: "escrita",
