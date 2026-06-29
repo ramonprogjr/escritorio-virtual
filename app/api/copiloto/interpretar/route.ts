@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     /\b(anota|anotar|nota|registr|atualiz|muda|mudar|altera|alterar|marca|marcar|defin|definir|coloca|colocar|estágio|estagio|score|valor|próxima|proxima|tarefa|agenda|tag)\b/i.test(
       texto
     );
-  const modeloFromDb = pareceEscrita ? "claude-haiku" : "mistral";
+  const modeloFromDb = "claude-haiku";
 
   const r = await completarChatPreferindoMistral({
     systemPrompt: construirPromptCopiloto({ rota, temLead }),
@@ -61,7 +61,11 @@ export async function POST(request: NextRequest) {
     modeloFromDb,
     maxTokens: 500,
   });
-  if (!r.ok) return NextResponse.json({ error: `IA indisponível: ${r.erro}` }, { status: 502 });
+  if (!r.ok) {
+    const hasMistral = !!process.env.MISTRAL_API_KEY?.trim();
+    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY?.trim();
+    return NextResponse.json({ error: `IA indisponível: ${r.erro} [mistral=${hasMistral} anthropic=${hasAnthropic}]` }, { status: 502 });
+  }
 
   void registrarConsumoIA({
     tenantId: auth.tenantId,
