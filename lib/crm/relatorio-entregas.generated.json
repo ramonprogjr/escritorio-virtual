@@ -1,7 +1,79 @@
 {
-  "geradoEm": "2026-06-29T07:29:44.634Z",
+  "geradoEm": "2026-06-29T07:58:27.311Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "4d0fa37dfa039d0927dec99066a412909d248c69",
+      "hashCurto": "4d0fa37",
+      "mensagem": "merge: integra fixes de copiloto do dev (interpretar/claude-haiku) na maratona Arq+Eng",
+      "mensagemRaw": "merge: integra fixes de copiloto do dev (interpretar/claude-haiku) na maratona Arq+Eng",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T07:32:30.000Z",
+      "hora": "04:32",
+      "arquivos": [],
+      "areas": {}
+    },
+    {
+      "hash": "452517a49b24f364c1f37aee3303512a4abefedf",
+      "hashCurto": "452517a",
+      "mensagem": "espinha Obra/EAP/Catálogo (E0) + funil de Projeto (A0) — IA-first, multi-tenant",
+      "mensagemRaw": "feat(eng+arq): espinha Obra/EAP/Catálogo (E0) + funil de Projeto (A0) — IA-first, multi-tenant",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T07:31:29.000Z",
+      "hora": "04:31",
+      "arquivos": [
+        "app/api/copiloto/executar/route.ts",
+        "app/api/crm/catalogo/route.ts",
+        "app/api/crm/obras/[id]/eap/route.ts",
+        "app/api/crm/obras/route.ts",
+        "app/api/crm/projetos/[id]/programa/route.ts",
+        "app/api/crm/projetos/[id]/route.ts",
+        "app/api/crm/projetos/route.ts",
+        "app/crm/arquitetura/[id]/page.tsx",
+        "app/crm/arquitetura/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "app/crm/obras/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/CrmFerramentasCustomDrawer.tsx",
+        "components/crm/arquitetura/NovoProjetoSideover.tsx",
+        "components/crm/arquitetura/ProjetoKanbanCard.tsx",
+        "components/crm/leads/PipelineConfigSideover.tsx",
+        "components/crm/obras/EapEditorSideover.tsx",
+        "components/crm/obras/NovaObraSideover.tsx",
+        "docs/A0-DESIGN.md",
+        "docs/E0-DESIGN.md",
+        "docs/E1-DESIGN.md",
+        "docs/E2-DESIGN.md",
+        "docs/E3-DESIGN.md",
+        "docs/PLANO-BLOCOS-ARQ-ENG.md",
+        "docs/insumos-do-dono/ANALISE-planilha-gestao-obra.md",
+        "docs/insumos-do-dono/planilha-DUMP.md",
+        "docs/insumos-do-dono/planilha-gestao-obra-2906.xlsx",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/crm/arquitetura-page-helpers.ts",
+        "lib/crm/pipeline-defaults.ts",
+        "lib/crm/projeto-codigo.ts",
+        "lib/crm/projeto-funil-defaults.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-arq.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/hub/executar-ferramenta-obra.ts",
+        "lib/obras/eap-presets.test.ts",
+        "lib/obras/eap-presets.ts",
+        "supabase/migrations/20260705130000_e0_obra_eap_catalogo.sql",
+        "supabase/migrations/20260705140000_a0_arquitetura_projeto.sql"
+      ],
+      "areas": {
+        "app/api": 7,
+        "app/crm": 4,
+        "components/crm": 7,
+        "outros": 13,
+        "lib/crm": 4,
+        "lib/hub": 4,
+        "supabase/migrations": 2
+      }
+    },
     {
       "hash": "ba41d6a7fb9da10a2d1585ee5b38235dff67b455",
       "hashCurto": "ba41d6a",
@@ -71,6 +143,36 @@
       ],
       "areas": {
         "outros": 57
+      }
+    },
+    {
+      "hash": "dd1cc3d3047150f8df0d6ff0b0d214cbdf20c7ca",
+      "hashCurto": "dd1cc3d",
+      "mensagem": "diagnóstico de chaves no erro da IA",
+      "mensagemRaw": "fix(copiloto): diagnóstico de chaves no erro da IA",
+      "autor": "Obra10+",
+      "dataIso": "2026-06-29T03:14:52.000Z",
+      "hora": "00:14",
+      "arquivos": [
+        "app/api/copiloto/interpretar/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "313209b0e4b6cca221b40c4ca544d3c66aa9e422",
+      "hashCurto": "313209b",
+      "mensagem": "força claude-haiku no interpretar",
+      "mensagemRaw": "fix(copiloto): força claude-haiku no interpretar",
+      "autor": "Obra10+",
+      "dataIso": "2026-06-29T02:31:05.000Z",
+      "hora": "23:31",
+      "arquivos": [
+        "app/api/copiloto/interpretar/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
       }
     },
     {

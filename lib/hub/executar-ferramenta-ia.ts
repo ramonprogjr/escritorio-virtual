@@ -541,6 +541,7 @@ async function executarFerramentaHubBuiltin(
     // ── E0: Engenharia / Obra (SEM gate canal_whatsapp — operam pelo copiloto global) ──
     case "hub_obra_listar":
     case "hub_obra_resumo":
+    case "hub_obra_hoje":
     case "hub_obra_criar":
     case "hub_obra_eap_montar":
       return executarFerramentaObra(toolName, args, ctx, supabase);

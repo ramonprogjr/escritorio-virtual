@@ -57,6 +57,7 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_crm_criar_cadastro: UserRound,
   hub_obra_listar: ListOrdered,
   hub_obra_resumo: HardHat,
+  hub_obra_hoje: ClipboardPenLine,
   hub_obra_criar: HardHat,
   hub_obra_eap_montar: Layers,
   arq_resumo: Compass,

@@ -20,6 +20,7 @@ import {
   disciplinaPorSlug,
   TIPOS_OBRA,
 } from "@/lib/obras/eap-presets";
+import { aggregateCockpit } from "@/lib/crm/cockpit-aggregate";
 
 type ObraCtx = { tenantId?: string; modoOperacao?: string | null };
 
@@ -42,7 +43,12 @@ function recusaSeCanalWhatsapp(ctx: ObraCtx): string | null {
 }
 
 export async function executarFerramentaObra(
-  toolName: "hub_obra_listar" | "hub_obra_resumo" | "hub_obra_criar" | "hub_obra_eap_montar",
+  toolName:
+    | "hub_obra_listar"
+    | "hub_obra_resumo"
+    | "hub_obra_hoje"
+    | "hub_obra_criar"
+    | "hub_obra_eap_montar",
   args: Record<string, unknown>,
   ctx: ObraCtx,
   supabase: SupabaseClient
@@ -50,6 +56,32 @@ export async function executarFerramentaObra(
   const tenant = (ctx.tenantId && ctx.tenantId.trim()) || defaultTenantId();
 
   switch (toolName) {
+    case "hub_obra_hoje": {
+      // Leitura: a MESMA agregação do cockpit (degradável, filtrada por tenant).
+      const negocioId = typeof args.negocio_id === "string" ? args.negocio_id.trim() : null;
+      const p = await aggregateCockpit(supabase, tenant, { negocioId });
+      // Resumo compacto p/ o LLM (não despeja todos os campos da carteira).
+      return JSON.stringify({
+        contadores: p.contadores,
+        atrasados: p.hoje.atrasados.slice(0, 8).map((a) => ({
+          obra: a.obra_titulo,
+          fase: a.fase,
+          venceu_ha_dias: Math.abs(a.dias),
+        })),
+        proximos_15d: p.hoje.proximos15.slice(0, 8).map((x) => ({
+          obra: x.obra_titulo,
+          fase: x.fase,
+          em_dias: x.dias,
+        })),
+        bloqueios: p.hoje.bloqueios.slice(0, 8).map((b) => ({
+          obra: b.obra_titulo,
+          tipo: b.tipo,
+          descricao: b.descricao,
+        })),
+        flags: p.flags,
+      });
+    }
+
     case "hub_obra_listar": {
       let q = supabase
         .from("hub_obras")
