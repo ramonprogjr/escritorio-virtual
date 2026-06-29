@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { POSTGREST_LEAD_TERMINAIS } from "@/lib/crm/estagio-filters";
 import { safeCount } from "@/lib/crm/metricas-safe";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 export type FinanceKpis = {
   aPagarAberto: number;
@@ -127,6 +128,7 @@ export async function aggregateFinanceDashboard(
         .select("id, descricao, tipo, valor_envolvido, criado_em")
         .eq("status", "pendente")
         .in("tipo", ["pagamento", "financeiro"])
+        .or(tenantScopeOrFilter(tenantId))
         .order("criado_em", { ascending: false })
         .limit(5),
       supabase

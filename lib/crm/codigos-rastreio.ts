@@ -26,7 +26,11 @@ export const HUB_PREFIXO_CODIGO = {
 
 export type HubPrefixoCodigo = (typeof HUB_PREFIXO_CODIGO)[keyof typeof HUB_PREFIXO_CODIGO];
 
-/** Prefixo legado (3 letras) → entidade, para a rpc atômica `crm_proximo_codigo`. */
+/**
+ * Prefixo (legado, p/ o fallback degradado) → entidade conhecida pela rpc atômica
+ * `crm_proximo_codigo`. Inclui as entidades de ESTEIRA (entrega por área) e os
+ * cadastros de rede (fornecedor/especialista) — todos já contemplados pela rpc.
+ */
 const ENTIDADE_POR_PREFIXO: Record<string, string> = {
   PES: "pessoa",
   EMP: "empresa",
@@ -34,6 +38,14 @@ const ENTIDADE_POR_PREFIXO: Record<string, string> = {
   NEG: "negocio",
   PAR: "parceiro",
   IMO: "imovel",
+  FOR: "fornecedor",
+  ESP: "especialista",
+  OBR: "obra",
+  PRJ: "projeto",
+  SRV: "servico",
+  MRC: "marcenaria",
+  MMR: "marmoraria",
+  VDR: "vidracaria",
 };
 
 /**
@@ -46,7 +58,7 @@ const ENTIDADE_POR_PREFIXO: Record<string, string> = {
 export async function gerarCodigoSequencial(
   supabase: SupabaseClient,
   tabela: string,
-  prefixo: HubPrefixoCodigo,
+  prefixo: HubPrefixoCodigo | string,
   mercado?: string | null
 ): Promise<string> {
   const entidade = ENTIDADE_POR_PREFIXO[prefixo] ?? "pessoa";

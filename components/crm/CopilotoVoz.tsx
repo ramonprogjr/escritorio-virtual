@@ -418,10 +418,12 @@ export function CopilotoVoz() {
 
   return (
     <>
-      {/* Backdrop — tocar fora fecha o painel */}
+      {/* Backdrop — tocar fora fecha o painel. No estado de confirmação, usa
+          cancelarAcao (descarta a proposta pendente com aviso) e não cancelar,
+          que faria um reset bruto perdendo o contexto da escrita pendente. */}
       {aberto && (
         <div
-          onClick={cancelar}
+          onClick={confirmando ? cancelarAcao : cancelar}
           aria-hidden
           style={{ position: "fixed", inset: 0, zIndex: 89, background: "rgba(0,0,0,0.25)" }}
         />

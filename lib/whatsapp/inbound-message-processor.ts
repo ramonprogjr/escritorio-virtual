@@ -96,7 +96,25 @@ async function enviarFallbackIA(params: {
     console.error("[WHATSAPP][PROCESSOR][FALLBACK] Erro ao registrar alerta:", e);
   }
 
-  await enviarMensagemWhatsApp(params.telefone, mensagem, params.waSendOpts);
+  const envio = await enviarMensagemWhatsApp(params.telefone, mensagem, params.waSendOpts);
+  if (!envio.ok) {
+    // O envio do fallback FALHOU (ex.: UAZAPI fora do ar). Não pode marcar o job
+    // como done em silêncio — o cliente ficaria sem nenhuma resposta. Alerta o time
+    // e propaga o erro: o worker reclassifica (retry se transitório, dead se não).
+    try {
+      await params.supabase.from("hub_alertas").insert({
+        agente_slug: params.agenteSlug || "diretor_geral_ia",
+        tipo: "critico",
+        titulo: "Falha ao enviar fallback IA",
+        mensagem: `Não foi possível enviar a resposta de fallback ao lead ${params.telefone}. Provider: ${envio.provider ?? "?"} · status: ${envio.status ?? "?"}.`,
+        lead_id: params.leadId,
+        dados: { motivo: params.motivo, erro: String(envio.error ?? "").slice(0, 200) },
+      });
+    } catch (e) {
+      console.error("[WHATSAPP][PROCESSOR][FALLBACK] Erro ao alertar falha de envio:", e);
+    }
+    throw new Error(`fallback_envio_falhou: ${envio.error || `HTTP ${envio.status ?? "?"}`}`);
+  }
 }
 
 export async function processarMensagemInboundWhatsapp(params: {

@@ -11,6 +11,9 @@ const LEAD_SELECT =
   "id, nome, telefone, email, origem, campanha, estagio, estagio_funil, score, valor_estimado, agente_responsavel, humano_responsavel, proxima_acao, data_proxima_acao, motivo_perda, tags, metadata, pessoa_id, tenant_id, ultimo_contato, criado_em, atualizado_em";
 
 export async function GET(_request: NextRequest, { params }: Params) {
+  const g = await requireCrmSessao(_request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) {
     return NextResponse.json({ error: configErr }, { status: 503 });
@@ -22,6 +25,11 @@ export async function GET(_request: NextRequest, { params }: Params) {
   const { data: lead, error } = await supabase.from("hub_leads_crm").select(LEAD_SELECT).eq("id", id).maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!lead) return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  // Isolamento de tenant (espelha o PATCH irmão e o GET de negócio): lead de outro
+  // tenant é 404. Sob service-role a RLS é bypassada — este filtro é a proteção.
+  if (lead.tenant_id && lead.tenant_id !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  }
 
   const [{ data: atividades }, { data: notas }, { data: propostas }, { data: memorias }] = await Promise.all([
     supabase.from("hub_atividades").select("*").eq("lead_id", id).order("criado_em", { ascending: false }).limit(50),

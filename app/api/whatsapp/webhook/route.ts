@@ -573,11 +573,22 @@ export async function POST(request: NextRequest) {
     // Roteamento para parceiro
     if (intencao === "parceiro") {
       const telLimpo = telefone.replace(/\D/g, "");
-      const { data: parceiroExistente } = await supabase
+      // Lookup ESCOPADO ao tenant (não mistura parceiros entre escritórios). Fallback
+      // p/ schema legado sem a coluna tenant_id — mesmo padrão isMissingPgColumn do insert.
+      let parceiroLookup = await supabase
         .from("hub_parceiros")
         .select("id, nome, status, modulo_atual")
         .eq("telefone", telLimpo)
+        .eq("tenant_id", defaultTenantId())
         .maybeSingle();
+      if (parceiroLookup.error && isMissingPgColumn(parceiroLookup.error, "tenant_id")) {
+        parceiroLookup = await supabase
+          .from("hub_parceiros")
+          .select("id, nome, status, modulo_atual")
+          .eq("telefone", telLimpo)
+          .maybeSingle();
+      }
+      const parceiroExistente = parceiroLookup.data;
 
       if (!parceiroExistente) {
         const parceiroRow = {

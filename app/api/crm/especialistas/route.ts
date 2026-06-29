@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { gerarCodigoSequencial } from "@/lib/crm/codigos-rastreio";
 import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 /** Rede — Especialistas / mão de obra (sem login; cadastro interno). Formato Membros. */
@@ -61,12 +62,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Já existe um especialista com este CPF (${dup.nome}).` }, { status: 409 });
   }
 
-  const year = new Date().getFullYear();
-  const { count } = await crmDb()
-    .from("hub_especialistas")
-    .select("*", { count: "exact", head: true })
-    .or(tenantScopeOrFilter(tenantId));
-  const codigo = `ESP-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
+  // Código ATÔMICO (rpc crm_proximo_codigo, contador por entidade/ano) — sem corrida
+  // sob rajada. Fallback degradado (ESP-AAAA-####) só se a rpc estiver indisponível.
+  const codigo = await gerarCodigoSequencial(crmDb(), "hub_especialistas", "ESP");
 
   const especialidades = Array.isArray(body.especialidades) ? (body.especialidades as unknown[]) : null;
 

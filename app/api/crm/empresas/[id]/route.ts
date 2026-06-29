@@ -145,7 +145,7 @@ export async function PATCH(
   }
 
   if ("cnpj" in body) {
-    const cnpjCheck = await validarCnpjEmpresaDisponivelPatch(db(), body.cnpj as string, id);
+    const cnpjCheck = await validarCnpjEmpresaDisponivelPatch(db(), body.cnpj as string, id, guard.ctx.tenantId);
     if (!cnpjCheck.ok) {
       return NextResponse.json({ error: cnpjCheck.error }, { status: 409 });
     }

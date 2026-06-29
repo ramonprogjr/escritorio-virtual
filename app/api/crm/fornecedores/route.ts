@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { gerarCodigoSequencial } from "@/lib/crm/codigos-rastreio";
+import { defaultTenantId } from "@/lib/tenant-default";
+import { rateLimitExcedido } from "@/lib/rate-limit-memoria";
 
 /** Rede — Fornecedores (PJ por área). Formato Membros: status_acesso = homologação. */
 const SELECT =
@@ -37,14 +39,21 @@ export async function POST(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
+  // Captação é PÚBLICA mas o marketing é HUB-only: rate-limit anti-spam por IP, e o tenant
+  // é SEMPRE o do Hub (defaultTenantId) — nunca do header (era forjável → escrita cross-tenant).
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "desconhecido";
+  if (rateLimitExcedido(`captacao:fornecedor:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Muitas tentativas. Aguarde um instante." }, { status: 429 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const nome = String(body.nome || "").trim();
+  const nome = String(body.nome || "").trim().slice(0, 200);
   if (!nome) return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
-  const year = new Date().getFullYear();
-  const { count } = await crmDb().from("hub_fornecedores").select("*", { count: "exact", head: true });
-  const codigo = `FOR-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
+  const tenantId = defaultTenantId();
+  // Código ATÔMICO (rpc crm_proximo_codigo, contador por entidade/ano) — sem corrida
+  // sob rajada. Fallback degradado (FOR-AAAA-####) só se a rpc estiver indisponível.
+  const codigo = await gerarCodigoSequencial(crmDb(), "hub_fornecedores", "FOR");
 
   const mercados = Array.isArray(body.mercados) ? (body.mercados as unknown[]) : null;
 

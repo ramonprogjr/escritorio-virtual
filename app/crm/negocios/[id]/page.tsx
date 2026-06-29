@@ -379,8 +379,10 @@ export default function NegocioDetalhePage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...internalApiHeaders() },
       body: JSON.stringify({
+        // status canônico de perda = "fechado_perdido" (NEGOCIO_STATUS / negocio-rules);
+        // "perdido" era gravado cru e sumia dos contadores que filtram fechado_perdido.
         etapa: novaEtapa,
-        status: perdido ? "perdido" : undefined,
+        status: perdido ? "fechado_perdido" : undefined,
       }),
     });
     if (res.ok) {
@@ -398,7 +400,7 @@ export default function NegocioDetalhePage() {
       headers: { "Content-Type": "application/json", ...internalApiHeaders() },
       body: JSON.stringify({
         etapa: motivoPendente,
-        status: "perdido",
+        status: "fechado_perdido",
         motivo_perda: motivoSelecionado.trim(),
       }),
     });
@@ -406,6 +408,8 @@ export default function NegocioDetalhePage() {
       setMotivoPendente(null);
       setMotivoSelecionado("");
       void carregar();
+    } else {
+      toast.error("Não foi possível registrar a perda.");
     }
   }
 

@@ -6,13 +6,15 @@ import {
   mensagemDocumentoInvalido,
   normalizarDocumento,
 } from "@/lib/crm/documento-brasil";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 import type { TipoPessoaCadastro } from "@/lib/crm/pessoa-cadastro";
 
 export async function validarDocumentoDisponivelPatch(
   supabase: SupabaseClient,
   tipo: TipoPessoaCadastro,
   documentoRaw: string | null | undefined,
-  excluirPessoaId?: string
+  excluirPessoaId?: string,
+  tenantId?: string | null
 ): Promise<{ ok: true; documento: string | null } | { ok: false; error: string }> {
   if (!documentoRaw?.trim()) return { ok: true, documento: null };
 
@@ -28,7 +30,7 @@ export async function validarDocumentoDisponivelPatch(
     return { ok: false, error: mensagemDocumentoInvalido(tipo) };
   }
 
-  const existente = await buscarPessoaPorDocumento(supabase, tipo, documento);
+  const existente = await buscarPessoaPorDocumento(supabase, tipo, documento, tenantId);
   if (existente && excluirPessoaId && String(existente.id) === excluirPessoaId) {
     return { ok: true, documento };
   }
@@ -47,17 +49,23 @@ export async function validarDocumentoDisponivelPatch(
 export async function validarCnpjEmpresaDisponivelPatch(
   supabase: SupabaseClient,
   cnpjRaw: string | null | undefined,
-  excluirEmpresaId?: string
+  excluirEmpresaId?: string,
+  tenantId?: string | null
 ): Promise<{ ok: true; cnpj: string | null } | { ok: false; error: string }> {
   if (!cnpjRaw?.trim()) return { ok: true, cnpj: null };
   const cnpj = normalizarDocumento(cnpjRaw);
   if (!cnpj) return { ok: true, cnpj: null };
 
-  const { data } = await supabase
+  // Dedup restrita ao tenant da sessão (+ legados sem tenant) — evita que o 409
+  // "CNPJ já cadastrado para …" vaze a razão social de outro tenant. Omitir tenantId
+  // mantém o comportamento global legado (compatibilidade).
+  const tid = typeof tenantId === "string" ? tenantId.trim() : "";
+  let query = supabase
     .from("hub_empresas")
     .select("id, razao_social, codigo")
-    .eq("cnpj", cnpj)
-    .maybeSingle();
+    .eq("cnpj", cnpj);
+  if (tid) query = query.or(tenantScopeOrFilter(tid));
+  const { data } = await query.maybeSingle();
 
   if (data && excluirEmpresaId && String(data.id) === excluirEmpresaId) {
     return { ok: true, cnpj };

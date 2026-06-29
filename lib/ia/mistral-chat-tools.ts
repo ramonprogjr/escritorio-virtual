@@ -78,6 +78,9 @@ export async function mistralChatCompletionToolRound(params: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+    // Timeout (espelha lib/ia/mistral-chat.ts): sem isso o tool-loop (até 6 rounds)
+    // e o worker WhatsApp podem travar indefinidamente numa chamada presa.
+    signal: AbortSignal.timeout(30_000),
   });
 
   const rawText = await res.text();

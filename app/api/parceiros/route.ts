@@ -8,7 +8,8 @@ import {
 } from "@/lib/crm/parceiro-compat";
 import { HUB_PARCEIRO_LIST_SELECT } from "@/lib/crm/parceiro-list-fetch";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { rateLimitExcedido } from "@/lib/rate-limit-memoria";
 
 function db() {
   return createClient(
@@ -113,7 +114,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  // Captação pública mas HUB-only: rate-limit anti-spam por IP + tenant SEMPRE do Hub
+  // (defaultTenantId), nunca do header (era forjável → escrita cross-tenant).
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "desconhecido";
+  if (rateLimitExcedido(`captacao:parceiro:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ erro: "Muitas tentativas. Aguarde um instante." }, { status: 429 });
+  }
+  const tenantId = defaultTenantId();
 
   try {
     const body = await request.json();

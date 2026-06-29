@@ -243,7 +243,43 @@ async function tokenInstanciaPorAgente(
   return { token: token || null, ident: (data as Record<string, unknown> | null) ?? null };
 }
 
+/**
+ * Re-checa o job logo após o claim: uma mensagem mais nova pode tê-lo "superseded"
+ * (status→done, last_error LIKE 'superseded%') na janela entre claim e processamento.
+ * Se já não está mais em processing, ABORTA sem responder — senão o cliente recebe
+ * resposta a uma mensagem que já foi substituída por outra mais recente.
+ */
+async function jobAindaValidoAposClaim(
+  supabase: SupabaseClient,
+  job: HubMsgJob,
+  log: HubLogger
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("hub_msg_jobs")
+    .select("status, last_error")
+    .eq("id", job.id)
+    .maybeSingle();
+  // Em erro de leitura, não bloqueia o fluxo (segue como antes) — fail-open seguro.
+  if (error || !data) return true;
+  const status = String(data.status ?? "");
+  const lastError = String(data.last_error ?? "");
+  const superseded = lastError.toLowerCase().startsWith("superseded");
+  if (status !== "processing" || superseded) {
+    log.info("wa.worker.job_superseded", {
+      job_id: job.id,
+      telefone: job.telefone,
+      status,
+      superseded,
+    });
+    return false;
+  }
+  return true;
+}
+
 async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogger): Promise<void> {
+  // Race supersede: aborta (sem responder) se o job já saiu de processing.
+  if (!(await jobAindaValidoAposClaim(supabase, job, log))) return;
+
   const contexto = reconstruirContexto(job);
 
   if (!contexto.waSendOpts?.instanceToken) {

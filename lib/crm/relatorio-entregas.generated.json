@@ -1,7 +1,24 @@
 {
-  "geradoEm": "2026-06-28T23:31:15.847Z",
+  "geradoEm": "2026-06-29T00:01:22.424Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "cf8fc98ad88d06767fa48d6fd474f5f9a48e86f8",
+      "hashCurto": "cf8fc98",
+      "mensagem": "Trafego owner-only (dado global da rede) + decisao de pipelines",
+      "mensagemRaw": "feat(crm): Trafego owner-only (dado global da rede) + decisao de pipelines",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-28T23:32:15.000Z",
+      "hora": "20:32",
+      "arquivos": [
+        "app/api/windsor/campanhas/route.ts",
+        "app/crm/trafego/page.tsx"
+      ],
+      "areas": {
+        "app/api": 1,
+        "app/crm": 1
+      }
+    },
     {
       "hash": "e9ebaa3541547b7a30774da8c677427959501a0e",
       "hashCurto": "e9ebaa3",

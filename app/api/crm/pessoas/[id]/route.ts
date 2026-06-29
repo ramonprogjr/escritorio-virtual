@@ -148,7 +148,8 @@ export async function PATCH(
         supabase,
         tipo,
         body.documento as string | undefined,
-        id
+        id,
+        g.ctx.tenantId
       );
       if (!docCheck.ok) {
         return NextResponse.json({ error: docCheck.error }, { status: 409 });

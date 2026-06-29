@@ -15,11 +15,14 @@ import {
   filtrarContas,
 } from "@/lib/crm/finance-contas";
 import { supabase } from "@/lib/supabase/client";
+import { useCrmTenant } from "@/components/crm/CrmTenantContext";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 function ContasReceberInner() {
   const searchParams = useSearchParams();
   const narrow = useNarrowViewport();
   const isMobile = narrow !== false;
+  const { tenantId, loading: tenantLoading } = useCrmTenant();
   const [contas, setContas] = useState<ContaFinanceira[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [modalNovo, setModalNovo] = useState(false);
@@ -29,10 +32,19 @@ function ContasReceberInner() {
   const proximos = searchParams.get("proximos");
 
   const carregar = useCallback(async () => {
+    // Sem tenant resolvido ainda → não consulta (evita ler de TODOS os tenants
+    // com a chave anon antes do contexto carregar). Some que a query é service-role
+    // bypassa RLS; o filtro de tenant explícito é a única proteção.
+    if (!tenantId) {
+      setContas([]);
+      setCarregando(tenantLoading);
+      return;
+    }
     setCarregando(true);
     const { data } = await supabase
       .from("hub_contas_receber")
       .select("*")
+      .or(tenantScopeOrFilter(tenantId))
       .order("vencimento", { ascending: true, nullsFirst: false });
 
     const linhas = (data ?? []).map((c) => ({
@@ -56,7 +68,8 @@ function ContasReceberInner() {
       const { data: negs } = await supabase
         .from("hub_negocios")
         .select("id, titulo, codigo")
-        .in("id", ids);
+        .in("id", ids)
+        .or(tenantScopeOrFilter(tenantId));
       if (Array.isArray(negs)) {
         mapaOrigem = Object.fromEntries(
           negs.map((n) => [
@@ -74,7 +87,7 @@ function ContasReceberInner() {
       }))
     );
     setCarregando(false);
-  }, []);
+  }, [tenantId, tenantLoading]);
 
   useEffect(() => {
     void carregar();

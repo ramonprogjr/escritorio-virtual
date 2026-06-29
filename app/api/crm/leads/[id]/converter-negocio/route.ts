@@ -27,12 +27,16 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const { data: lead, error: leadErr } = await supabase
     .from("hub_leads_crm")
-    .select("id, codigo, nome, valor_estimado, pessoa_id, estagio, metadata, pipeline_id")
+    .select("id, codigo, nome, valor_estimado, pessoa_id, estagio, metadata, pipeline_id, tenant_id")
     .eq("id", lead_id)
     .maybeSingle();
 
   if (leadErr) return NextResponse.json({ error: leadErr.message }, { status: 500 });
   if (!lead) return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  // Isolamento de tenant: não converter lead de outro tenant (service-role bypassa RLS).
+  if (lead.tenant_id && lead.tenant_id !== tenantId) {
+    return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  }
 
   let body: Record<string, unknown> = {};
   try {

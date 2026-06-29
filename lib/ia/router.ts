@@ -117,12 +117,13 @@ export async function receberDemanda(demanda: Demanda): Promise<AgenteSelecionad
     .eq("ativo", true)
     .order("prioridade", { ascending: false });
 
-  // 7. Busca hierarquia do agente
+  // 7. Busca hierarquia do agente (agente sem hierarquia é normal: maybeSingle
+  // evita PGRST116, que quebraria a engine; montarAgenteSelecionado já trata null).
   const { data: hierarquia } = await db
     .from("hub_hierarquia")
     .select("*")
     .eq("agente_slug", melhor.agente.agente_slug)
-    .single();
+    .maybeSingle();
 
   // 8. Seleciona modelo baseado no valor e criticidade
   const modelo = selecionarModelo(melhor.agente, demanda);

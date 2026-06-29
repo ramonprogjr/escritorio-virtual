@@ -6,6 +6,7 @@ import { Eye, Pencil, Trash2, User } from "lucide-react";
 import { AgenteSideoverEntityCard, AgenteSideoverInfoGrid } from "@/components/crm/AgenteSideoverCards";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
 import { CrmSideoverFold } from "@/components/crm/CrmSideoverFold";
+import { toast } from "@/components/crm/toast";
 import { SmartField } from "@/components/crm/SmartField";
 import {
   CadastroPremiumSideover,
@@ -266,6 +267,7 @@ export function CadastroContactoSideover({
         setErro(data.error || "Falha ao guardar.");
         return;
       }
+      toast.success("Contato atualizado.");
       onSaved();
       onBackToView();
       void carregar();

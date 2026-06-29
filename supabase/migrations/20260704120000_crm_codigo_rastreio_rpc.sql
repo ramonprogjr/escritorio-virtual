@@ -12,6 +12,11 @@
 --
 -- Formato compacto: PREFIXO+AAAA+SEQ (PS2026001); negócio embute o mercado
 -- (NGIMB2026001). App: lib/crm/codigos-rastreio.ts chama esta rpc.
+--
+-- 2026-06-28: + prefixos marcenaria(MC)/marmoraria(MM)/vidracaria(VD) — esteira
+-- de entrega por área. PROD precisa reaplicar este CREATE OR REPLACE para que
+-- essas 3 áreas saiam com prefixo próprio (antes caíam em 'XX'). A unicidade já
+-- era garantida (contador por entidade); só o prefixo VISÍVEL muda.
 -- ============================================================================
 
 create table if not exists public.hub_codigo_contador (
@@ -31,6 +36,7 @@ begin
     when 'negocio' then 'NG' when 'parceiro' then 'PC' when 'fornecedor' then 'FR'
     when 'especialista' then 'ES' when 'imovel' then 'IM' when 'obra' then 'OB'
     when 'projeto' then 'PJ' when 'servico' then 'SV' when 'produto' then 'PD'
+    when 'marcenaria' then 'MC' when 'marmoraria' then 'MM' when 'vidracaria' then 'VD'
     else 'XX' end;
   insert into public.hub_codigo_contador as c (entidade, ano, ultimo)
     values (lower(p_entidade), v_ano, 1)

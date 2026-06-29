@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
+import { gerarCodigoSequencial } from "@/lib/crm/codigos-rastreio";
 import { resolverEntrega, type TipoDerivado } from "@/lib/crm/derivar-negocio";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 
@@ -58,9 +59,10 @@ export async function derivarEntregaDoNegocio(
 
   const tenantId = opts?.tenant_id ?? (negocio.tenant_id as string);
   const titulo = String(negocio.titulo || `Negócio ${negocio.codigo ?? negocioId}`).slice(0, 200);
-  const year = new Date().getFullYear();
-  const { count } = await supabase.from(tabela).select("*", { count: "exact", head: true });
-  const codigo = `${prefixoCodigo}-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
+  // Código ATÔMICO (rpc crm_proximo_codigo, contador por entidade/ano) — sem corrida:
+  // 2 negócios ganhos ao mesmo tempo recebem códigos distintos. Fallback degradado
+  // (PREFIXO-AAAA-####) só se a rpc estiver indisponível. Mesmo helper de pessoa/empresa.
+  const codigo = await gerarCodigoSequencial(supabase, tabela, prefixoCodigo);
 
   const row = { codigo, titulo, status: statusInicial, negocio_id: negocioId, tenant_id: tenantId };
 
