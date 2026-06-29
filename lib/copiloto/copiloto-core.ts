@@ -98,6 +98,7 @@ const FERRAMENTAS_ESCRITA_DOC = `Ferramentas de ESCRITA (acao="escrever" — ALT
 const FERRAMENTAS_OBRA_DOC = `Ferramentas de ENGENHARIA/OBRA (use quando a tela for de obras):
 - hub_obra_listar (LEITURA): lista as obras da carteira. Params: { "status"?: "<status>", "tipo_obra"?: "construcao|reforma|servico|…" }.
 - hub_obra_resumo (LEITURA): resumo de UMA obra (status, tipo, nº de frentes). Params: { "obra_id": "<id da obra da tela>" }.
+- hub_obra_hoje (LEITURA): fila de decisões do dia — atrasados, marcos dos próximos 15 dias e bloqueios das obras. Use para "o que pede decisão hoje", "o que está atrasado", "tem bloqueio". Params: {} (ou { "negocio_id"?: "<id>" }).
 - hub_obra_criar (ESCRITA): cria obra nova com código automático e a EAP do preset. Params: { "titulo": "<nome>", "tipo_obra": "construcao|reforma|servico|…", "cliente_pessoa_id"?: "<id>", "cliente_empresa_id"?: "<id>" }. Em descricao_humana explique: "Vou criar a obra <titulo> (<tipo>) com a EAP padrão".
 - hub_obra_eap_montar (ESCRITA): adiciona uma frente (disciplina) à EAP de uma obra. Params: { "obra_id": "<id>", "disciplina_slug": "eletrica|hidraulica|civil|…", "nome"?: "<texto>" }.`;
 

@@ -20,6 +20,7 @@ export type HubAgenteFerramentaId =
   // ── E0: Engenharia/Obra (não dependem de canal WhatsApp) ──
   | "hub_obra_listar"
   | "hub_obra_resumo"
+  | "hub_obra_hoje"
   | "hub_obra_criar"
   | "hub_obra_eap_montar"
   // ── A0: Arquitetura/Projeto (não dependem de canal WhatsApp) ──
@@ -414,6 +415,29 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
     },
   },
   {
+    id: "hub_obra_hoje",
+    categoria: "obra",
+    titulo: "Fila de decisões do dia (Hoje)",
+    descricao:
+      "Cockpit do dia: obras com fases atrasadas, marcos nos próximos 15 dias e bloqueios (ocorrências críticas / pedidos abertos). Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_hoje",
+      description:
+        "Resume a fila de decisões do dia das obras do tenant: contadores (atrasados, próximos 15 dias, bloqueios), as fases atrasadas e os bloqueios atuais. Use para 'o que pede decisão hoje', 'o que está atrasado nas obras', 'tem bloqueio'. Não altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          negocio_id: {
+            type: "string",
+            description: "Filtro opcional: só obras de um negócio.",
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
     id: "hub_obra_criar",
     categoria: "obra",
     titulo: "Criar obra (com EAP do preset)",
@@ -689,6 +713,7 @@ export function mergeUsoFerramentasComPadrao(
     hub_crm_criar_cadastro: false,
     hub_obra_listar: false,
     hub_obra_resumo: false,
+    hub_obra_hoje: false,
     hub_obra_criar: false,
     hub_obra_eap_montar: false,
     arq_resumo: false,
@@ -744,6 +769,7 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_crm_criar_cadastro: "escrita",
   hub_obra_listar: "leitura",
   hub_obra_resumo: "leitura",
+  hub_obra_hoje: "leitura",
   hub_obra_criar: "escrita",
   hub_obra_eap_montar: "escrita",
   arq_resumo: "leitura",

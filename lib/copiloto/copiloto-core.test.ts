@@ -12,7 +12,7 @@ import {
 } from "./copiloto-core";
 
 describe("copiloto-core — gate de nível de acesso", () => {
-  it("inclui as 4 leituras de lead + 2 de obra (E0) + 1 de arquitetura (A0)", () => {
+  it("inclui as 4 leituras de lead + 3 de obra (E0/E1) + 1 de arquitetura (A0)", () => {
     expect(COPILOTO_FERRAMENTAS_LEITURA).toEqual(
       expect.arrayContaining([
         "hub_lead_resumo",
@@ -22,11 +22,13 @@ describe("copiloto-core — gate de nível de acesso", () => {
         // E0 — Engenharia/Obra (leitura, auto-executável)
         "hub_obra_listar",
         "hub_obra_resumo",
+        // E1 — cockpit "Hoje" (fila de decisões, leitura, auto-executável)
+        "hub_obra_hoje",
         // A0 — Arquitetura/Projeto (leitura, auto-executável)
         "arq_resumo",
       ])
     );
-    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(7);
+    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(8);
   });
 
   it("classifica leitura vs escrita corretamente", () => {
