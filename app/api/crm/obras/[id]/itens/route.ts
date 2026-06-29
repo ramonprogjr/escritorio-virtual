@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn } from "@/lib/tenant-default";
+import { sessaoPodeEscreverCusto } from "@/lib/obras/persona-escopo";
 import {
   isAndamentoItem,
   isSituacaoItem,
@@ -41,9 +42,31 @@ const SELECT_BASE =
 const AVISO_PENDENTE =
   "Itens & avanço ainda não ativos (migração E2 pendente — janela do dono).";
 
+/**
+ * E7 — campos de CUSTO gravados pelo editor de escopo (existem só após a migração E7).
+ * `quantidade` é E2 (sempre existe) e é tratada à parte. bdi_fator é o override por item (E7).
+ */
+const CAMPOS_CUSTO_E7 = [
+  "custo_locacao_frete",
+  "custo_material",
+  "custo_mao_obra",
+  "bdi_fator",
+] as const;
+
 function ehTabelaAusente(error: { message?: string } | null): boolean {
   if (!error) return false;
   return isMissingPgColumn(error) || /relation .*does not exist/i.test(error.message ?? "");
+}
+
+/** Alguma das colunas E7 (custo/bdi) ainda não existe no schema (migração E7 pendente). */
+function ehColunaE7Ausente(error: { message?: string } | null): boolean {
+  if (!error) return false;
+  return (
+    isMissingPgColumn(error, "custo_locacao_frete") ||
+    isMissingPgColumn(error, "custo_material") ||
+    isMissingPgColumn(error, "custo_mao_obra") ||
+    isMissingPgColumn(error, "bdi_fator")
+  );
 }
 
 /**
@@ -275,7 +298,45 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const itemId = String(body.id || "").trim();
   if (!itemId) return NextResponse.json({ error: "id do item é obrigatório" }, { status: 400 });
 
+  // GATE DE PERSONA (server-side): quem pode GRAVAR custo é derivado do PAPEL da sessão, não do
+  // cliente. Arquiteto/prestador NÃO podem tocar a faixa-dinheiro — os campos de custo são
+  // ignorados (silenciosamente) e a resposta sinaliza `custo_ignorado_persona`. NUNCA confiar no
+  // cliente esconder o input. `quantidade` e avanço seguem permitidos para todas as personas.
+  const podeCusto = sessaoPodeEscreverCusto(g.ctx.role);
+
+  // `patch` = campos sempre-presentes (E2). `patchCusto` = campos E7 (custo/bdi), separados para o
+  // retry tolerante: sem as colunas E7, gravamos só o `patch` (quantidade entra aí) — o custo não
+  // grava mas a quantidade sim, e a resposta diz a verdade (migracao_pendente).
   const patch: Record<string, unknown> = { atualizado_em: new Date().toISOString() };
+  const patchCusto: Record<string, unknown> = {};
+
+  // quantidade (E2, coluna sempre presente): aceita 0 como valor válido (item zerado), null limpa.
+  if ("quantidade" in body) {
+    const q = body.quantidade;
+    if (q === null) patch.quantidade = null;
+    else if (typeof q === "number" && Number.isFinite(q)) patch.quantidade = Math.max(0, q);
+  }
+  if ("unidade" in body) {
+    patch.unidade = typeof body.unidade === "string" ? body.unidade.trim() || null : null;
+  }
+
+  // Custos E7 (locação/frete, material, mão de obra, bdi_fator do item): só se a persona pode.
+  // Cada campo: number ≥ 0 (bdi pode ser >0); null limpa. Vão em `patchCusto` (retry tolerante).
+  let custoRejeitadoPorPersona = false;
+  for (const campo of CAMPOS_CUSTO_E7) {
+    if (!(campo in body)) continue;
+    if (!podeCusto) {
+      custoRejeitadoPorPersona = true; // veio custo no body mas o papel não pode → ignora, sinaliza
+      continue;
+    }
+    const v = body[campo];
+    if (v === null) {
+      patchCusto[campo] = null;
+    } else if (typeof v === "number" && Number.isFinite(v)) {
+      // bdi_fator é um fator (>0 faz sentido); custos não-negativos. Clampa o piso em 0.
+      patchCusto[campo] = Math.max(0, v);
+    }
+  }
 
   if (typeof body.pct_avanco === "number") {
     patch.pct_avanco = Math.max(0, Math.min(100, body.pct_avanco));
@@ -314,14 +375,34 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (typeof body[b.campo] === "boolean") patch[b.campo] = body[b.campo];
   }
 
-  const { data, error } = await crmDb()
-    .from("hub_obra_itens")
-    .update(patch)
-    .eq("id", itemId)
-    .eq("obra_id", obraId) // garante que o item é da obra do tenant validado
-    .eq("tenant_id", g.ctx.tenantId)
-    .select(SELECT_BASE)
-    .maybeSingle();
+  const temCusto = Object.keys(patchCusto).length > 0;
+  const tenantId = g.ctx.tenantId; // capturado fora da closure (TS estreita o union do guard)
+
+  // Update com os campos E7 inclusos (quando há custo a gravar e a persona pode).
+  // O `.eq("id"/"obra_id"/"tenant_id")` é a ÚNICA proteção (service-role bypassa RLS): nunca
+  // aceitamos tenant_id/obra_id/id do body — o filtro garante posse.
+  function executar(comCusto: boolean) {
+    const corpo = comCusto ? { ...patch, ...patchCusto } : patch;
+    return crmDb()
+      .from("hub_obra_itens")
+      .update(corpo)
+      .eq("id", itemId)
+      .eq("obra_id", obraId) // garante que o item é da obra do tenant validado
+      .eq("tenant_id", tenantId)
+      .select(SELECT_BASE)
+      .maybeSingle();
+  }
+
+  let { data, error } = await executar(temCusto);
+
+  // TOLERÂNCIA E7: se o custo não pôde gravar porque a coluna não existe (migração E7 pendente),
+  // repete SEM os campos de custo — a `quantidade`/avanço (E2) grava na mesma, e a resposta avisa
+  // honestamente que o custo só entra após a migração (a UI não diz "salvou" o que não salvou).
+  let custoPendenteMigracao = false;
+  if (error && temCusto && ehColunaE7Ausente(error)) {
+    custoPendenteMigracao = true;
+    ({ data, error } = await executar(false));
+  }
 
   if (error) {
     if (ehTabelaAusente(error)) {
@@ -330,5 +411,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   if (!data) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
-  return NextResponse.json({ data });
+
+  // Resposta honesta: avisa se o custo foi descartado por migração pendente OU por persona sem
+  // permissão — a UI usa esses flags para NÃO mentir "salva automaticamente".
+  return NextResponse.json({
+    data,
+    custo_gravado: temCusto && !custoPendenteMigracao,
+    migracao_pendente: custoPendenteMigracao,
+    custo_ignorado_persona: custoRejeitadoPorPersona,
+    ...(custoPendenteMigracao
+      ? { aviso: "Quantidade salva. Custo/preço disponível após aplicar a migração E7 (janela do dono)." }
+      : {}),
+  });
 }
