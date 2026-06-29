@@ -13,7 +13,7 @@ import {
 } from "./copiloto-core";
 
 describe("copiloto-core — gate de nível de acesso", () => {
-  it("inclui as 4 leituras de lead + 3 de obra (E0/E1) + 1 de item (E2) + 1 de bloqueios (E3) + 1 de arquitetura (A0)", () => {
+  it("inclui as 4 leituras de lead + 3 de obra (E0/E1) + 1 de item (E2) + 1 de bloqueios (E3) + 1 de estoque (E5) + 1 de arquitetura (A0)", () => {
     expect(COPILOTO_FERRAMENTAS_LEITURA).toEqual(
       expect.arrayContaining([
         "hub_lead_resumo",
@@ -29,11 +29,13 @@ describe("copiloto-core — gate de nível de acesso", () => {
         "hub_obra_item_listar",
         // E3 — Restrições/Bloqueios (leitura, auto-executável)
         "hub_obra_bloqueios_listar",
+        // E5 — Inventário/estoque (leitura, auto-executável)
+        "hub_obra_estoque_consultar",
         // A0 — Arquitetura/Projeto (leitura, auto-executável)
         "arq_resumo",
       ])
     );
-    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(10);
+    expect(COPILOTO_FERRAMENTAS_LEITURA).toHaveLength(11);
   });
 
   it("classifica leitura vs escrita corretamente", () => {
@@ -44,7 +46,7 @@ describe("copiloto-core — gate de nível de acesso", () => {
 });
 
 describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
-  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 2 de item (E2) + 2 de bloqueio (E3) + 3 de arquitetura (A0) + 2 de aprovação (A1)", () => {
+  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 2 de item (E2) + 2 de bloqueio (E3) + 1 de SC (E5) + 3 de arquitetura (A0) + 2 de aprovação (A1)", () => {
     expect(COPILOTO_FERRAMENTAS_ESCRITA_FASE3).toEqual([
       "hub_registar_nota_lead",
       "hub_atualizar_lead",
@@ -57,6 +59,8 @@ describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
       // E3 — escrita de bloqueio (criar/resolver; operam sobre obra_id/item_id, não sobre lead)
       "hub_obra_bloqueio_criar",
       "hub_obra_bloqueio_resolver",
+      // E5 — criar SC de compra (opera sobre obra_id; nasce em rascunho, aprovar é gate humano na tela)
+      "hub_obra_sc_criar",
       // A0 — escrita de projeto/arquitetura (operam sobre projeto_id, não sobre lead)
       "arq_criar_projeto",
       "arq_mover_estagio",
@@ -75,6 +79,15 @@ describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
   it("escrita de obra (E0) é executável e dispensa lead aberto", () => {
     expect(ferramentaExecutavel("hub_obra_criar")).toBe(true);
     expect(ferramentaExecutavel("hub_obra_eap_montar")).toBe(true);
+  });
+
+  it("SC de compra (E5) é executável, dispensa lead aberto e tem leitura de estoque auto-exec", () => {
+    expect(ferramentaExecutavel("hub_obra_sc_criar")).toBe(true);
+    expect(escritaSemLead("hub_obra_sc_criar")).toBe(true);
+    // leitura de inventário é auto-executável (não está na allowlist de escrita)
+    expect(ferramentaExecutavel("hub_obra_estoque_consultar")).toBe(true);
+    expect(nivelDaFerramenta("hub_obra_estoque_consultar")).toBe("leitura");
+    expect(nivelDaFerramenta("hub_obra_sc_criar")).toBe("escrita");
   });
 
   it("escrita de item (E2) é executável e dispensa lead aberto", () => {
