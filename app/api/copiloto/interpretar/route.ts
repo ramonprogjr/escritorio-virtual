@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     /\b(anota|anotar|nota|registr|atualiz|muda|mudar|altera|alterar|marca|marcar|defin|definir|coloca|colocar|estágio|estagio|score|valor|próxima|proxima|tarefa|agenda|tag)\b/i.test(
       texto
     );
-  const modeloFromDb = pareceEscrita ? "claude-haiku" : "mistral";
+  const modeloFromDb = "claude-haiku";
 
   const r = await completarChatPreferindoMistral({
     systemPrompt: construirPromptCopiloto({ rota, temLead }),
