@@ -31,6 +31,9 @@ export type HubAgenteFerramentaId =
   | "hub_obra_bloqueios_listar"
   | "hub_obra_bloqueio_criar"
   | "hub_obra_bloqueio_resolver"
+  // ── E5: Compras → Estoque (SC + Inventário) ──
+  | "hub_obra_sc_criar"
+  | "hub_obra_estoque_consultar"
   // ── A0: Arquitetura/Projeto (não dependem de canal WhatsApp) ──
   | "arq_resumo"
   | "arq_criar_projeto"
@@ -686,6 +689,63 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
       },
     },
   },
+  // ── E5: Compras → Estoque (SC + Inventário) ─────────────────────────────────
+  {
+    id: "hub_obra_estoque_consultar",
+    categoria: "obra",
+    titulo: "Consultar estoque da obra (inventário)",
+    descricao:
+      "Consulta o inventário da obra (em estoque = entradas − saídas + devoluções), com a fórmula visível. Só leitura.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_estoque_consultar",
+      description:
+        "Consulta o inventário de uma obra (quanto há em estoque de cada material/equipamento, derivado das movimentações). Use para 'quanto cimento tem', 'tem vergalhão no estoque', 'o que está zerado'. Filtra por item (texto) e categoria. Não altera dados.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          item: { type: "string", description: "Filtro por nome do item (ex.: cimento)." },
+          categoria: {
+            type: "string",
+            enum: ["material", "equipamento", "servico", "mao_de_obra"],
+            description: "Filtro opcional pela categoria.",
+          },
+        },
+        required: ["obra_id"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_obra_sc_criar",
+    categoria: "obra",
+    titulo: "Criar SC (solicitação de compra)",
+    descricao:
+      "Cria uma solicitação de compra em RASCUNHO para a obra (item do catálogo + quantidade). A IA prepara — aprovar a compra é decisão humana na tela. Escrita.",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_obra_sc_criar",
+      description:
+        "Cria uma SC (solicitação de compra) em RASCUNHO para a obra, com um item e a quantidade. Faz match do item no catálogo (ex.: 'cimento' → Cimento CP-II). Use para 'pede 50 sacos de cimento', 'preciso comprar vergalhão 10mm'. A SC nasce em rascunho — APROVAR A COMPRA É DECISÃO HUMANA NA TELA (nunca por voz). Se o item casar com vários do catálogo, o sistema pede para escolher antes. Só propõe; o dono confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          obra_id: { type: "string", description: "ID da obra (use o da tela)." },
+          item: { type: "string", description: "O que comprar (ex.: cimento CP-II, vergalhão 10mm)." },
+          quantidade: { type: "number", description: "Quantidade a comprar (ex.: 50).", minimum: 0 },
+          tipo_material: {
+            type: "string",
+            enum: ["material", "equipamento", "servico", "mao_de_obra"],
+            description: "Categoria do item (material por padrão).",
+          },
+          frente_id: { type: "string", description: "ID da frente da EAP, se a compra é de uma frente específica." },
+        },
+        required: ["obra_id", "item", "quantidade"],
+        additionalProperties: false,
+      },
+    },
+  },
   // ── A0: Arquitetura / Projeto ───────────────────────────────────────────────
   {
     id: "arq_resumo",
@@ -972,6 +1032,8 @@ export function mergeUsoFerramentasComPadrao(
     hub_obra_bloqueios_listar: false,
     hub_obra_bloqueio_criar: false,
     hub_obra_bloqueio_resolver: false,
+    hub_obra_sc_criar: false,
+    hub_obra_estoque_consultar: false,
     arq_resumo: false,
     arq_criar_projeto: false,
     arq_mover_estagio: false,
@@ -1036,6 +1098,8 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_obra_bloqueios_listar: "leitura",
   hub_obra_bloqueio_criar: "escrita",
   hub_obra_bloqueio_resolver: "escrita",
+  hub_obra_estoque_consultar: "leitura",
+  hub_obra_sc_criar: "escrita",
   arq_resumo: "leitura",
   arq_criar_projeto: "escrita",
   arq_mover_estagio: "escrita",

@@ -1,7 +1,52 @@
 {
-  "geradoEm": "2026-06-29T12:09:02.199Z",
+  "geradoEm": "2026-06-29T12:52:56.666Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "220beca2f84ccf3311396a3bfd19d042fc0e3842",
+      "hashCurto": "220beca",
+      "mensagem": "A1 — Programa de necessidades editável + Aprovações do cliente",
+      "mensagemRaw": "feat(arq): A1 — Programa de necessidades editável + Aprovações do cliente",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T12:09:53.000Z",
+      "hora": "09:09",
+      "arquivos": [
+        "app/api/crm/arquitetura/fila/route.ts",
+        "app/api/crm/projetos/[id]/programa/[faseId]/aprovacao/route.ts",
+        "app/api/crm/projetos/[id]/programa/[faseId]/route.ts",
+        "app/api/crm/projetos/[id]/programa/route.ts",
+        "app/crm/arquitetura/[id]/page.tsx",
+        "app/crm/arquitetura/page.tsx",
+        "app/crm/ferramentas/page.tsx",
+        "components/crm/AgenteFerramentasIaBlock.tsx",
+        "components/crm/arquitetura/ProjetoKanbanCard.tsx",
+        "docs/RELATORIO-NOITE.md",
+        "docs/insumos-do-dono/ifood-construcao-pedidos.md",
+        "docs/insumos-do-dono/integracao-contas-negocio-spine-logs.md",
+        "docs/insumos-do-dono/modelos-contrato-e-escrow.md",
+        "docs/insumos-do-dono/portal-do-cliente-e-medos.md",
+        "docs/insumos-do-dono/servicos-cadeia-contratacao-monetizacao.md",
+        "lib/copiloto/copiloto-core.test.ts",
+        "lib/copiloto/copiloto-core.ts",
+        "lib/crm/aprovacao-projeto-db.ts",
+        "lib/crm/aprovacao-projeto.test.ts",
+        "lib/crm/aprovacao-projeto.ts",
+        "lib/crm/projeto-funil-defaults.ts",
+        "lib/hub/agente-ferramentas-registry.ts",
+        "lib/hub/executar-ferramenta-arq.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "supabase/migrations/20260705150000_a1_aprovacao_sla.sql"
+      ],
+      "areas": {
+        "app/api": 4,
+        "app/crm": 3,
+        "components/crm": 2,
+        "outros": 8,
+        "lib/crm": 4,
+        "lib/hub": 3,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "f539d19c207206901e2148855eb4606d2d288d15",
       "hashCurto": "f539d19",

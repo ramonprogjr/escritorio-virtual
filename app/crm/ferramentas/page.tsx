@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Boxes,
   Brain,
   CheckCheck,
   ClipboardPenLine,
@@ -17,6 +18,7 @@ import {
   PieChart,
   Search,
   Send,
+  ShoppingCart,
   StickyNote,
   UserPen,
   UserRound,
@@ -68,6 +70,8 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_obra_bloqueios_listar: ListOrdered,
   hub_obra_bloqueio_criar: Wrench,
   hub_obra_bloqueio_resolver: ClipboardPenLine,
+  hub_obra_estoque_consultar: Boxes,
+  hub_obra_sc_criar: ShoppingCart,
   arq_resumo: Compass,
   arq_criar_projeto: Compass,
   arq_mover_estagio: ListOrdered,

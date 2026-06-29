@@ -17,6 +17,7 @@ import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
 import { executarFerramentaObra } from "@/lib/hub/executar-ferramenta-obra";
 import { executarFerramentaObraItem } from "@/lib/hub/executar-ferramenta-obra-itens";
 import { executarFerramentaObraRestricao } from "@/lib/hub/executar-ferramenta-obra-restricoes";
+import { executarFerramentaEstoque } from "@/lib/hub/executar-ferramenta-estoque";
 import { executarFerramentaArq } from "@/lib/hub/executar-ferramenta-arq";
 
 export type FerramentaHubContexto = {
@@ -559,6 +560,11 @@ async function executarFerramentaHubBuiltin(
     case "hub_obra_bloqueio_criar":
     case "hub_obra_bloqueio_resolver":
       return executarFerramentaObraRestricao(toolName, args, ctx, supabase);
+
+    // ── E5: Compras → Estoque (SEM gate canal_whatsapp — copiloto global) ──
+    case "hub_obra_sc_criar":
+    case "hub_obra_estoque_consultar":
+      return executarFerramentaEstoque(toolName, args, ctx, supabase);
 
     // ── A0: Arquitetura / Projeto (SEM gate canal_whatsapp — copiloto global) ──
     case "arq_resumo":

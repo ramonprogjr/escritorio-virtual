@@ -1,176 +1,355 @@
-# E6 (orcamento -> pagamento + compatibilizacao) — Design + Auditoria (mesa redonda)
+# E6 REVISADO (financeiro + 2 modelos de contrato + ESCROW) — Design ideal (mesa redonda)
 
-NOTA CRITICA: a auditoria achou vazamento cross-tenant LIVE em lib/ia/aprovacoes.ts (buscarAprovacoesPendentes/aprovar/rejeitar sem .eq tenant). CORRIGIR no build de E6.
+> Substitui o E6 generico anterior. tipo_contrato imutavel (admin=unitario/preco fechado=totais) + escrow dual-approval. PRE-REQUISITO: fix do vazamento tenant em lib/ia/aprovacoes.ts.
 
-All key audit points confirmed against real code:
-- `hub_aprovacoes.tipo` CHECK = `('proposta','pedido_material','pagamento','desconto','outro')` — needs DROP+ADD for new types.
-- `cockpit-aggregate.ts`: `pagamentosAVencer: null` (ln 375), `temFinanceiro: false` (ln 390), `ehAusenciaDeSchema` degradation pattern (ln 58) — all real.
-- E2 `hub_obra_itens.valor_contrato NUMERIC(14,2)` (ln 90), `parent_id` (ln 59), `ativo` (ln 99) — all real.
-- **CONFIRMED CRITICAL**: `buscarAprovacoesPendentes()` (ln 53) filters only `.eq("status","pendente")` — **NO tenant_id filter**. The `aprovar`/`rejeitar` functions filter only `.eq("id", ...)`. The cross-tenant leak is real and confirmed in the live code.
+Tenho os dois documentos. O insumo do dono e o E6 anterior estão claros, e as 4 lentes desenharam o financeiro+escrow com chão de código verificado. Produzo o E6 revisado agora.
 
-I have enough ground truth. Producing the final audited design.
+## Financeiro + Escrow (E6 revisado) — design ideal
+
+> Reescreve `docs/E6-DESIGN.md`. O E6 anterior estava certo na engenharia (orçamento→pagamento+compatibilização, gate dourado), mas **neutro quanto ao modelo de negócio**. O dono trouxe 2 eixos que mudam o **produto**: (1) `tipo_contrato` imutável bifurca o que cada parte VÊ; (2) ESCROW = custódia + liberação por **aprovação dupla** (arquitetura + Hub). O escrow não é feature financeira — é o mecanismo de **confiança** que vende o produto ("somos juízes"), e o spread tem que ser **honesto** ou dispara o medo que viemos curar.
+
+**Bloqueador herdado e confirmado no código real:** `lib/ia/aprovacoes.ts` — `buscarAprovacoesPendentes()` (ln 53), `aprovar()` (ln 159), `rejeitar()` (ln 202) filtram sem `.eq('tenant_id')`. E6 leva **dinheiro** para esse gate → um tenant aprovaria escrow de outro. **Fix de tenant é pré-requisito de go-live, não opcional.** (CEO: confirmar com o dono — é segurança/dado sensível.)
 
 ---
 
-## Design final de E6 — Orçamento → Pagamento + Compatibilização
+### Eixo tipo de contrato (administração unitário x preço fechado totais)
 
-As 4 lentes convergiram fortemente. Onde divergiram (nomes de tabela, snapshot vs. desnorm, 1-orçamento-por-frente vs. 1-linha-por-item), o CEO decide abaixo. **Veredito: aprovado para construção, com 1 bloqueador de segurança (tenant em `hub_aprovacoes`) que é pré-requisito de go-live.**
+`tipo_contrato` é atributo da **obra** (`hub_obras`), escolhido no fechamento do contrato, **IMUTÁVEL após o 1º orçamento aprovado**. É vocabulário do dono — eng. civil + corretor que viveu os dois modelos — então aparece com as palavras dele.
 
-### Modelo + o gate 'Aprovado'→libera pagamento (via hub_aprovacoes + evento)
-
-**Decisão de granularidade (resolvendo a divergência das lentes):** orçamento em **2 níveis** — cabeçalho por frente + linhas por item. A planilha tem "1 linha = 1 item", mas o gate do dono é "Aprovado **libera a frente** para pagamento". Cabeçalho dá a unidade de aprovação (1 card no gate por frente, não 18); as linhas dão a fidelidade item-a-item e a base da Compatibilização. (Backend-architect acertou; product-owner/ai-engineer simplificaram demais ao colar valor no item.)
-
-3 tabelas físicas + 1 VIEW + reuso total do gate:
-
-| Peça | Decisão | Fato no código |
+| | **ADMINISTRAÇÃO** (campo "gerenciamento") | **PREÇO FECHADO** (turn-key) |
 |---|---|---|
-| `hub_obra_orcamentos` (cabeçalho/frente) | **NOVA** | unidade de aprovação; `status` espelha a coluna 'Aprovado' |
-| `hub_obra_orcamento_itens` (linha/item) | **NOVA** | `item_id` FK → `hub_obra_itens` (E2, confirmado ln 90); `valor_total` GENERATED STORED |
-| Gate 'Aprovado libera' | **REUSA `hub_aprovacoes`** | tipo novo `orcamento_frente`; CHECK confirmado ln 141 → DROP+ADD |
-| `hub_obra_pagamentos` | **NOVA** | tem `orcamento_id`/`item_id`/`aprovacao_id` que `hub_contas_pagar` não tem |
-| Compatibilização | **VIEW `security_invoker=true`** | derivada de E2.valor_contrato; nunca tabela |
-| Cascata Aprovado→libera | **EVENTO via RPC**, não trigger | mesma decisão de E3/E5; auditável e atômico |
+| Cliente vê | valor **UNITÁRIO** de tudo (gestão aberta) | só **TOTAIS** por etapa/medição |
+| Composição interna | exposta (qtd × unitário) | da executante, **nunca exibida** |
+| Paga | cada item aprovado | por avanço × valor da etapa |
+| Compatibilização | item a item | por frente/etapa |
+| Spread | declarado por linha ("gerenciamento %") | embutido no total (legítimo no turn-key) |
 
-**O gate em 2 estágios (a regra de ouro vira 2 portas):**
+**Decisão de arquitetura (CEO): a bifurcação é na APRESENTAÇÃO, não no schema.** Um campo no dado, duas telas. O schema é único (`hub_obra_orcamentos` existe para ambos); o que muda é (a) `valor_total` derivado de itens (administração) vs. lump sum (preço fechado), (b) o filtro de visibilidade no endpoint do Portal. Isso entrega 2 JOBs distintos sem explodir esforço — rejeita-se duplicar tabelas (a tentação das lentes PO/ai-engineer).
 
-```
-ORÇAR → [GATE 1: humano aprova orçamento da frente] → LIBERA
-(rascunho)   hub_aprovacoes tipo='orcamento_frente'    (status='aprovado')
-             = coluna 'Aprovado' da planilha                  │
-                                                              ▼
-                               [Gerar pagamento] habilita só se orçamento aprovado
-PAGAR ← status='pago' ← [registrar baixa] ← [GATE 2: humano autoriza pagamento]
-                                              hub_aprovacoes tipo='pagamento_obra'
-A IA NUNCA fecha NENHUM dos 2 gates.
-```
-
-A cascata reusa o ponto de extensão **`executarAcaoAprovada()`** (lib/ia/aprovacoes.ts) + o PATCH em `app/api/aprovacoes/[id]` que **já faz cascata** para `cotacao_fornecedor`. E6 só adiciona um ramo `tipo='orcamento_frente'` → `UPDATE hub_obra_orcamentos SET status='aprovado'` → pagamentos vinculados ficam liberáveis. **Não há trigger de cascata** (frágil, não-auditável).
-
-**Por que `bloqueado BOOLEAN` (ai-engineer) é redundante e foi REJEITADO:** a liberação é derivada de `orcamento.status='aprovado'`. Um flag `bloqueado` separado cria 2 fontes de verdade que dessincronizam. O guard do endpoint de pagamento valida o status do orçamento no momento do INSERT — fonte única.
-
-### Compatibilização (cobertura 🟢/🔴) como VIEW
-
-VIEW `vw_hub_obra_compatibilizacao`, `security_invoker=true` (padrão de `vw_hub_obra_itens_situacao`, confirmado E2). Base = `hub_obra_itens` (E2) LEFT JOIN orçamento-item LEFT JOIN totais de pagamento. **3 estados, não 2** (refinamento sobre a planilha — o 🟡 evita o erro de "ter orçamento mas não-aprovado parecer coberto"):
-
-- 🟢 `com_aprovado` — item tem orçamento-item de orçamento `status='aprovado'`
-- 🟡 `com_pendente` — tem orçamento mas aguarda gate
-- 🔴 `sem_orcamento` — `valor_contrato` existe, orçamento = 0 → **o gap que a tela existe para mostrar**
-
-`pct_cobertura = valor_orcado / valor_contrato * 100`, com `CASE WHEN valor_contrato IS NULL OR =0 THEN NULL` (guarda divisão por zero — confirmado necessário pois `valor_contrato` é nullable em E2). Filtro `WHERE ativo=true AND parent_id IS NULL` (só itens-pai/contrato, confirmado E2 ln 59/99). LATERAL pega o orçamento aprovado mais recente (`ORDER BY status='aprovado' THEN criado_em DESC LIMIT 1`) — resolve aditivo corretamente.
-
-### Telas (orçamento, fila de aprovação, pagamentos, compatibilização) + ASCII
-
-Navegação: **aba "Financeiro"** dentro de `/crm/obras/[id]` (3ª aba ao lado de Itens|Painel, confirmado pelas lentes UX), com segmented `[Orçamento][Aprovações][Pagamentos][Cobertura]`. Não é página solta — financeiro é por obra (regra "financeiro por frente"). Tokens dark verde+dourado existentes, mobile-first, gates como bottom-sheet.
-
-**T1 — Orçamento (por frente, expande em itens):**
-```
-┌─ Financeiro · Consulado Itália ─────────────┐
-│ [Orçamento✓][Aprovações 2][Pagamentos][Cobertura]│
-│ Previsto R$1.84M · Orçado R$1.20M · Aprov.R$980k │ ← faixa-saúde
-│ ✨ "R$640k esperam sua aprovação em 3 frentes"   │ ← banner IA (leitura)
-├─ ▾ CIVIL (Andar 8) ──────── R$420k · 🟢 Aprovado ┤
-│   • Revest. cerâm.  120m² R$85/m²  R$10.200 🟢   │
-├─ ▾ ELÉTRICA ─────────────── R$310k · 🟡 pendente ┤
-│   • Quadro QD A9        R$45.000  ⏳ aguardando  │
-│   [Enviar p/ aprovação ▸]  ← gate dourado        │
-│ ⚠ Aprovar orçamento é ato HUMANO (faixa dourada) │
-└──────────────────────────────────────────────────┘
-```
-
-**T2 — Fila de aprovação (NÃO é tela nova — reusa `/crm/aprovacoes`):**
-```
-┌─ Aprovações · 2 pendentes ─[💰Orçamento][💳Pagamento]┐
-│ ┌ 💰 ORÇAMENTO · Elétrica/A9 · R$310.000 ──────────┐│ ← borda dourada 3px
-│ │ ✨ IA 88%: dentro do contrato, cobertura 100%     ││
-│ │ ⚠ Aprovar LIBERA pagamento desta frente           ││ ← efeito explícito
-│ │ [Rejeitar ✗]                    [Aprovar ✓]       ││
-│ ┌ 💳 PAGAMENTO · Medição M3 · R$84.000 · vence 5d ─┐│
-│ │ ⛔ BLOQUEADO: orçamento da frente não aprovado    ││ ← edge visível
-│ │ [Aprovar orçamento primeiro ›]  [Autorizar](off) ││
-└──────────────────────────────────────────────────────┘
-```
-
-**T3 — Pagamentos (3 baldes fiéis à planilha):**
-```
-┌─ Pagamentos ─[A pagar R$210k][Vence 7d R$84k🟡][Atrasado R$32k🔴][Pago]┐
-│ 🔴 ATRASADO 4d · Medição M2 · Civil · R$32.000 · ConstruMax           │
-│    [Autorizar pagamento ▸] [Renegociar]   ← gate dourado              │
-│ 🟡 VENCE 5d · Medição M3 · Elétrica · R$84.000 · ✅ orçam. aprovado   │
-│ ⚪ A PAGAR · ART/CREA · R$1.200                                        │
-│ [+ Lançar] (só habilita se há orçamento aprovado OU manual-avulso)    │
-└───────────────────────────────────────────────────────────────────────┘
-```
-
-**T4 — Compatibilização (🟢/🔴 + % — vermelho primeiro):**
-```
-┌─ Cobertura · 72% coberto ─[🔴 Sem orç. 6][🟡 Parcial 3][🟢 OK 41]┐
-│ ╭ 72% ╮ 132 de 164 itens cobertos · gap R$280k sem orçamento      │
-│ 🔴 Esquadrias A9  prev R$120k · orç R$0 · 0%   [✨ orçar][Orçar▸] │ ← CTA fecha o loop
-│ 🟡 Quadro elétr.  prev R$45k · orç R$30k · 67% [Completar▸]      │
-│ 🟢 Concretagem    prev R$120k · orç R$120k · 100% ✓             │
-└───────────────────────────────────────────────────────────────────┘
-```
-
-### Como o cockpit E1 acende a seção Pagamentos
-
-Confirmado no código real: `cockpit-aggregate.ts` tem `pagamentosAVencer: null` (ln 375) e `temFinanceiro: false` (ln 390) **hardcoded**, com o helper `ehAusenciaDeSchema` (ln 58) já pronto para degradar. E6 adiciona **1 bloco `lerPagamentosResumo()`** no mesmo molde dos `lerPedidosAbertos` (Promise.all + `ehAusenciaDeSchema → return []`):
-
-- Lê 3 buckets de `hub_obra_pagamentos` (a_pagar com venc>hoje / vencendo ≤7d / atrasado), `.eq('tenant_id', tenantId).in('obra_id', obraIds)` puro.
-- Se a tabela não existe → `ehAusenciaDeSchema` → retorna vazio → `temFinanceiro` continua `false` → §4 segue "chega em breve". **Zero quebra** (filosofia degrada-não-derruba já no arquivo).
-- Com dados: `pagamentosAVencer` deixa de ser `null`, `temFinanceiro` vira `true`, a §4 vira painel real com os 3 pills. O contador "A vencer" no topo do Hoje recebe `totalAPagar + totalAtrasado`.
-- **Regra de ouro no cockpit:** §4 nunca tem botão [Pagar] direto — só [Abrir] → leva à T3 onde o gate mora. O Hoje mostra, não paga. §4 oculta por papel (não só desabilita).
-
-### Conversacional/IA (humano aprova)
-
-4 tools registradas nos 4 pontos canônicos (`HubAgenteFerramentaId`, `HUB_FERRAMENTA_ACESSO`, `COPILOTO_FERRAMENTAS_ESCRITA_FASE3`, `ESCRITA_SEM_LEAD` — operam sobre `obra_id`):
-
-- **`hub_financeiro_resumo`** (leitura, auto-exec): "quanto falta pagar na obra X" → 3 buckets + total.
-- **`hub_orcamento_listar`** (leitura): "o que falta orçar" → 🔴 da compatibilização.
-- **`hub_orcamento_criar`** (escrita, gate sempre): cria **rascunho** via card dourado `acaoPendente`. Nunca submete nem aprova — aprovar é 2º gate na tela com papel.
-- **`hub_financeiro_aprovar`** (escrita crítica): "aprova o orçamento da Elétrica" → **NÃO executa**; prepara o card e/ou **enfileira** em `hub_aprovacoes`, depois deep-link para `/crm/aprovacoes`. Espelha E5 "aprovar compra por voz = proibido". A decisão de dinheiro é sempre clique humano com papel.
-
-Ambíguo (2 frentes Elétrica) → chip-picker antes do gate. Confiança <0,7 → aviso amarelo (já no CopilotoVoz).
-
-### Edge cases
-
-Consolidados das 4 lentes (todos cobertos): item sem orçamento (🔴, nunca trava, CTA [Orçar]); pagamento sem orçamento aprovado (HTTP 422 + botão some na UI; exceção `adiantamento` com flag explícito → decisão do dono); aditivo (`orcamento_pai_id` + status próprio gate; cobertura >100% legítima = badge "aditivo", não erro); medição > contratado (422 `medicao_excede_contrato` + aviso vermelho + override consciente, nunca silencioso); pagamento parcial (N linhas mesmo `orcamento_id`, VIEW soma; "pago excede orçado" = ⚠); status atrasado (job diário fonte-de-verdade + derivação local na UI entre execuções); item sem `valor_contrato` (pct=NULL → "—%", não NaN); migração não aplicada (degrada via `ehAusenciaDeSchema`, endpoints 503); double-tap idempotente (guard `status='pendente'`).
-
-### Reuso/reconciliação x novo
-
-**Reusa (sem tocar):** `hub_aprovacoes` (gate dourado, só expande CHECK); `executarAcaoAprovada()` + PATCH `/api/aprovacoes/[id]` (ponto de cascata existente); `hub_obra_itens.valor_contrato` (E2, base da VIEW); `hub_obra_frentes_eap` (E0, agrupador); `vw_hub_obra_itens_situacao` (padrão de VIEW); `current_user_tenant_id()`/`default_obra10_tenant_id()`/`hub_atualizar_timestamp()`; `cockpit-aggregate.ts` (+1 bloco degradável); `CopilotoVoz`/`acaoPendente`; `requireCrmSessao`/`crmDb`/`isMissingPgColumn`. **Reconcilia previsto×real:** previsto=`valor_contrato` (E2) × orçado=`hub_obra_orcamento_itens` × comprado=`hub_pedidos_material` (E5) × pago=`hub_obra_pagamentos` (E6). `hub_contas_pagar` **não** é reusado (CRM genérico sem obra_id) — fica intocado. **Novo mínimo:** 3 tabelas + 1 VIEW + 2 RPCs (SECURITY DEFINER c/ guard tenant) + 1 cron de atraso + expansão de CHECK + 4 tools + 1 bloco no cockpit. Migração: `supabase/migrations/20260730120000_e6_orcamento_pagamento.sql` (aditiva, reversível).
+Imutabilidade **sem trigger** (evitar magia oculta): guard no endpoint `PATCH /api/crm/obras/[id]` → se `COUNT(hub_obra_orcamentos WHERE obra_id) > 0` e payload contém `tipo_contrato` → `422 tipo_contrato_imutavel`. Regra visível no código + documentada no `COMMENT` da coluna.
 
 ---
 
-## AUDITORIA das decisões
+### Modelo de dados (orçamento + pagamento + ESCROW custódia/liberação dupla)
 
-**🔴 CRÍTICO 1 — Vazamento cross-tenant em `hub_aprovacoes` (CONFIRMADO no código, não suposto).** Li `lib/ia/aprovacoes.ts`: `buscarAprovacoesPendentes()` (ln 53) filtra **só** `.eq("status","pendente")` — sem `tenant_id`. `aprovar`/`rejeitar` filtram só `.eq("id", ...)`. As 3 lentes sinalizaram (memória obs 9218) e a 4ª (ai-engineer) propôs contornar pelo endpoint. **Veredito do CEO: contornar não basta.** E6 amplia o blast radius desse gate para DINHEIRO — um tenant veria/aprovaria orçamento e pagamento de outro. **`.eq('tenant_id')` puro + guard 404 em `buscarAprovacoesPendentes`/`aprovar`/`rejeitar` é PRÉ-REQUISITO de go-live de E6, não opcional.** Fix cirúrgico (passar `tenantId` como argumento), não refactor. **Bloqueador.**
+Migração aditiva `supabase/migrations/20260730120000_e6_financeiro_contrato_escrow.sql`. Ordem: E0 → E2 → E5 → **E6**.
 
-**🟡 ATENÇÃO 2 — Conflito de naming/ordem entre lentes.** Backend-architect usa `20260730120000`; ai-engineer usa `20260712000000` (colidiria com E2 `20260710120000` por proximidade e quebraria a ordem E2→E5→E6). **Decisão: `20260730120000`** (depois de E5). Nomes de tabela: padronizar `hub_obra_orcamentos`/`hub_obra_orcamento_itens`/`hub_obra_pagamentos` (prefixo `hub_obra_*`, consistente com E2/E0), **não** `hub_orcamento_itens`/`hub_pagamentos` soltos (product-owner).
+**1. ALTER hub_obras — o eixo**
+```sql
+ALTER TABLE public.hub_obras
+  ADD COLUMN IF NOT EXISTS tipo_contrato TEXT NOT NULL DEFAULT 'administracao';
+ALTER TABLE public.hub_obras DROP CONSTRAINT IF EXISTS hub_obras_tipo_contrato_check;
+ALTER TABLE public.hub_obras ADD CONSTRAINT hub_obras_tipo_contrato_check
+  CHECK (tipo_contrato IN ('administracao','preco_fechado'));
+COMMENT ON COLUMN public.hub_obras.tipo_contrato IS
+  'IMUTÁVEL pós-1º orçamento aprovado (guard no endpoint, sem trigger).
+   administracao=cliente vê unitário (gestão aberta); preco_fechado=turn-key, só totais.';
+```
 
-**🟡 ATENÇÃO 3 — Conflito com E1 (cockpit).** O bloco `lerPagamentosResumo` deve seguir EXATAMENTE o tipo já declarado: `pagamentosAVencer: number | null` (ln 96 — é `number|null`, **não** objeto). A lente ai-engineer propôs trocar para objeto `{a_pagar, vencendo_7d, atrasado}` — isso **muda a assinatura do tipo** e pode quebrar consumidores de E1. **Decisão:** manter `pagamentosAVencer: number` (o total) e adicionar os detalhes em campo NOVO `financeiro?: {...}` aditivo, preservando E1. Verificar o componente consumidor antes de codar (médio risco, confirmar com `tsc`).
+**2. hub_obra_orcamentos — cabeçalho/frente (unidade de aprovação — Gate 1)**
+Mantém a decisão de granularidade do E6 anterior (2 níveis: cabeçalho por frente + linhas por item). Não armazena `tipo_contrato` — lê da obra (fonte única). Campos-chave novos sobre o E6 anterior: `versao` + `orcamento_pai_id` (aditivo), `aprovacao_id` (link ao gate), `escrow_status`.
+```sql
+CREATE TABLE IF NOT EXISTS public.hub_obra_orcamentos (
+  id, obra_id FK CASCADE, tenant_id FK CASCADE,
+  frente_id FK hub_obra_frentes_eap(E0) ON DELETE SET NULL,
+  titulo TEXT, descricao TEXT,
+  versao INTEGER DEFAULT 1, orcamento_pai_id UUID FK self,   -- aditivo
+  valor_total NUMERIC(14,2),          -- adm: derivado dos itens; preço fechado: direto
+  status TEXT DEFAULT 'rascunho'
+    CHECK (status IN ('rascunho','enviado','aprovado','rejeitado','cancelado')),
+  aprovacao_id UUID FK hub_aprovacoes, aprovado_em, aprovado_por,
+  escrow_status TEXT DEFAULT 'sem_custodia'
+    CHECK IN ('sem_custodia','aguardando_deposito','em_custodia','liberado','devolvido'),
+  escrow_valor NUMERIC(14,2), escrow_ref TEXT,    -- fase 2
+  criado_em, atualizado_em
+);
+-- RLS USING (tenant_id = current_user_tenant_id()); índices (obra,status)/(tenant)/(frente)
+```
 
-**🟢 Conflito com E2/E5 — nenhum real.** E6 só LÊ `valor_contrato` (E2) e referencia E5 para reconciliação; ambas FKs nullable → E6 degrada se E2/E5 ausentes. Aditivo puro.
+**3. hub_obra_orcamento_itens — linha/item (fidelidade unitária)**
+Existe nos dois tipos, mas `visivel_cliente` controla exposição. Composição interna (`custo_material`/`custo_mao_obra`/`margem_pct`) preenchida no preço fechado para auditoria do Hub, **filtrada pelo endpoint** antes de chegar ao Portal.
+```sql
+CREATE TABLE IF NOT EXISTS public.hub_obra_orcamento_itens (
+  id, orcamento_id FK CASCADE, obra_id FK, tenant_id FK,
+  item_id UUID FK hub_obra_itens(E2) ON DELETE SET NULL,   -- base da compatibilização
+  descricao TEXT, unidade TEXT, quantidade NUMERIC(10,3),
+  valor_unitario NUMERIC(14,4),
+  valor_total NUMERIC(14,2) GENERATED ALWAYS AS (ROUND(quantidade*valor_unitario,2)) STORED,
+  spread_pct NUMERIC(5,2) DEFAULT 0,   -- "gerenciamento" honesto (adm); auditável
+  custo_material, custo_mao_obra, custo_outros, margem_pct,  -- interno; nunca ao cliente em preço fechado
+  visivel_cliente BOOLEAN DEFAULT true, ordem INTEGER, criado_em
+);
+-- RLS por tenant; índices (orcamento,ordem)/(item)/(tenant)
+```
 
-**Regra de tenant:** todas as tabelas novas com RLS `tenant_id=current_user_tenant_id()` + policy anon `default_obra10_tenant_id()`; VIEW `security_invoker=true`; RPCs SECURITY DEFINER com guard `WHERE tenant_id=p_tenant_id` antes de qualquer mutação; endpoints `.eq('tenant_id')` puro + 404. Conforme. **Exceto** o furo herdado de `hub_aprovacoes` (Crítico 1).
+**4. hub_obra_pagamentos — parcela vinculada à frente aprovada (Gate 2 + escrow)**
+```sql
+CREATE TABLE IF NOT EXISTS public.hub_obra_pagamentos (
+  id, obra_id FK, tenant_id FK, orcamento_id FK SET NULL, item_id FK SET NULL,
+  titulo TEXT, tipo TEXT DEFAULT 'medicao'
+    CHECK IN ('medicao','adiantamento','retencao','aditivo','reembolso','avulso'),
+  numero_medicao INTEGER,
+  valor NUMERIC(14,2), valor_retencao DEFAULT 0,
+  valor_liquido GENERATED ALWAYS AS (valor - valor_retencao) STORED,
+  valor_pago NUMERIC(14,2), data_vencimento DATE NOT NULL, data_pagamento DATE,
+  -- estado: 'atrasado' é DERIVADO na UI (status liberável + venc<hoje), NÃO coluna (fonte única)
+  status TEXT DEFAULT 'bloqueado'
+    CHECK IN ('bloqueado','liberado','autorizado','em_custodia','pago','cancelado'),
+  -- GATE 2 DUPLO: dois links de aprovação, papéis distintos
+  aprovacao_arq_id UUID FK hub_aprovacoes,   -- chave 1: arquitetura
+  aprovacao_hub_id UUID FK hub_aprovacoes,   -- chave 2: Hub (juiz)
+  escrow_liberado BOOLEAN DEFAULT false, escrow_liberado_em, escrow_liberado_por,
+  tipo_contrato TEXT DEFAULT 'administracao',  -- desnorm p/ relatório
+  adiantamento_justificativa TEXT,   -- obrigatório se tipo='adiantamento' (CHECK)
+  fornecedor_id, fornecedor_nome, criado_por, decidido_por, criado_em, atualizado_em
+);
+ALTER TABLE ... ADD CONSTRAINT chk_adiantamento_just
+  CHECK (tipo <> 'adiantamento' OR adiantamento_justificativa IS NOT NULL);
+-- append-only: nunca DELETE → status='cancelado' (soft)
+-- índice parcial cockpit: (tenant,status,data_vencimento) WHERE status IN ('liberado','autorizado','em_custodia')
+```
 
-**Regra de ouro (humano aprova):** preservada em 2 gates (orçamento E pagamento), ambos por `hub_aprovacoes`, IA nunca fecha, voz só enfileira. Fiel à planilha ("Aprovado libera") e à spec ("Pagamento exige aprovação humana"). Conforme.
+**5. ESCROW — extrato imutável (a peça nova, núcleo da confiança)**
+A custódia precisa de **lastro append-only** (o "nada se perde" do dono vira extrato que o cliente vê). 1 conta por obra + movimentos só-INSERT.
+```sql
+CREATE TABLE hub_obra_escrow_contas (   -- 1 por obra
+  id, obra_id FK, tenant_id FK,
+  saldo_custodia DEFAULT 0, saldo_liberado DEFAULT 0, saldo_pago DEFAULT 0,
+  provedor TEXT DEFAULT 'interno',   -- MVP=virtual/contábil; fase2='banco_x'
+  criado_em
+);
+CREATE TABLE hub_obra_escrow_movimentos (   -- APPEND-ONLY, nunca UPDATE/DELETE
+  id, conta_id FK, obra_id FK, tenant_id FK,
+  tipo TEXT CHECK IN ('deposito','liberacao','pagamento','estorno'),
+  valor NUMERIC(14,2), pagamento_id FK SET NULL,
+  aprovacao_arq_id FK, aprovacao_hub_id FK,   -- as 2 chaves que liberaram
+  origem TEXT, criado_por TEXT, criado_em
+);
+-- RLS por tenant em ambas; movimentos é o lastro auditável do escrow
+```
 
-## Critério de PRONTO
+---
 
-1. Migração `20260730120000` aplicada (aditiva, reversível por DROP); `tsc` + `vitest` + `_chk23` verdes.
-2. **Fix de tenant em `hub_aprovacoes` aplicado e testado** (bloqueador — sem ele não vai a prod).
-3. Criar orçamento (rascunho) → enviar → aprovar na fila (gate) → status vira `aprovado` → pagamento vinculado fica liberável; pagamento sem orçamento aprovado retorna 422. Verificado clicando no navegador.
-4. Cockpit E1 §4 acende com dado real quando há pagamentos; volta a "chega em breve" sem a tabela (degradação testada).
-5. Compatibilização mostra 🟢/🟡/🔴 + % correto, incluindo item sem `valor_contrato` ("—%", não NaN).
-6. Conversacional: leitura auto-exec responde "quanto falta pagar"; "aprova o orçamento" NÃO executa, só enfileira/abre fila.
-7. Mobile: gates como bottom-sheet, 3 baldes em grid, botões ≥56px.
+### ESCROW: aprovação dupla (arquitetura + Hub) via hub_aprovacoes + evento
 
-## O que precisa da janela do dono
+**Reuso do gate dourado.** Confirmado no código: `hub_aprovacoes.tipo` CHECK ainda são os 5 originais (`'proposta','pedido_material','pagamento','desconto','outro'`) — nunca expandido. DROP+ADD:
+```sql
+ALTER TABLE public.hub_aprovacoes DROP CONSTRAINT IF EXISTS hub_aprovacoes_tipo_check;
+ALTER TABLE public.hub_aprovacoes ADD CONSTRAINT hub_aprovacoes_tipo_check
+  CHECK (tipo IN ('proposta','pedido_material','pagamento','desconto','outro',
+                  'orcamento_frente',     -- GATE 1
+                  'pagamento_obra_arq',   -- GATE 2 chave 1
+                  'pagamento_obra_hub')); -- GATE 2 chave 2
+ALTER TABLE public.hub_aprovacoes ADD COLUMN IF NOT EXISTS obra_id UUID FK SET NULL;
+CREATE INDEX idx_hub_aprovacoes_tenant_status ON public.hub_aprovacoes(tenant_id,status);
+```
 
-1. **Aplicar a migração em prod** (única ação irreversível-sem-rollback-trivial → backup antes). Bloqueio de aprovação humana.
-2. **Adiantamento sem orçamento aprovado**: permitido com flag explícito (design) ou bloqueado? Decisão de negócio.
-3. **Alçada por valor** (ex.: até R$5k gestor, acima diretor): o modelo suporta via `papel` na aprovação, mas a regra precisa ser configurada.
-4. **Política de aditivo**: cobertura >100% = 🟢 "aditivo" (design) vs. alerta?
-5. **Confirmar o fix de tenant em `hub_aprovacoes` antes de E6** (é segurança/dado sensível — o dono sempre verifica achados de integridade).
+**A aprovação dupla = DOIS registros** em `hub_aprovacoes` ligados ao MESMO pagamento (`aprovacao_arq_id` + `aprovacao_hub_id`), papéis distintos. O escrow só libera (INSERT movimento `liberacao` + `status='autorizado'`) quando **ambos** estão `aprovado`. CEO decide entre as 2 propostas das lentes: **dois registros tipados** (PO) em vez de um registro com `dados.papel_X` (backend) — porque dois registros aparecem naturalmente na fila existente `/crm/aprovacoes`, cada papel filtra o seu, e o blast radius do JSONB mutável fica fora.
 
-Arquivos-âncora (design-only, nada editado): `supabase/migrations/20260523120000_crm_integral_core.sql` (hub_aprovacoes ln 139-141), `supabase/migrations/20260710120000_e2_obra_itens.sql` (valor_contrato ln 90), `lib/ia/aprovacoes.ts` (furo de tenant ln 53/159/202 — FIX pré-requisito), `app/api/aprovacoes/[id]/route.ts` (cascata existente), `lib/crm/cockpit-aggregate.ts` (pagamentosAVencer:null ln 375, temFinanceiro:false ln 390), `docs/insumos-do-dono/ANALISE-planilha-gestao-obra.md` (Orcamentos/Pagamentos/Compatibilizacao). Migração-alvo: `supabase/migrations/20260730120000_e6_orcamento_pagamento.sql`.
+**Diagrama de estados do pagamento:**
+```
+BLOQUEADO ──(Gate 1: orçamento da frente aprovado)──► LIBERADO
+                                                          │
+                                          (Gate 2 chave 1: ARQUITETURA aprova) ✓
+                                                          │  [aguarda 2ª chave]
+                                          (Gate 2 chave 2: HUB aprova) ✓
+                                                          │
+                                                     AUTORIZADO ──► PAGO
+                                                          │  (fase 2: EM_CUSTODIA → PAGO)
+                                          CANCELADO (a qualquer momento antes de PAGO)
+```
+
+**Cascata reusa o ponto de extensão existente** `executarAcaoAprovada()` + `PATCH /api/aprovacoes/[id]` (que já faz cascata para `cotacao_fornecedor`). 3 ramos novos no switch:
+- `orcamento_frente` → `rpc_aprovar_orcamento_frente()`: marca orçamento `aprovado` + pagamentos vinculados `bloqueado → liberado`.
+- `pagamento_obra_arq` / `pagamento_obra_hub` → ao aprovar, chama `rpc_liberar_escrow()`: se as DUAS chaves estão `aprovado` → libera; senão aguarda a segunda.
+
+**2 RPCs `SECURITY DEFINER` com guard de tenant ANTES de qualquer mutação** (porque `crmDb`/PATCH usam service_role e bypassam RLS):
+```sql
+rpc_aprovar_orcamento_frente(p_orcamento_id, p_aprovacao_id, p_tenant_id)
+  → SELECT ... WHERE id=p_orcamento_id AND tenant_id=p_tenant_id; NOT FOUND → {ok:false}
+  → UPDATE orcamento SET status='aprovado'
+  → UPDATE pagamentos SET status='liberado' WHERE orcamento_id=... AND status='bloqueado'
+
+rpc_liberar_escrow(p_pagamento_id, p_tenant_id)
+  → guard tenant; lê status de aprovacao_arq_id E aprovacao_hub_id (ambos com tenant guard)
+  → se arq≠'aprovado' OR hub≠'aprovado' → {ok:false, erro:'aprovacao_dupla_incompleta', arq, hub}
+  → UPDATE pagamento SET status='autorizado', escrow_liberado=true, escrow_liberado_por='duplo'
+  → INSERT escrow_movimento (tipo='liberacao', as 2 chaves) + INSERT log auditoria (append-only)
+```
+**Atenção de implementação (achado real):** o PATCH usa `status==='aprovado'/'rejeitado'` mas convém confirmar o CHECK de `hub_aprovacoes.status` antes de codar a RPC — alinhar para o vocabulário que o código já usa, com UPDATE dos dados existentes se necessário.
+
+**A IA NUNCA é nenhuma das 2 chaves.** Prepara o card, enfileira; o humano clica. "Aprovar/liberar escrow por voz" = proibido (espelha E5).
+
+---
+
+### Telas por tipo de contrato + escrow visível + ASCII
+
+Aba **Financeiro** em `/crm/obras/[id]`. Segmented control com rótulos que mudam por tipo. **Faixa-selo de contrato fixa no topo** (cadeado dourado 🔒 = imutável, combate o medo de troca escondida). Tokens dark verde+dourado existentes, mobile-first, gates como bottom-sheet, botões ≥56px. Reusa a paleta canônica de `app/crm/aprovacoes/page.tsx` (`C.green #003b26`, `C.gold #c9a24a`, `C.red #b3261e`).
+
+```
+ADMINISTRAÇÃO: [Custos][Aprovações N][Custódia][Pagamentos][Cobertura]
+PREÇO FECHADO: [Etapas][Aprovações N][Custódia][Medições][—]
+```
+
+**T1a — CUSTOS · ADMINISTRAÇÃO (unitário, livro aberto, spread honesto):**
+```
+┌─ Financeiro · Consulado Itália ── 🔒 ADMINISTRAÇÃO · livro aberto ──┐
+│ [Custos✓][Aprovações 2][Custódia][Pagamentos][Cobertura]            │
+│ Previsto R$1.84M · Orçado R$1.20M · Aprovado R$980k                 │
+│ ✨ "R$640k esperam aprovação em 3 frentes" [ver fila ▸]            │
+│ ▾ CIVIL · A8 ─────────────────────── R$420k · 🟢 Aprovado          │
+│   • Revest. cerâmico 120m² × R$85/m²              = R$10.200  🟢    │ ← UNITÁRIO visível
+│   • Cabo 2,5mm 400m × R$4,20 (atacado)            = R$1.680   🟢    │
+│   ⓘ gerenciamento 8% declarado · -8% vs varejo (R$890 poupados) ✨ │ ← spread HONESTO = economia
+│ ▾ ELÉTRICA ───────────────────────── R$310k · 🟡 pendente          │
+│   • Quadro QD A9 1un × R$45.000                   = R$45.000  ⏳    │
+│   [Enviar p/ aprovação dupla ▸]   ← gate dourado                    │
+│ ⚠ Aprovar é ato HUMANO + DUPLO (arquitetura + Hub)                 │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**T1b — ETAPAS · PREÇO FECHADO (só totais, sem composição):**
+```
+┌─ Financeiro · Res. Alphaville ── 🔒 PREÇO FECHADO · turn-key ──────┐
+│ [Etapas✓][Aprovações 1][Custódia][Medições][—]                     │
+│ Contrato R$680k · Liberado R$272k · Saldo R$408k                   │
+│ ████████████░░░░░░░░░  40% executado · 40% liberado                │
+│ Etapa 1 · Fundação+Estrutura ── R$204k · 🟢 pago via custódia 28/mai│ ← SÓ total da etapa
+│ Etapa 2 · Alvenaria+Cobertura ─ R$170k · 🟢 em custódia, liberando  │
+│ Etapa 3 · Instalações ───────── R$136k · 🟡 65% · aguarda medição Hub│
+│ Etapa 4 · Acabamento ────────── R$170k · ⚪ a iniciar              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+(ZERO valor unitário/composição — é da executante. Se o dado vier, o render ignora.)
+
+**T2 — CUSTÓDIA (ESCROW) · a tela que CURA o medo (ambos os tipos):**
+```
+┌─ Custódia (Escrow) · Consulado Itália ─────────────────────────────┐
+│ 🛡 Seu dinheiro fica protegido. Só sai com dupla aprovação.        │
+│   ╭ R$420k ╮  ╭ R$180k ╮  ╭ R$272k ╮                              │
+│   │EM      │  │AGUARDA │  │LIBERADO│                               │
+│   │CUSTÓDIA │  │APROVAÇ.│  │ ✅     │                               │
+│   ╰──🔒────╯  ╰──⏳────╯  ╰──✓─────╯                              │
+│ Fluxo de cada liberação:                                           │
+│   Depósito ─▶ Aprov. Arquitetura ─▶ Aprov. Hub ─▶ Liberado        │
+│     🟢          🟢                    ⏳ aqui        ⚪             │
+│ Extrato (imutável):                                                │
+│  29/jun Liberação · Medição M2 · R$32.000 · 🔑arq✓ 🔑hub✓         │
+│  28/jun Depósito  · Aporte cliente        · R$200.000             │
+└─────────────────────────────────────────────────────────────────────┘
+```
+A timeline de 4 passos torna a dupla aprovação tangível ("onde está meu dinheiro agora"). **MVP: os cofres são CALCULADOS dos status de aprovação** (sem banco real) — a tela diz "custódia (controle do Hub)", nunca promete conta bancária até a fase 2 (honestidade, ou vira a mentira que o produto combate).
+
+**T3 — Fila de Aprovações (gate dourado DUPLO — reusa `/crm/aprovacoes` com filtros):**
+```
+┌─ Aprovações · 3 pendentes ─[💰Orçamento 2][💳Pagamento 1]──────────┐
+│ ┌ 💰 ORÇAMENTO · Elétrica · R$310.000 · ADMINISTRAÇÃO ────────────┐│ ← borda dourada 3px
+│ │ ✨ IA 88%: dentro do contrato · cobertura 100%                  ││
+│ │ ⚠ Aprovar LIBERA os pagamentos desta frente                     ││
+│ │ Dupla: 🟢 Arquiteto OK · ⏳ falta VOCÊ (Hub)                    ││ ← estado da dupla no card
+│ │ [Rejeitar ✗]                          [Aprovar (Hub) ✓]         ││
+│ ┌ 💳 PAGAMENTO · Medição M3 · R$84.000 · vence 5d ───────────────┐│
+│ │ Escrow: aguarda aprovação dupla                                 ││
+│ │ Aprovado arquitetura: ✅   Aprovado Hub: ⏳                     ││
+│ │ [Aprovar como Hub ✓]                                            ││
+│ ┌ 💳 PAGAMENTO · Medição M2 ── BLOQUEADO ─────────────────────────┐│
+│ │ ⛔ orçamento da frente ainda não aprovado                        ││ ← edge VISÍVEL
+│ │ [Ir p/ gate de orçamento ›]      [Autorizar](desabilitado)      ││
+└─────────────────────────────────────────────────────────────────────┘
+```
+O pill "Dupla: 🟢 Arquiteto · ⏳ Hub" é o coração do redesign — mostra em qual das 2 portas o item está; o rótulo do botão roda conforme quem falta.
+
+**T4 — Pagamentos (3 baldes fiéis à planilha + estado escrow; em preço fechado vira "Medições"):**
+```
+┌─ Pagamentos ─[A pagar R$210k][Vence 7d 🟡 R$84k][Atrasado 🔴 R$32k][Pago]─┐
+│ 🔴 ATRASADO 4d · Medição M2 · Civil · R$32.000 · ConstruMax              │
+│    🛡 em custódia · 🟢🟢 dupla OK   [Liberar pagamento ▸][Renegociar]    │
+│ 🟡 VENCE 5d · Medição M3 · Elétrica · R$84.000 · ⏳ falta Hub            │
+│ ⚪ A PAGAR · ART/CREA · R$1.200 · avulso (sem escrow)                    │
+│ [+ Lançar] (habilita só com orçamento aprovado OU adiantamento+justif.)  │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+`atrasado` = `status IN ('liberado','autorizado') AND data_vencimento < hoje` — derivado na UI, confirmado por job diário (uma fonte de verdade). Item avulso "sem escrow" explícito (honestidade).
+
+**T5 — Compatibilização/Cobertura (🟢🟡🔴 + %, VIEW; só ADMINISTRAÇÃO):**
+```
+┌─ Cobertura · 72% coberto ─[🔴 Sem orç. 6][🟡 Pendente 3][🟢 OK 41]──┐
+│ ╭ 72% ╮ 132 de 164 itens · gap R$280k sem orçamento                 │
+│ 🔴 Esquadrias A9   prev R$120k · orç R$0   · —%  [✨ Orçar][Orçar▸] │ ← CTA fecha o loop
+│ 🟡 Quadro elétrico prev R$45k  · orç R$30k · 67% [Completar▸]        │
+│ 🟢 Concretagem     prev R$120k · orç R$120k· 100% ✓                  │
+│ 🟢 Alvenaria+adit. prev R$80k  · orç R$95k · 119% [aditivo] ← badge  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+Vermelho primeiro (o gap é o motivo da tela existir). 3 estados (não 2): 🟡 evita "orçamento não-aprovado parecer coberto".
+
+---
+
+### Compatibilização (cobertura) + cockpit Pagamentos
+
+**VIEW `vw_hub_obra_compatibilizacao` `WITH (security_invoker=true)`** (padrão de `vw_hub_obra_itens_situacao` do E2). Base = `hub_obra_itens` (E2, `valor_contrato` nullable) `LEFT JOIN LATERAL` melhor-orçamento (aprovado primeiro, senão pendente mais recente) `LEFT JOIN` totais pagos. `WHERE ativo=true AND parent_id IS NULL` (só itens-pai). 3 estados + `pct_cobertura = CASE WHEN valor_contrato IS NULL OR =0 THEN NULL ELSE orçado/contrato*100`. `eh_aditivo = orçado > contratado` (badge, não erro). Endpoints filtram `tenant_id` explicitamente.
+
+**Cockpit E1 acende §4** — confirmado: `cockpit-aggregate.ts` tem `pagamentosAVencer: null` (ln 375) e `temFinanceiro: false` (ln 390) hardcoded, com `ehAusenciaDeSchema` (ln 58) pronto. Adiciona **1 bloco `lerPagamentosResumo()`** no molde de `lerPedidosAbertos` (Promise.all):
+- Lê 3 baldes de `hub_obra_pagamentos`, `.eq('tenant_id', tenantId).in('obra_id', obraIds)` puro.
+- Schema ausente → `ehAusenciaDeSchema` → `null` → `temFinanceiro` segue `false` → §4 "chega em breve". **Zero quebra.**
+- Com dado: **preserva a assinatura `pagamentosAVencer: number | null`** (ln 96) = total; detalhe vai em campo **NOVO aditivo** `financeiro?: {a_pagar, vencendo_7d, atrasado, em_custodia, aguarda_2a_chave}`. (CEO: a lente ai-engineer queria trocar o tipo para objeto — **rejeitado**, quebraria consumidores de E1.)
+- §4 também mostra escrow: "R$420k em custódia · R$84k aguardam 2ª chave".
+
+**Regra de ouro no cockpit: §4 nunca tem [Pagar] — só [Abrir] → T4/T3** onde o gate duplo mora. O Hoje mostra, não paga. §4 oculta por papel (cliente vê só os pagamentos dele).
+
+**Job diário** (`0 3 * * *`) é fonte de verdade do balde de vencimento; entre execuções a UI deriva localmente para não enganar o usuário.
+
+---
+
+### Spread honesto
+
+O medo do dono é "ser enganado" — markup escondido dispara exatamente isso. Regra de produto:
+- **Administração (gestão aberta):** spread é OBRIGATORIAMENTE visível — `spread_pct` por linha rotulado "gerenciamento", exibido como **economia** ("-8% vs varejo, R$890 poupados", ganho de volume/atacado), nunca como markup. Guard de UI: administração não renderiza item sem o spread declarado.
+- **Preço fechado (turn-key):** a composição é da executante; o spread está embutido no total e isso é legítimo — mas `margem_pct` interno é **auditável pelo Hub** (engenharia auditorial: "somos juízes"), nunca exibido ao cliente.
+
+Isso materializa "spread HONESTO (volume/atacado, não markup escondido)" do insumo.
+
+---
+
+### MVP vs fase 2 (custódia bancária)
+
+**MVP (go-live) — entrega a CONFIANÇA com o que já existe; o banco é encanamento, vem depois:**
+- `tipo_contrato` + bifurcação de tela (1 enum + 2 modos de render). ALTO impacto, BAIXO esforço.
+- Gate DUPLO via `hub_aprovacoes` (2 registros tipados arq/hub) + expansão de CHECK + cascata no `executarAcaoAprovada`.
+- **Escrow VIRTUAL/contábil** (`provedor='interno'`): conta + movimentos append-only só no nosso banco; "custódia" é estado contábil, não dinheiro em banco real. Entrega T2 + extrato — a regra de confiança SEM risco financeiro/regulatório.
+- `vw_hub_obra_compatibilizacao` + cockpit §4 acende + 4 tools IA + job diário.
+- Spread honesto declarado.
+- **Fix de tenant em `lib/ia/aprovacoes.ts` (BLOQUEADOR, antes de go-live).**
+
+**FASE 2 (tração + parceiro bancário — exige janela do dono: custo + credencial + compliance):**
+- Custódia BANCÁRIA real (BaaS/conta escrow), webhook de depósito → `em_custodia`, repasse automático no gate duplo → `pago`, devolução em cancelamento → `devolvido`, `escrow_ref` (ID externo), QR de depósito no Portal.
+- Alçada por valor (ex.: até R$5k gestor / acima diretor) na 2ª chave.
+- Split automático do spread.
+
+> O que VENDE é "só paga o aprovado, dupla chave, extrato imutável". 100% entregável SEM banco. A custódia bancária é a evolução, não o pré-requisito.
+
+---
+
+### Reuso x novo · Edge cases
+
+**Reusa (sem tocar):** `hub_aprovacoes` (só expande CHECK + add `obra_id`); `executarAcaoAprovada()` + `PATCH /api/aprovacoes/[id]` (cascata existente, +3 ramos); `hub_obra_itens.valor_contrato`/`parent_id`/`ativo` (E2, só lê); `hub_obra_frentes_eap` (E0, agrupador); `vw_hub_obra_itens_situacao` (padrão de VIEW); `current_user_tenant_id()`/`default_obra10_tenant_id()`/`hub_atualizar_timestamp()`; `cockpit-aggregate.ts` (+1 bloco degradável, assinatura preservada); `CopilotoVoz`/`acaoPendente`; `requireCrmSessao`/`crmDb`/`isMissingPgColumn`/`ehAusenciaDeSchema`; paleta e card dourado de `app/crm/aprovacoes`. `hub_contas_pagar` **não** reusado (CRM genérico sem obra_id), fica intocado.
+
+**Novo mínimo:** `tipo_contrato` em `hub_obras`; 5 tabelas (orcamentos, orcamento_itens, pagamentos, escrow_contas, escrow_movimentos); 1 VIEW; 2 RPCs SECURITY DEFINER com guard tenant; 1 cron; expansão de CHECK; 4 tools; 1 bloco no cockpit. Migração `20260730120000` aditiva, reversível por DROP.
+
+**Edge cases (todos cobertos):**
+- **Sem orçamento:** item 🔴 na Cobertura, nunca trava, CTA [Orçar]; pagamento sobre item sem orçamento aprovado → `422 orcamento_nao_aprovado`, botão some.
+- **Medição > contratado:** `422 medicao_excede_contrato` + aviso vermelho; override consciente com flag + justificativa, nunca silencioso. Em preço fechado, barra >100% com badge "excedente".
+- **Aditivo:** `orcamento_pai_id` + `versao`; cobertura >100% = badge "aditivo" (legítimo, não erro). Em preço fechado, aditivo é o ÚNICO jeito de o total mudar → aprovação explícita.
+- **Pagamento sem dupla aprovação = BLOQUEADO** (não some): mostra "falta 2ª chave (arq/Hub)"; `rpc_liberar_escrow` retorna `{ok:false, erro:'aprovacao_dupla_incompleta'}`; endpoint 403; escrow não libera com 1 chave.
+- **tipo_contrato imutável:** `422 tipo_contrato_imutavel` se `COUNT(orcamentos)>0`; sem botão de editar na UI (cadeado 🔒).
+- **Sem valor_contrato:** `pct_cobertura=NULL` → "—%", nunca NaN.
+- **Migração pendente:** `ehAusenciaDeSchema` → `temFinanceiro=false` → "chega em breve"; endpoints 503 `{migracao_pendente:true}`; zero quebra.
+- **Double-tap:** guard `WHERE status='pendente'` no RPC → `409 aprovacao_ja_processada`; idempotente.
+- **Adiantamento sem orçamento:** permitido APENAS com `tipo='adiantamento'` + justificativa (CHECK); modal de confirmação explícita. **Política (permitir/bloquear/alçada) = decisão do dono.**
+- **Preço fechado sem itens:** endpoint retorna `{itens:[]}`; UI não renderiza seção de itens; cobertura por frente.
+- **Aprovador único (escritório pequeno = arq+Hub na mesma pessoa):** permitido, mas 2 atos separados em log (2 cliques conscientes), nunca 1 clique = 2 chaves (senão o gate duplo é teatro).
+- **Pago excede orçado:** ⚠ badge na linha; não bloqueia (medições parciais legítimas); alertado no cockpit.
+
+**Pendências para o dono (humano aprova dinheiro):** (1) confirmar o **fix de tenant** em `hub_aprovacoes` antes de E6 (bloqueador, segurança); (2) política de adiantamento sem orçamento; (3) alçada por valor na 2ª chave; (4) percentual/regra do spread de gerenciamento; (5) provedor bancário da fase 2; (6) imutabilidade desde a criação vs. tolerante em planejamento.
+
+**Confiança:** ALTA na fidelidade ao dono (os 2 eixos vêm textuais do insumo 29/jun) e no chão de código (CHECK de `hub_aprovacoes` ainda os 5 originais, `cockpit-aggregate` ln 58/375/390, E2 `valor_contrato`, vazamento cross-tenant — todos verificados pelas lentes no código real). MÉDIA na custódia bancária (fase 2, depende de parceiro financeiro). Nada foi editado — é design. Arquivo-alvo da reescrita: `c:\Users\wende\Documents\escritorio-virtual-ramon\docs\E6-DESIGN.md`.
