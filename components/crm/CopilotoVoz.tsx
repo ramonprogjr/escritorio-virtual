@@ -260,6 +260,18 @@ export function CopilotoVoz() {
     }
   }, [modo, estado]);
 
+  // Ponto de entrada externo (Talk-and-Go): outros componentes podem abrir o
+  // copiloto disparando `window.dispatchEvent(new Event("copiloto:abrir"))`.
+  // Aditivo e seguro: só abre quando está fechado; não altera o resto do fluxo.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const abrir = () => {
+      if (estado === "idle") aoTocarFab();
+    };
+    window.addEventListener("copiloto:abrir", abrir);
+    return () => window.removeEventListener("copiloto:abrir", abrir);
+  }, [estado, aoTocarFab]);
+
   const trocarModo = useCallback(
     (m: "voz" | "texto") => {
       setArrasto(0);

@@ -1,7 +1,48 @@
 {
-  "geradoEm": "2026-06-29T00:01:22.424Z",
+  "geradoEm": "2026-06-29T00:53:56.088Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "6fb31508d1bbe1d050ea62d6d0d0393659566a13",
+      "hashCurto": "6fb3150",
+      "mensagem": "hardening completo p/ rodar perfeito (vendas+marketing dependem)",
+      "mensagemRaw": "fix(nucleo): hardening completo p/ rodar perfeito (vendas+marketing dependem)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T00:02:49.000Z",
+      "hora": "21:02",
+      "arquivos": [
+        "app/api/crm/empresas/[id]/route.ts",
+        "app/api/crm/especialistas/route.ts",
+        "app/api/crm/fornecedores/route.ts",
+        "app/api/crm/leads/[id]/converter-negocio/route.ts",
+        "app/api/crm/leads/[id]/route.ts",
+        "app/api/crm/pessoas/[id]/route.ts",
+        "app/api/parceiros/route.ts",
+        "app/api/whatsapp/webhook/route.ts",
+        "app/crm/financeiro/receber/page.tsx",
+        "app/crm/negocios/[id]/page.tsx",
+        "components/crm/CopilotoVoz.tsx",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "lib/crm/codigos-rastreio.ts",
+        "lib/crm/derivar-entrega.ts",
+        "lib/crm/finance-dashboard-aggregate.ts",
+        "lib/crm/validar-documento-server.ts",
+        "lib/ia/mistral-chat-tools.ts",
+        "lib/ia/router.ts",
+        "lib/rate-limit-memoria.ts",
+        "lib/whatsapp/inbound-message-processor.ts",
+        "lib/workers/whatsapp-job-worker.ts",
+        "supabase/migrations/20260704120000_crm_codigo_rastreio_rpc.sql"
+      ],
+      "areas": {
+        "app/api": 8,
+        "app/crm": 2,
+        "components/crm": 2,
+        "lib/crm": 4,
+        "outros": 5,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "cf8fc98ad88d06767fa48d6fd474f5f9a48e86f8",
       "hashCurto": "cf8fc98",

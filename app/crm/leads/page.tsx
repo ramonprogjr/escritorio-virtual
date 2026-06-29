@@ -13,7 +13,7 @@ import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { ESTAGIOS_FALLBACK_UI, limparNomePipeline } from "@/lib/crm/pipeline-defaults";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
-import { LeadEncaminharModal } from "@/components/crm/leads/LeadEncaminharModal";
+import { DirecionarLeadDrawer } from "@/components/crm/DirecionarLeadDrawer";
 import { EncaminhamentosPendentesPanel } from "@/components/crm/leads/EncaminhamentosPendentesPanel";
 
 const LeadRapidoSideover = dynamic(
@@ -1065,7 +1065,7 @@ export default function LeadsPage() {
             <div className="flex gap-2 px-5 py-3 border-b border-[#1d3a2c] flex-shrink-0 overflow-x-auto">
               {[
                 { label: "Ligar", Icon: Phone, action: () => { if (detalhe?.telefone) window.open(`tel:${detalhe.telefone}`); } },
-                { label: "Encaminhar", Icon: Share2, action: () => setEncaminharLead(detalhe) },
+                { label: "Direcionar", Icon: Share2, action: () => setEncaminharLead(detalhe) },
                 { label: "Negócio", Icon: Briefcase, action: () => void converterNegocio(detalhe) },
                 { label: "Nota", Icon: StickyNote, action: () => setTabDetalhe("notas") },
                 { label: "Perdido", Icon: XCircle, action: () => { setPerdaComoSpam(false); setConfirmandoPerda(true); } },
@@ -1259,15 +1259,15 @@ export default function LeadsPage() {
       )}
 
       {encaminharLead && (
-        <LeadEncaminharModal
+        <DirecionarLeadDrawer
           open
           leadId={encaminharLead.id}
           leadNome={encaminharLead.nome}
           onClose={() => setEncaminharLead(null)}
-          onSuccess={() => {
+          onQualificar={() => moverEstagio(encaminharLead.id, "qualificado")}
+          onDirecionado={() => {
             void moverEstagio(encaminharLead.id, "encaminhado");
             void carregar();
-            setEncaminharLead(null);
           }}
         />
       )}

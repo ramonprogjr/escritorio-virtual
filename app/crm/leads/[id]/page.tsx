@@ -417,7 +417,7 @@ export default function LeadFichaPage() {
     if (json.data?.id) router.push(`/crm/negocios/${json.data.id}`);
   }
 
-  async function moverEstagio(estagioNovo: string, extra?: Record<string, unknown>) {
+  async function moverEstagio(estagioNovo: string, extra?: Record<string, unknown>): Promise<boolean> {
     const res = await patchLeadCrm(id, {
       estagio: estagioNovo,
       _estagio_anterior: lead?.estagio as string,
@@ -425,9 +425,10 @@ export default function LeadFichaPage() {
     });
     if (!res.ok) {
       alert(res.error);
-      return;
+      return false;
     }
-    carregar();
+    await carregar();
+    return true;
   }
 
   async function confirmarPerda() {
@@ -579,7 +580,12 @@ export default function LeadFichaPage() {
           </div>
         </div>
         <div className="flex flex-shrink-0 gap-2">
-          <DistribuirLeadPanel leadId={id} onDone={() => void carregar()} />
+          <DistribuirLeadPanel
+            leadId={id}
+            leadNome={lead.nome as string}
+            onDone={() => void carregar()}
+            onQualificar={() => moverEstagio("qualificado")}
+          />
           <button
             type="button"
             onClick={() => void criarNegocio()}
