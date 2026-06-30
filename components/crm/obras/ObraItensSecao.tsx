@@ -20,7 +20,6 @@ import {
   Lock,
   Mic,
   CalendarClock,
-  Camera,
   Save,
   ChevronRight,
   AlertTriangle,
@@ -123,10 +122,18 @@ function CardItem({
   const bloq = contarBloqueiosItem(it);
   const avanco = it.pct_avanco ?? 0;
 
+  // A6 (E2E DOMÍNIO C): o card é um <button> só-visual — resume o item para leitor de tela.
+  const ariaResumo =
+    `${it.nome ?? "Item"} — situação ${ROTULO_SITUACAO[situacao]}, ${avanco}% concluído` +
+    (bloq > 0 ? `, ${bloq} bloqueio${bloq > 1 ? "s" : ""}` : "") +
+    (nSubitens > 0 ? `, ${nSubitens} subiten${nSubitens > 1 ? "s" : ""}` : "") +
+    ". Toque para abrir a ficha.";
+
   return (
     <button
       type="button"
       onClick={onAbrir}
+      aria-label={ariaResumo}
       className="flex w-full flex-col gap-2 rounded-xl border p-3 text-left"
       style={{ borderColor: BORDA, background: BG_CARD, borderLeft: `4px solid ${cor}` }}
     >
@@ -462,17 +469,9 @@ function FichaItem({
           </p>
         ) : null}
 
-        {/* Ações */}
+        {/* Ações — A3 (E2E DOMÍNIO C): botão "Evidência" (disabled "Em breve") removido. A evidência
+            mora no fluxo de MEDIÇÃO (DrawerMedir, com foto/observação append-only), não aqui. */}
         <div className="sticky bottom-0 -mx-4 mt-auto flex gap-2 border-t px-4 pt-3" style={{ borderColor: BORDA, background: "rgba(10,20,15,0.98)" }}>
-          <button
-            type="button"
-            disabled
-            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-3 text-[12px] font-semibold opacity-50"
-            style={{ color: DOURADO, border: `1px solid ${DOURADO}44` }}
-            title="Em breve"
-          >
-            <Camera className="h-4 w-4" /> Evidência
-          </button>
           <button
             type="button"
             onClick={salvar}

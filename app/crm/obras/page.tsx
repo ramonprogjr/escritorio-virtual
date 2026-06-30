@@ -262,10 +262,11 @@ function Contador({
       }}
     >
       <span style={{ color: cor }}>{icone}</span>
-      <strong className="mt-1 text-2xl font-extrabold" style={{ color: esmaecido ? "#8b949e" : "#e6edf3" }}>
+      <strong className="mt-1 text-2xl font-extrabold" style={{ color: esmaecido ? "#8aa99a" : "#e6edf3" }}>
         {valor}
       </strong>
-      <span className="text-[11px] text-[#8b949e]">{label}</span>
+      {/* A6: cinza de TEXTO subido de #8b949e p/ #8aa99a (contraste ≥4.5:1 sobre o fundo escuro). */}
+      <span className="text-[11px] text-[#8aa99a]">{label}</span>
     </Comp>
   );
 }
@@ -905,11 +906,13 @@ function PainelHoje({
         </SecaoHoje>
       ) : null}
 
-      {/* §4 PAGAMENTOS — financeiro chega em breve (cinza, não erro) */}
-      <div className="flex items-center gap-2 rounded-xl border border-dashed border-[#2a4636] bg-[#0c1a10] px-3 py-2.5">
-        <CreditCard className="h-4 w-4 text-[#6e9e8a]" />
-        <span className="text-xs text-[#6e9e8a]">
-          Pagamentos a vencer — o módulo financeiro chega em breve.
+      {/* §4 PAGAMENTOS — o Financeiro POR OBRA já existe (deploy #9); o que falta é o agregado
+          cross-obra de "a vencer" no cockpit. Copy honesta: não subestima o que já está pronto. */}
+      <div className="flex items-start gap-2 rounded-xl border border-dashed border-[#2a4636] bg-[#0c1a10] px-3 py-2.5">
+        <CreditCard className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#8aa99a]" />
+        <span className="text-xs text-[#8aa99a]">
+          O agregado de pagamentos a vencer (todas as obras) chega em breve. O Financeiro por obra
+          já está disponível — abra uma obra na aba <strong className="text-[#c8d6cd]">Financeiro</strong>.
         </span>
       </div>
 

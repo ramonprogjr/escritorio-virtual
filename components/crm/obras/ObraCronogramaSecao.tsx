@@ -134,6 +134,19 @@ export function ObraCronogramaSecao({ obraId }: { obraId: string }) {
 
       <CurvaSvg planejado={planejado} executado={executado} lente={lente} hojeIndex={resp?.hoje_index ?? -1} />
 
+      {/* A7 (E2E DOMÍNIO C): resumo textual da Curva-S para leitor de tela (o SVG não expõe números). */}
+      <p className="sr-only">
+        {kpis
+          ? `Curva-S. Avanço físico ${kpis.fisicoAtual}%` +
+            (verFinanceiro ? `, avanço financeiro ${kpis.financeiroAtual}%` : "") +
+            (kpis.desvioPct == null
+              ? ", desvio em relação ao planejado indisponível"
+              : `, desvio de ${kpis.desvioPct > 0 ? "+" : ""}${kpis.desvioPct}% em relação ao planejado`) +
+            (kpis.previsaoTermino ? `, previsão de término ${fmtData(kpis.previsaoTermino)}` : "") +
+            "."
+          : "Curva-S: sem dados de cronograma ainda."}
+      </p>
+
       {pendenteE4 ? <AvisoMigracao aviso={resp?.aviso ?? null} /> : null}
     </div>
   );

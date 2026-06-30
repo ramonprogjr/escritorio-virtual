@@ -20,11 +20,16 @@ type ObraPainel = {
   estado: string | null;
 };
 
-const BORDA = "#1d3a2c";
-const BG_CARD = "#0f1d16";
-const DOURADO = "#c9a24a";
-
 type Aba = "escopo" | "painel" | "itens" | "cronograma" | "compras" | "financeiro";
+
+const ABAS: { id: Aba; rotulo: string }[] = [
+  { id: "escopo", rotulo: "Escopo" },
+  { id: "itens", rotulo: "Itens & Avanço" },
+  { id: "cronograma", rotulo: "Cronograma" },
+  { id: "compras", rotulo: "Compras & Estoque" },
+  { id: "financeiro", rotulo: "Financeiro" },
+  { id: "painel", rotulo: "Painel" },
+];
 
 export default function ObraPainelPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,112 +61,109 @@ export default function ObraPainelPage() {
   }, [carregar]);
 
   if (!obra) {
-    return <p style={{ padding: 24, color: "#8b949e" }}>Carregando painel da obra…</p>;
+    return <p className="p-6 text-sm text-[#8aa99a]">Carregando painel da obra…</p>;
   }
 
+  const localizacao =
+    [obra.endereco, obra.cidade, obra.estado].filter(Boolean).join(" — ") || "Endereço não informado";
+
   return (
-    <div style={{ padding: 24, color: "#e6edf3", maxWidth: 960 }}>
-      <button type="button" onClick={() => router.push("/crm/obras")} style={{ color: "#8b949e", marginBottom: 16 }}>
-        ← Obras
-      </button>
-      <h1 style={{ margin: 0 }}>{obra.titulo}</h1>
-      <p style={{ color: "#8b949e", fontFamily: "monospace" }}>{obra.codigo} · {obra.status}</p>
-      <p style={{ marginTop: 8, fontSize: 14 }}>
-        {[obra.endereco, obra.cidade, obra.estado].filter(Boolean).join(" — ") || "Endereço não informado"}
-      </p>
+    <div className="min-h-full bg-[#0a140f] px-4 py-5 text-[#e6edf3] sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-5xl">
+        <button
+          type="button"
+          onClick={() => router.push("/crm/obras")}
+          className="-ml-1 inline-flex min-h-[44px] items-center gap-1 px-1 text-sm font-semibold text-[#8aa99a] transition-colors hover:text-[#e6edf3]"
+        >
+          ← Obras
+        </button>
+        <h1 className="mt-1 text-xl font-bold sm:text-2xl">{obra.titulo}</h1>
+        <p className="font-mono text-xs text-[#8aa99a]">
+          {obra.codigo} · {obra.status}
+        </p>
+        <p className="mt-2 text-sm text-[#c8d6cd]">{localizacao}</p>
 
-      {/* Abas: Itens & Avanço (E2) | Painel (pedidos/check-ins/diário) */}
-      <div
-        role="tablist"
-        aria-label="Seções da obra"
-        style={{ display: "flex", gap: 4, marginTop: 24, marginBottom: 16, borderBottom: `1px solid ${BORDA}` }}
-      >
-        {([
-          { id: "escopo", rotulo: "Escopo" },
-          { id: "itens", rotulo: "Itens & Avanço" },
-          { id: "cronograma", rotulo: "Cronograma" },
-          { id: "compras", rotulo: "Compras & Estoque" },
-          { id: "financeiro", rotulo: "Financeiro" },
-          { id: "painel", rotulo: "Painel" },
-        ] as const).map(({ id: tabId, rotulo }) => {
-          const ativo = aba === tabId;
-          return (
-            <button
-              key={tabId}
-              type="button"
-              role="tab"
-              aria-selected={ativo}
-              onClick={() => setAba(tabId)}
-              style={{
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: 700,
-                color: ativo ? "#f0c869" : "#8aa99a",
-                background: "transparent",
-                border: "none",
-                borderBottom: ativo ? `2px solid ${DOURADO}` : "2px solid transparent",
-                cursor: "pointer",
-              }}
-            >
-              {rotulo}
-            </button>
-          );
-        })}
-      </div>
-
-      {aba === "escopo" ? (
-        <ArvoreEscopo obraId={id} obraCodigo={obra.codigo} obraTitulo={obra.titulo} />
-      ) : aba === "itens" ? (
-        <>
-          <ObraItensSecao obraId={id} />
-          <SecaoHistoricoMedicoes obraId={id} titulo="Histórico de medições da obra" />
-        </>
-      ) : aba === "cronograma" ? (
-        <ObraCronogramaSecao obraId={id} />
-      ) : aba === "compras" ? (
-        <ObraComprasEstoqueSecao obraId={id} />
-      ) : aba === "financeiro" ? (
-        <ObraFinanceiroSecao obraId={id} />
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-          <section style={{ background: BG_CARD, borderRadius: 10, padding: 16, border: `1px solid ${BORDA}` }}>
-            <h2 style={{ fontSize: 14, margin: "0 0 12px" }}>Pedidos de material</h2>
-            {pedidos.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#8b949e" }}>Nenhum pedido.</p>
-            ) : (
-              pedidos.map((p) => (
-                <p key={String(p.id)} style={{ fontSize: 12, margin: "6px 0" }}>
-                  {String(p.descricao)} — {String(p.status)}
-                </p>
-              ))
-            )}
-          </section>
-          <section style={{ background: BG_CARD, borderRadius: 10, padding: 16, border: `1px solid ${BORDA}` }}>
-            <h2 style={{ fontSize: 14, margin: "0 0 12px" }}>Check-ins</h2>
-            {checkins.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#8b949e" }}>Nenhum check-in.</p>
-            ) : (
-              checkins.map((c) => (
-                <p key={String(c.id)} style={{ fontSize: 12, margin: "6px 0" }}>
-                  {String(c.tipo)} — {new Date(String(c.criado_em)).toLocaleString("pt-BR")}
-                </p>
-              ))
-            )}
-          </section>
-          <section style={{ background: BG_CARD, borderRadius: 10, padding: 16, border: `1px solid ${BORDA}` }}>
-            <h2 style={{ fontSize: 14, margin: "0 0 12px" }}>Diário de obra</h2>
-            {diario.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#8b949e" }}>Sem registros.</p>
-            ) : (
-              diario.map((d) => (
-                <p key={String(d.id)} style={{ fontSize: 12, margin: "6px 0" }}>
-                  {String(d.resumo).slice(0, 80)}
-                </p>
-              ))
-            )}
-          </section>
+        {/* Abas — scroll horizontal no mobile (não estoura): cada aba flex-shrink-0. */}
+        <div
+          role="tablist"
+          aria-label="Seções da obra"
+          className="mt-6 mb-4 flex gap-1 overflow-x-auto border-b border-[#1d3a2c] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {ABAS.map(({ id: tabId, rotulo }) => {
+            const ativo = aba === tabId;
+            return (
+              <button
+                key={tabId}
+                type="button"
+                role="tab"
+                aria-selected={ativo}
+                onClick={() => setAba(tabId)}
+                className={`min-h-[44px] flex-shrink-0 whitespace-nowrap border-b-2 px-3.5 text-[13px] font-bold transition-colors ${
+                  ativo
+                    ? "border-[#c9a24a] text-[#f0c869]"
+                    : "border-transparent text-[#8aa99a] hover:text-[#c8d6cd]"
+                }`}
+              >
+                {rotulo}
+              </button>
+            );
+          })}
         </div>
-      )}
+
+        {aba === "escopo" ? (
+          <ArvoreEscopo obraId={id} obraCodigo={obra.codigo} obraTitulo={obra.titulo} />
+        ) : aba === "itens" ? (
+          <>
+            <ObraItensSecao obraId={id} />
+            <SecaoHistoricoMedicoes obraId={id} titulo="Histórico de medições da obra" />
+          </>
+        ) : aba === "cronograma" ? (
+          <ObraCronogramaSecao obraId={id} />
+        ) : aba === "compras" ? (
+          <ObraComprasEstoqueSecao obraId={id} />
+        ) : aba === "financeiro" ? (
+          <ObraFinanceiroSecao obraId={id} />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <section className="rounded-[10px] border border-[#1d3a2c] bg-[#0f1d16] p-4">
+              <h2 className="mb-3 text-sm font-semibold">Pedidos de material</h2>
+              {pedidos.length === 0 ? (
+                <p className="text-xs text-[#8aa99a]">Nenhum pedido.</p>
+              ) : (
+                pedidos.map((p) => (
+                  <p key={String(p.id)} className="my-1.5 text-xs">
+                    {String(p.descricao)} — {String(p.status)}
+                  </p>
+                ))
+              )}
+            </section>
+            <section className="rounded-[10px] border border-[#1d3a2c] bg-[#0f1d16] p-4">
+              <h2 className="mb-3 text-sm font-semibold">Check-ins</h2>
+              {checkins.length === 0 ? (
+                <p className="text-xs text-[#8aa99a]">Nenhum check-in.</p>
+              ) : (
+                checkins.map((c) => (
+                  <p key={String(c.id)} className="my-1.5 text-xs">
+                    {String(c.tipo)} — {new Date(String(c.criado_em)).toLocaleString("pt-BR")}
+                  </p>
+                ))
+              )}
+            </section>
+            <section className="rounded-[10px] border border-[#1d3a2c] bg-[#0f1d16] p-4">
+              <h2 className="mb-3 text-sm font-semibold">Diário de obra</h2>
+              {diario.length === 0 ? (
+                <p className="text-xs text-[#8aa99a]">Sem registros.</p>
+              ) : (
+                diario.map((d) => (
+                  <p key={String(d.id)} className="my-1.5 text-xs">
+                    {String(d.resumo).slice(0, 80)}
+                  </p>
+                ))
+              )}
+            </section>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

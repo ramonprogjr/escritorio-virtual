@@ -103,7 +103,9 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
       // Renomeado a pedido do dono (Jun/2026): Projetos→Arquitetura, Obras→Engenharia.
       // Sub-itens futuros (Arquitetura>Projetos; Engenharia>Construção+Reforma) entram quando
       // as telas separadas existirem — evita "menu morto". Ver [[navegacao-renomear-...]].
-      { href: "/crm/projetos", label: "Arquitetura", icon: LayoutTemplate, minRole: "comercial" },
+      // B1 (E2E DOMÍNIO C): aponta para o MÓDULO REAL (kanban funil, KPIs, fila de aprovação,
+      // "Gerar obra"); /crm/projetos era o STUB e agora redireciona p/ cá.
+      { href: "/crm/arquitetura", label: "Arquitetura", icon: LayoutTemplate, minRole: "comercial" },
       { href: "/crm/obras", label: "Engenharia", icon: HardHat, minRole: "comercial" },
       { href: "/crm/imoveis", label: "Imóveis", icon: Home, minRole: "comercial" },
       { href: "/crm/pedidos", label: "Pedidos", icon: Truck, minRole: "comercial" },
