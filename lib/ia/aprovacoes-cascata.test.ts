@@ -28,10 +28,25 @@ let snapshotErroReal: { code?: string; message?: string } | null = null;
 let snapshotLancaExcecao = false;
 
 function makeQuery(tabela: string) {
-  // Builder encadeável: todo método devolve o próprio builder; os terminais resolvem com a aprovação.
+  // Builder encadeável. Os terminais (single, select-como-terminal, insert) resolvem Promises.
+  // IMPORTANTE para F-B3: após .update().eq().eq().eq().select("id"), a lib aguarda
+  // { data: [...], error } para checar se linhas foram afetadas (guarda de idempotência).
+  // O mock devolve data=[aprovacaoRow] se aprovacaoRow != null (UPDATE teve efeito),
+  // ou data=[] se null (UPDATE sem efeito — idempotência já processada).
+  let isUpdate = false;
   const q: Record<string, unknown> = {};
-  q.select = () => q;
-  q.update = () => q;
+  q.update = () => { isUpdate = true; return q; };
+  q.select = (..._args: unknown[]) => {
+    if (isUpdate) {
+      // Terminal do update: retorna as linhas afetadas (F-B3 idempotência)
+      return Promise.resolve({
+        data: aprovacaoRow ? [{ id: aprovacaoRow.id }] : [],
+        error: null,
+      });
+    }
+    // select de leitura — encadeável (ex: .from().select().eq().single())
+    return q;
+  };
   q.insert = (linha: Record<string, unknown>) => {
     insertCalls.push({ tabela, linha });
     return Promise.resolve({ data: null, error: null });

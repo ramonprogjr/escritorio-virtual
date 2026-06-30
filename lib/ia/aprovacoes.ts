@@ -302,8 +302,13 @@ export async function aprovar(
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
 
-  // Atualiza status (reaplica o filtro de tenant no UPDATE — defesa em profundidade)
-  await db
+  // F-B3 IDEMPOTÊNCIA: condiciona o UPDATE a status='pendente' E verifica linhas afetadas.
+  // Sem esta guarda, dois operadores (ou duplo-clique/retry) passam pelo SELECT acima, ambos
+  // encontram a aprovação e disparam a cascata do escrow duas vezes (pagamento duplicado).
+  // Com .eq("status","pendente") + verificação de data retornada, apenas o PRIMEIRO UPDATE
+  // tem efeito; o segundo recebe data=[] e retorna cedo — a cascata de dinheiro NÃO executa novamente.
+  // Nota: Supabase JS v2 — .select("id") após .update() retorna as linhas afetadas.
+  const { data: linhasAfetadas, error: errUpdate } = await db
     .from("hub_aprovacoes")
     .update({
       status: "aprovado",
@@ -312,7 +317,18 @@ export async function aprovar(
       observacao,
     })
     .eq("id", aprovacaoId)
-    .eq("tenant_id", tenant);
+    .eq("tenant_id", tenant)
+    .eq("status", "pendente")  // guarda de idempotência — só age se ainda pendente
+    .select("id");
+
+  if (errUpdate) return { sucesso: false, erro: errUpdate.message };
+
+  // Nenhuma linha retornada = aprovação já foi processada (aprovada/rejeitada por outro operador).
+  // Retornamos sucesso=true (não é erro do chamador — o estado desejado já foi atingido),
+  // mas NÃO disparamos a cascata do escrow novamente.
+  if (!linhasAfetadas || linhasAfetadas.length === 0) {
+    return { sucesso: true }; // idempotente — já processada, sem cascata dupla
+  }
 
   // Registra no log de decisões. SEGURANÇA (ESTRUTURA-UNIFICADA §7): grava `tenant_id` SEMPRE —
   // log de decisão de DINHEIRO (escrow/pagamento) não pode ficar fora do tenant. supabase() é
@@ -354,7 +370,8 @@ export async function rejeitar(
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
 
-  await db
+  // F-B3 IDEMPOTÊNCIA (rejeitar): mesma guarda do aprovar — só age se ainda pendente.
+  const { data: linhasRejeitadas, error: errRejeitar } = await db
     .from("hub_aprovacoes")
     .update({
       status: "rejeitado",
@@ -363,7 +380,15 @@ export async function rejeitar(
       motivo_rejeicao: motivo,
     })
     .eq("id", aprovacaoId)
-    .eq("tenant_id", tenant);
+    .eq("tenant_id", tenant)
+    .eq("status", "pendente")  // guarda de idempotência
+    .select("id");
+
+  if (errRejeitar) return { sucesso: false, erro: errRejeitar.message };
+
+  if (!linhasRejeitadas || linhasRejeitadas.length === 0) {
+    return { sucesso: true }; // já processada — retorno idempotente
+  }
 
   const dados = (aprovacao.dados as Record<string, unknown>) || {};
   if (aprovacao.tipo === "cotacao_fornecedor" && dados.pedido_id) {

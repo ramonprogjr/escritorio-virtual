@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { aprovar, rejeitar } from "@/lib/ia/aprovacoes";
-import { getCallerContext } from "@/lib/crm/crm-api-auth";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 export async function PATCH(
   request: NextRequest,
@@ -10,9 +10,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
-  // SEGURANÇA (F0/E6): tenant vem da SESSÃO (cookie httpOnly), nunca do body/header. Aprovar/rejeitar
-  // levam o escrow ao gate de dinheiro — sem o tenant da sessão, um operador aprovaria a fila de outro.
-  const g = await getCallerContext(request);
+  // SEGURANÇA (F-B2/E6): gate de papel SERVER-SIDE — apenas gestor ou owner podem aprovar/rejeitar.
+  // getCallerContext (antigo) admitia qualquer atendente; requireCrmGestor fecha a escalada de privilégio
+  // sobre o gate do dinheiro (escrow). O guard client-side no layout não é suficiente: um atendente
+  // autenticado com a INTERNAL_API_KEY do front poderia chamar PATCH diretamente.
+  // tenant vem da SESSÃO (cookie httpOnly), nunca do body/header.
+  const g = await requireCrmGestor(request);
   if ("error" in g) return g.error;
   const tenantId = g.ctx.tenantId;
 
