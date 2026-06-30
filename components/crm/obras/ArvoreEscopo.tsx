@@ -35,6 +35,9 @@ import {
   Coins,
   Activity,
   Ruler,
+  Download,
+  FileText,
+  Table2,
 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { DrawerMedir } from "@/components/crm/obras/DrawerMedir";
@@ -44,6 +47,7 @@ import {
   lentesDaPersona,
   personaPodeVerCusto,
   personaPodeVerMargem,
+  personaPodeVerPreco,
   formulaPreco,
   fmtMoeda,
   custoUnitario,
@@ -55,6 +59,7 @@ import {
   type ItemEscopoCalc,
   type CockpitEscopo,
 } from "@/lib/obras/escopo";
+import { gerarMemorialHtml, gerarOrcamentoCsv, nomeArquivo } from "@/lib/obras/orcamentaria";
 
 const DOURADO = "#c9a24a";
 const BORDA = "#1d3a2c";
@@ -65,6 +70,9 @@ const TXT_DIM = "#8aa99a";
 
 type Props = {
   obraId: string;
+  /** Código/título da obra — só p/ o cabeçalho dos artefatos gerados (EXTRAIR). Opcionais/tolerantes. */
+  obraCodigo?: string | null;
+  obraTitulo?: string | null;
   lenteInicial?: LenteEscopo;
   /**
    * Persona INICIAL (fallback até o servidor responder). A persona EFETIVA é sempre a que o
@@ -89,6 +97,8 @@ const BDIS_COMUNS = [1.0, 1.06, 1.1, 1.155, 1.2, 1.25];
 
 export function ArvoreEscopo({
   obraId,
+  obraCodigo,
+  obraTitulo,
   lenteInicial = "avanco",
   persona: personaInicial = "prestador",
   somenteLeitura = false,
@@ -223,6 +233,13 @@ export function ArvoreEscopo({
           onMudar={setLente}
         />
         <div className="flex items-center gap-2">
+          <MenuGerar
+            ambientes={ambientes}
+            persona={persona}
+            pendente={pendente}
+            obraCodigo={obraCodigo}
+            obraTitulo={obraTitulo}
+          />
           <SeletorBdi
             valor={bdiHeader}
             onMudar={salvarBdi}
@@ -418,6 +435,147 @@ function SeletorBdi({
         </span>
       ) : null}
     </label>
+  );
+}
+
+// ── Menu "Orçamentária" (a peça orçamentária): Memorial (HTML/print) · Planilha (CSV) ──
+/**
+ * 1 botão "Orçamentária" → menu pequeno com as 2 saídas da MESMA árvore já carregada (`ambientes`):
+ *  - Memorial descritivo: abre o HTML printável numa nova aba (Blob), pronto p/ imprimir/PDF.
+ *  - Planilha orçamentária (CSV): download via Blob (com BOM UTF-8 p/ Excel pt-BR).
+ * Honesto: respeita a persona (CSV omite custo/margem p/ quem não pode; rótulo avisa o que sai) e
+ * a migração pendente (artefatos saem com quantidade + nota). Sem itens → desabilitado.
+ */
+function MenuGerar({
+  ambientes,
+  persona,
+  pendente,
+  obraCodigo,
+  obraTitulo,
+}: {
+  ambientes: NoAmbiente[];
+  persona: PersonaEscopo;
+  pendente: boolean;
+  obraCodigo?: string | null;
+  obraTitulo?: string | null;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const obra = useMemo(
+    () => ({ codigo: obraCodigo ?? null, titulo: obraTitulo ?? null }),
+    [obraCodigo, obraTitulo]
+  );
+  const vazio = ambientes.length === 0;
+
+  // Memorial: abre o HTML numa nova aba via Blob URL (sem document.write, sem CSP inline issues).
+  const gerarMemorial = useCallback(() => {
+    const html = gerarMemorialHtml(ambientes, obra, { migracaoPendente: pendente });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    // Revoga depois de um tempo (a aba nova já carregou o documento).
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    setAberto(false);
+  }, [ambientes, obra, pendente]);
+
+  // CSV: download via <a download>. BOM (﻿) p/ o Excel pt-BR ler acentos corretamente.
+  const gerarCsv = useCallback(() => {
+    const csv = gerarOrcamentoCsv(ambientes, persona, { migracaoPendente: pendente });
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomeArquivo("orcamento", obra, "csv");
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setAberto(false);
+  }, [ambientes, persona, obra, pendente]);
+
+  // Rótulo honesto da planilha conforme o que a persona recebe.
+  const rotuloPlanilha = personaPodeVerCusto(persona)
+    ? "com custo, preço e margem"
+    : personaPodeVerPreco(persona)
+      ? "com preço (sem custo/margem)"
+      : "só descrição e quantidade";
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => !vazio && setAberto((v) => !v)}
+        disabled={vazio}
+        aria-haspopup="menu"
+        aria-expanded={aberto}
+        title={
+          vazio
+            ? "Monte o escopo para gerar a orçamentária"
+            : "Gerar a orçamentária (memorial + planilha) da árvore"
+        }
+        className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[12px] font-semibold"
+        style={{
+          borderColor: `${DOURADO}44`,
+          color: DOURADO,
+          background: BG_CARD,
+          opacity: vazio ? 0.5 : 1,
+        }}
+      >
+        <Download className="h-3.5 w-3.5" /> Orçamentária
+        <ChevronDown className="h-3 w-3" />
+      </button>
+
+      {aberto ? (
+        <>
+          {/* backdrop p/ fechar ao clicar fora */}
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            className="fixed inset-0 z-10 cursor-default"
+            onClick={() => setAberto(false)}
+          />
+          <div
+            role="menu"
+            className="absolute right-0 z-20 mt-1 w-60 overflow-hidden rounded-lg border shadow-lg"
+            style={{ borderColor: BORDA, background: BG_DEEP }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={gerarMemorial}
+              className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-[#14301f]"
+            >
+              <FileText className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: DOURADO }} />
+              <span className="min-w-0">
+                <span className="block text-[12px] font-bold" style={{ color: TXT }}>
+                  Memorial descritivo
+                </span>
+                <span className="block text-[10px]" style={{ color: TXT_DIM }}>
+                  imprime/PDF · descrição + quantidade
+                </span>
+              </span>
+            </button>
+            <div style={{ height: 1, background: BORDA }} />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={gerarCsv}
+              className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-[#14301f]"
+            >
+              <Table2 className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: DOURADO }} />
+              <span className="min-w-0">
+                <span className="block text-[12px] font-bold" style={{ color: TXT }}>
+                  Planilha orçamentária (CSV)
+                </span>
+                <span className="block text-[10px]" style={{ color: TXT_DIM }}>
+                  {rotuloPlanilha}
+                  {pendente ? " · quantidade (custo após migração)" : ""}
+                </span>
+              </span>
+            </button>
+          </div>
+        </>
+      ) : null}
+    </div>
   );
 }
 

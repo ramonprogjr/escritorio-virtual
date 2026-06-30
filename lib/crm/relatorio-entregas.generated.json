@@ -1,7 +1,35 @@
 {
-  "geradoEm": "2026-06-29T22:10:52.894Z",
+  "geradoEm": "2026-06-30T01:27:56.668Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "2893cb0e14eaf4af0f62f094f27abd95f19638c1",
+      "hashCurto": "2893cb0",
+      "mensagem": "Fase 3a — medição honesta (append-only) + wiring do snapshot de custo (auditada)",
+      "mensagemRaw": "feat(eng): Fase 3a — medição honesta (append-only) + wiring do snapshot de custo (auditada)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T01:26:19.000Z",
+      "hora": "22:26",
+      "arquivos": [
+        "app/api/aprovacoes/[id]/route.ts",
+        "app/api/crm/obras/[id]/medicoes/route.test.ts",
+        "app/api/crm/obras/[id]/medicoes/route.ts",
+        "components/crm/obras/ArvoreEscopo.tsx",
+        "components/crm/obras/DrawerMedir.tsx",
+        "docs/DIVIDAS-TECNICAS.md",
+        "lib/ia/aprovacoes-cascata.test.ts",
+        "lib/ia/aprovacoes.ts",
+        "lib/obras/medicao.test.ts",
+        "lib/obras/medicao.ts",
+        "supabase/migrations/20260817120000_e7c_medicao.sql"
+      ],
+      "areas": {
+        "app/api": 3,
+        "components/crm": 2,
+        "outros": 5,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "f8fd7dddc0dc748c4f8cb5eba8e1a79a3b30354a",
       "hashCurto": "f8fd7dd",
@@ -6324,23 +6352,6 @@
       ],
       "areas": {
         "outros": 4
-      }
-    },
-    {
-      "hash": "99f5c64b930b5d4e5c56369d3a55e92eb23ccdee",
-      "hashCurto": "99f5c64",
-      "mensagem": "redirecionar raiz para login em vez da landing",
-      "mensagemRaw": "fix(hub): redirecionar raiz para login em vez da landing",
-      "autor": "Ramon Pereira",
-      "dataIso": "2026-06-22T23:29:30.000Z",
-      "hora": "20:29",
-      "arquivos": [
-        "app/page.tsx",
-        "proxy.ts"
-      ],
-      "areas": {
-        "app/hub": 1,
-        "outros": 1
       }
     }
   ]

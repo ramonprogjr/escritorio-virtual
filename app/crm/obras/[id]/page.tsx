@@ -107,7 +107,7 @@ export default function ObraPainelPage() {
       </div>
 
       {aba === "escopo" ? (
-        <ArvoreEscopo obraId={id} />
+        <ArvoreEscopo obraId={id} obraCodigo={obra.codigo} obraTitulo={obra.titulo} />
       ) : aba === "itens" ? (
         <ObraItensSecao obraId={id} />
       ) : aba === "compras" ? (
