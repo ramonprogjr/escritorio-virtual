@@ -7,6 +7,7 @@ import {
   mensagemDocumentoInvalido,
   normalizarDocumento,
 } from "@/lib/crm/documento-brasil";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -17,6 +18,10 @@ function db() {
 
 /** GET ?documento=...&tipo_pessoa=PF|PJ — valida formato e indica se já existe no hub. */
 export async function GET(request: NextRequest) {
+  // Exige sessão CRM: este endpoint testa CPF/CNPJ contra a base — não pode ser oráculo aberto.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
     return NextResponse.json(
       { error: "Supabase não configurado no servidor." },
@@ -54,18 +59,17 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = db();
-  const existente = await buscarPessoaPorDocumento(supabase, tipo, documento);
+  // Escopo por tenant: não confirma documento de outro escritório (anti-enumeração / LGPD).
+  const existente = await buscarPessoaPorDocumento(supabase, tipo, documento, g.ctx.tenantId);
 
   if (existente) {
     const label = tipo === "PF" ? "CPF" : "CNPJ";
+    // 409-like: NÃO expõe nome/código/id de outro registo — só o booleano + mensagem genérica.
     return NextResponse.json({
       disponivel: false,
       valido: true,
       duplicado: true,
-      error: `${label} já cadastrado para ${existente.nome} (${existente.codigo || "sem código"}).`,
-      pessoa_id: existente.id,
-      codigo: existente.codigo,
-      nome: existente.nome,
+      error: `${label} já cadastrado neste escritório.`,
     });
   }
 

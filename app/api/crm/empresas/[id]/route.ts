@@ -5,10 +5,38 @@ import {
   actorFromRequestHeaders,
   registrarAuditoriaCrm,
 } from "@/lib/crm/registrar-auditoria-crm";
-import { isMissingPgColumn } from "@/lib/tenant-default";
-import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { DEFAULT_OBRA10_TENANT_ID, isMissingPgColumn } from "@/lib/tenant-default";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
 import { validarCnpjEmpresaDisponivelPatch } from "@/lib/crm/validar-documento-server";
+
+/**
+ * Confina o acesso ao tenant do caller. Busca a empresa por id (service-role bypassa RLS) e
+ * devolve 404 se ela pertencer a outro escritório. NULL / Obra10 padrão = legado partilhado.
+ */
+async function carregarEmpresaDoTenant(
+  supabase: ReturnType<typeof db>,
+  id: string,
+  tenantId: string
+): Promise<{ ok: true; row: Record<string, unknown> } | { ok: false; status: number; error: string }> {
+  const { data, error } = await supabase
+    .from("hub_empresas")
+    .select("id, razao_social, codigo, cnpj, email, telefone, prefixo_mercado, tenant_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error && !isMissingPgColumn(error, "tenant_id")) {
+    return { ok: false, status: 500, error: error.message };
+  }
+  if (!data) {
+    return { ok: false, status: 404, error: "Empresa não encontrada." };
+  }
+  const row = data as Record<string, unknown> & { tenant_id?: string | null };
+  const tid = row.tenant_id != null ? String(row.tenant_id).trim() : "";
+  if (tid && tid !== tenantId && tid !== DEFAULT_OBRA10_TENANT_ID) {
+    return { ok: false, status: 404, error: "Empresa não encontrada." };
+  }
+  return { ok: true, row };
+}
 
 const EMPRESA_SELECT =
   "id, codigo, razao_social, nome_fantasia, cnpj, email, telefone, segmento, prefixo_mercado, cep, logradouro, numero, complemento, bairro, cidade, estado, ativo, acesso_habilitado, acesso_habilitado_em, criado_em, atualizado_em";
@@ -45,9 +73,12 @@ function configError(): string | null {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   try {
     const err = configError();
     if (err) {
@@ -64,6 +95,13 @@ export async function GET(
     }
 
     const supabase = db();
+
+    // Guard de tenant: 404 se a empresa for de outro escritório (service-role bypassa RLS).
+    const posse = await carregarEmpresaDoTenant(supabase, id, g.ctx.tenantId);
+    if (!posse.ok) {
+      return NextResponse.json({ error: posse.error }, { status: posse.status });
+    }
+
     let { data, error } = await supabase
       .from("hub_empresas")
       .select(EMPRESA_SELECT)
@@ -118,6 +156,13 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const supabaseGuard = db();
+  // Guard de tenant: 404 se a empresa for de outro escritório (service-role bypassa RLS).
+  const posse = await carregarEmpresaDoTenant(supabaseGuard, id, guard.ctx.tenantId);
+  if (!posse.ok) {
+    return NextResponse.json({ error: posse.error }, { status: posse.status });
   }
 
   const updates: Record<string, unknown> = {
@@ -226,19 +271,25 @@ export async function DELETE(
   }
 
   const supabase = db();
-  const { data: existente } = await supabase
-    .from("hub_empresas")
-    .select("id, razao_social, codigo, cnpj, email, telefone, prefixo_mercado")
-    .eq("id", id)
-    .maybeSingle();
 
-  if (!existente) {
-    return NextResponse.json({ error: "Empresa não encontrada." }, { status: 404 });
+  // Guard de tenant: 404 se a empresa for de outro escritório (service-role bypassa RLS).
+  const posse = await carregarEmpresaDoTenant(supabase, id, guard.ctx.tenantId);
+  if (!posse.ok) {
+    return NextResponse.json({ error: posse.error }, { status: posse.status });
   }
+  const existente = posse.row as {
+    id: string;
+    razao_social?: string | null;
+    codigo?: string | null;
+    cnpj?: string | null;
+    email?: string | null;
+    telefone?: string | null;
+    prefixo_mercado?: string | null;
+  };
 
   const actor = actorFromRequestHeaders(request.headers);
 
-  const { result, httpStatus } = await excluirEmpresaCrm(supabase, id);
+  const { result, httpStatus } = await excluirEmpresaCrm(supabase, id, guard.ctx.tenantId);
   if (!result.ok) {
     return NextResponse.json(
       { error: result.error || "Falha ao excluir." },

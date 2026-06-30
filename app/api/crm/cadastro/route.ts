@@ -8,9 +8,14 @@ import {
   insertHubEmpresaCrm,
   insertHubPessoaCrm,
 } from "@/lib/crm/hub-insert-crm";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 export async function POST(request: NextRequest) {
+  // Tenant deriva da sessão do operador (g.ctx.tenantId), não do header forjável.
+  // Sem isto, todo cadastro do browser caía no tenant Obra10 padrão (A1).
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmSupabaseConfigError();
   if (configErr) {
     return NextResponse.json(
@@ -41,7 +46,7 @@ export async function POST(request: NextRequest) {
       : null;
 
   const supabase = crmSupabaseAdmin();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   const result = await salvarSuperCadastro(supabase, parsed.data, {
     tenantId,

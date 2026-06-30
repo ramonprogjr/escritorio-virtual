@@ -259,20 +259,18 @@ export async function POST(request: NextRequest) {
 
   const d = validacao.data;
 
+  // Dedup escopado por tenant (service-role bypassa RLS) + 409 genérico (não vaza nome/código
+  // de registo de outro escritório em base legada).
   const { data: dupTel } = await supabase
     .from("hub_pessoas")
-    .select("id, nome, codigo")
+    .select("id")
     .eq("telefone", d.telefone)
+    .or(tenantScopeOrFilter(tenantId))
     .maybeSingle();
 
   if (dupTel) {
     return NextResponse.json(
-      {
-        error: `Telefone já cadastrado para ${dupTel.nome} (${dupTel.codigo || "sem código"}).`,
-        pessoa_id: dupTel.id,
-        codigo: dupTel.codigo,
-        nome: dupTel.nome,
-      },
+      { error: "Telefone já cadastrado neste escritório." },
       { status: 409 }
     );
   }
@@ -280,19 +278,15 @@ export async function POST(request: NextRequest) {
   if (d.documento) {
     const { data: dupDoc } = await supabase
       .from("hub_pessoas")
-      .select("id, nome, codigo")
+      .select("id")
       .eq("documento", d.documento)
+      .or(tenantScopeOrFilter(tenantId))
       .maybeSingle();
 
     if (dupDoc) {
       const label = d.tipo_pessoa === "PF" ? "CPF" : "CNPJ";
       return NextResponse.json(
-        {
-          error: `${label} já cadastrado para ${dupDoc.nome} (${dupDoc.codigo || "sem código"}).`,
-          pessoa_id: dupDoc.id,
-          codigo: dupDoc.codigo,
-          nome: dupDoc.nome,
-        },
+        { error: `${label} já cadastrado neste escritório.` },
         { status: 409 }
       );
     }

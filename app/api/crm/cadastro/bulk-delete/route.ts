@@ -41,14 +41,15 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = db();
+  const tenantId = g.ctx.tenantId;
   const erros: { id: string; error: string }[] = [];
   let ok = 0;
 
   for (const id of ids) {
     const { result, httpStatus } =
       tipo === "pessoa"
-        ? await excluirPessoaCrm(supabase, id)
-        : await excluirEmpresaCrm(supabase, id);
+        ? await excluirPessoaCrm(supabase, id, tenantId)
+        : await excluirEmpresaCrm(supabase, id, tenantId);
 
     if (result.ok) {
       ok += 1;
