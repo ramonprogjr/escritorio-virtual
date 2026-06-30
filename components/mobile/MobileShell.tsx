@@ -16,6 +16,7 @@ import {
   filterCrmNavGroupsForRole,
   isCrmNavPathActive,
 } from "@/lib/crm-nav-groups";
+import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 
 interface Props {
   children: React.ReactNode;
@@ -291,6 +292,11 @@ export default function MobileShell({ children }: Props) {
               </div>
             ))}
           </nav>
+
+          {/* Footer de sessão: avatar + logout acessíveis pelo menu do MobileShell */}
+          <div className="flex-shrink-0 border-t px-2 py-2" style={{ borderColor: CHROME_BORDER }}>
+            <CrmSessionFooter variant="drawer" onNavigate={() => setMenuOpen(false)} />
+          </div>
         </aside>
       </div>
     </div>

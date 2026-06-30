@@ -1,7 +1,56 @@
 {
-  "geradoEm": "2026-06-30T18:23:07.174Z",
+  "geradoEm": "2026-06-30T19:01:18.308Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "d172cbc03f0b32653df3e704743a7cd0e4454be7",
+      "hashCurto": "d172cbc",
+      "mensagem": "Lote F — polish seguro (clareza de valores $ + comportamento mobile + toque/grids/tipografia)",
+      "mensagemRaw": "fix(mobile): Lote F — polish seguro (clareza de valores $ + comportamento mobile + toque/grids/tipografia)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T19:00:54.000Z",
+      "hora": "16:00",
+      "arquivos": [
+        "app/crm/agentes-reais/page.tsx",
+        "app/crm/aprovacoes/page.tsx",
+        "app/crm/atendimento/page.tsx",
+        "app/crm/configuracoes/page.tsx",
+        "components/crm/CrmFinanceDashboard.tsx",
+        "components/crm/CrmLeadsEntradaPeriodo.tsx",
+        "components/crm/CrmMetricCard.tsx",
+        "components/crm/EmpresaFormDrawer.tsx",
+        "components/crm/FinanceiroContasList.tsx",
+        "components/crm/PessoaFormModal.tsx",
+        "components/crm/cadastro/CadastroComercialSecao.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "components/crm/leads/LeadKanbanCard.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx",
+        "components/crm/obras/ArvoreEscopo.tsx",
+        "components/crm/obras/EapEditorSideover.tsx",
+        "components/crm/obras/ObraFinanceiroSecao.tsx",
+        "components/mobile/MobileShell.tsx"
+      ],
+      "areas": {
+        "app/crm": 4,
+        "components/crm": 13,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "8ef39e2ef924ea05522572ec64101e9b47487674",
+      "hashCurto": "8ef39e2",
+      "mensagem": "atualiza relatório da maratona (#28->#35, inclui CC-12 tabela->cards)",
+      "mensagemRaw": "docs: atualiza relatório da maratona (#28->#35, inclui CC-12 tabela->cards)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T18:25:15.000Z",
+      "hora": "15:25",
+      "arquivos": [
+        "docs/MARATONA-2H-RELATORIO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
     {
       "hash": "e0441bc373491ca18aa0fc5fecd7b2a30ed9a3dc",
       "hashCurto": "e0441bc",
