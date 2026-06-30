@@ -30,7 +30,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "descricao é obrigatória" }, { status: 400 });
   }
 
-  const valor = Number(body.valor);
+  // Normaliza pt-BR: "1.234,50" → "1234.50" antes de converter.
+  // type="number" em browsers modernos protege no desktop, mas em alguns Androids/
+  // teclados regionais o valor chega como string com vírgula decimal.
+  const valorRaw = String(body.valor ?? "").trim();
+  const valorNorm = valorRaw.includes(",")
+    ? valorRaw.replace(/\./g, "").replace(",", ".")
+    : valorRaw;
+  const valor = Number(valorNorm);
   if (!Number.isFinite(valor) || valor <= 0) {
     return NextResponse.json({ error: "valor inválido" }, { status: 400 });
   }
@@ -92,7 +99,12 @@ export async function POST(request: NextRequest) {
   }
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Logar o detalhe técnico no servidor; nunca expor schema/constraint ao cliente.
+    console.error("[financeiro/contas POST] erro ao inserir:", error.message);
+    return NextResponse.json(
+      { error: "Não foi possível salvar o lançamento. Tente novamente." },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ ok: true, id: data?.id, tipo }, { status: 201 });

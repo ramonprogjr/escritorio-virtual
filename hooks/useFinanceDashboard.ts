@@ -3,9 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import type { FinanceDashboardPayload } from "@/lib/crm/finance-dashboard-aggregate";
-import { aggregateFinanceDashboard } from "@/lib/crm/finance-dashboard-aggregate";
-import { DEFAULT_OBRA10_TENANT_ID } from "@/lib/tenant-default";
-import { supabase } from "@/lib/supabase/client";
 
 export type FinanceDashboardState = FinanceDashboardPayload & {
   loading: boolean;
@@ -39,11 +36,6 @@ const inicial: FinanceDashboardState = {
   recarregar: () => {},
 };
 
-function tenantIdCliente(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_TENANT_ID?.trim();
-  return fromEnv || DEFAULT_OBRA10_TENANT_ID;
-}
-
 export function useFinanceDashboard(): FinanceDashboardState {
   const [state, setState] = useState<FinanceDashboardState>(inicial);
 
@@ -67,34 +59,29 @@ export function useFinanceDashboard(): FinanceDashboardState {
         return;
       }
       const errBody = await res.json().catch(() => ({}));
-      throw new Error(
-        typeof errBody.error === "string" ? errBody.error : `Erro ${res.status}`
-      );
-    } catch (apiErr) {
-      try {
-        const body = await aggregateFinanceDashboard(supabase, tenantIdCliente());
-        setState({
-          ...body,
-          loading: false,
-          erro:
-            apiErr instanceof Error
-              ? `${apiErr.message} (dados via Supabase)`
-              : null,
-          carregado: true,
-          recarregar: carregar,
-        });
-      } catch (fallbackErr) {
-        setState((s) => ({
-          ...s,
-          loading: false,
-          erro:
-            fallbackErr instanceof Error
-              ? fallbackErr.message
-              : "Não foi possível carregar o painel financeiro",
-          carregado: false,
-          recarregar: carregar,
-        }));
-      }
+      const errMsg =
+        typeof errBody.error === "string" ? errBody.error : `Erro ${res.status}`;
+      // Fallback via Supabase client removido (D-3): usava tenant fixo via anon key,
+      // ignorava o tenant do usuário logado e dependia de RLS incerta para não vazar.
+      // Em falha da rota, exibe erro e permite "Tentar novamente" explicitamente.
+      setState((s) => ({
+        ...s,
+        loading: false,
+        erro: errMsg,
+        carregado: false,
+        recarregar: carregar,
+      }));
+    } catch (err) {
+      setState((s) => ({
+        ...s,
+        loading: false,
+        erro:
+          err instanceof Error
+            ? err.message
+            : "Não foi possível carregar o painel financeiro",
+        carregado: false,
+        recarregar: carregar,
+      }));
     }
   }, []);
 
