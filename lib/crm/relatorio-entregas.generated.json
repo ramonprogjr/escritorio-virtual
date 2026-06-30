@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-30T03:44:42.362Z",
+  "geradoEm": "2026-06-30T04:02:11.795Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "3c69854811924eeb4c344a2c5ad59fec8d9ba6cb",
+      "hashCurto": "3c69854",
+      "mensagem": "Domínio H (Portais/Auth) — fixes seguros da auditoria E2E + H-SEC-1 documentado",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio H (Portais/Auth) — fixes seguros da auditoria E2E + H-SEC-1 documentado",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T04:02:00.000Z",
+      "hora": "01:02",
+      "arquivos": [
+        "app/api/auth/crm-session/route.ts",
+        "app/api/parceiro/cadastro-publico/route.ts",
+        "app/api/public/especialista/route.ts",
+        "app/especialista/cadastro/page.tsx",
+        "app/fornecedor/cotacao/page.tsx",
+        "app/login/page.tsx",
+        "app/parceiro/cadastro/[token]/page.tsx",
+        "docs/E2E-DOMINIO-H-ACHADOS.md",
+        "docs/SEGURANCA-H-SEC-1.md",
+        "proxy.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "outros": 6,
+        "app/hub": 1
+      }
+    },
     {
       "hash": "ed3db2a6d227f5075024e0f6edc8dc860e114c78",
       "hashCurto": "ed3db2a",

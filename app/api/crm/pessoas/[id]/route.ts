@@ -13,9 +13,39 @@ import {
   registrarAuditoriaCrm,
 } from "@/lib/crm/registrar-auditoria-crm";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
-import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { validarDocumentoDisponivelPatch } from "@/lib/crm/validar-documento-server";
+import { DEFAULT_OBRA10_TENANT_ID } from "@/lib/tenant-default";
 import type { TipoPessoaCadastro } from "@/lib/crm/pessoa-cadastro";
+
+/**
+ * Confina o acesso ao tenant do caller. Busca o registo por id (service-role bypassa RLS)
+ * e devolve 404 se ele pertencer a outro escritório. NULL/Obra10 padrão = legado partilhado
+ * (acessível por todos, como nas listas via tenantScopeOrFilter).
+ */
+async function carregarPessoaDoTenant(
+  supabase: ReturnType<typeof db>,
+  id: string,
+  tenantId: string
+): Promise<{ ok: true; row: Record<string, unknown> } | { ok: false; status: number; error: string }> {
+  const { data, error } = await supabase
+    .from("hub_pessoas")
+    .select("id, nome, codigo, telefone, email, tipo_pessoa, documento, tenant_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error && !isMissingPgColumn(error, "tenant_id")) {
+    return { ok: false, status: 500, error: error.message };
+  }
+  if (!data) {
+    return { ok: false, status: 404, error: "Pessoa não encontrada." };
+  }
+  const row = data as Record<string, unknown> & { tenant_id?: string | null };
+  const tid = row.tenant_id != null ? String(row.tenant_id).trim() : "";
+  if (tid && tid !== tenantId && tid !== DEFAULT_OBRA10_TENANT_ID) {
+    return { ok: false, status: 404, error: "Pessoa não encontrada." };
+  }
+  return { ok: true, row };
+}
 
 function db() {
   return createClient(
@@ -35,9 +65,12 @@ function configError(): string | null {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   try {
     const err = configError();
     if (err) {
@@ -54,6 +87,13 @@ export async function GET(
     }
 
     const supabase = db();
+
+    // Guard de tenant: 404 se o registo for de outro escritório (service-role bypassa RLS).
+    const posse = await carregarPessoaDoTenant(supabase, id, g.ctx.tenantId);
+    if (!posse.ok) {
+      return NextResponse.json({ error: posse.error }, { status: posse.status });
+    }
+
     let res = await supabase
       .from("hub_pessoas")
       .select(HUB_PESSOA_SELECT_EXTENDED)
@@ -135,6 +175,12 @@ export async function PATCH(
   }
 
   const supabase = db();
+
+  // Guard de tenant: 404 se o registo for de outro escritório (service-role bypassa RLS).
+  const posse = await carregarPessoaDoTenant(supabase, id, g.ctx.tenantId);
+  if (!posse.ok) {
+    return NextResponse.json({ error: posse.error }, { status: posse.status });
+  }
 
   if ("documento" in body || "tipo_pessoa" in body) {
     const { data: atualDoc } = await supabase
@@ -240,19 +286,24 @@ export async function DELETE(
 
   const supabase = db();
 
-  const { data: existente } = await supabase
-    .from("hub_pessoas")
-    .select("id, nome, codigo, telefone, email, tipo_pessoa, documento")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (!existente) {
-    return NextResponse.json({ error: "Pessoa não encontrada." }, { status: 404 });
+  // Guard de tenant: 404 se o registo for de outro escritório (service-role bypassa RLS).
+  const posse = await carregarPessoaDoTenant(supabase, id, g.ctx.tenantId);
+  if (!posse.ok) {
+    return NextResponse.json({ error: posse.error }, { status: posse.status });
   }
+  const existente = posse.row as {
+    id: string;
+    nome?: string | null;
+    codigo?: string | null;
+    telefone?: string | null;
+    email?: string | null;
+    tipo_pessoa?: string | null;
+    documento?: string | null;
+  };
 
   const actor = actorFromRequestHeaders(request.headers);
 
-  const { result, httpStatus } = await excluirPessoaCrm(supabase, id);
+  const { result, httpStatus } = await excluirPessoaCrm(supabase, id, g.ctx.tenantId);
   if (!result.ok) {
     return NextResponse.json(
       { error: result.error || "Falha ao excluir." },
