@@ -3,7 +3,7 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { aggregateAnalytics } from "@/lib/crm/analytics-aggregate";
 import { parseAnalyticsPeriodo } from "@/lib/crm/analytics-period";
 import { MERCADOS_PREFIXO } from "@/lib/crm/negocio-cadastro";
-import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
 
 function errorMessage(e: unknown): string {
   if (e instanceof Error && e.message) return e.message;
@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const g = await requireCrmSessao(request);
+  // Analytics expõe números financeiros e de KPI — exige role financeiro+ (owner/gestor/financeiro).
+  // A rota /crm/analytics já exige "financeiro" via crmPodeVerRota; alinhamos o endpoint ao mesmo nível.
+  const g = await requireCrmFinanceiro(request);
   if ("error" in g) return g.error;
 
   const periodo = parseAnalyticsPeriodo(request.nextUrl.searchParams.get("periodo"));

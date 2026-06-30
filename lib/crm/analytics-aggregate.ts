@@ -194,6 +194,7 @@ export async function aggregateAnalytics(
     supabase
       .from("hub_kpis_resultados")
       .select("kpi_slug, valor_medido, valor_meta, nivel_alerta, criado_em, agente_slug")
+      .eq("tenant_id", tenantId)
       .gte("criado_em", since)
       .order("criado_em", { ascending: false })
       .limit(200),
@@ -227,7 +228,11 @@ export async function aggregateAnalytics(
         .gte("criado_em", sinceHoje)
     ),
     safeCount(
-      supabase.from("hub_aprovacoes").select("id", { count: "exact", head: true }).eq("status", "pendente")
+      supabase
+        .from("hub_aprovacoes")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId)
+        .eq("status", "pendente")
     ),
     safeCount(
       supabase
@@ -249,6 +254,7 @@ export async function aggregateAnalytics(
     supabase
       .from("hub_encaminhamentos")
       .select("lead_id")
+      .eq("tenant_id", tenantId)
       .gte("encaminhado_em", since),
     safeCount(
       supabase
@@ -268,6 +274,7 @@ export async function aggregateAnalytics(
       supabase
         .from("hub_kpis_resultados")
         .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId)
         .neq("nivel_alerta", "ok")
         .gte("criado_em", since)
     ),
