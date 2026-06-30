@@ -29,7 +29,7 @@ export function FunilOperacionalChart({ items }: Props) {
         return (
           <div key={item.label} className="flex items-center gap-2" aria-hidden="true">
             <span
-              className="min-w-[7rem] shrink-0 truncate text-right text-[10px] font-bold text-[#8b949e] sm:max-w-[9rem]"
+              className="min-w-[7rem] shrink-0 truncate text-right text-xs font-bold text-[#8b949e] sm:max-w-[9rem]"
               title={item.label}
             >
               {item.label}
@@ -45,7 +45,7 @@ export function FunilOperacionalChart({ items }: Props) {
                 />
               )}
             </div>
-            <span className="w-8 shrink-0 text-right text-[10px] font-bold tabular-nums text-[#e6edf3]">
+            <span className="w-8 shrink-0 text-right text-xs font-bold tabular-nums text-[#e6edf3]">
               {item.count}
             </span>
           </div>

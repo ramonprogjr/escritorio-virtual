@@ -398,7 +398,7 @@ function AprovacoesInner() {
                       alignSelf: "flex-start",
                     }}>
                       <span aria-hidden="true" style={{ fontSize: 11 }}>🔐</span>
-                      <span style={{ color: C.gold, fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                      <span style={{ color: C.gold, fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
                         Gate de pagamento
                       </span>
                     </div>
@@ -421,7 +421,7 @@ function AprovacoesInner() {
 
                   {/* Motivo */}
                   <div>
-                    <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
                       O que observou:
                     </p>
                     <p style={{ color: C.text, fontSize: 12, margin: 0, lineHeight: 1.6 }}>{ap.motivo}</p>
@@ -430,7 +430,7 @@ function AprovacoesInner() {
                   {/* Impacto */}
                   {ap.impacto && (
                     <div>
-                      <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
                         Impacto:
                       </p>
                       <span style={{
@@ -446,7 +446,7 @@ function AprovacoesInner() {
                   {/* Recomendação */}
                   {ap.recomendacao && (
                     <div style={{ background: C.goldBg, borderRadius: 8, padding: "10px 12px", borderLeft: `2px solid ${C.gold}` }}>
-                      <p style={{ fontSize: 9, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
                         Recomendação da IA:
                       </p>
                       <p style={{ color: C.text, fontSize: 12, margin: 0, lineHeight: 1.5 }}>{ap.recomendacao}</p>

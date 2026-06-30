@@ -59,26 +59,26 @@ export function CrmLeadsEntradaPeriodo({ pontos, periodo }: Props) {
 
       <div className="mb-2 grid grid-cols-3 gap-1 text-center">
         <div className="rounded-md bg-[#0a140f] px-1 py-1.5">
-          <p className="text-[9px] text-[#6e7681]">Total</p>
+          <p className="text-xs text-[#6e7681]">Total</p>
           <p className="text-sm font-black tabular-nums text-[#e6edf3]">{total}</p>
         </div>
         <div className="rounded-md bg-[#0a140f] px-1 py-1.5">
-          <p className="text-[9px] text-[#6e7681]">{porSemana ? "Média/sem." : "Média/dia"}</p>
+          <p className="text-xs text-[#6e7681]">{porSemana ? "Média/sem." : "Média/dia"}</p>
           <p className="text-sm font-black tabular-nums text-[#c9a24a]">{media}</p>
         </div>
         <div className="rounded-md bg-[#0a140f] px-1 py-1.5">
-          <p className="text-[9px] text-[#6e7681]">Pico</p>
+          <p className="text-xs text-[#6e7681]">Pico</p>
           <p className="text-sm font-black tabular-nums text-[#e6edf3]">
             {pico.count}
             {pico.count > 0 && (
-              <span className="block text-[8px] font-normal text-[#6e7681]">{pico.label}</span>
+              <span className="block text-xs font-normal text-[#6e7681]">{pico.label}</span>
             )}
           </p>
         </div>
       </div>
 
       {exibir.length === 0 || total === 0 ? (
-        <p className="flex-1 text-center text-[10px] text-[#6e7681]">Sem entradas neste período.</p>
+        <p className="flex-1 text-center text-xs text-[#6e7681]">Sem entradas neste período.</p>
       ) : (
         <div
           className="flex flex-1 items-end justify-between gap-0.5 px-0.5"
@@ -102,7 +102,7 @@ export function CrmLeadsEntradaPeriodo({ pontos, periodo }: Props) {
                 }}
               />
               {exibir.length <= 7 && (
-                <span className="mt-1 max-w-full truncate text-[8px] text-[#484f58]">{p.label}</span>
+                <span className="mt-1 max-w-full truncate text-[10px] text-[#484f58]">{p.label}</span>
               )}
             </div>
           ))}
@@ -111,7 +111,7 @@ export function CrmLeadsEntradaPeriodo({ pontos, periodo }: Props) {
 
       <Link
         href="/crm/leads?view=kanban"
-        className="mt-2 block text-center text-[10px] font-bold text-[#c9a24a] hover:underline"
+        className="mt-2 block text-center text-xs font-bold text-[#c9a24a] hover:underline"
       >
         Ver leads no kanban →
       </Link>

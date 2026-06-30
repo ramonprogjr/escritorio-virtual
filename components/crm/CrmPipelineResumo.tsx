@@ -279,7 +279,7 @@ export function CrmPipelineResumo() {
                           </span>
                           {v > 0 && (
                             <span
-                              className="mt-0.5 max-w-full truncate px-0.5 text-center text-[8px] font-bold leading-tight sm:text-[9px]"
+                              className="mt-0.5 max-w-full truncate px-0.5 text-center text-xs font-bold leading-tight"
                               style={{ color: est.color }}
                               title={moedaPipeline(v)}
                             >
@@ -287,7 +287,7 @@ export function CrmPipelineResumo() {
                             </span>
                           )}
                         </div>
-                        <span className="mt-2 w-full max-w-[5.5rem] px-0.5 text-center text-[9px] leading-snug text-[#6e7681] group-hover:text-[#c9a24a] sm:text-[10px]">
+                        <span className="mt-2 w-full max-w-[5.5rem] px-0.5 text-center text-[10px] leading-snug text-[#6e7681] group-hover:text-[#c9a24a]">
                           {est.label}
                         </span>
                       </button>
@@ -299,7 +299,7 @@ export function CrmPipelineResumo() {
 
             {/* Legenda + outcomes */}
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#16271e] pt-3">
-              <p className="m-0 text-[10px] text-[#6e7681]">
+              <p className="m-0 text-xs text-[#6e7681]">
                 Setas = % que passou da etapa anterior
               </p>
               <div className="flex gap-2">
@@ -386,7 +386,7 @@ export function CrmPipelineResumo() {
                           </span>
                           {v > 0 && (
                             <span
-                              className="mt-0.5 max-w-full truncate px-0.5 text-center text-[8px] font-bold leading-tight sm:text-[9px]"
+                              className="mt-0.5 max-w-full truncate px-0.5 text-center text-xs font-bold leading-tight"
                               style={{ color: et.color }}
                               title={moedaPipeline(v)}
                             >
@@ -394,7 +394,7 @@ export function CrmPipelineResumo() {
                             </span>
                           )}
                         </div>
-                        <span className="mt-2 w-full max-w-[5.5rem] px-0.5 text-center text-[9px] leading-snug text-[#6e7681] group-hover:text-[#c9a24a] sm:text-[10px]">
+                        <span className="mt-2 w-full max-w-[5.5rem] px-0.5 text-center text-[10px] leading-snug text-[#6e7681] group-hover:text-[#c9a24a]">
                           {et.label}
                         </span>
                       </button>
