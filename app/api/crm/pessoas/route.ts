@@ -12,7 +12,7 @@ import {
   validarPessoaCadastro,
   type PessoaCadastroPayload,
 } from "@/lib/crm/pessoa-cadastro";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
