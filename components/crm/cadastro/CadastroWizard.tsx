@@ -1015,22 +1015,41 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={() => void salvar()}
-            disabled={salvando || buscandoCnpj}
-            style={{
-              padding: "10px 22px",
-              borderRadius: 8,
-              border: "none",
-              background: "#238636",
-              color: "#fff",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {salvando ? "Salvando…" : "Salvar cadastro"}
-          </button>
+          {(() => {
+            // Bloqueia Salvar enquanto o documento é verificado ou quando deu inválido/duplicado.
+            // (docHint sem docHintOk = mensagem de erro de doc; ok = "válido e disponível".)
+            const docComErro = Boolean(docHint) && !docHintOk;
+            const bloqueado = salvando || buscandoCnpj || docVerificando || docComErro;
+            const motivo = salvando
+              ? "Salvando…"
+              : buscandoCnpj
+                ? "Aguarde a consulta do CNPJ terminar."
+                : docVerificando
+                  ? "Verificando o documento — aguarde."
+                  : docComErro
+                    ? docHint || "Corrija o documento antes de salvar."
+                    : "Salvar cadastro";
+            return (
+              <button
+                type="button"
+                onClick={() => void salvar()}
+                disabled={bloqueado}
+                title={motivo}
+                style={{
+                  padding: "10px 22px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: "#238636",
+                  color: "#fff",
+                  fontWeight: 700,
+                  cursor: bloqueado ? "not-allowed" : "pointer",
+                  opacity: bloqueado ? 0.6 : 1,
+                }}
+              >
+                {salvando ? "Salvando…" : "Salvar cadastro"}
+              </button>
+            );
+          })()}
         </div>
       </aside>
     </>

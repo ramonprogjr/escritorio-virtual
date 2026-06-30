@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Eye, Pencil, Trash2, User } from "lucide-react";
+import { Pencil, Trash2, User } from "lucide-react";
 import { AgenteSideoverEntityCard, AgenteSideoverInfoGrid } from "@/components/crm/AgenteSideoverCards";
 import { CrmTelefoneCell } from "@/components/crm/CrmTelefoneCell";
 import { CrmSideoverFold } from "@/components/crm/CrmSideoverFold";
@@ -823,38 +823,5 @@ export function CadastroContactoSideover({
         </div>
       )}
     </CadastroPremiumSideover>
-  );
-}
-
-/** Botões de ação na linha da tabela */
-export function CadastroRowActions({
-  onView,
-  onEdit,
-}: {
-  onView: () => void;
-  onEdit: () => void;
-}) {
-  const btn: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    border: "1px solid #1d3a2c",
-    background: "#16271e",
-    color: "#c9a24a",
-    cursor: "pointer",
-    marginLeft: 4,
-  };
-  return (
-    <span style={{ display: "inline-flex", gap: 4 }}>
-      <button type="button" title="Ver detalhes" style={btn} onClick={onView}>
-        <Eye size={15} />
-      </button>
-      <button type="button" title="Editar" style={btn} onClick={onEdit}>
-        <Pencil size={15} />
-      </button>
-    </span>
   );
 }
