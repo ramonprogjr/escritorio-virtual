@@ -1,7 +1,25 @@
 {
-  "geradoEm": "2026-06-30T14:11:11.031Z",
+  "geradoEm": "2026-06-30T14:20:07.811Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "7013dc5bc7ed4abcb4edb72c562c9d5351e65e75",
+      "hashCurto": "7013dc5",
+      "mensagem": "remove rota-irmã morta de aprovações + teste de idempotência F-B3",
+      "mensagemRaw": "chore(seguranca/escrow): remove rota-irmã morta de aprovações + teste de idempotência F-B3",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T14:19:39.000Z",
+      "hora": "11:19",
+      "arquivos": [
+        "app/api/aprovacoes/[id]/route.ts",
+        "docs/RESUMO-NOITE-E2E-FINALE.md",
+        "lib/ia/aprovacoes-cascata.test.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "outros": 2
+      }
+    },
     {
       "hash": "44c12c277ea0c54451144d2171765855f0a2df71",
       "hashCurto": "44c12c2",

@@ -9,7 +9,8 @@ import { getSafeReturnPath } from "@/lib/auth/safe-return-path";
  */
 function isPublicApiPath(pathname: string): boolean {
   if (pathname.startsWith("/api/whatsapp")) return true;
-  if (pathname.startsWith("/api/health")) return true;
+  // G-D1: /api/health saiu da lista pública — expõe QUAIS segredos da plataforma existem.
+  // Agora é owner-only (guard na própria route handler). Decisão do dono.
   if (pathname.startsWith("/api/public/")) return true;
   if (pathname === "/api/parceiros/portal/verify") return true;
   if (pathname.startsWith("/api/validar/")) return true;

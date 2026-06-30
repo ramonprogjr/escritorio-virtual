@@ -5,7 +5,8 @@ import {
   validarEmpresaCadastro,
   type EmpresaCadastroPayload,
 } from "@/lib/crm/empresa-cadastro";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -100,6 +101,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // H-SEC-1: guard de sessão (antes dependia só do proxy) + tenant da sessão (não do header).
+  const sessao = await requireCrmSessao(request);
+  if ("error" in sessao) return sessao.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const busca = searchParams.get("busca") || "";
@@ -110,7 +115,7 @@ export async function GET(request: NextRequest) {
   const estado = searchParams.get("estado") || "";
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(searchParams.get("limit") || "200", 10), 500);
-  const tenant_id = tenantIdFromRequest(request.headers);
+  const tenant_id = sessao.ctx.tenantId;
 
   const EMPRESA_SELECT_LIST =
     "id, codigo, razao_social, nome_fantasia, cnpj, email, telefone, segmento, prefixo_mercado, cep, logradouro, numero, complemento, bairro, cidade, estado, ativo, acesso_habilitado, acesso_habilitado_em, tenant_id, criado_em, atualizado_em";
@@ -197,8 +202,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // H-SEC-1: guard de sessão + tenant da sessão (não do header forjável).
+  const sessao = await requireCrmSessao(request);
+  if ("error" in sessao) return sessao.error;
+
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = sessao.ctx.tenantId;
 
   let body: Partial<EmpresaCadastroPayload>;
   try {

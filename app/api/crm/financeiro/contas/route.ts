@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
-import { isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       ? String(body.vencimento).slice(0, 10)
       : null;
 
-  const tenantId = tenantIdFromRequest(request.headers) || auth.ctx.tenantId;
+  // H-SEC-1: tenant vem SEMPRE da sessão (g.ctx), nunca do header forjável.
+  const tenantId = auth.ctx.tenantId;
   const supabase = crmDb();
 
   const row: Record<string, unknown> = {

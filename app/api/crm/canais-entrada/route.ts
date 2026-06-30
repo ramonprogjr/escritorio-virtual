@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
-import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 /** Registro de canais de entrada (fontes de lead). NÃO guarda tokens/segredos aqui. */
 const SELECT = "id, tipo, nome, identificador, origem_slug, ativo, observacao, criado_em";
 
 export async function GET(request: NextRequest) {
+  const sessao = await requireCrmSessao(request);
+  if ("error" in sessao) return sessao.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = sessao.ctx.tenantId;
   const { data, error } = await crmDb()
     .from("hub_canais_entrada")
     .select(SELECT)

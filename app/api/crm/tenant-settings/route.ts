@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmDb, crmConfigError } from "@/lib/crm/supabase-server";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest } from "@/lib/tenant-default";
-import { requireCrmGestor, requireInternalApiKey } from "@/lib/crm/crm-api-auth";
+import { isMissingPgColumn } from "@/lib/tenant-default";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 export type TenantSettings = {
   horario_inicio?: string;
@@ -14,10 +14,11 @@ export type TenantSettings = {
 export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
-  const keyErr = requireInternalApiKey(request);
-  if (keyErr) return keyErr;
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const gestor = await requireCrmGestor(request);
+  if ("error" in gestor) return gestor.error;
+
+  const tenantId = gestor.ctx.tenantId;
   const { data, error } = await crmDb()
     .from("hub_tenants")
     .select("id, slug, nome_exibicao, settings")
@@ -39,7 +40,7 @@ export async function PATCH(request: NextRequest) {
   const gestor = await requireCrmGestor(request);
   if ("error" in gestor) return gestor.error;
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
+  const tenantId = gestor.ctx.tenantId;
   const body = (await request.json().catch(() => ({}))) as TenantSettings;
 
   const { data: atual } = await crmDb()

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { defaultTenantId } from "@/lib/tenant-default";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
-import { requireInternalApiKey, crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
+import { crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
 import {
   crmHandoffDb,
   resolveOperador,
@@ -20,8 +20,6 @@ function allowWhatsappDryRun(): boolean {
 export async function POST(request: NextRequest) {
   const configErr = crmApiConfigError();
   if (configErr) return configErr;
-  const keyErr = requireInternalApiKey(request);
-  if (keyErr) return keyErr;
 
   // Identidade do operador (obrigatória) — do cookie de sessão, não de header forjável
   const authId = resolveCallerAuthId(request);

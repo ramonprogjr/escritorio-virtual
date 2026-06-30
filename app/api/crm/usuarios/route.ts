@@ -4,7 +4,6 @@ import {
   crmApiConfigError,
   normalizeEquipaRole,
   requireCrmGestor,
-  requireInternalApiKey,
   resolveInviteTenantId,
 } from "@/lib/crm/crm-api-auth";
 import { convidarColaboradorCrm } from "@/lib/crm/convidar-colaborador";
@@ -18,8 +17,6 @@ import { isCrmOwnerRole } from "@/lib/crm/crm-permissoes";
 export async function GET(request: NextRequest) {
   const config = crmApiConfigError();
   if (config) return config;
-  const keyErr = requireInternalApiKey(request);
-  if (keyErr) return keyErr;
 
   const gestor = await requireCrmGestor(request);
   if ("error" in gestor) return gestor.error;

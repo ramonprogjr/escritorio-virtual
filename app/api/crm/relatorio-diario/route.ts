@@ -6,16 +6,15 @@ import {
 import {
   crmApiConfigError,
   requireCrmOwner,
-  requireInternalApiKey,
 } from "@/lib/crm/crm-api-auth";
 import { crmDb } from "@/lib/crm/supabase-server";
 
 export async function GET(request: NextRequest) {
   const config = crmApiConfigError();
   if (config) return config;
-  const keyErr = requireInternalApiKey(request);
-  if (keyErr) return keyErr;
 
+  // H-SEC-1: sem key gate standalone. requireCrmOwner (via getCallerContext) já aceita
+  // cookie de sessão (browser) OU chave interna + x-caller-auth-id (cron/server-to-server).
   const owner = await requireCrmOwner(request);
   if ("error" in owner) return owner.error;
 
