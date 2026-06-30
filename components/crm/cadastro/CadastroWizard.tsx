@@ -1038,9 +1038,9 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                 style={{
                   padding: "10px 22px",
                   borderRadius: 8,
-                  border: "none",
-                  background: "#238636",
-                  color: "#fff",
+                  border: "1px solid rgba(201,162,74,0.35)",
+                  background: "#003b26",
+                  color: "#c9a24a",
                   fontWeight: 700,
                   cursor: bloqueado ? "not-allowed" : "pointer",
                   opacity: bloqueado ? 0.6 : 1,

@@ -116,7 +116,7 @@ export function SmartField({
                 disabled={disabled}
                 onKeyDown={(e) => onChipKey(e, idx)}
                 onClick={() => onChange(o.value)}
-                className={`min-h-10 cursor-pointer rounded-full border px-3.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24a]/50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${cor}`}
+                className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a24a]/50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${cor}`}
               >
                 {o.label}
               </button>

@@ -591,7 +591,7 @@ function AtendimentoContent() {
                   key={m}
                   type="button"
                   onClick={() => setModoAtend(m)}
-                  className={`flex-shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors border ${
+                  className={`flex-shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-2.5 text-[11px] font-medium transition-colors border ${
                     modoAtend === m
                       ? m === "meus"
                         ? "border-[#c9a24a]/50 bg-[#c9a24a]/12 text-[#c9a24a]"
@@ -637,7 +637,7 @@ function AtendimentoContent() {
                 key={f}
                 type="button"
                 onClick={() => setFiltro(f)}
-                className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors border ${
+                className={`flex-shrink-0 rounded-lg px-2.5 py-2.5 text-[11px] font-medium transition-colors border ${
                   filtro === f
                     ? "border-white/15 bg-white/8 text-zinc-100"
                     : "border-transparent text-zinc-500 hover:text-zinc-300"
@@ -1087,7 +1087,7 @@ function AtendimentoContent() {
               display: "flex", flexDirection: "column", minHeight: 0,
             }}
           >
-            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: 16, background: "linear-gradient(180deg,#121a26 0%, #101722 100%)" }}>
+            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: 16, background: "linear-gradient(180deg,#0f1d16 0%, #0a140f 100%)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, color: "#c9a24a", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>ATENDIMENTO</p>
@@ -1098,7 +1098,7 @@ function AtendimentoContent() {
                 <button
                   type="button"
                   onClick={() => setInfoOpen(false)}
-                  style={{ border: "1px solid #344256", background: "#1d2633", color: "#9eb0c8", borderRadius: 8, width: 34, height: 34, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ border: "1px solid #1d3a2c", background: "#16271e", color: "#8b9e93", borderRadius: 8, width: 34, height: 34, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                   aria-label="Fechar"
                 >
                   <X size={16} strokeWidth={2} />

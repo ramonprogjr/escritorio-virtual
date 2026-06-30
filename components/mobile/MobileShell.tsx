@@ -136,7 +136,7 @@ export default function MobileShell({ children }: Props) {
   const showBack = needsMobileSubHeader(pathname);
 
   return (
-    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ background: "#0d1117" }}>
+    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden" style={{ background: "#0a140f" }}>
       {/* Top bar único (sanduíche → menu em seções, igual ao desktop/onboarding) */}
       <header
         className="sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b px-3"
@@ -163,7 +163,7 @@ export default function MobileShell({ children }: Props) {
             type="button"
             onClick={voltar}
             aria-label="Voltar"
-            className="flex h-11 w-9 shrink-0 items-center justify-center rounded-xl"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
             style={{ color: ITEM_TEXT }}
           >
             <ChevronLeft size={22} strokeWidth={2} aria-hidden />

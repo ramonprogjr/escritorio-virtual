@@ -146,7 +146,7 @@ export function CrmPipelineResumo() {
           <button
             type="button"
             onClick={() => void carregar()}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#1d3a2c] text-[#8b949e] transition-colors hover:border-[#c9a24a40] hover:text-[#c9a24a]"
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#1d3a2c] text-[#8b949e] transition-colors hover:border-[#c9a24a40] hover:text-[#c9a24a]"
             title="Atualizar"
           >
             <RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} />

@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-30T17:33:15.411Z",
+  "geradoEm": "2026-06-30T17:41:41.721Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "eff2a25ebb28d13d3c070237273a33d9926fe05d",
+      "hashCurto": "eff2a25",
+      "mensagem": "Lote B1 — fim do zoom-iOS + piso tipográfico >=12px + min-w-0 no card de KPI",
+      "mensagemRaw": "fix(mobile): Lote B1 — fim do zoom-iOS + piso tipográfico >=12px + min-w-0 no card de KPI",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T17:41:30.000Z",
+      "hora": "14:41",
+      "arquivos": [
+        "app/crm/aprovacoes/page.tsx",
+        "app/crm/atendimento/page.tsx",
+        "app/crm/configuracoes/page.tsx",
+        "app/crm/relatorios/page.tsx",
+        "app/globals.css",
+        "components/crm/CrmAnalyticsDashboard.tsx",
+        "components/crm/CrmLeadsEntradaPeriodo.tsx",
+        "components/crm/CrmMetricCard.tsx",
+        "components/crm/CrmPipelineResumo.tsx",
+        "components/crm/FunilOperacionalChart.tsx"
+      ],
+      "areas": {
+        "app/crm": 4,
+        "outros": 1,
+        "components/crm": 5
+      }
+    },
     {
       "hash": "e300f237252319ec231f34eb54ae4c792535ede7",
       "hashCurto": "e300f23",
