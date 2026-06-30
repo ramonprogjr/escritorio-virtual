@@ -683,10 +683,10 @@ function AtendimentoContent() {
                     <div className={`w-2 h-2 flex-shrink-0 rounded-full ring-1 ring-white/10 ${STATUS_COR[lead.estagio] || "bg-gray-500"}`} />
                     <span className="text-zinc-100 text-xs font-semibold truncate">{lead.nome}</span>
                   </div>
-                  <span className="text-zinc-400 text-[10px] flex-shrink-0 ml-1 tabular-nums">{rel(lead.criado_em)}</span>
+                  <span className="text-zinc-400 text-xs flex-shrink-0 ml-1 tabular-nums">{rel(lead.criado_em)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 text-[10px] uppercase tracking-wide truncate mr-2">
+                  <span className="text-zinc-400 text-xs uppercase tracking-wide truncate mr-2">
                     {ORIGEM_LABEL[lead.origem] || lead.origem}
                     {lead.ultimo_contato ? ` · ${rel(lead.ultimo_contato)}` : ""}
                   </span>
@@ -1043,7 +1043,9 @@ function AtendimentoContent() {
                   rows={2}
                   className={`flex-1 bg-black/30 disabled:opacity-40 text-zinc-100 text-xs rounded-xl px-3 py-2.5 outline-none resize-none border ${C.border} focus:ring-1 focus:ring-[#c9a24a]/35 placeholder-zinc-600`}
                   onKeyDown={e => {
-                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void enviarMensagem(); }
+                    // No mobile (touch), Enter quebra linha normalmente — não interceptar.
+                    // No desktop, Enter sem Shift envia a mensagem.
+                    if (!isMobile && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void enviarMensagem(); }
                   }}
                 />
                 <div className={`rounded-xl border ${C.border} bg-black/25 p-1 min-w-[7.5rem] sm:min-w-[8.5rem]`}>

@@ -184,7 +184,7 @@ export default function MobileShell({ children }: Props) {
           <Bell size={19} strokeWidth={2} aria-hidden />
           {aprovacoesGlobais > 0 && (
             <span
-              className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black text-white"
+              className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-black text-white"
               style={{ background: "#b3261e" }}
             >
               {aprovacoesGlobais > 9 ? "9+" : aprovacoesGlobais}

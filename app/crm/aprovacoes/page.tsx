@@ -293,7 +293,7 @@ function AprovacoesInner() {
 
       {/* ── Filters ─── */}
       <div style={{
-        display: "flex", gap: 8, padding: "12px 24px",
+        display: "flex", gap: 8, padding: `12px ${isMobile ? 16 : 24}px`,
         background: C.surface, borderBottom: `1px solid ${C.line}`,
         overflowX: "auto", flexShrink: 0,
       }}>
@@ -324,7 +324,7 @@ function AprovacoesInner() {
       </div>
 
       {/* ── Content ─── */}
-      <div style={{ flex: 1, padding: "24px" }}>
+      <div style={{ flex: 1, padding: isMobile ? "16px" : "24px" }}>
         {erro && !carregando && (
           <div role="alert" style={{
             marginBottom: 16, padding: "12px 16px", borderRadius: 10,
@@ -409,11 +409,11 @@ function AprovacoesInner() {
                     <span aria-hidden="true" style={{ fontSize: 22, flexShrink: 0 }}>
                       {TIPO_ICON[ap.tipo] ?? "📌"}
                     </span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ color: isDinheiro ? C.gold : C.text, fontWeight: 700, fontSize: 13, margin: 0, lineHeight: 1.3 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: isDinheiro ? C.gold : C.text, fontWeight: 700, fontSize: 13, margin: 0, lineHeight: 1.3, wordBreak: "break-word" }}>
                         {ap.descricao}
                       </p>
-                      <p style={{ color: C.muted, fontSize: 11, margin: "4px 0 0" }}>
+                      <p style={{ color: C.muted, fontSize: 11, margin: "4px 0 0", wordBreak: "break-word" }}>
                         {TIPO_LABEL_DINHEIRO[ap.tipo] ?? ap.tipo} · {ap.agente_nome || ap.agente_slug} · {rel(ap.criado_em)}
                       </p>
                     </div>

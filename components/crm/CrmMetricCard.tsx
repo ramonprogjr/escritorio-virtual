@@ -9,6 +9,8 @@ type Props = {
   onClick?: () => void;
   loading?: boolean;
   className?: string;
+  title?: string;
+  "aria-label"?: string;
 };
 
 export function CrmMetricCardSkeleton({ className = "" }: { className?: string }) {
@@ -32,6 +34,8 @@ export function CrmMetricCard({
   onClick,
   loading,
   className = "",
+  title,
+  "aria-label": ariaLabel,
 }: Props) {
   if (loading) return <CrmMetricCardSkeleton className={className} />;
 
@@ -60,14 +64,14 @@ export function CrmMetricCard({
 
   if (href) {
     return (
-      <a href={href} className={baseClass} style={style}>
+      <a href={href} className={baseClass} style={style} title={title} aria-label={ariaLabel}>
         {inner}
       </a>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} className={baseClass} style={style}>
+    <button type="button" onClick={onClick} className={baseClass} style={style} title={title} aria-label={ariaLabel}>
       {inner}
     </button>
   );

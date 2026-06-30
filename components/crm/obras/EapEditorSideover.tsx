@@ -190,18 +190,18 @@ export function EapEditorSideover({ open, onClose, obraId, obraTitulo, onUpdated
                         aria-label="Mover para cima"
                         onClick={() => void mover(i, -1)}
                         disabled={i === 0 || migracaoPendente}
-                        className="text-[#8b949e] disabled:opacity-30"
+                        className="flex h-9 w-9 items-center justify-center text-[#8b949e] disabled:opacity-30"
                       >
-                        <ChevronUp size={14} />
+                        <ChevronUp size={16} />
                       </button>
                       <button
                         type="button"
                         aria-label="Mover para baixo"
                         onClick={() => void mover(i, 1)}
                         disabled={i === frentes.length - 1 || migracaoPendente}
-                        className="text-[#8b949e] disabled:opacity-30"
+                        className="flex h-9 w-9 items-center justify-center text-[#8b949e] disabled:opacity-30"
                       >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={16} />
                       </button>
                     </div>
                     <span

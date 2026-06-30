@@ -157,7 +157,7 @@ export function NegocioKanbanCard({
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
               <span
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: 700,
                   padding: "4px 8px",
                   borderRadius: 6,

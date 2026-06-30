@@ -184,7 +184,7 @@ export function LeadKanbanCard({
               {lead.origem ? (
                 <span
                   style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: 700,
                     padding: "4px 8px",
                     borderRadius: 6,

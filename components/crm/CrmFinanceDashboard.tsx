@@ -173,8 +173,10 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
         />
         <CrmMetricCard
           label="Vencido"
-          valor={moedaFinanceiroExata(kpis.vencidoTotal)}
-          sub={`pagar ${moedaFinanceiroExata(kpis.vencidoPagar)} · receber ${moedaFinanceiroExata(kpis.vencidoReceber)}`}
+          valor={moedaFinanceiro(kpis.vencidoTotal)}
+          title={moedaFinanceiroExata(kpis.vencidoTotal)}
+          aria-label={`Vencido: ${moedaFinanceiroExata(kpis.vencidoTotal)}`}
+          sub={`pagar ${moedaFinanceiro(kpis.vencidoPagar)} · rec. ${moedaFinanceiro(kpis.vencidoReceber)}`}
           cor={kpis.vencidoTotal > 0 ? "#f85149" : "#8b949e"}
           href="/crm/financeiro/pagar?status=pendente&vencido=1"
           loading={dash.loading}
