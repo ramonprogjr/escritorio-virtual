@@ -52,6 +52,11 @@ const BG_INPUT = "#0a140f";
 const TEXTO = "#e6edf3";
 const TEXTO_FRACO = "#8b949e";
 const VERMELHO = "#EF4444";
+// A2 (E2E DOMÍNIO C): substitui azul #3B82F6 (Orçado) e roxo #8B5CF6 (Em custódia) — fora da
+// marca Obra10+ (verde+dourado dark). Teal harmoniza com o verde; dourado-escuro marca a custódia
+// (valor retido) distinto do dourado puro (espera) e do verde (liberado).
+const TEAL = "#2f9e8f"; // Orçado — frio da marca (não-azul Shadcn)
+const DOURADO_ESCURO = "#b8862f"; // Em custódia — valor protegido/retido
 
 type SubAba = "orcamento" | "aprovacoes" | "pagamentos" | "cobertura";
 
@@ -347,13 +352,13 @@ function ResumoCards({ resumo, isAdm }: { resumo: ResumoFinanceiro; isAdm: boole
   const cards: { label: string; valor: number; cor: string }[] = isAdm
     ? [
         { label: "Previsto", valor: resumo.previsto, cor: TEXTO_FRACO },
-        { label: "Orçado", valor: resumo.orcado, cor: "#3B82F6" },
+        { label: "Orçado", valor: resumo.orcado, cor: TEAL },
         { label: "Aprovado", valor: resumo.aprovado, cor: "#3fb950" },
       ]
     : [
         { label: "Contrato", valor: resumo.orcado, cor: TEXTO_FRACO },
         { label: "Liberado", valor: resumo.liberado, cor: "#3fb950" },
-        { label: "Em custódia", valor: resumo.em_custodia, cor: "#8B5CF6" },
+        { label: "Em custódia", valor: resumo.em_custodia, cor: DOURADO_ESCURO },
       ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
@@ -709,7 +714,7 @@ function PainelCustodia({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
         {[
-          { label: "Em custódia 🔒", valor: emCustodia, cor: "#8B5CF6" },
+          { label: "Em custódia 🔒", valor: emCustodia, cor: DOURADO_ESCURO },
           { label: "Aguarda 2ª chave ⏳", valor: aguarda, cor: DOURADO },
           { label: "Liberado ✅", valor: liberado, cor: "#3fb950" },
         ].map((c) => (

@@ -1,7 +1,35 @@
 {
-  "geradoEm": "2026-06-30T04:42:18.136Z",
+  "geradoEm": "2026-06-30T05:01:01.908Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "96a776b864dabd7212a55537cfb3cb8c5d7630af",
+      "hashCurto": "96a776b",
+      "mensagem": "Domínio A (Comercial/CRM) — bloqueador de segurança + UX (B1/G1/G2 + G4-G10)",
+      "mensagemRaw": "fix(e2e): Domínio A (Comercial/CRM) — bloqueador de segurança + UX (B1/G1/G2 + G4-G10)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T05:00:50.000Z",
+      "hora": "02:00",
+      "arquivos": [
+        "app/api/crm/distribuicao/regras/route.ts",
+        "app/api/crm/leads/[id]/nota/route.ts",
+        "app/api/hub/canais/route.ts",
+        "app/crm/atendimento/page.tsx",
+        "app/crm/distribuicao/page.tsx",
+        "app/crm/leads/page.tsx",
+        "app/crm/page.tsx",
+        "app/crm/trafego/page.tsx",
+        "components/crm/leads/LeadKanbanCard.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx",
+        "docs/E2E-DOMINIO-A-ACHADOS.md"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 5,
+        "components/crm": 2,
+        "outros": 1
+      }
+    },
     {
       "hash": "0f37a9cd94c8e060e8474719881b5d760e548fcf",
       "hashCurto": "0f37a9c",

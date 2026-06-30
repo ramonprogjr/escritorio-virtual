@@ -545,7 +545,7 @@ export default function NegocioDetalhePage() {
       )}
 
       <div style={{ marginTop: 16, display: "flex", gap: 12, fontSize: 12 }}>
-        <Link href={`/crm/projetos?negocio_id=${negocio.id}`} style={{ color: "#c9a24a", fontWeight: 700 }}>Projetos</Link>
+        <Link href={`/crm/arquitetura?negocio_id=${negocio.id}`} style={{ color: "#c9a24a", fontWeight: 700 }}>Arquitetura</Link>
         <Link href={`/crm/obras?negocio_id=${negocio.id}`} style={{ color: "#8b949e" }}>Obras</Link>
       </div>
 

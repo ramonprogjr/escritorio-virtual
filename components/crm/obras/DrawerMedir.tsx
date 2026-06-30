@@ -63,6 +63,11 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
     return Number.isFinite(q) && q > 0;
   }, [item?.quantidade]);
 
+  // HONESTIDADE (B3 / E2E DOMÍNIO C): há foto SELECIONADA mas SEM destino de armazenamento
+  // (fotoUrl vazio = não há bucket/upload). A foto NÃO entra no registro — não fingir que entra.
+  // Mostra aviso no campo e o anexa à mensagem de sucesso. (Criar o bucket é decisão do dono.)
+  const fotoNaoPersiste = fotoPreview != null && fotoUrl.trim() === "";
+
   // Preview do pct resultante AO VIVO (espelha a regra do servidor — derivarPctAvanco).
   const pctPreview = useMemo(() => {
     const qr = qtdRealizada.trim() === "" ? null : Number(qtdRealizada);
@@ -137,7 +142,12 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
       if (json.migracao_pendente) {
         setOkMsg(json.aviso || "Avanço salvo. O registro formal entra após a migração E7c.");
       } else {
-        setOkMsg(`Medição registrada. Avanço do item: ${json.pct_avanco_resultante ?? pctPreview}%.`);
+        // HONESTIDADE (B3): se havia foto selecionada mas o armazenamento não está configurado,
+        // a foto NÃO foi salva no registro — dizer isso em vez de fingir que a evidência entrou.
+        const avisoFoto = fotoNaoPersiste
+          ? " A FOTO não foi salva (armazenamento de evidências ainda não configurado)."
+          : "";
+        setOkMsg(`Medição registrada. Avanço do item: ${json.pct_avanco_resultante ?? pctPreview}%.${avisoFoto}`);
       }
       // Anti-duplicação: zera os campos da entrada (o pct/foto/obs desta medição) — sem reabrir o
       // botão para um 2º registro idêntico. O okMsg permanece visível até o usuário fechar ou medir de novo.
@@ -151,7 +161,7 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
     } finally {
       setSalvando(false);
     }
-  }, [item, salvando, okMsg, qtdRealizada, pctManual, temPlanejada, fotoUrl, observacao, obraId, onMedido, pctPreview]);
+  }, [item, salvando, okMsg, qtdRealizada, pctManual, temPlanejada, fotoUrl, fotoNaoPersiste, observacao, obraId, onMedido, pctPreview]);
 
   if (!open || !item) return null;
 
@@ -390,6 +400,22 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
               if (okMsg) setOkMsg(null);
             }}
           />
+
+          {/* HONESTIDADE (B3): a foto não será salva enquanto o armazenamento não existir — avisa,
+              em vez de deixar o preview sugerir que a evidência ficou registrada. */}
+          {fotoNaoPersiste ? (
+            <p
+              className="flex items-start gap-1 text-[11px]"
+              style={{ color: "#e3b341" }}
+              role="status"
+            >
+              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" aria-hidden />
+              <span>
+                Esta foto fica só neste aparelho — o armazenamento de evidências ainda não está
+                configurado, então ela <strong>não será salva</strong> no registro da medição.
+              </span>
+            </p>
+          ) : null}
         </div>
 
         {/* Observação */}
