@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Mic, Sparkles, ShieldCheck, Hand } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { crmApiHeaders } from "@/lib/internal-api-headers-client";
 
 type ConsumoRow = {
   origem: string;
@@ -33,16 +33,20 @@ export default function CopilotoCentralPage() {
 
   useEffect(() => {
     let vivo = true;
+    // E-A3: lê via API server-side com guard de sessão + escopo de tenant.
+    // Não usa mais o client Supabase diretamente (dependia de RLS ativa em hub_ia_consumo).
     (async () => {
-      const { data } = await supabase
-        .from("hub_ia_consumo")
-        .select("origem, modelo, creditos, ref_id, criado_em")
-        .like("origem", "copiloto_%")
-        .order("criado_em", { ascending: false })
-        .limit(20);
-      if (vivo) {
-        setRows((data as ConsumoRow[] | null) ?? []);
-        setLoading(false);
+      try {
+        const headers = await crmApiHeaders();
+        const res = await fetch("/api/crm/copiloto/historico", { headers });
+        if (res.ok) {
+          const json = (await res.json()) as { rows?: ConsumoRow[] };
+          if (vivo) setRows(json.rows ?? []);
+        }
+      } catch {
+        // falha silenciosa — histórico é cosmético nesta tela
+      } finally {
+        if (vivo) setLoading(false);
       }
     })();
     return () => {

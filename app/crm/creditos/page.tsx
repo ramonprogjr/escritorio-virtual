@@ -9,7 +9,7 @@ type ConsumoRow = {
   origem: string;
   modelo: string;
   creditos: number;
-  custo_brl: number; // NÃO exibir ao usuário — só Tijolos.
+  // custo_brl removido da API (E-A1) — margem interna, nunca exposta ao browser.
   criado_em: string;
 };
 

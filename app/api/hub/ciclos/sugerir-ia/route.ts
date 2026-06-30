@@ -3,6 +3,7 @@ import {
   sugerirDescricaoCiclo,
   sugerirParametrosFollowup,
 } from "@/lib/hub/sugerir-ciclo-ia";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 const ACOES = ["descricao", "followup"] as const;
 type Acao = (typeof ACOES)[number];
@@ -12,6 +13,10 @@ function isAcao(v: unknown): v is Acao {
 }
 
 export async function POST(request: NextRequest) {
+  // E-B8: guard de gestor — sugestão IA tem custo de inferência (LLM).
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

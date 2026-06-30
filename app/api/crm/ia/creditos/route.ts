@@ -7,7 +7,7 @@ export type ConsumoRow = {
   origem: string;
   modelo: string;
   creditos: number;
-  custo_brl: number;
+  // custo_brl removido — margem interna, não exposta ao browser (E-A1).
   criado_em: string;
 };
 
@@ -27,9 +27,10 @@ export async function GET(request: NextRequest) {
 
   const saldo = await saldoCreditos(tenantId, db);
 
+  // E-A1: custo_brl é margem interna — nunca viaja ao browser.
   const { data, error } = await db
     .from("hub_ia_consumo")
-    .select("origem, modelo, creditos, custo_brl, criado_em")
+    .select("origem, modelo, creditos, criado_em")
     .eq("tenant_id", tenantId)
     .order("criado_em", { ascending: false })
     .limit(50);

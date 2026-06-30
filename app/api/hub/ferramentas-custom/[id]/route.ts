@@ -6,7 +6,7 @@ import {
   type HubAgenteFerramentaId,
 } from "@/lib/hub/agente-ferramentas-registry";
 import { smartProviderValido } from "@/lib/hub/ferramentas-custom-db";
-import { tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmOwner } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -16,8 +16,12 @@ function db() {
 }
 
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  // E-B9 (PATCH): editar ferramenta custom exige owner — espelha restrição da UI.
+  const g = await requireCrmOwner(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  const tenantId = g.ctx.tenantId;
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: "id obrigatório." }, { status: 400 });
 
@@ -84,8 +88,12 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
 }
 
 export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  // E-B9 (DELETE): excluir ferramenta custom exige owner.
+  const g = await requireCrmOwner(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  const tenantId = g.ctx.tenantId;
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: "id obrigatório." }, { status: 400 });
 

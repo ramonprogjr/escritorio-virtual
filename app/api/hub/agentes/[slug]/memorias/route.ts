@@ -4,6 +4,7 @@ import {
   contarMemoriasAgente,
   limparMemoriasAgente,
 } from "@/lib/hub/limpar-memorias-agente";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -12,13 +13,29 @@ function db() {
   );
 }
 
+/**
+ * Retorna 404 se o agente pertence a outro tenant.
+ * Service-role bypassa RLS — esta checagem explícita é a única proteção.
+ */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  // E-B1 (GET): guard de sessão — qualquer papel CRM ativo pode ver a contagem.
+  const g = await requireCrmSessao(req);
+  if ("error" in g) return g.error;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw).trim();
@@ -29,11 +46,11 @@ export async function GET(
   const supabase = db();
   const { data: agente } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug")
+    .select("agente_slug, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
-  if (!agente) {
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
     return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
   }
 
@@ -48,6 +65,10 @@ export async function DELETE(
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  // E-B1 (DELETE): apaga memórias + zera leads — exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw).trim();
@@ -68,11 +89,12 @@ export async function DELETE(
   const supabase = db();
   const { data: agente } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug")
+    .select("agente_slug, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
-  if (!agente) {
+  // Isolamento de tenant: 404 se o agente pertence a outro tenant (não vaza existência).
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
     return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
   }
 

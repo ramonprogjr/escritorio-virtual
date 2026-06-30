@@ -573,23 +573,18 @@ export default function CiclosPage() {
 
   async function executarAgora(ciclo: Ciclo) {
     setExecutando(ciclo.id);
-    const agente = slugParaApiCiclos(ciclo.agente_slug);
-    const nome = ciclo.nome.toLowerCase();
-    const nomeCiclo = nome.includes("follow") ? "followup"
-      : nome.includes("sla") ? "sla"
-      : nome.includes("manha") || nome.includes("matinal") ? ciclo.agente_slug === "gerente_atendimento" ? "relatorio_manha" : "analise_manha"
-      : nome.includes("noite") ? "analise_noite"
-      : nome.includes("tráfego") || nome.includes("trafego") ? "trafego"
-      : nome.includes("supervis") ? "supervisao"
-      : "followup";
-
+    // E-B10: o CRON_SECRET não é mais exposto no bundle client.
+    // O endpoint server-side /api/hub/ciclos/executar lê o secret do ENV e dispara o runner.
     try {
-      await fetch(
-        `/api/ciclos/${agente}?ciclo=${nomeCiclo}&hub_ciclo_id=${encodeURIComponent(ciclo.id)}&secret=obra10plus_cron_2026`,
-        {
-        headers: internalApiHeaders(),
-        }
-      );
+      const res = await fetch("/api/hub/ciclos/executar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ ciclo_id: ciclo.id }),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        console.error("[executarAgora]", json.error || `Erro ${res.status}`);
+      }
     } catch (e) { console.error(e); }
 
     await carregarLogsEAlertas();
@@ -916,7 +911,7 @@ export default function CiclosPage() {
                     borderRadius: 999,
                     fontSize: 12,
                     background: "#121923",
-                    border: "1px solidrgb(13, 13, 13)",
+                    border: "1px solid #293241",
                     color: "#e6edf3",
                   }}
                 />

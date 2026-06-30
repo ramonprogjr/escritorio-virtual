@@ -5,7 +5,7 @@ import { extrairTextoDocumentoRag } from "@/lib/hub/rag";
 import { mistralTranscreverAudioBuffer } from "@/lib/whatsapp/mistral-transcribe-audio";
 import { registrarConsumoIA } from "@/lib/ia/metering";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
-import { defaultTenantId } from "@/lib/tenant-default";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 /** Limite de upload de documento (base64) — alinhado aos uploads de playbook. */
 const MAX_DOC_BYTES = 8 * 1024 * 1024;
@@ -63,14 +63,17 @@ export async function POST(
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
 
+  // E-B6: guard de gestor — endpoint debita Tijolos e chama IA (custo real).
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
-  let body: { descricao?: unknown; tenantId?: unknown; documento?: unknown; audio?: unknown };
+  let body: { descricao?: unknown; documento?: unknown; audio?: unknown };
   try {
     body = (await request.json()) as {
       descricao?: unknown;
-      tenantId?: unknown;
       documento?: unknown;
       audio?: unknown;
     };
@@ -133,24 +136,30 @@ export async function POST(
 
   const supabase = db();
 
-  // Resolve o agente (mesma convenção das demais rotas de playbook: por agente_slug).
+  // E-B6: resolve agente com tenant_id para isolar por tenant da sessão.
   const { data: agente, error: agErr } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug, nome, modelo_padrao")
+    .select("agente_slug, nome, modelo_padrao, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
   if (agErr) return NextResponse.json({ error: agErr.message }, { status: 500 });
-  if (!agente) return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
 
-  const tenantId =
-    (typeof body.tenantId === "string" && body.tenantId.trim()) || defaultTenantId();
+  // Isolamento de tenant: 404 se o agente pertence a outro tenant.
+  const agenteRow = agente as { agente_slug: string; nome?: string | null; modelo_padrao?: string | null; tenant_id?: string | null } | null;
+  if (!agenteRow) return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  if (agenteRow.tenant_id != null && String(agenteRow.tenant_id) !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  }
+
+  // Tenant SEMPRE da sessão — nunca do body (body.tenantId era a brecha).
+  const tenantId = g.ctx.tenantId;
 
   const out = await gerarPlaybookViaIa({
     descricao,
-    agenteNome: (agente.nome as string | null) ?? slug,
+    agenteNome: (agenteRow.nome as string | null) ?? slug,
     agenteSlug: slug,
-    modeloFromDb: (agente.modelo_padrao as string | null) ?? undefined,
+    modeloFromDb: (agenteRow.modelo_padrao as string | null) ?? undefined,
   });
 
   // Metering (Tijolos): best-effort, por fase de geração — nunca bloqueia a resposta.

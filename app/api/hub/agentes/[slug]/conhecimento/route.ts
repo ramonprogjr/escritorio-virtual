@@ -5,6 +5,7 @@ import {
   isConhecimentoSecaoId,
   ordemConhecimentoSecao,
 } from "@/lib/hub/conhecimento-secoes";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 /**
  * Conhecimento/tarefas do agente (tabela `hub_agente_conhecimento`).
@@ -15,7 +16,7 @@ import {
  *   PUT → grava/atualiza UMA secção (upsert manual: a tabela não tem unique
  *         em (agente_slug, secao), só índice — por isso fazemos select→update/insert).
  *
- * Service-role, valida que o agente existe, aditivo. Não altera rotas existentes.
+ * Service-role, valida que o agente existe e pertence ao tenant, aditivo.
  */
 
 function db() {
@@ -23,6 +24,15 @@ function db() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
 }
 
 /** Erro do PostgREST/Postgres quando a própria tabela não existe (base muito antiga). */
@@ -38,16 +48,31 @@ function isTabelaConhecimentoMissing(message?: string): boolean {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // E-B4 (GET): guard de sessão — qualquer papel CRM ativo pode ler o conhecimento do agente.
+  const g = await requireCrmSessao(req);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const supabase = db();
+
+  // Verificar que o agente pertence ao tenant antes de expor conteúdo.
+  const { data: agenteRow } = await supabase
+    .from("hub_agente_identidade")
+    .select("agente_slug, tenant_id")
+    .eq("agente_slug", slug)
+    .maybeSingle();
+
+  if (!agenteRow || agenteForaDoTenant(agenteRow as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ secoes: [] });
+  }
 
   const { data, error } = await supabase
     .from("hub_agente_conhecimento")
@@ -85,6 +110,10 @@ export async function PUT(
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // E-B4 (PUT): escreve no knowledge base do agente (vira system prompt) — exige gestor.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
@@ -110,17 +139,17 @@ export async function PUT(
 
   const supabase = db();
 
-  // Valida que o agente existe (mesmo padrão das outras rotas hub).
+  // E-B4: valida que o agente existe E pertence ao tenant da sessão.
   const { data: agente, error: agErr } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug")
+    .select("agente_slug, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
   if (agErr) {
     return NextResponse.json({ error: agErr.message }, { status: 500 });
   }
-  if (!agente) {
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
