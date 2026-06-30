@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { RefreshCw } from "lucide-react";
 import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { useMetricas } from "@/hooks/useMetricas";
@@ -30,6 +31,7 @@ type RelatorioJson = {
 
 export default function Relatorios() {
   const metricas = useMetricas();
+  const narrow = useNarrowViewport();
   const [decisoesPendentes, setDecisoesPendentes] = useState(0);
   const [kpisForaMeta, setKpisForaMeta] = useState(0);
   const [entidadeAtiva, setEntidadeAtiva] = useState<RelatorioEntidade>("leads");
@@ -208,30 +210,62 @@ export default function Relatorios() {
           ) : dataset && dataset.rows.length === 0 && !dataset.aviso ? (
             <p className="py-12 text-center text-sm text-[#8b949e]">Nenhum registo encontrado.</p>
           ) : dataset && (dataset.rows.length > 0 || dataset.aviso) ? (
-            <div className="max-h-[min(70vh,640px)] overflow-auto rounded-lg border border-[#1d3a2c]">
-              <table className="w-full min-w-[640px] text-left text-xs">
-                <thead className="sticky top-0 z-10 bg-[#16271e]">
-                  <tr className="border-b border-[#1d3a2c] text-[#8b949e]">
-                    {dataset.headers.map((h) => (
-                      <th key={h} className="whitespace-nowrap px-3 py-2.5 font-bold">
-                        {RELATORIO_HEADER_LABELS[h] ?? h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataset.rows.map((row, ri) => (
-                    <tr key={ri} className="border-b border-[#16271e] text-[#e6edf3] hover:bg-[#16271e]/60">
+            <>
+            {/* DESKTOP: tabela padrão — preservada 100% */}
+            {narrow !== true && (
+              <div className="max-h-[min(70vh,640px)] overflow-auto rounded-lg border border-[#1d3a2c]">
+                <table className="w-full min-w-[640px] text-left text-xs">
+                  <thead className="sticky top-0 z-10 bg-[#16271e]">
+                    <tr className="border-b border-[#1d3a2c] text-[#8b949e]">
                       {dataset.headers.map((h) => (
-                        <td key={h} className="max-w-[220px] truncate whitespace-nowrap px-3 py-2" title={String(row[h] ?? "")}>
-                          {formatarCelulaRelatorio(h, row[h])}
-                        </td>
+                        <th key={h} className="whitespace-nowrap px-3 py-2.5 font-bold">
+                          {RELATORIO_HEADER_LABELS[h] ?? h}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {dataset.rows.map((row, ri) => (
+                      <tr key={ri} className="border-b border-[#16271e] text-[#e6edf3] hover:bg-[#16271e]/60">
+                        {dataset.headers.map((h) => (
+                          <td key={h} className="max-w-[220px] truncate whitespace-nowrap px-3 py-2" title={String(row[h] ?? "")}>
+                            {formatarCelulaRelatorio(h, row[h])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* MOBILE: cada linha vira um card empilhado (rótulo: valor) */}
+            {narrow === true && (
+              <div className="flex flex-col gap-3">
+                {dataset.rows.map((row, ri) => (
+                  <div
+                    key={ri}
+                    className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] px-4 py-3"
+                  >
+                    {dataset.headers.map((h) => {
+                      const label = RELATORIO_HEADER_LABELS[h] ?? h;
+                      const valor = formatarCelulaRelatorio(h, row[h]);
+                      return (
+                        <div key={h} className="flex flex-col gap-0.5 border-b border-[#16271e] py-2 last:border-b-0 last:pb-0 first:pt-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">
+                            {label}
+                          </span>
+                          <span className="break-words text-sm text-[#e6edf3]">
+                            {valor}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
+            </>
           ) : null}
         </div>
       </div>

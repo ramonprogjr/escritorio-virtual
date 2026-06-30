@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RefreshCw } from "lucide-react";
@@ -141,6 +142,7 @@ function MetricMini({
 export function CrmAnalyticsDashboard() {
   const pathname = usePathname();
   const { setSlot } = useCrmHeaderSlot();
+  const narrow = useNarrowViewport();
   const [periodo, setPeriodo] = useState<AnalyticsPeriodo>("24h");
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -550,30 +552,65 @@ export function CrmAnalyticsDashboard() {
             {data.ultimosResultados.length > 0 && (
               <>
                 <SectionTitle>Histórico de medições</SectionTitle>
-                <div className="overflow-hidden rounded-xl border border-[#1d3a2c]">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-[#0f1d16] text-left text-[10px] uppercase text-[#8b949e]">
-                        <th className="px-3 py-2">KPI</th>
-                        <th className="px-3 py-2">Valor</th>
-                        <th className="px-3 py-2">Alerta</th>
-                        <th className="px-3 py-2">Quando</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.ultimosResultados.map((r, i) => (
-                        <tr key={i} className="border-t border-[#16271e] text-[#e6edf3]">
-                          <td className="px-3 py-2 font-mono text-xs">{r.kpi_slug}</td>
-                          <td className="px-3 py-2">{r.valor_medido}</td>
-                          <td className="px-3 py-2">{r.nivel_alerta}</td>
-                          <td className="px-3 py-2 text-xs text-[#8b949e]">
-                            {new Date(r.criado_em).toLocaleString("pt-BR")}
-                          </td>
+
+                {/* DESKTOP: tabela padrão — preservada 100% */}
+                {narrow !== true && (
+                  <div className="overflow-hidden rounded-xl border border-[#1d3a2c]">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-[#0f1d16] text-left text-[10px] uppercase text-[#8b949e]">
+                          <th className="px-3 py-2">KPI</th>
+                          <th className="px-3 py-2">Valor</th>
+                          <th className="px-3 py-2">Alerta</th>
+                          <th className="px-3 py-2">Quando</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {data.ultimosResultados.map((r, i) => (
+                          <tr key={i} className="border-t border-[#16271e] text-[#e6edf3]">
+                            <td className="px-3 py-2 font-mono text-xs">{r.kpi_slug}</td>
+                            <td className="px-3 py-2">{r.valor_medido}</td>
+                            <td className="px-3 py-2">{r.nivel_alerta}</td>
+                            <td className="px-3 py-2 text-xs text-[#8b949e]">
+                              {new Date(r.criado_em).toLocaleString("pt-BR")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* MOBILE: cada linha vira um card (rótulo:valor empilhados) */}
+                {narrow === true && (
+                  <div className="flex flex-col gap-3">
+                    {data.ultimosResultados.map((r, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] px-4 py-3"
+                      >
+                        <div className="flex flex-col gap-0.5 border-b border-[#16271e] py-2 first:pt-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">KPI</span>
+                          <span className="break-all font-mono text-sm text-[#e6edf3]">{r.kpi_slug}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 border-b border-[#16271e] py-2">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">Valor</span>
+                            <span className="text-sm text-[#e6edf3]">{r.valor_medido}</span>
+                          </div>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">Alerta</span>
+                            <span className="text-sm text-[#e6edf3]">{r.nivel_alerta}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-0.5 pt-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8b949e]">Quando</span>
+                          <span className="text-xs text-[#8b949e]">{new Date(r.criado_em).toLocaleString("pt-BR")}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>

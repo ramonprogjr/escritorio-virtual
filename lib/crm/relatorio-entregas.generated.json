@@ -1,7 +1,26 @@
 {
-  "geradoEm": "2026-06-30T18:09:49.629Z",
+  "geradoEm": "2026-06-30T18:16:06.457Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "77b915424fa58607d2e3149c5069340196075d01",
+      "hashCurto": "77b9154",
+      "mensagem": "relatório da maratona 2h + limpa imports mortos (tenantIdFromRequest)",
+      "mensagemRaw": "chore(mobile/seguranca): relatório da maratona 2h + limpa imports mortos (tenantIdFromRequest)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T18:15:54.000Z",
+      "hora": "15:15",
+      "arquivos": [
+        "app/api/crm/leads/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "app/api/crm/pessoas/route.ts",
+        "docs/MARATONA-2H-RELATORIO.md"
+      ],
+      "areas": {
+        "app/api": 3,
+        "outros": 1
+      }
+    },
     {
       "hash": "611aa0932fe57b5176b26930178b5b9a248fc007",
       "hashCurto": "611aa09",
