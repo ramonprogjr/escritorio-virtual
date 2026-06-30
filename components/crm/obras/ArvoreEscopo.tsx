@@ -325,7 +325,7 @@ function CockpitHeader({
               background: ativo ? "linear-gradient(180deg, #14301f, #0a140f)" : BG_CARD,
             }}
           >
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: ativo ? "#f0c869" : TXT_DIM }}>
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: ativo ? "#f0c869" : TXT_DIM }}>
               <Icone className="h-3 w-3" /> {k.rotulo}
             </div>
             <p className="mt-1 text-[15px] font-bold tabular-nums" style={{ color: TXT }}>
@@ -549,7 +549,7 @@ function MenuGerar({
                 <span className="block text-[12px] font-bold" style={{ color: TXT }}>
                   Memorial descritivo
                 </span>
-                <span className="block text-[10px]" style={{ color: TXT_DIM }}>
+                <span className="block text-[12px]" style={{ color: TXT_DIM }}>
                   imprime/PDF · descrição + quantidade
                 </span>
               </span>
@@ -566,7 +566,7 @@ function MenuGerar({
                 <span className="block text-[12px] font-bold" style={{ color: TXT }}>
                   Planilha orçamentária (CSV)
                 </span>
-                <span className="block text-[10px]" style={{ color: TXT_DIM }}>
+                <span className="block text-[12px]" style={{ color: TXT_DIM }}>
                   {rotuloPlanilha}
                   {pendente ? " · quantidade (custo após migração)" : ""}
                 </span>

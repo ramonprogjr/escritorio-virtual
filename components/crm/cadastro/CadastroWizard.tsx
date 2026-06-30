@@ -683,6 +683,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                         }}
                         style={{
                           padding: "0 16px",
+                          minHeight: 44,
                           borderRadius: 10,
                           border: `1px solid ${OB.dourado}`,
                           background: "rgba(201, 162, 74, 0.15)",
@@ -893,6 +894,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                       disabled={buscandoCep}
                       style={{
                         padding: "0 14px",
+                        minHeight: 44,
                         borderRadius: 10,
                         border: `1px solid ${OB.borda}`,
                         background: "#16271e",
@@ -910,7 +912,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
                   style={{
                     gridColumn: "1 / -1",
                     display: "grid",
-                    gridTemplateColumns: "1fr minmax(96px, 140px)",
+                    gridTemplateColumns: "minmax(0,1fr) minmax(80px, 120px)",
                     gap: 12,
                   }}
                 >

@@ -91,7 +91,7 @@ export function CrmLeadsEntradaPeriodo({ pontos, periodo }: Props) {
               className="group flex min-w-0 flex-1 flex-col items-center"
               title={`${p.label}: ${p.count} lead${p.count !== 1 ? "s" : ""}`}
             >
-              <span className="mb-0.5 text-[9px] font-bold tabular-nums text-[#8b949e] opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="mb-0.5 text-[9px] font-bold tabular-nums text-[#8b949e] opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                 {p.count > 0 ? p.count : ""}
               </span>
               <div

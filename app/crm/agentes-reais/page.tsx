@@ -127,19 +127,19 @@ export default function CopilotoCentralPage() {
                     <p style={{ color: "#cdd9d2", fontSize: 12.5, fontWeight: 600, margin: 0 }}>
                       {ORIGEM_LABEL[r.origem] || r.origem}
                     </p>
-                    <p style={{ color: "#6e7681", fontSize: 11, margin: "2px 0 0" }}>{quando(r.criado_em)}</p>
+                    <p style={{ color: "#6e7681", fontSize: 12, margin: "2px 0 0" }}>{quando(r.criado_em)}</p>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                     {r.modelo && (
                       <span style={{
-                        fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
+                        fontSize: 12, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
                         background: /claude/i.test(r.modelo) ? "#e3b34122" : "#2f9e8f22",
                         color: /claude/i.test(r.modelo) ? "#e3b341" : "#2f9e8f",
                       }}>{/claude/i.test(r.modelo) ? "Claude" : "Mistral"}</span>
                     )}
                     {typeof r.creditos === "number" && r.creditos !== 0 && (
-                      <span style={{ fontSize: 11, color: "#c9a24a", fontWeight: 700 }}>
-                        {Math.abs(r.creditos)} 🧱
+                      <span style={{ fontSize: 12, color: "#c9a24a", fontWeight: 700 }}>
+                        {Math.abs(r.creditos)} créd.
                       </span>
                     )}
                   </div>

@@ -115,7 +115,7 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
                     {c.origem}
                   </p>
                 )}
-                <p className="mt-1 text-lg font-black tabular-nums text-[#e6edf3]">
+                <p className="mt-1 break-words pr-1 text-base font-black tabular-nums text-[#e6edf3] sm:text-lg">
                   {moedaFinanceiroExata(c.valor)}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#8b949e]">

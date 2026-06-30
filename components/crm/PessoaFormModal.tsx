@@ -884,7 +884,9 @@ export function PessoaFormDrawer({ open, onClose, onSaved }: Props) {
 
                 style={{
 
-                  padding: "12px 14px",
+                  padding: "0 14px",
+
+                  minHeight: 44,
 
                   borderRadius: 10,
 

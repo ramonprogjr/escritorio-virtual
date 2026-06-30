@@ -307,7 +307,7 @@ export default function Configuracoes() {
                         rows.map((row, j) => (j === i ? { ...row, horas_espera: v } : row))
                       );
                     }}
-                    className="w-20 rounded border border-[#1d3a2c] bg-[#16271e] px-2 py-1 text-[#e6edf3]"
+                    className="w-20 rounded border border-[#1d3a2c] bg-[#16271e] px-2 py-2.5 text-[#e6edf3]"
                   />
                   <span className="text-[#8b949e]">h</span>
                 </li>

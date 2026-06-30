@@ -345,7 +345,8 @@ export function EmpresaFormDrawer({ open, onClose, onSaved }: Props) {
                 disabled={buscandoCep}
                 style={{
                   alignSelf: "flex-end",
-                  padding: "12px 14px",
+                  padding: "0 14px",
+                  minHeight: 44,
                   borderRadius: 10,
                   border: "1px solid #1d3a2c",
                   background: "#0f1d16",

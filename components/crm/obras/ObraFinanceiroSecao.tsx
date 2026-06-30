@@ -723,7 +723,7 @@ function PainelCustodia({
         ].map((c) => (
           <div key={c.label} style={{ background: BG_INPUT, border: `1px solid ${BORDA}`, borderRadius: 10, padding: 10, textAlign: "center" }}>
             <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: c.cor }}>{brl(c.valor)}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 10, color: TEXTO_FRACO }}>{c.label}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: TEXTO_FRACO }}>{c.label}</p>
           </div>
         ))}
       </div>
@@ -829,10 +829,10 @@ function DrawerNovoOrcamento({
           <>
             <label style={rotulo}>Itens (qtd × unitário)</label>
             {itens.map((it, i) => (
-              <div key={i} style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                <input value={it.descricao} onChange={(e) => setItem(i, "descricao", e.target.value)} placeholder="Descrição" style={{ ...input, flex: 2 }} />
-                <input value={it.quantidade} onChange={(e) => setItem(i, "quantidade", e.target.value)} placeholder="Qtd" type="number" style={{ ...input, width: 64 }} />
-                <input value={it.valor_unitario} onChange={(e) => setItem(i, "valor_unitario", e.target.value)} placeholder="R$/un" type="number" style={{ ...input, width: 84 }} />
+              <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                <input value={it.descricao} onChange={(e) => setItem(i, "descricao", e.target.value)} placeholder="Descrição" style={{ ...input, flex: "2 1 160px", minWidth: 90 }} />
+                <input value={it.quantidade} onChange={(e) => setItem(i, "quantidade", e.target.value)} placeholder="Qtd" type="number" style={{ ...input, flex: "1 1 64px", minWidth: 64 }} />
+                <input value={it.valor_unitario} onChange={(e) => setItem(i, "valor_unitario", e.target.value)} placeholder="R$/un" type="number" style={{ ...input, flex: "1 1 84px", minWidth: 84 }} />
               </div>
             ))}
             <button type="button" onClick={addItem} style={{ ...botaoSecundario, marginBottom: 16 }}>

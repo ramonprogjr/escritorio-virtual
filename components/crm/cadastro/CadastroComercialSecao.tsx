@@ -139,7 +139,7 @@ function OpcaoToggleCard({
           {badge ? (
             <span
               style={{
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: 0.06,
                 color: OB.dourado,
@@ -166,7 +166,7 @@ function OpcaoToggleCard({
           paddingTop: 4,
         }}
       >
-        <span style={{ fontSize: 10, fontWeight: 700, color: ativo ? "#3fb950" : "#6e7781" }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: ativo ? "#3fb950" : "#6e7781" }}>
           {ativo ? "ATIVO" : "INATIVO"}
         </span>
         <CrmToggleSwitch
