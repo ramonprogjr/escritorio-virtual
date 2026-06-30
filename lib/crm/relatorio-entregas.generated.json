@@ -1,7 +1,27 @@
 {
-  "geradoEm": "2026-06-30T18:01:38.902Z",
+  "geradoEm": "2026-06-30T18:09:49.629Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "611aa0932fe57b5176b26930178b5b9a248fc007",
+      "hashCurto": "611aa09",
+      "mensagem": "Lote D — grids de coluna fixa viram responsivos (CC-8)",
+      "mensagemRaw": "fix(mobile): Lote D — grids de coluna fixa viram responsivos (CC-8)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T18:09:37.000Z",
+      "hora": "15:09",
+      "arquivos": [
+        "app/crm/negocios/[id]/page.tsx",
+        "components/crm/FinanceiroNovoLancamentoModal.tsx",
+        "components/crm/NegocioFormDrawer.tsx",
+        "components/crm/obras/ObraFinanceiroSecao.tsx",
+        "components/crm/obras/ObraItensSecao.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 4
+      }
+    },
     {
       "hash": "276a409d95081d3694353fcf491e6d2ba0c17f34",
       "hashCurto": "276a409",

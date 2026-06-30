@@ -8,7 +8,7 @@ import {
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { criarVinculosNegocio } from "@/lib/crm/negocio-vinculos";
 import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
-import { defaultTenantId, isMissingPgColumn, isTenantFkError, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { isMissingPgColumn, isTenantFkError, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { legacyNegocioTipoFromMercado } from "@/lib/crm/negocio-tipo";
 

@@ -6,7 +6,7 @@ import {
   prepararRowHubLeadInsert,
   validarLeadCadastro,
 } from "@/lib/crm/lead-cadastro";
-import { defaultTenantId, isMissingPgColumn, tenantIdFromRequest, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
