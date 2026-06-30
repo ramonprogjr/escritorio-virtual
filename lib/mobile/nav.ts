@@ -1,44 +1,4 @@
-import type { LucideIcon } from "lucide-react";
-import { Activity, Building2, MessageSquare, Megaphone, MoreHorizontal } from "lucide-react";
-
-export type MobileTabId = "pulso" | "escritorio" | "atendimento" | "marketing" | "mais";
-
-export type MobileTabDef = {
-  id: MobileTabId;
-  label: string;
-  icon: LucideIcon;
-  rota?: string;
-  opensSheet?: boolean;
-};
-
-export const MOBILE_TABS: MobileTabDef[] = [
-  { id: "pulso", label: "Pulso", icon: Activity, rota: "/crm" },
-  { id: "escritorio", label: "CRM", icon: Building2, rota: "/crm" },
-  { id: "atendimento", label: "Atendimento", icon: MessageSquare, rota: "/crm/atendimento" },
-  { id: "marketing", label: "Marketing", icon: Megaphone, rota: "/crm/trafego" },
-  { id: "mais", label: "Mais", icon: MoreHorizontal, opensSheet: true },
-];
-
-export type MobileMoreItem = {
-  label: string;
-  href: string;
-  badgeKey?: "leads" | "aprovacoes" | "chat";
-};
-
-export const MOBILE_MORE_ITEMS: MobileMoreItem[] = [
-  { label: "Cadastros", href: "/crm/cadastro" },
-  { label: "Leads", href: "/crm/leads", badgeKey: "leads" },
-  { label: "Negócios", href: "/crm/negocios" },
-  { label: "Parceiros", href: "/crm/parceiros" },
-  { label: "Aprovações", href: "/crm/aprovacoes", badgeKey: "aprovacoes" },
-  { label: "Agentes IA", href: "/crm/agentes" },
-  { label: "Analytics", href: "/crm/analytics" },
-  { label: "Financeiro", href: "/crm/financeiro" },
-  { label: "Relatórios", href: "/crm/relatorios" },
-  { label: "Configurações", href: "/crm/configuracoes" },
-  { label: "Progresso sistema", href: "/crm/progresso-sistema" },
-  { label: "Integrações", href: "/crm/integracoes" },
-];
+import { CRM_NAV_GROUPS, isCrmNavPathActive } from "@/lib/crm-nav-groups";
 
 const SHEET_PREFIXES = [
   "/crm/cadastro",
@@ -69,17 +29,6 @@ const SHEET_PREFIXES = [
   "/crm/agentes-reais",
 ];
 
-/** Aba inferior ativa para a rota atual. */
-export function mobileTabIdFromPath(pathname: string): MobileTabId {
-  if (pathname === "/office") return "escritorio";
-  if (pathname.startsWith("/crm/atendimento")) return "atendimento";
-  if (pathname.startsWith("/crm/trafego")) return "marketing";
-  if (pathname === "/crm" || pathname === "/crm/") return "pulso";
-  if (SHEET_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))) return "mais";
-  if (pathname.startsWith("/crm")) return "pulso";
-  return "pulso";
-}
-
 export function isMobileShellRoute(pathname: string): boolean {
   if (pathname === "/" || pathname.startsWith("/cadastre-se")) return false;
   if (pathname.startsWith("/parceiro/")) return false;
@@ -87,24 +36,29 @@ export function isMobileShellRoute(pathname: string): boolean {
   return true;
 }
 
+/**
+ * Deriva o título da página no mobile a partir de `CRM_NAV_GROUPS` (mesma fonte do menu).
+ * Primeiro aplica overrides para rotas de detalhe (sub-páginas) onde o label do item
+ * pai não é suficiente (ex.: "/crm/leads/123" → "Lead").
+ * Depois percorre CRM_NAV_GROUPS procurando o item com href ativo.
+ * Fallback final: "Obra10+".
+ */
 export function mobilePageTitle(pathname: string): string {
   if (pathname === "/office") return "Escritório";
-  if (pathname === "/crm") return "Pulso";
-  if (pathname === "/crm/cadastro" || pathname.startsWith("/crm/cadastro/")) return "Cadastros";
-  if (pathname === "/crm/leads") return "Leads";
+
+  // Overrides de detalhe — sub-rotas onde o label do item pai não é o ideal
   if (pathname.startsWith("/crm/leads/")) return "Lead";
-  if (pathname === "/crm/atendimento") return "Atendimento";
-  if (pathname === "/crm/aprovacoes") return "Aprovações";
-  if (pathname === "/crm/agentes") return "Agentes IA";
   if (pathname.startsWith("/crm/agentes/")) return "Agente IA";
-  if (pathname === "/crm/analytics" || pathname === "/crm/kpis") return "Analytics";
-  if (pathname === "/crm/trafego") return "Marketing";
-  if (pathname === "/crm/financeiro" || pathname.startsWith("/crm/financeiro/")) return "Financeiro";
-  if (pathname.startsWith("/crm/negocios")) return "Negócios";
-  if (pathname.startsWith("/crm/parceiros")) return "Parceiros";
-  if (pathname === "/crm/configuracoes") return "Configurações";
-  if (pathname === "/crm/progresso-sistema") return "Progresso sistema";
-  if (pathname === "/crm/integracoes") return "Integrações";
+
+  // Deriva a partir de CRM_NAV_GROUPS (mesma fonte do menu lateral/drawer)
+  for (const group of CRM_NAV_GROUPS) {
+    for (const item of group.items) {
+      if (isCrmNavPathActive(pathname, item.href)) {
+        return item.label;
+      }
+    }
+  }
+
   return "Obra10+";
 }
 

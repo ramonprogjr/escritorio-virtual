@@ -682,7 +682,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         <CrmUniversalHeader />
 
         <div
-          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0"
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[env(safe-area-inset-bottom,0px)] md:pb-0"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {children}

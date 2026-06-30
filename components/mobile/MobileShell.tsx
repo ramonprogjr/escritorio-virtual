@@ -170,7 +170,7 @@ export default function MobileShell({ children }: Props) {
           </button>
         )}
 
-        <h1 className="min-w-0 flex-1 truncate text-base font-bold" style={{ color: "#eaf4ee" }}>
+        <h1 className="min-w-0 flex-1 truncate text-base font-bold" style={{ color: "#eaf4ee", minWidth: "4rem" }}>
           {mobilePageTitle(pathname)}
         </h1>
 
@@ -178,7 +178,7 @@ export default function MobileShell({ children }: Props) {
           type="button"
           onClick={() => router.push("/crm/aprovacoes")}
           aria-label="Pendências"
-          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+          className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl${showBack ? " hidden min-[360px]:flex" : ""}`}
           style={{ background: "#11241b", color: "#dCEbe2", border: `1px solid ${CHROME_BORDER}` }}
         >
           <Bell size={19} strokeWidth={2} aria-hidden />

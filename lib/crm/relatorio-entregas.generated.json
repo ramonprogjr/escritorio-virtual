@@ -1,7 +1,37 @@
 {
-  "geradoEm": "2026-06-30T17:41:41.721Z",
+  "geradoEm": "2026-06-30T17:53:27.303Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "3de533f1ee310c0514d5bde4723920b513f2c400",
+      "hashCurto": "3de533f",
+      "mensagem": "Lote B2/C — alvos de toque 44px + cores da marca (azul/verde GitHub -> Obra10+)",
+      "mensagemRaw": "fix(mobile): Lote B2/C — alvos de toque 44px + cores da marca (azul/verde GitHub -> Obra10+)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T17:53:15.000Z",
+      "hora": "14:53",
+      "arquivos": [
+        "app/crm/atendimento/page.tsx",
+        "app/crm/layout.tsx",
+        "app/crm/relatorios/page.tsx",
+        "components/crm/CrmMetricCard.tsx",
+        "components/crm/CrmPipelineResumo.tsx",
+        "components/crm/SmartField.tsx",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "components/crm/cadastro/CadastroEmpresaSideover.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "components/crm/leads/LeadKanbanCard.tsx",
+        "components/crm/leads/MercadoLeadPicker.tsx",
+        "components/crm/negocios/NegocioKanbanCard.tsx",
+        "components/mobile/MobileDetector.tsx",
+        "components/mobile/MobileShell.tsx"
+      ],
+      "areas": {
+        "app/crm": 3,
+        "components/crm": 9,
+        "outros": 2
+      }
+    },
     {
       "hash": "eff2a25ebb28d13d3c070237273a33d9926fe05d",
       "hashCurto": "eff2a25",
@@ -6700,27 +6730,6 @@
       ],
       "areas": {
         "outros": 1
-      }
-    },
-    {
-      "hash": "3ad71dbad61a6da769c745c6938dbc0da9c8d034",
-      "hashCurto": "3ad71db",
-      "mensagem": "identidade do chamador via cookie de sessao (fecha escalada x-caller-auth-id)",
-      "mensagemRaw": "fix(seguranca): identidade do chamador via cookie de sessao (fecha escalada x-caller-auth-id)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T17:46:02.000Z",
-      "hora": "14:46",
-      "arquivos": [
-        "app/api/crm/atendimento/assumir/route.ts",
-        "app/api/crm/atendimento/devolver/route.ts",
-        "app/api/crm/atendimento/send/route.ts",
-        "docs/STATUS_MARATONA.md",
-        "lib/crm/crm-api-auth.ts"
-      ],
-      "areas": {
-        "app/api": 3,
-        "outros": 1,
-        "lib/crm": 1
       }
     }
   ]
