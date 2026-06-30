@@ -1,7 +1,42 @@
 {
-  "geradoEm": "2026-06-30T05:31:46.203Z",
+  "geradoEm": "2026-06-30T05:55:51.790Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "b7854496616eab1d2ecc8e189374365d8393da14",
+      "hashCurto": "b785449",
+      "mensagem": "Domínio E (IA/Agentes) — guards de tenant nas rotas-filhas + segredo do cron fora do browser (auditada GO)",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio E (IA/Agentes) — guards de tenant nas rotas-filhas + segredo do cron fora do browser (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T05:55:40.000Z",
+      "hora": "02:55",
+      "arquivos": [
+        "app/api/crm/copiloto/historico/route.ts",
+        "app/api/crm/ia/creditos/route.ts",
+        "app/api/hub/agentes/[slug]/conhecimento/route.ts",
+        "app/api/hub/agentes/[slug]/logs/route.ts",
+        "app/api/hub/agentes/[slug]/memorias/route.ts",
+        "app/api/hub/agentes/[slug]/mistral-sync/route.ts",
+        "app/api/hub/agentes/[slug]/operacao/route.ts",
+        "app/api/hub/agentes/[slug]/playbook/gerar-por-ia/route.ts",
+        "app/api/hub/ciclos/[id]/route.ts",
+        "app/api/hub/ciclos/executar/route.ts",
+        "app/api/hub/ciclos/route.ts",
+        "app/api/hub/ciclos/sugerir-ia/route.ts",
+        "app/api/hub/ferramentas-custom/[id]/route.ts",
+        "app/api/hub/ferramentas-custom/route.ts",
+        "app/api/hub/ferramentas-custom/sugerir/route.ts",
+        "app/crm/agentes-reais/page.tsx",
+        "app/crm/ciclos/page.tsx",
+        "app/crm/creditos/page.tsx",
+        "docs/E2E-DOMINIO-E-ACHADOS.md"
+      ],
+      "areas": {
+        "app/api": 15,
+        "app/crm": 3,
+        "outros": 1
+      }
+    },
     {
       "hash": "6265020bb192a650feb3feb752d45990de1f5297",
       "hashCurto": "6265020",
