@@ -20,6 +20,10 @@ type InsertCall = { tabela: string; linha: Record<string, unknown> };
 const rpcCalls: RpcCall[] = [];
 const insertCalls: InsertCall[] = [];
 let aprovacaoRow: Record<string, unknown> | null = null;
+// F-B3: quando true, o SELECT-single ACHA a linha (existe), mas o UPDATE condicionado a
+// status='pendente' retorna data=[] — i.e. a aprovação JÁ foi processada (2º clique / outro operador).
+// Desacopla o resultado do UPDATE do resultado da leitura para reproduzir a corrida exata.
+let updateRetornaVazio = false;
 // Quando true, rpc_snapshot_custo_frente devolve "function does not exist" (migração E7b pendente).
 let snapshotFuncaoAusente = false;
 // Quando set, rpc_snapshot_custo_frente devolve um erro REAL (não "função ausente") — deve ser logado.
@@ -38,9 +42,10 @@ function makeQuery(tabela: string) {
   q.update = () => { isUpdate = true; return q; };
   q.select = (..._args: unknown[]) => {
     if (isUpdate) {
-      // Terminal do update: retorna as linhas afetadas (F-B3 idempotência)
+      // Terminal do update: retorna as linhas afetadas (F-B3 idempotência). updateRetornaVazio
+      // força data=[] mesmo com a linha existindo (2º clique: o guard status='pendente' não casa).
       return Promise.resolve({
-        data: aprovacaoRow ? [{ id: aprovacaoRow.id }] : [],
+        data: aprovacaoRow && !updateRetornaVazio ? [{ id: aprovacaoRow.id }] : [],
         error: null,
       });
     }
@@ -95,6 +100,7 @@ beforeEach(() => {
   rpcCalls.length = 0;
   insertCalls.length = 0;
   aprovacaoRow = null;
+  updateRetornaVazio = false;
   snapshotFuncaoAusente = false;
   snapshotErroReal = null;
   snapshotLancaExcecao = false;
@@ -281,6 +287,30 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
     expect(r.sucesso).toBe(true);
     expect(rpcCalls.some((c) => c.nome === "rpc_liberar_escrow")).toBe(false);
     expect(rpcCalls.some((c) => c.nome === "rpc_aprovar_orcamento_frente")).toBe(false);
+  });
+
+  // ── F-B3 IDEMPOTÊNCIA: 2º clique / outro operador NÃO dispara a cascata de novo (pagamento duplicado) ──
+  it("F-B3: aprovação já processada (SELECT acha, UPDATE retorna []) → NENHUMA RPC de escrow + sucesso=true", async () => {
+    // A linha EXISTE (passa pelo SELECT-single), mas o UPDATE condicionado a status='pendente'
+    // não casa nenhuma linha (já 'aprovado' por um clique anterior) → data=[]. A guarda de
+    // idempotência deve retornar cedo, ANTES de executarAcaoAprovada, sem liberar o escrow.
+    updateRetornaVazio = true;
+    aprovacaoRow = {
+      id: "apr-arq-idem",
+      tipo: "pagamento_obra_arq",
+      agente_slug: "hub",
+      descricao: "Aprovação da arquitetura (duplo clique)",
+      dados: { pagamento_id: "pag-77", obra_id: "obra-7", papel: "arquitetura" },
+    };
+
+    const r = await aprovar("apr-arq-idem", undefined, TENANT);
+    // Idempotente: o estado desejado já foi atingido → sucesso, mas SEM efeito colateral.
+    expect(r.sucesso).toBe(true);
+    // A trava exata do F-B3: a cascata de DINHEIRO não roda na 2ª passagem.
+    expect(rpcCalls.some((c) => c.nome === "rpc_liberar_escrow")).toBe(false);
+    expect(rpcCalls.some((c) => c.nome === "rpc_aprovar_orcamento_frente")).toBe(false);
+    expect(rpcCalls.some((c) => c.nome === "rpc_snapshot_custo_frente")).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
   });
 });
 

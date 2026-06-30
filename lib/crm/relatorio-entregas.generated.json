@@ -1,7 +1,30 @@
 {
-  "geradoEm": "2026-06-30T13:55:03.812Z",
+  "geradoEm": "2026-06-30T14:11:11.031Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "44c12c277ea0c54451144d2171765855f0a2df71",
+      "hashCurto": "44c12c2",
+      "mensagem": "Domínio I (Relatórios/Analytics) — 5 vazamentos cross-tenant de números (auditada GO)",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio I (Relatórios/Analytics) — 5 vazamentos cross-tenant de números (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T14:10:51.000Z",
+      "hora": "11:10",
+      "arquivos": [
+        "app/api/crm/analytics/route.ts",
+        "app/api/crm/kpis/calcular/route.ts",
+        "components/crm/CrmAnalyticsDashboard.tsx",
+        "components/crm/FunilOperacionalChart.tsx",
+        "docs/E2E-DOMINIO-I-ACHADOS.md",
+        "lib/crm/analytics-aggregate.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "components/crm": 2,
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
     {
       "hash": "2cbc089b6bcbf80d6816b9f91fe324963f61db72",
       "hashCurto": "2cbc089",
