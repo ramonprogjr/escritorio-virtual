@@ -1,7 +1,32 @@
 {
-  "geradoEm": "2026-06-30T04:02:11.795Z",
+  "geradoEm": "2026-06-30T04:27:23.688Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "032c5bd61224f1335dc4f8ad007d9576c182b6d2",
+      "hashCurto": "032c5bd",
+      "mensagem": "Domínio B (Cadastros) — guards de tenant nos acessos individuais (auditada GO)",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio B (Cadastros) — guards de tenant nos acessos individuais (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T04:25:20.000Z",
+      "hora": "01:25",
+      "arquivos": [
+        ".gitignore",
+        "app/api/crm/cadastro/bulk-delete/route.ts",
+        "app/api/crm/cadastro/route.ts",
+        "app/api/crm/empresas/[id]/route.ts",
+        "app/api/crm/pessoas/[id]/route.ts",
+        "app/api/crm/pessoas/route.ts",
+        "app/api/crm/pessoas/verificar-documento/route.ts",
+        "docs/E2E-DOMINIO-B-ACHADOS.md",
+        "lib/crm/excluir-cadastro-crm.ts"
+      ],
+      "areas": {
+        "outros": 2,
+        "app/api": 6,
+        "lib/crm": 1
+      }
+    },
     {
       "hash": "3c69854811924eeb4c344a2c5ad59fec8d9ba6cb",
       "hashCurto": "3c69854",

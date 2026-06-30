@@ -101,7 +101,7 @@ function TipoPessoaBadge({ tipo }: { tipo: unknown }) {
   const pj = t === "PJ";
   return (
     <span className="shrink-0 rounded-full bg-[#1d3a2c] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
-      {pj ? "Emp" : "PF"}
+      {pj ? "PJ" : "PF"}
     </span>
   );
 }
@@ -362,9 +362,9 @@ export default function CadastroPage() {
         onChange: setFiltroTipo,
         label: "Tipo pessoa",
         options: [
-          { value: "", label: "PF e Emp" },
+          { value: "", label: "PF e PJ" },
           { value: "PF", label: "PF" },
-          { value: "PJ", label: "Emp" },
+          { value: "PJ", label: "PJ" },
         ],
       },
       uf,

@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
+import { crmApiHeaders } from "@/lib/internal-api-headers-client";
 import { formatarTelefoneMascara } from "@/lib/crm/telefone-brasil";
 import { toast } from "@/components/crm/toast";
 
@@ -54,9 +54,19 @@ export default function ContatosPage() {
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("hub_contatos_notificacao").select("*").order("nome");
-    setContatos(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/crm/contatos", { headers: await crmApiHeaders() });
+      const json = (await res.json().catch(() => ({}))) as { data?: Contato[]; error?: string };
+      if (res.ok) {
+        setContatos(json.data ?? []);
+      } else {
+        toast.error(json.error || "Não foi possível carregar os contatos.");
+      }
+    } catch {
+      toast.error("Erro de rede ao carregar contatos.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
@@ -77,27 +87,65 @@ export default function ContatosPage() {
       return;
     }
     setSalvando(true);
-
-    if (editando) {
-      await supabase.from("hub_contatos_notificacao").update({ ...form, atualizado_em: new Date().toISOString() }).eq("id", editando);
-    } else {
-      await supabase.from("hub_contatos_notificacao").insert({ ...form });
+    try {
+      const res = await fetch(
+        editando ? `/api/crm/contatos/${encodeURIComponent(editando)}` : "/api/crm/contatos",
+        {
+          method: editando ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json", ...(await crmApiHeaders()) },
+          body: JSON.stringify(form),
+        }
+      );
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error || "Não foi possível salvar o contato.");
+        return;
+      }
+      toast.success(editando ? "Contato atualizado." : "Contato adicionado.");
+      await carregar();
+      resetForm();
+      setMostraNovo(false);
+    } catch {
+      toast.error("Erro de rede ao salvar.");
+    } finally {
+      setSalvando(false);
     }
-
-    await carregar();
-    resetForm();
-    setMostraNovo(false);
-    setSalvando(false);
   }
 
   async function remover(id: string) {
-    await supabase.from("hub_contatos_notificacao").delete().eq("id", id);
-    await carregar();
+    try {
+      const res = await fetch(`/api/crm/contatos/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: await crmApiHeaders(),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error || "Não foi possível remover o contato.");
+        return;
+      }
+      toast.success("Contato removido.");
+      await carregar();
+    } catch {
+      toast.error("Erro de rede ao remover.");
+    }
   }
 
   async function toggleAtivo(c: Contato) {
-    await supabase.from("hub_contatos_notificacao").update({ ativo: !c.ativo }).eq("id", c.id);
-    await carregar();
+    try {
+      const res = await fetch(`/api/crm/contatos/${encodeURIComponent(c.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(await crmApiHeaders()) },
+        body: JSON.stringify({ ativo: !c.ativo }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error || "Não foi possível atualizar.");
+        return;
+      }
+      await carregar();
+    } catch {
+      toast.error("Erro de rede.");
+    }
   }
 
   function iniciarEdicao(c: Contato) {

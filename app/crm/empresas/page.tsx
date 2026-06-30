@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Building2, Plus, X } from "lucide-react";
 import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { CrmPermissaoSelect } from "@/components/crm/CrmPermissaoSelect";
+import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { crmApiHeaders } from "@/lib/internal-api-headers-client";
 import { isCrmOwnerRole } from "@/lib/crm/crm-permissoes";
 import { supabase } from "@/lib/supabase/client";
@@ -19,6 +20,7 @@ export default function EmpresasPage() {
   const [modal, setModal] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [acaoId, setAcaoId] = useState<string | null>(null);
+  const [confirmarDesativar, setConfirmarDesativar] = useState<TenantRow | null>(null);
   const [form, setForm] = useState({
     nome_exibicao: "",
     admin_email: "",
@@ -93,25 +95,32 @@ export default function EmpresasPage() {
     }
   }
 
-  async function alternarAtivo(t: TenantRow) {
-    const desativando = t.ativo !== false;
-    if (desativando && !window.confirm(`Marcar o escritório "${t.nome_exibicao}" como inativo?`)) {
+  function alternarAtivo(t: TenantRow) {
+    // Desativar é a ação destrutiva — pede confirmação no padrão do CRM (dark/dourado).
+    // Reativar é seguro e direto.
+    if (t.ativo !== false) {
+      setConfirmarDesativar(t);
       return;
     }
+    void aplicarAtivo(t, true);
+  }
+
+  async function aplicarAtivo(t: TenantRow, ativar: boolean) {
     setAcaoId(t.id);
     try {
       const res = await fetch(`/api/crm/tenants/${encodeURIComponent(t.id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...(await crmApiHeaders()) },
-        body: JSON.stringify({ ativo: !desativando }),
+        body: JSON.stringify({ ativo: ativar }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         toast.error(json.error || "Não foi possível atualizar o escritório");
         return;
       }
-      toast.success(desativando ? "Escritório desativado" : "Escritório ativado");
-      setTenants((prev) => prev.map((x) => (x.id === t.id ? { ...x, ativo: !desativando } : x)));
+      toast.success(ativar ? "Escritório ativado" : "Escritório desativado");
+      setTenants((prev) => prev.map((x) => (x.id === t.id ? { ...x, ativo: ativar } : x)));
+      setConfirmarDesativar(null);
     } catch {
       toast.error("Erro de rede");
     } finally {
@@ -194,7 +203,7 @@ export default function EmpresasPage() {
                       <button
                         type="button"
                         disabled={acaoId === t.id}
-                        onClick={() => void alternarAtivo(t)}
+                        onClick={() => alternarAtivo(t)}
                         className="inline-flex min-h-8 items-center rounded-lg border px-2.5 text-xs font-bold transition-colors disabled:opacity-50"
                         style={
                           t.ativo === false
@@ -275,6 +284,27 @@ export default function EmpresasPage() {
           </div>
         </div>
       )}
+
+      <CrmConfirmDialog
+        open={confirmarDesativar !== null}
+        title="Desativar escritório?"
+        confirmLabel="Desativar"
+        danger
+        loading={confirmarDesativar != null && acaoId === confirmarDesativar.id}
+        onCancel={() => {
+          if (acaoId == null) setConfirmarDesativar(null);
+        }}
+        onConfirm={() => {
+          if (confirmarDesativar) void aplicarAtivo(confirmarDesativar, false);
+        }}
+      >
+        {confirmarDesativar ? (
+          <>
+            Marcar <strong style={{ color: "#e6edf3" }}>{confirmarDesativar.nome_exibicao}</strong>{" "}
+            como inativo? Os colaboradores deste escritório perdem o acesso até ser reativado.
+          </>
+        ) : null}
+      </CrmConfirmDialog>
     </div>
   );
 }

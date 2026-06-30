@@ -199,6 +199,8 @@ export default function EspecialistasPage() {
                     <button
                       key={esp}
                       type="button"
+                      aria-pressed={ativo}
+                      aria-label={`${esp}${ativo ? " (selecionada)" : ""}`}
                       onClick={() => toggleEspecialidade(esp)}
                       style={{
                         padding: "7px 12px", borderRadius: 999,
@@ -229,6 +231,7 @@ export default function EspecialistasPage() {
                     <button
                       key={opt.label}
                       type="button"
+                      aria-pressed={ativo}
                       onClick={() => setForm((f) => ({ ...f, tem_equipe: opt.val }))}
                       style={{
                         flex: 1, padding: "9px 12px", borderRadius: 8,
