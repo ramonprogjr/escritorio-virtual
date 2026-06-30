@@ -23,6 +23,7 @@ import {
   cockpitDe,
   rotuloAmbiente,
   rotuloDisciplina,
+  canonicalizarAmbiente,
   fmtMoeda,
   round2,
   type ItemEscopoInput,
@@ -63,6 +64,35 @@ describe("escopo — visibilidade por persona (decisão 3b)", () => {
     expect(lentesDaPersona("prestador")).toEqual(["preco", "avanco"]);
     expect(lentesDaPersona("hub")).toEqual(["preco", "custo", "margem", "avanco"]);
     expect(lentesDaPersona("executor")).toEqual(["preco", "custo", "margem", "avanco"]);
+  });
+});
+
+// ── R3: canonicalização do ambiente (ESTRUTURA-UNIFICADA §7 Fase 0) ───────────
+describe("escopo — canonicalizarAmbiente (R3: write trim+lowercase, agrega subtotais)", () => {
+  it('"Sala", "sala " e "SALA" caem na MESMA chave canônica', () => {
+    expect(canonicalizarAmbiente("Sala")).toBe("sala");
+    expect(canonicalizarAmbiente("sala ")).toBe("sala");
+    expect(canonicalizarAmbiente("  SALA  ")).toBe("sala");
+    // os três produzem a mesma chave → mesmo subtotal por ambiente (fim da fragmentação)
+    const chaves = ["Sala", "sala ", "SALA"].map(canonicalizarAmbiente);
+    expect(new Set(chaves).size).toBe(1);
+  });
+
+  it("vazio/whitespace/null/undefined → null (não grava ambiente em branco)", () => {
+    expect(canonicalizarAmbiente("")).toBeNull();
+    expect(canonicalizarAmbiente("   ")).toBeNull();
+    expect(canonicalizarAmbiente(null)).toBeNull();
+    expect(canonicalizarAmbiente(undefined)).toBeNull();
+  });
+
+  it("não-string → null (defensivo)", () => {
+    expect(canonicalizarAmbiente(123 as unknown as string)).toBeNull();
+  });
+
+  it("é idempotente (canonicalizar 2× = 1×)", () => {
+    const uma = canonicalizarAmbiente("Cozinha Gourmet");
+    expect(uma).toBe("cozinha gourmet");
+    expect(canonicalizarAmbiente(uma)).toBe(uma);
   });
 });
 

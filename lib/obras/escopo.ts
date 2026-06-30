@@ -269,6 +269,22 @@ export type CockpitEscopo = {
   itens: number; // nº de itens-raiz
 };
 
+/**
+ * R3 (ESTRUTURA-UNIFICADA §7 Fase 0) — CANONICALIZA o `ambiente` no WRITE: trim + lowercase.
+ * SEM lista fechada (não força um catálogo): só normaliza a CHAVE de agrupamento para que
+ * "Sala", "sala " e "SALA" caiam no MESMO subtotal por ambiente — a raiz da fragmentação dos
+ * subtotais. A exibição usa rotuloAmbiente() (Title Case) por cima do canônico; e `area_label`
+ * preserva o texto bonito quando houver. Idempotente: canonicalizar 2× = canonicalizar 1×.
+ *
+ * Contrato: string vazia/whitespace/null/undefined → null (não grava ambiente em branco, que
+ * agruparia tudo num "__sem__" artificial). Toda escrita em hub_obra_itens.ambiente passa por aqui.
+ */
+export function canonicalizarAmbiente(v: string | null | undefined): string | null {
+  if (typeof v !== "string") return null;
+  const canon = v.trim().toLowerCase();
+  return canon ? canon : null;
+}
+
 /** Rótulo legível de um código de ambiente (slug → Title Case). Espelha rotuloAmbiente da UI E2. */
 export function rotuloAmbiente(codigo: string | null | undefined): string {
   const base = (codigo || "").replace(/_/g, " ").trim();
