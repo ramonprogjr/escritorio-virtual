@@ -1,7 +1,24 @@
 {
-  "geradoEm": "2026-06-30T18:16:06.457Z",
+  "geradoEm": "2026-06-30T18:23:07.174Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "e0441bc373491ca18aa0fc5fecd7b2a30ed9a3dc",
+      "hashCurto": "e0441bc",
+      "mensagem": "Lote E/CC-12 — tabelas de relatório viram cards no mobile (dado acessível no toque)",
+      "mensagemRaw": "fix(mobile): Lote E/CC-12 — tabelas de relatório viram cards no mobile (dado acessível no toque)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T18:22:55.000Z",
+      "hora": "15:22",
+      "arquivos": [
+        "app/crm/relatorios/page.tsx",
+        "components/crm/CrmAnalyticsDashboard.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1
+      }
+    },
     {
       "hash": "77b915424fa58607d2e3149c5069340196075d01",
       "hashCurto": "77b9154",
