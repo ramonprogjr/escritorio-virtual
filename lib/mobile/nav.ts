@@ -65,7 +65,7 @@ const SHEET_PREFIXES = [
   "/crm/ferramentas",
   "/crm/contatos",
   "/crm/usuarios",
-  "/crm/conteudo",
+  // G-D2: /crm/conteudo é stub "Em breve" — escondido do menu até existir de verdade (decisão do dono).
   "/crm/agentes-reais",
 ];
 

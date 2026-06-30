@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireInternalApiKey, crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
+import { crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
 import {
   crmHandoffDb,
   resolveOperador,
@@ -9,8 +9,6 @@ import {
 export async function POST(request: NextRequest) {
   const configErr = crmApiConfigError();
   if (configErr) return configErr;
-  const keyErr = requireInternalApiKey(request);
-  if (keyErr) return keyErr;
 
   const authId = resolveCallerAuthId(request);
   if (!authId) {

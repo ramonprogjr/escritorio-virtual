@@ -27,14 +27,12 @@ const LABELS: Record<string, string> = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "Supabase anon key",
   SUPABASE_SERVICE_ROLE_KEY: "Supabase service role",
   INTERNAL_API_KEY: "Chave API interna",
-  NEXT_PUBLIC_INTERNAL_API_KEY: "Chave API interna no browser",
   CRON_SECRET: "Segredo dos ciclos",
   WEBHOOK_SECRET: "Segredo do webhook WhatsApp",
   ANTHROPIC_API_KEY: "Anthropic API key",
   UAZAPI_BASE_URL: "WhatsApp base URL",
   UAZAPI_INSTANCE_TOKEN: "WhatsApp token da instância",
   DEFAULT_TENANT_ID: "Tenant padrão server",
-  NEXT_PUBLIC_TENANT_ID: "Tenant padrão browser",
   WINDSOR_API_KEY: "Windsor.ai",
 };
 

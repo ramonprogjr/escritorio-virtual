@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { aggregateFinanceDashboard } from "@/lib/crm/finance-dashboard-aggregate";
 import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
-import { tenantIdFromRequest } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
   const auth = await requireCrmFinanceiro(request);
   if ("error" in auth) return auth.error;
 
-  const tenantId = tenantIdFromRequest(request.headers) || auth.ctx.tenantId;
+  const tenantId = auth.ctx.tenantId;
   try {
     const payload = await aggregateFinanceDashboard(db(), tenantId);
     return NextResponse.json(payload);

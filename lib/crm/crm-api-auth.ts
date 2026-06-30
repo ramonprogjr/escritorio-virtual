@@ -79,14 +79,23 @@ export async function getCallerContext(
 ): Promise<{ ctx: CrmCallerContext } | { error: NextResponse }> {
   const config = crmApiConfigError();
   if (config) return { error: config };
-  const keyErr = requireInternalApiKey(request);
-  if (keyErr) return { error: keyErr };
 
-  // Identidade vem do token de sessão validado pelo proxy (cookie httpOnly).
-  // O header `x-caller-auth-id` (forjável pelo cliente) só é fallback para chamador
-  // interno SEM cookie — que já passou pelo gate `x-api-key` do proxy. Com cookie
-  // presente, o header é IGNORADO (fecha escalada por auth_id de outro usuário).
-  const authId = resolveCallerAuthId(request);
+  // H-SEC-1: o browser autentica EXCLUSIVAMENTE pelo cookie de sessão (não envia mais
+  // x-api-key — a chave saiu do bundle). A chave interna só é exigida no caminho SEM
+  // cookie (cron/worker/server-to-server), onde a identidade vem do header forjável
+  // `x-caller-auth-id` — por isso esse caminho continua gated pela chave. Com cookie de
+  // sessão presente (já validado pelo proxy), NÃO exigimos a chave; senão o browser
+  // (sem x-api-key) tomaria 401 em toda chamada.
+  const cookieAuthId = authIdFromSessionCookie(request);
+  if (!cookieAuthId) {
+    const keyErr = requireInternalApiKey(request);
+    if (keyErr) return { error: keyErr };
+  }
+
+  // Identidade: cookie httpOnly (validado pelo proxy) tem prioridade. O header
+  // `x-caller-auth-id` (forjável) só é fallback no caminho interno SEM cookie — que já
+  // passou pelo gate da chave acima. Com cookie presente, o header é IGNORADO.
+  const authId = cookieAuthId ?? resolveCallerAuthId(request);
   if (!authId) {
     return {
       error: NextResponse.json(
