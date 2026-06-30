@@ -200,7 +200,7 @@ export default function Configuracoes() {
           <p className="text-sm font-bold text-[#e6edf3]">Horário comercial</p>
           <p className="mt-1 text-xs text-[#8b949e]">Salvo nas configurações do escritório (requer admin).</p>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <label className="text-[10px] font-bold uppercase text-[#8b949e]">
+            <label className="text-xs font-bold uppercase text-[#8b949e]">
               Início
               <input
                 type="time"
@@ -211,7 +211,7 @@ export default function Configuracoes() {
                 className="mt-1 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-sm text-[#e6edf3]"
               />
             </label>
-            <label className="text-[10px] font-bold uppercase text-[#8b949e]">
+            <label className="text-xs font-bold uppercase text-[#8b949e]">
               Fim
               <input
                 type="time"
@@ -222,7 +222,7 @@ export default function Configuracoes() {
                 className="mt-1 w-full min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 text-sm text-[#e6edf3]"
               />
             </label>
-            <label className="col-span-2 text-[10px] font-bold uppercase text-[#8b949e] sm:col-span-1">
+            <label className="col-span-2 text-xs font-bold uppercase text-[#8b949e] sm:col-span-1">
               Fuso
               <input
                 value={tenantSettings.timezone ?? "America/Sao_Paulo"}
@@ -256,7 +256,7 @@ export default function Configuracoes() {
             />
             Sugestão automática ativa (deste escritório)
           </label>
-          <label className="mt-3 block text-[10px] font-bold uppercase text-[#8b949e]">
+          <label className="mt-3 block text-xs font-bold uppercase text-[#8b949e]">
             Prazo validação humana (horas)
             <input
               type="number"

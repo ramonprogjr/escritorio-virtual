@@ -49,7 +49,7 @@ export function CrmMetricCard({
       >
         {valor}
       </p>
-      {sub && <p className="mt-0.5 text-xs text-[#6e7681]">{sub}</p>}
+      {sub && <p className="mt-0.5 min-w-0 break-words text-xs text-[#6e7681]">{sub}</p>}
     </>
   );
 

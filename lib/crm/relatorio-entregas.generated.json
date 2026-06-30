@@ -1,7 +1,26 @@
 {
-  "geradoEm": "2026-06-30T17:12:48.852Z",
+  "geradoEm": "2026-06-30T17:33:15.411Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "e300f237252319ec231f34eb54ae4c792535ede7",
+      "hashCurto": "e300f23",
+      "mensagem": "F-D2 — as 2 chaves do pagamento exigem AUTORIDADES distintas (auditada GO)",
+      "mensagemRaw": "feat(escrow/seguranca): F-D2 — as 2 chaves do pagamento exigem AUTORIDADES distintas (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T17:33:01.000Z",
+      "hora": "14:33",
+      "arquivos": [
+        "app/api/hub/aprovacoes/[id]/route.ts",
+        "docs/MOBILE-AUDITORIA-ACHADOS.md",
+        "lib/ia/aprovacoes-cascata.test.ts",
+        "lib/ia/aprovacoes.ts"
+      ],
+      "areas": {
+        "app/api": 1,
+        "outros": 3
+      }
+    },
     {
       "hash": "a0995f8169f2e8945580304171d184e9d975cc14",
       "hashCurto": "a0995f8",

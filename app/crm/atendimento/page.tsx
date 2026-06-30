@@ -1127,7 +1127,7 @@ function AtendimentoContent() {
                     { label: "Observações", value: textoObservacoes(leadSel.observacoes) },
                   ].map((i) => (
                     <div key={i.label} className={`rounded-lg border ${C.border} bg-black/25 px-3 py-2`}>
-                      <p className="text-zinc-500 text-[10px] font-medium uppercase tracking-wide">{i.label}</p>
+                      <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">{i.label}</p>
                       <p className="text-zinc-100 text-[12px] font-medium mt-0.5 leading-snug break-words">{i.value}</p>
                     </div>
                   ))}
@@ -1152,7 +1152,7 @@ function AtendimentoContent() {
                     { label: "Último contato", value: formatarDataHora(leadSel.ultimo_contato) },
                   ].map((i) => (
                     <div key={i.label} className={`rounded-lg border ${C.border} bg-black/25 px-3 py-2`}>
-                      <p className="text-zinc-500 text-[10px] font-medium uppercase tracking-wide">{i.label}</p>
+                      <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">{i.label}</p>
                       <p className="text-zinc-100 text-[12px] font-medium mt-0.5 leading-snug break-words">{i.value}</p>
                     </div>
                   ))}
@@ -1171,7 +1171,7 @@ function AtendimentoContent() {
                     { label: "E-mail", value: leadSel.email || "—" },
                   ].map((i) => (
                     <div key={i.label} className={`rounded-lg border ${C.border} bg-black/25 px-3 py-2`}>
-                      <p className="text-zinc-500 text-[10px] font-medium uppercase tracking-wide">{i.label}</p>
+                      <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">{i.label}</p>
                       <p className="text-zinc-100 text-[12px] font-medium mt-0.5 leading-snug break-words">{i.value}</p>
                     </div>
                   ))}
@@ -1192,7 +1192,7 @@ function AtendimentoContent() {
                     { label: "1ª mensagem", value: (typeof leadSel.metadata?.primeira_mensagem === "string" && leadSel.metadata.primeira_mensagem) || "—" },
                   ].map((i) => (
                     <div key={i.label} className={`rounded-lg border ${C.border} bg-black/25 px-3 py-2`}>
-                      <p className="text-zinc-500 text-[10px] font-medium uppercase tracking-wide">{i.label}</p>
+                      <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">{i.label}</p>
                       <p className="text-zinc-100 text-[12px] font-medium mt-0.5 leading-snug break-words">{i.value}</p>
                     </div>
                   ))}

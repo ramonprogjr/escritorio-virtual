@@ -24,6 +24,11 @@ html, body {
   display: none;
 }
 
+/* CC-9: bloqueia zoom automático do Safari iOS em inputs < 16px */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px; }
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }

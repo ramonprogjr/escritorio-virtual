@@ -111,7 +111,7 @@ function MetricMini({
 }) {
   const inner = (
     <>
-      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#484f58]">{label}</p>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#484f58]">{label}</p>
       <p className="text-xl font-black" style={{ color: cor ?? "#e6edf3" }}>
         {value}
       </p>
@@ -393,7 +393,7 @@ export function CrmAnalyticsDashboard() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4 lg:col-span-1">
                 <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#8b949e]">Funil de leads</p>
-                <p className="mb-3 text-[10px] leading-snug text-[#6e7681]">
+                <p className="mb-3 text-xs leading-snug text-[#6e7681]">
                   Distribuição actual por estágio (snapshot operacional, não taxa de conversão entre etapas).
                 </p>
                 <FunilOperacionalChart
