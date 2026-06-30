@@ -1,7 +1,26 @@
 {
-  "geradoEm": "2026-06-30T17:53:27.303Z",
+  "geradoEm": "2026-06-30T18:01:38.902Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "276a409d95081d3694353fcf491e6d2ba0c17f34",
+      "hashCurto": "276a409",
+      "mensagem": "Lote A — recupera 80px (padding-fantasma) + título do menu + limpa código morto (CC-1 parcial)",
+      "mensagemRaw": "fix(mobile): Lote A — recupera 80px (padding-fantasma) + título do menu + limpa código morto (CC-1 parcial)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T18:01:26.000Z",
+      "hora": "15:01",
+      "arquivos": [
+        "app/crm/layout.tsx",
+        "components/mobile/MobileMoreSheet.tsx",
+        "components/mobile/MobileShell.tsx",
+        "lib/mobile/nav.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 3
+      }
+    },
     {
       "hash": "3de533f1ee310c0514d5bde4723920b513f2c400",
       "hashCurto": "3de533f",

@@ -640,7 +640,7 @@ export default function NegocioDetalhePage() {
           );
         })()}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginTop: 24 }}>
         <div>
           <p style={{ fontSize: 11, color: "#8b949e" }}>MERCADO</p>
           <p>{labelMercadoPrefixo(negocio.prefixo_mercado)}</p>

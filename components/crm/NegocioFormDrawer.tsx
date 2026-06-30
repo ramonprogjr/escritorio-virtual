@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import {
   Bot,
   BriefcaseBusiness,
@@ -187,6 +188,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
   const [loading, setLoading] = useState(false);
   const [carregandoOpts, setCarregandoOpts] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const narrow = useNarrowViewport();
 
   useEffect(() => {
     if (!open) return;
@@ -674,7 +676,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+            gridTemplateColumns: narrow ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))",
             gap: 8,
           }}
         >
@@ -734,7 +736,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
         </div>
 
         <CadastroSideoverPanel>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: narrow ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 12 }}>
             {metricCard("Mercado", resumoMercado, "#e6edf3")}
             {metricCard("Etapa", ETAPA_LABEL[form.etapa] || form.etapa, "#e6edf3")}
             {metricCard("Valor", fmtValorBRL(form.valor_estimado), "#22c55e")}
@@ -819,7 +821,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
         {step === "comercial" ? (
           <>
             <CadastroSideoverPanel>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={LABEL}>Valor estimado (R$)</label>
                   <input
@@ -927,7 +929,7 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
             </CadastroSideoverPanel>
 
             <CadastroSideoverPanel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: narrow ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10 }}>
                 {metricCard("Leads", String(form.lead_ids.length), "#9ecbff")}
                 {metricCard("Pessoas", String(form.pessoa_ids.length), "#b58a63")}
                 {metricCard("Empresas", String(form.empresa_ids.length), "#86efac")}

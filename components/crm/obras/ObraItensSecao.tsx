@@ -301,7 +301,7 @@ function FichaItem({
         </div>
 
         {/* Situação (auto) × Andamento (manual) — colunas distintas */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-lg border p-2" style={{ borderColor: BORDA, background: BG_CARD }}>
             <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#6e9e8a]">Situação (automática)</p>
             <SeloSituacao situacao={situacaoPreview} diasAtraso={item.dias_atraso} />

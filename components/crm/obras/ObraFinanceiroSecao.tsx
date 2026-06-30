@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import {
   Plus,
   X,
@@ -349,6 +350,7 @@ export function ObraFinanceiroSecao({ obraId }: { obraId: string }) {
 
 // ── Resumo (cabeçalho) ────────────────────────────────────────────────────────
 function ResumoCards({ resumo, isAdm }: { resumo: ResumoFinanceiro; isAdm: boolean }) {
+  const narrow = useNarrowViewport();
   const cards: { label: string; valor: number; cor: string }[] = isAdm
     ? [
         { label: "Previsto", valor: resumo.previsto, cor: TEXTO_FRACO },
@@ -361,7 +363,7 @@ function ResumoCards({ resumo, isAdm }: { resumo: ResumoFinanceiro; isAdm: boole
         { label: "Em custódia", valor: resumo.em_custodia, cor: DOURADO_ESCURO },
       ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+    <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "repeat(3, 1fr)", gap: 8 }}>
       {cards.map((c) => (
         <div key={c.label} style={{ background: BG_CARD, border: `1px solid ${BORDA}`, borderRadius: 10, padding: 12 }}>
           <p style={{ margin: 0, fontSize: 11, color: TEXTO_FRACO }}>{c.label}</p>
@@ -697,6 +699,7 @@ function PainelCustodia({
   escrow: EscrowConta;
   movimentos: EscrowMov[];
 }) {
+  const narrow = useNarrowViewport();
   const emCustodia = escrow?.saldo_custodia ?? resumo.em_custodia;
   const liberado = escrow?.saldo_liberado ?? resumo.liberado;
   const aguarda = resumo.aguarda_2a_chave;
@@ -712,7 +715,7 @@ function PainelCustodia({
         (arquitetura + Hub). {escrow?.provedor === "interno" || !escrow ? "Custódia sob controle do Hub." : ""}
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr" : "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
         {[
           { label: "Em custódia 🔒", valor: emCustodia, cor: DOURADO_ESCURO },
           { label: "Aguarda 2ª chave ⏳", valor: aguarda, cor: DOURADO },
