@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-30T05:01:01.908Z",
+  "geradoEm": "2026-06-30T05:19:39.099Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "d59e8856d3d9154b087c44b2705efb4162ed8067",
+      "hashCurto": "d59e885",
+      "mensagem": "Domínio C (Operações/Obras) — nav->Arquitetura real + obras/[id] mobile + marca",
+      "mensagemRaw": "fix(e2e): Domínio C (Operações/Obras) — nav->Arquitetura real + obras/[id] mobile + marca",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T05:19:27.000Z",
+      "hora": "02:19",
+      "arquivos": [
+        "app/crm/negocios/[id]/page.tsx",
+        "app/crm/obras/[id]/page.tsx",
+        "app/crm/obras/page.tsx",
+        "app/crm/projetos/page.tsx",
+        "components/crm/obras/DrawerMedir.tsx",
+        "components/crm/obras/ObraCronogramaSecao.tsx",
+        "components/crm/obras/ObraFinanceiroSecao.tsx",
+        "components/crm/obras/ObraItensSecao.tsx",
+        "docs/E2E-DOMINIO-C-ACHADOS.md",
+        "lib/crm-nav-groups.ts"
+      ],
+      "areas": {
+        "app/crm": 4,
+        "components/crm": 4,
+        "outros": 2
+      }
+    },
     {
       "hash": "96a776b864dabd7212a55537cfb3cb8c5d7630af",
       "hashCurto": "96a776b",

@@ -8,7 +8,7 @@ import { toast } from "@/components/crm/toast";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { CrmMetricCard, CrmSectionTitle } from "@/components/crm/CrmMetricCard";
 import { moedaPipeline } from "@/lib/crm/pipeline-funil";
-import { moedaFinanceiro } from "@/lib/crm/finance-contas";
+import { moedaFinanceiro, moedaFinanceiroExata } from "@/lib/crm/finance-contas";
 import type { FinanceDashboardState } from "@/hooks/useFinanceDashboard";
 
 function CrmFinanceAcaoAgora({
@@ -173,15 +173,15 @@ export function CrmFinanceDashboard({ dash }: { dash: FinanceDashboardState }) {
         />
         <CrmMetricCard
           label="Vencido"
-          valor={moedaFinanceiro(kpis.vencidoTotal)}
-          sub={`${moedaFinanceiro(kpis.vencidoPagar)} pagar · ${moedaFinanceiro(kpis.vencidoReceber)} receber`}
+          valor={moedaFinanceiroExata(kpis.vencidoTotal)}
+          sub={`pagar ${moedaFinanceiroExata(kpis.vencidoPagar)} · receber ${moedaFinanceiroExata(kpis.vencidoReceber)}`}
           cor={kpis.vencidoTotal > 0 ? "#f85149" : "#8b949e"}
           href="/crm/financeiro/pagar?status=pendente&vencido=1"
           loading={dash.loading}
         />
         <CrmMetricCard
           label="Saldo projetado"
-          valor={moedaFinanceiro(kpis.saldoProjetado)}
+          valor={moedaFinanceiroExata(kpis.saldoProjetado)}
           sub="receber − pagar (não é saldo bancário)"
           cor={saldoPositivo ? "#3fb950" : "#f85149"}
           loading={dash.loading}

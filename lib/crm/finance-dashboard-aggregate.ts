@@ -116,12 +116,12 @@ export async function aggregateFinanceDashboard(
       supabase
         .from("hub_contas_pagar")
         .select("id, descricao, valor, vencimento, status")
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+        .or(tenantScopeOrFilter(tenantId))
         .order("vencimento", { ascending: true, nullsFirst: false }),
       supabase
         .from("hub_contas_receber")
         .select("id, descricao, valor, vencimento, status")
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+        .or(tenantScopeOrFilter(tenantId))
         .order("vencimento", { ascending: true, nullsFirst: false }),
       supabase
         .from("hub_aprovacoes")
