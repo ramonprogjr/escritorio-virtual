@@ -24,7 +24,7 @@ function messageForAuthRequestFailure(err: unknown): string {
       ? " NEXT_PUBLIC_SUPABASE_URL no .env.local deve ser uma URL válida (ex.: https://xxxxx.supabase.co ou http://127.0.0.1:54321)."
       : "";
   return (
-    "Não foi possível contactar o servidor de autenticação (Supabase). Verifique: ligação à Internet; URL e chave em .env.local (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY); reinicie o servidor após alterar o .env; no dashboard Supabase confirme que o projeto não está em pausa." +
+    "Não foi possível contatar o servidor de autenticação (Supabase). Verifique: conexão com a Internet; URL e chave em .env.local (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY); reinicie o servidor após alterar o .env; no dashboard Supabase confirme que o projeto não está em pausa." +
     urlHint +
     (typeof window !== "undefined" && /^http:\/\/(127\.0\.0\.1|localhost):/i.test(window.location.origin)
       ? " Se usar Supabase local (CLI), deixe supabase start a correr e confira CORS/additional redirects para este origin."
@@ -47,7 +47,7 @@ function traduzirErroAuth(msg: string): string {
   if (m.includes("password") && (m.includes("weak") || m.includes("short")))
     return "A senha deve ter pelo menos 6 caracteres.";
   if (m.includes("network") || m.includes("fetch"))
-    return "Falha de conexão. Verifique a sua internet e tente novamente.";
+    return "Falha de conexão. Verifique sua internet e tente novamente.";
   if (m.includes("token") || m.includes("expired") || m.includes("invalid token"))
     return "Link expirado ou inválido. Solicite um novo link de recuperação.";
   // Fallback: retorna PT genérico sem vazar o técnico

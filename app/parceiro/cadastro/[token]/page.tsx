@@ -337,7 +337,7 @@ export default function CadastroParceiro() {
           Cadastro de Parceiro
         </h1>
         <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
-          Indique como vai actuar na rede.
+          Indique como vai atuar na rede.
         </p>
       </div>
 
