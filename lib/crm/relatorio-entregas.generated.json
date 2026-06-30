@@ -1,7 +1,48 @@
 {
-  "geradoEm": "2026-06-30T14:20:07.811Z",
+  "geradoEm": "2026-06-30T17:12:48.852Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "a0995f8169f2e8945580304171d184e9d975cc14",
+      "hashCurto": "a0995f8",
+      "mensagem": "H-SEC-1 (chave interna fora do browser) + G-D1 (health owner-only) + G-D2 (esconder conteúdo) — auditada GO",
+      "mensagemRaw": "fix(seguranca): H-SEC-1 (chave interna fora do browser) + G-D1 (health owner-only) + G-D2 (esconder conteúdo) — auditada GO",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T17:12:30.000Z",
+      "hora": "14:12",
+      "arquivos": [
+        "app/api/crm/atendimento/assumir/route.ts",
+        "app/api/crm/atendimento/devolver/route.ts",
+        "app/api/crm/atendimento/route.ts",
+        "app/api/crm/atendimento/send/route.ts",
+        "app/api/crm/canais-entrada/route.ts",
+        "app/api/crm/empresas/route.ts",
+        "app/api/crm/financeiro/contas/route.ts",
+        "app/api/crm/financeiro/dashboard/route.ts",
+        "app/api/crm/integracoes/status/route.ts",
+        "app/api/crm/leads/[id]/propostas/route.ts",
+        "app/api/crm/me/context/route.ts",
+        "app/api/crm/onboarding/status/route.ts",
+        "app/api/crm/relatorio-diario/route.ts",
+        "app/api/crm/tenant-settings/route.ts",
+        "app/api/crm/tenants/route.ts",
+        "app/api/crm/usuarios/route.ts",
+        "app/api/health/route.ts",
+        "app/crm/configuracoes/page.tsx",
+        "docs/PENDENCIAS-DONO-INFRA.md",
+        "lib/crm/crm-api-auth.ts",
+        "lib/crm/health-checks.ts",
+        "lib/internal-api-headers.ts",
+        "lib/mobile/nav.ts",
+        "proxy.ts"
+      ],
+      "areas": {
+        "app/api": 17,
+        "app/crm": 1,
+        "outros": 4,
+        "lib/crm": 2
+      }
+    },
     {
       "hash": "7013dc5bc7ed4abcb4edb72c562c9d5351e65e75",
       "hashCurto": "7013dc5",
@@ -6635,68 +6676,6 @@
         "app/api": 3,
         "outros": 1,
         "lib/crm": 1
-      }
-    },
-    {
-      "hash": "475a08dbd2589fdea086adfe282072bfe395522a",
-      "hashCurto": "475a08d",
-      "mensagem": "Bloco B desbloqueado — service role key resolve 500/503",
-      "mensagemRaw": "docs(maratona): Bloco B desbloqueado — service role key resolve 500/503",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T17:06:11.000Z",
-      "hora": "14:06",
-      "arquivos": [
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "9324703cb44cd5c22326090f22573fa6f798e36e",
-      "hashCurto": "9324703",
-      "mensagem": "Bloco D — auditoria viva de RLS + plano de seguranca validado",
-      "mensagemRaw": "docs(maratona): Bloco D — auditoria viva de RLS + plano de seguranca validado",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T16:30:38.000Z",
-      "hora": "13:30",
-      "arquivos": [
-        "docs/PROPOSTA_CONJUNTA.md",
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 2
-      }
-    },
-    {
-      "hash": "4c2b9625a4eac0ee47e59ab6e26654923f51163e",
-      "hashCurto": "4c2b962",
-      "mensagem": "Bloco D parcial — politicas vivas de users estao travadas (drift repo->prod)",
-      "mensagemRaw": "docs(maratona): Bloco D parcial — politicas vivas de users estao travadas (drift repo->prod)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T15:59:31.000Z",
-      "hora": "12:59",
-      "arquivos": [
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "b776a42e3e146b4c20976e1ee146c1b2112aa4e9",
-      "hashCurto": "b776a42",
-      "mensagem": "Bloco B — service role key destrava data layer do CRM",
-      "mensagemRaw": "fix(maratona): Bloco B — service role key destrava data layer do CRM",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T15:32:37.000Z",
-      "hora": "12:32",
-      "arquivos": [
-        "app/_chk23.js",
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 2
       }
     }
   ]
