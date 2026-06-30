@@ -87,7 +87,7 @@ export default function DashboardPage() {
       valor: `${m.taxaEncaminhamento}%`,
       sub: "leads encaminhados",
       cor: "#f59e0b",
-      rota: "/crm/parceiros",
+      rota: "/crm/distribuicao",
     },
     {
       label: "Parceiros ativos",
@@ -101,7 +101,7 @@ export default function DashboardPage() {
       valor: m.encaminhamentosHoje,
       sub: "rede de parceiros",
       cor: "#b58a63",
-      rota: "/crm/parceiros",
+      rota: "/crm/distribuicao",
     },
     {
       label: "Modelos IA ativos",

@@ -501,9 +501,7 @@ function AtendimentoContent() {
   function labelRemetente(msg: Mensagem): string {
     if (!msg.agente_id) return "IA";
     if (meuSlug && msg.agente_id === meuSlug) return "Você";
-    const isIa = !["wendel", "celular"].includes(msg.agente_id) &&
-      !leads.find(() => false); // sempre IA se não for slug humano conhecido
-    // heurística: se agente_id contém apenas letras simples e está no meuSlug ou humano_responsavel → humano
+    // Humano se a mensagem foi marcada como tal OU o agente é o responsável humano do lead.
     const looksHuman =
       msg.metadata?.feito_por_tipo === "humano" ||
       (leadSel?.humano_responsavel && msg.agente_id === leadSel.humano_responsavel);
@@ -662,10 +660,10 @@ function AtendimentoContent() {
         {/* Lista */}
         <div className="flex-1 overflow-y-auto">
           {carregando && leads.length === 0 && (
-            <div className="text-center text-zinc-600 text-xs mt-10">Carregando conversas…</div>
+            <div className="text-center text-zinc-400 text-xs mt-10">Carregando conversas…</div>
           )}
           {!carregando && leadsFiltrados.length === 0 && (
-            <div className="text-center text-zinc-600 text-xs mt-10">Nenhuma conversa neste filtro</div>
+            <div className="text-center text-zinc-400 text-xs mt-10">Nenhuma conversa neste filtro</div>
           )}
           {leadsFiltrados.map(lead => {
             const badge = modoBadge(lead);
@@ -685,10 +683,10 @@ function AtendimentoContent() {
                     <div className={`w-2 h-2 flex-shrink-0 rounded-full ring-1 ring-white/10 ${STATUS_COR[lead.estagio] || "bg-gray-500"}`} />
                     <span className="text-zinc-100 text-xs font-semibold truncate">{lead.nome}</span>
                   </div>
-                  <span className="text-zinc-600 text-[10px] flex-shrink-0 ml-1 tabular-nums">{rel(lead.criado_em)}</span>
+                  <span className="text-zinc-400 text-[10px] flex-shrink-0 ml-1 tabular-nums">{rel(lead.criado_em)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-600 text-[10px] uppercase tracking-wide truncate mr-2">
+                  <span className="text-zinc-400 text-[10px] uppercase tracking-wide truncate mr-2">
                     {ORIGEM_LABEL[lead.origem] || lead.origem}
                     {lead.ultimo_contato ? ` · ${rel(lead.ultimo_contato)}` : ""}
                   </span>
@@ -820,7 +818,7 @@ function AtendimentoContent() {
               {carregandoMensagens && mensagens.length === 0 && !mensagensLoadError && (
                 <div className="flex flex-col items-center justify-center h-32 gap-2">
                   <div className="w-5 h-5 border-2 border-[#1d3a2c] border-t-[#c9a24a] rounded-full animate-spin" />
-                  <span className="text-zinc-600 text-xs">Carregando mensagens…</span>
+                  <span className="text-zinc-400 text-xs">Carregando mensagens…</span>
                 </div>
               )}
               {!carregandoMensagens && !mensagensLoadError && mensagens.length === 0 && (
@@ -829,10 +827,10 @@ function AtendimentoContent() {
                     <MessageSquare size={18} strokeWidth={1.5} className="text-zinc-600" />
                   </div>
                   <div>
-                    <p className="text-zinc-500 text-sm font-medium">Sem mensagens nesta conversa</p>
-                    <p className="text-zinc-700 text-[11px] mt-1 leading-relaxed">
-                      Mensagens anteriores ao sistema de histórico não foram preservadas.<br/>
-                      Novas mensagens aparecerão aqui em tempo real.
+                    <p className="text-zinc-300 text-sm font-medium">Conversa pronta para começar</p>
+                    <p className="text-zinc-400 text-[12px] mt-1 leading-relaxed">
+                      Ainda não há mensagens neste histórico.<br/>
+                      As novas aparecem aqui em tempo real.
                     </p>
                   </div>
                 </div>
@@ -958,7 +956,7 @@ function AtendimentoContent() {
 
                         {/* Hora (só no último do grupo) */}
                         {isLastInGroup && (
-                          <span className="text-zinc-700 text-[10px] tabular-nums mt-0.5 px-1">{fmtHora(msg.criado_em)}</span>
+                          <span className="text-zinc-400 text-[10px] tabular-nums mt-0.5 px-1">{fmtHora(msg.criado_em)}</span>
                         )}
                       </div>
 
