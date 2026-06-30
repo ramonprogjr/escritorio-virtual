@@ -31,6 +31,49 @@ async function registrarDecisao(
   }
 }
 
+/**
+ * Postgres: a função/RPC ainda não existe no schema (migração E7b não aplicada). PostgREST devolve
+ * 42883 (undefined_function) e/ou uma mensagem "function ... does not exist" / "could not find the
+ * function". Detectamos pelos dois sinais para tolerar diferentes versões do PostgREST.
+ */
+function isMissingPgFunction(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  if (err.code === "42883" || err.code === "PGRST202") return true;
+  const m = (err.message || "").toLowerCase();
+  return (
+    (m.includes("function") && (m.includes("does not exist") || m.includes("could not find"))) ||
+    m.includes("schema cache")
+  );
+}
+
+/**
+ * E7c (Fase 3a — decisão #1): copia o snapshot de custo dos orçamentos APROVADOS da frente para o
+ * item-mãe, via rpc_snapshot_custo_frente (E7b). TOLERANTE: se a função ainda não existe (migração
+ * E7b pendente), ignora silenciosamente — a aprovação JAMAIS quebra por causa do snapshot de custo.
+ * tenant_id é sempre o da sessão (já validado em aprovar()). Qualquer outro erro também é tolerado
+ * (apenas logado): o snapshot é um efeito secundário do gate, nunca um bloqueador do dinheiro.
+ */
+async function snapshotCustoFrenteTolerante(
+  db: ReturnType<typeof supabase>,
+  obraId: string,
+  frenteId: string | null,
+  tenant: string
+): Promise<void> {
+  try {
+    const { error } = await db.rpc("rpc_snapshot_custo_frente", {
+      p_obra_id: obraId,
+      p_frente_id: frenteId,
+      p_tenant_id: tenant,
+    });
+    if (error && !isMissingPgFunction(error)) {
+      console.warn("[APROVAÇÕES] snapshot de custo falhou (ignorado, não bloqueia):", error.message);
+    }
+  } catch (e) {
+    // Falha de rede/qualquer exceção: o snapshot é best-effort. A aprovação já foi gravada.
+    console.warn("[APROVAÇÕES] snapshot de custo lançou exceção (ignorado):", e);
+  }
+}
+
 export type TipoAprovacao =
   | "proposta"
   | "campanha"
@@ -398,6 +441,17 @@ async function executarAcaoAprovada(
         p_aprovacao_id: aprovacao.id as string,
         p_tenant_id: tenantId,
       });
+
+      // E7c (Fase 3a — decisão #1): DEPOIS de aprovar, COPIA o snapshot de custo da versão aprovada
+      // para o item-mãe (hub_obra_itens), via a rpc_snapshot_custo_frente de E7b. Função SEPARADA da
+      // de aprovação (não colide): a de E6 aprova+libera; esta só materializa o custo no item.
+      // TOLERÂNCIA: a função só existe após a migração E7b → se "function does not exist", ignora
+      // silenciosamente (a aprovação NÃO pode quebrar por causa do snapshot). tenant_id sempre.
+      const obraId = dados.obra_id as string | undefined;
+      const frenteId = (dados.frente_id as string | undefined) ?? null;
+      if (obraId) {
+        await snapshotCustoFrenteTolerante(db, obraId, frenteId, tenantId);
+      }
     }
   }
 

@@ -1,7 +1,83 @@
 {
-  "geradoEm": "2026-06-29T21:10:27.986Z",
+  "geradoEm": "2026-06-29T22:10:52.894Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "f8fd7dddc0dc748c4f8cb5eba8e1a79a3b30354a",
+      "hashCurto": "f8fd7dd",
+      "mensagem": "Fase 2 — ArvoreEscopo (planilha viva) + aba Escopo + endpoint + E7b (auditada)",
+      "mensagemRaw": "feat(escopo): Fase 2 — ArvoreEscopo (planilha viva) + aba Escopo + endpoint + E7b (auditada)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T22:10:09.000Z",
+      "hora": "19:10",
+      "arquivos": [
+        "app/api/crm/obras/[id]/escopo/route.ts",
+        "app/api/crm/obras/[id]/itens/route.test.ts",
+        "app/api/crm/obras/[id]/itens/route.ts",
+        "app/api/crm/obras/[id]/route.ts",
+        "app/crm/obras/[id]/page.tsx",
+        "components/crm/obras/ArvoreEscopo.tsx",
+        "lib/obras/e7-item-escopo.test.ts",
+        "lib/obras/escopo.test.ts",
+        "lib/obras/escopo.ts",
+        "lib/obras/persona-escopo.test.ts",
+        "lib/obras/persona-escopo.ts",
+        "supabase/migrations/20260816120000_e7b_status_escopo_e_aprovar.sql"
+      ],
+      "areas": {
+        "app/api": 4,
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 5,
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "2916f1d7988d1d5f0e9fcd8f475adbc1533ccf62",
+      "hashCurto": "2916f1d",
+      "mensagem": "Groq como 3º provedor fallback (copiloto + llm-completion)",
+      "mensagemRaw": "feat(ia): Groq como 3º provedor fallback (copiloto + llm-completion)",
+      "autor": "Obra10+",
+      "dataIso": "2026-06-29T21:40:24.000Z",
+      "hora": "18:40",
+      "arquivos": [
+        "app/api/copiloto/interpretar/route.ts",
+        "lib/ia/groq-chat.ts",
+        "lib/ia/llm-completion.ts",
+        "render.yaml"
+      ],
+      "areas": {
+        "app/api": 1,
+        "outros": 3
+      }
+    },
+    {
+      "hash": "2abf703e6926d6c433f54811b295a360f2749223",
+      "hashCurto": "2abf703",
+      "mensagem": "fundação da estrutura unificada — Fase 0 (elo E2↔E6) + E7 item-escopo (arquivo)",
+      "mensagemRaw": "feat(escopo): fundação da estrutura unificada — Fase 0 (elo E2↔E6) + E7 item-escopo (arquivo)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-29T21:11:17.000Z",
+      "hora": "18:11",
+      "arquivos": [
+        "app/api/crm/obras/[id]/financeiro/route.ts",
+        "app/api/crm/obras/[id]/itens/route.ts",
+        "app/api/crm/projetos/[id]/gerar-obra/route.ts",
+        "docs/ESTRUTURA-UNIFICADA-OPERACAO-DESIGN.md",
+        "docs/insumos-do-dono/ANALISE-planilha-orcamento-dono.md",
+        "docs/insumos-do-dono/INDICE.md",
+        "docs/insumos-do-dono/estrutura-unificada-orcamento-cronograma-escopo.md",
+        "lib/ia/aprovacoes.ts",
+        "lib/obras/criar-obra-com-eap.ts",
+        "lib/obras/eap-presets.ts",
+        "supabase/migrations/20260815120000_e7_item_escopo_unificado.sql"
+      ],
+      "areas": {
+        "app/api": 3,
+        "outros": 7,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "6a26c0c4fa5840c872b77932e662d48346239185",
       "hashCurto": "6a26c0c",

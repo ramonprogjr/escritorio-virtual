@@ -79,12 +79,40 @@ export async function PATCH(
     if (tipo === "orcamento_frente") {
       const orcId = dados.orcamento_id as string | undefined;
       if (orcId) {
-        const { data: rpc } = await supabase.rpc("rpc_aprovar_orcamento_frente", {
+        // HONESTIDADE (Fase 3a — caminho do DINHEIRO): a RPC de APROVAÇÃO não pode ser engolida.
+        // Se ela falhar (constraint/timeout/db), NÃO retornamos ok:true sobre dinheiro não liberado.
+        const { data: rpc, error: errRpc } = await supabase.rpc("rpc_aprovar_orcamento_frente", {
           p_orcamento_id: orcId,
           p_aprovacao_id: id,
           p_tenant_id: ctx.tenantId,
         });
+        if (errRpc) {
+          return NextResponse.json(
+            { ok: false, erro: `Falha ao liberar o orçamento da frente: ${errRpc.message}` },
+            { status: 500 }
+          );
+        }
         escrow = { gate: "orcamento_frente", resultado: rpc };
+
+        // E7c (decisão #1): DEPOIS de aprovar, copia o snapshot de custo da versão aprovada para o
+        // item-mãe (rpc_snapshot_custo_frente de E7b). TOLERANTE: a função só existe após a migração
+        // E7b → se "function does not exist" (ou qualquer erro), ignora; a aprovação não pode quebrar.
+        const obraId =
+          (dados.obra_id as string | undefined) ??
+          (aprovacaoRow.obra_id as string | undefined) ??
+          undefined;
+        const frenteId = (dados.frente_id as string | undefined) ?? null;
+        if (obraId) {
+          const { error: snapErr } = await supabase.rpc("rpc_snapshot_custo_frente", {
+            p_obra_id: obraId,
+            p_frente_id: frenteId,
+            p_tenant_id: ctx.tenantId,
+          });
+          if (snapErr) {
+            // best-effort: 42883/PGRST202/"function does not exist" = migração E7b pendente.
+            console.warn("[APROVAÇÕES] snapshot de custo ignorado (não bloqueia):", snapErr.message);
+          }
+        }
       }
     }
 
@@ -92,10 +120,17 @@ export async function PATCH(
     if (tipo === "pagamento_obra_arq" || tipo === "pagamento_obra_hub") {
       const pagamentoId = dados.pagamento_id as string | undefined;
       if (pagamentoId) {
-        const { data: rpc } = await supabase.rpc("rpc_liberar_escrow", {
+        // HONESTIDADE (Fase 3a): a RPC de liberação do escrow MOVE dinheiro. Se falhar, não fingir ok:true.
+        const { data: rpc, error: errRpc } = await supabase.rpc("rpc_liberar_escrow", {
           p_pagamento_id: pagamentoId,
           p_tenant_id: ctx.tenantId,
         });
+        if (errRpc) {
+          return NextResponse.json(
+            { ok: false, erro: `Falha ao liberar o escrow: ${errRpc.message}` },
+            { status: 500 }
+          );
+        }
         escrow = { gate: "pagamento_obra", resultado: rpc };
       }
     }
