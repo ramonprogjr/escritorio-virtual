@@ -363,7 +363,7 @@ export default function DistribuicaoPage() {
                         <div style={{ height: 4, borderRadius: 2, background: "#16271e", overflow: "hidden", marginTop: 3 }}>
                           <div style={{ width: `${f.aderencia}%`, height: "100%", background: corA }} />
                         </div>
-                        <p style={{ margin: "2px 0 0", fontSize: 9, color: "#6e7681", textTransform: "uppercase" }}>aderência</p>
+                        <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8b949e", textTransform: "uppercase" }}>aderência</p>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 70 }}>
                         {f.status_financeiro === "bloqueado" && (

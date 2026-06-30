@@ -125,9 +125,24 @@ export default function TrafegoPage() {
       {/* Campanhas */}
       <div className="flex-1 overflow-y-auto p-5">
         {loading && (
-          <div className="flex items-center justify-center h-48">
-            <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: "#1d3a2c", borderTopColor: "#c9a24a" }} />
-          </div>
+          <ul className="space-y-3" aria-hidden>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li
+                key={i}
+                className="animate-pulse rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4"
+              >
+                <div className="mb-3 h-3.5 w-2/5 rounded bg-[#16271e]" />
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {[0, 1, 2, 3].map((j) => (
+                    <div key={j}>
+                      <div className="mb-1.5 h-2.5 w-12 rounded bg-[#16271e]" />
+                      <div className="h-3 w-16 rounded bg-[#16271e]" />
+                    </div>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
 
         {!loading && erro && (

@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-30T04:27:23.688Z",
+  "geradoEm": "2026-06-30T04:42:18.136Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "0f37a9cd94c8e060e8474719881b5d760e548fcf",
+      "hashCurto": "0f37a9c",
+      "mensagem": "Domínio B (Cadastros) — UX + contatos com guard de tenant (A3-A9)",
+      "mensagemRaw": "fix(e2e): Domínio B (Cadastros) — UX + contatos com guard de tenant (A3-A9)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T04:42:07.000Z",
+      "hora": "01:42",
+      "arquivos": [
+        "app/api/crm/contatos/[id]/route.ts",
+        "app/api/crm/contatos/route.ts",
+        "app/crm/cadastro/page.tsx",
+        "app/crm/contatos/page.tsx",
+        "app/crm/empresas/page.tsx",
+        "app/crm/especialistas/page.tsx",
+        "components/crm/cadastro/CadastroContactoSideover.tsx",
+        "components/crm/cadastro/CadastroWizard.tsx",
+        "supabase/migrations/20260630120000_contatos_tenant_rls.sql"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 4,
+        "components/crm": 2,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "032c5bd61224f1335dc4f8ad007d9576c182b6d2",
       "hashCurto": "032c5bd",
@@ -6463,40 +6489,6 @@
       ],
       "areas": {
         "outros": 2
-      }
-    },
-    {
-      "hash": "c256890940ce5a065aafb8d5408644c97718a88e",
-      "hashCurto": "c256890",
-      "mensagem": "Bloco B achado — CRM data layer 500/503 por SUPABASE_SERVICE_ROLE_KEY vazia",
-      "mensagemRaw": "docs(maratona): Bloco B achado — CRM data layer 500/503 por SUPABASE_SERVICE_ROLE_KEY vazia",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T04:38:00.000Z",
-      "hora": "01:38",
-      "arquivos": [
-        ".gitignore",
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 2
-      }
-    },
-    {
-      "hash": "ce8e1d0f022061c4dab9f34cb2730185171d80e7",
-      "hashCurto": "ce8e1d0",
-      "mensagem": "Bloco A — fundacao de trabalho (STATUS, PROPOSTA, _chk23, _publicar)",
-      "mensagemRaw": "chore(maratona): Bloco A — fundacao de trabalho (STATUS, PROPOSTA, _chk23, _publicar)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T04:31:39.000Z",
-      "hora": "01:31",
-      "arquivos": [
-        "_publicar.ps1",
-        "app/_chk23.js",
-        "docs/PROPOSTA_CONJUNTA.md",
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 4
       }
     }
   ]

@@ -439,9 +439,19 @@ export default function LeadsPage() {
 
   async function adicionarNota() {
     if (!detalhe || !novaNota.trim()) return;
-    const { data } = await supabase.from("hub_notas").insert({ lead_id: detalhe.id, conteudo: novaNota.trim(), criado_por: "humano" }).select().single();
-    if (data) setNotas(prev => [data as Nota, ...prev]);
-    await supabase.from("hub_atividades").insert({ lead_id: detalhe.id, tipo: "nota", descricao: novaNota.trim().slice(0, 80), feito_por: "humano", feito_por_tipo: "humano" });
+    // Grava pela API guardada (requireCrmComercial + tenant) — nunca insert anon órfão.
+    const res = await fetch(`/api/crm/leads/${encodeURIComponent(detalhe.id)}/nota`, {
+      method: "POST",
+      credentials: "include",
+      headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ descricao: novaNota.trim() }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      mostrarErroAcao(typeof json?.error === "string" ? json.error : "Não foi possível salvar a nota.");
+      return;
+    }
+    if (json?.data) setNotas(prev => [json.data as Nota, ...prev]);
     setNovaNota("");
   }
 
@@ -716,7 +726,7 @@ export default function LeadsPage() {
                   </span>
                 </div>
                 {lane.leads.length === 0 ? (
-                  <p className="px-1 pb-1 text-xs text-[#484f58]">Nada aqui — bom sinal.</p>
+                  <p className="px-1 pb-1 text-xs text-[#8b949e]">Nada aqui — bom sinal.</p>
                 ) : (
                   <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                     {visiveis.map((lead) => {
@@ -898,7 +908,7 @@ export default function LeadsPage() {
                         }
                       />
                     ))}
-                    {col.length === 0 && <p className="py-4 text-center text-xs text-[#484f58]">vazio</p>}
+                    {col.length === 0 && <p className="py-4 text-center text-xs text-[#8b949e]">vazio</p>}
                   </div>
                 </div>
               );
@@ -1004,13 +1014,13 @@ export default function LeadsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[#8b949e] text-xs">{lead.agente_responsavel || "—"}</td>
-                      <td className="px-4 py-3 text-[#484f58] text-xs">{tempo(lead.atualizado_em)}</td>
+                      <td className="px-4 py-3 text-[#8b949e] text-xs">{tempo(lead.atualizado_em)}</td>
                       <td className="px-4 py-3"><button type="button" onClick={(e) => { e.stopPropagation(); router.push(`/crm/leads/${lead.id}`); }} className="text-[#c9a24a] hover:text-[#e0b86a] text-xs">Ver →</button></td>
                     </tr>
                   );
                 })}
                 {filtrados.length === 0 && (
-                  <tr><td colSpan={8} className="px-4 py-12 text-center text-[#484f58] text-sm">Nenhum lead encontrado</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-12 text-center text-[#8b949e] text-sm">Nenhum lead encontrado</td></tr>
                 )}
               </tbody>
             </table>

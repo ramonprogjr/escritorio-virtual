@@ -196,14 +196,14 @@ export function LeadKanbanCard({
                   {ORIGENS_LABEL[lead.origem] || lead.origem}
                 </span>
               ) : null}
-              <span style={{ color: "#64748b", fontSize: 10, fontWeight: 600 }}>
+              <span style={{ color: "#8b949e", fontSize: 11, fontWeight: 600 }}>
                 {tempo(lead.atualizado_em)}
               </span>
               {fr ? (
                 <span
                   title={`SLA de resposta: ${fr.label}`}
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: 800,
                     padding: "2px 6px",
                     borderRadius: 999,
@@ -282,7 +282,7 @@ export function LeadKanbanCard({
           <p
             style={{
               margin: "0 0 8px",
-              fontSize: 10,
+              fontSize: 11,
               fontFamily: "ui-monospace, monospace",
               color: "rgba(201, 162, 74, 0.92)",
               whiteSpace: "nowrap",
@@ -324,8 +324,8 @@ export function LeadKanbanCard({
             </div>
             <div
               style={{
-                color: lead.score >= 70 ? "#86efac" : "#94a3b8",
-                fontSize: 10,
+                color: lead.score >= 70 ? "#86efac" : "#a9c6b6",
+                fontSize: 11,
                 fontWeight: 700,
                 whiteSpace: "nowrap",
                 overflow: "hidden",
@@ -364,8 +364,8 @@ export function LeadKanbanCard({
             <p
               style={{
                 margin: 0,
-                color: "#94a3b8",
-                fontSize: 10,
+                color: "#a9c6b6",
+                fontSize: 11,
                 fontWeight: 600,
               }}
             >

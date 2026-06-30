@@ -17,19 +17,35 @@ export async function POST(request: NextRequest, { params }: Params) {
   const descricao = String(body.descricao || "").trim();
   if (!descricao) return NextResponse.json({ error: "Escreva a nota." }, { status: 400 });
 
-  const { data, error } = await crmDb()
-    .from("hub_atividades")
+  const supabase = crmDb();
+  const tenantId = g.ctx.tenantId;
+
+  // Nota completa para o painel de notas do lead (hub_notas) — com tenant.
+  const { data: nota, error: notaErr } = await supabase
+    .from("hub_notas")
     .insert({
       lead_id: id,
-      tipo: "nota",
-      descricao: descricao.slice(0, 2000),
-      feito_por: "humano",
-      feito_por_tipo: "humano",
-      tenant_id: g.ctx.tenantId,
+      conteudo: descricao.slice(0, 2000),
+      criado_por: "humano",
+      tenant_id: tenantId,
     })
-    .select("id, tipo, descricao, criado_em")
+    .select("id, conteudo, criado_por, criado_em")
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ data }, { status: 201 });
+  if (notaErr) return NextResponse.json({ error: notaErr.message }, { status: 500 });
+
+  // Espelho na timeline (hub_atividades) — KPI-ready; falha aqui não derruba a nota.
+  const { error: atvErr } = await supabase.from("hub_atividades").insert({
+    lead_id: id,
+    tipo: "nota",
+    descricao: descricao.slice(0, 80),
+    feito_por: "humano",
+    feito_por_tipo: "humano",
+    tenant_id: tenantId,
+  });
+  if (atvErr) {
+    console.error("[leads/nota] atividade falhou (nota gravada):", atvErr.message);
+  }
+
+  return NextResponse.json({ data: nota }, { status: 201 });
 }

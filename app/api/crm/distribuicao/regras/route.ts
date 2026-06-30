@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
-import { defaultTenantId, tenantIdFromRequest } from "@/lib/tenant-default";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 /** Regras de roteamento automático de leads (configuráveis). */
@@ -8,14 +8,17 @@ const SELECT =
   "id, prioridade, ativo, origem, mercado, uf, destino_tipo, destino_valor, rotulo, criado_em";
 
 export async function GET(request: NextRequest) {
+  // Tenant vem da sessão do gestor (não de header forjável) — isolamento real.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const tenantId = tenantIdFromRequest(request.headers) || defaultTenantId();
   const { data, error } = await crmDb()
     .from("hub_lead_routing_regras")
     .select(SELECT)
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("prioridade", { ascending: true })
     .order("criado_em", { ascending: true });
 

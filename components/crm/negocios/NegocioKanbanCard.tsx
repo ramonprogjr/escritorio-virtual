@@ -168,7 +168,7 @@ export function NegocioKanbanCard({
               >
                 {negocio.status.replace(/_/g, " ")}
               </span>
-              <span style={{ color: "#64748b", fontSize: 10, fontWeight: 600 }}>
+              <span style={{ color: "#8b949e", fontSize: 11, fontWeight: 600 }}>
                 {tempo(negocio.criado_em)}
               </span>
             </div>
@@ -224,7 +224,7 @@ export function NegocioKanbanCard({
         <p
           style={{
             margin: "0 0 8px",
-            fontSize: 10,
+            fontSize: 11,
             fontFamily: "ui-monospace, monospace",
             color: "rgba(201, 162, 74, 0.92)",
           }}
@@ -264,14 +264,14 @@ export function NegocioKanbanCard({
               title={negocio.proxima_acao}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <p style={{ margin: 0, flex: 1, color: "#94a3b8", fontSize: 10, fontWeight: 600 }}>Próxima ação</p>
+                <p style={{ margin: 0, flex: 1, color: "#a9c6b6", fontSize: 11, fontWeight: 600 }}>Próxima ação</p>
                 {quando ? (
                   <span
                     style={{
                       flexShrink: 0,
                       borderRadius: 999,
                       padding: "1px 7px",
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: 700,
                       background: `${cor}22`,
                       color: cor,
