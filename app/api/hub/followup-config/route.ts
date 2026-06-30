@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { HubFollowupConfigLite } from "@/lib/hub-ciclos-configuracoes";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -9,7 +10,8 @@ function db() {
   );
 }
 
-export async function GET() {
+/** Leitura interna reutilizada por GET e PATCH (após auth já validado). */
+async function fetchRows(): Promise<NextResponse> {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
@@ -38,7 +40,17 @@ export async function GET() {
   return NextResponse.json({ rows });
 }
 
-export async function PATCH(request: Request) {
+export async function GET(request: NextRequest) {
+  const gestor = await requireCrmGestor(request);
+  if ("error" in gestor) return gestor.error;
+
+  return fetchRows();
+}
+
+export async function PATCH(request: NextRequest) {
+  const gestor = await requireCrmGestor(request);
+  if ("error" in gestor) return gestor.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
@@ -63,5 +75,5 @@ export async function PATCH(request: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return GET();
+  return fetchRows();
 }

@@ -55,7 +55,7 @@ function statusBadge(status: string) {
   const ativo = status.trim().toLowerCase() === "ativo";
   return (
     <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
         ativo ? "bg-[#23863633] text-[#3fb950]" : "bg-[#f8514922] text-[#ff7b72]"
       }`}
     >
@@ -331,7 +331,7 @@ export default function UsuariosPage() {
                         )}
                       </button>
                     ) : (
-                      <span className="text-[10px] text-[#484f58]">—</span>
+                      <span className="text-[11px] text-[#484f58]">—</span>
                     )}
                   </div>
                 </li>
@@ -341,7 +341,7 @@ export default function UsuariosPage() {
         ) : (
           <div className="overflow-x-auto rounded-xl border border-[#1d3a2c]">
             <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-[#0f1d16] text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+              <thead className="bg-[#0f1d16] text-[11px] font-bold uppercase tracking-wide text-[#8b949e]">
                 <tr>
                   <th className="px-3 py-2">Nome</th>
                   <th className="px-3 py-2">E-mail</th>
@@ -388,7 +388,7 @@ export default function UsuariosPage() {
                           <button
                             type="button"
                             onClick={() => void alternarStatus(u)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 py-1 text-[10px] font-semibold text-[#8b949e] hover:text-[#e6edf3]"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2 py-1 text-[11px] font-semibold text-[#8b949e] hover:text-[#e6edf3]"
                           >
                             {u.status.trim().toLowerCase() === "ativo" ? (
                               <>
@@ -403,7 +403,7 @@ export default function UsuariosPage() {
                             )}
                           </button>
                         ) : (
-                          <span className="text-[10px] text-[#484f58]">—</span>
+                          <span className="text-[11px] text-[#484f58]">—</span>
                         )}
                       </td>
                     </tr>

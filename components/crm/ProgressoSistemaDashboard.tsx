@@ -430,15 +430,7 @@ function RelatorioDoDiaSection() {
         >
           Pré-visualizar JSON
         </button>
-        <a
-          href="https://wa.me/5511950864013"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg border px-4 py-2 text-xs text-[#3fb950] hover:border-[#22c55e55]"
-          style={{ borderColor: "#1d3a2c" }}
-        >
-          WhatsApp Nice
-        </a>
+        {/* Contato interno removido do bundle — não expor PII em produção */}
       </div>
       {erro ? <p className="mt-2 text-xs text-[#f87171]">{erro}</p> : null}
       {preview ? (

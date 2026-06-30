@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
-import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 /**
  * Contatos de notificação (quem recebe alertas de novo lead / aprovação / encaminhamento).
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await crmDb()
     .from("hub_contatos_notificacao")
     .select(SELECT)
-    .or(tenantScopeOrFilter(g.ctx.tenantId))
+    .eq("tenant_id", g.ctx.tenantId)
     .order("nome", { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -24,7 +24,7 @@ function Toggle({ ativo, onChange }: { ativo: boolean; onChange: () => void }) {
     <button onClick={onChange}
       style={{
         width: 38, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
-        background: ativo ? "#34d399" : "#1d3a2c", position: "relative", transition: "background 200ms",
+        background: ativo ? "#34d399" : "var(--obra-borda)", position: "relative", transition: "background 200ms",
         padding: 0, flexShrink: 0,
       }}>
       <span style={{
@@ -160,8 +160,8 @@ export default function ContatosPage() {
 
   const INPUT = {
     width: "100%", padding: "11px 13px", borderRadius: 10,
-    border: "1px solid #1d3a2c", background: "#0a140f",
-    color: "#e6edf3", fontSize: 14, boxSizing: "border-box" as const,
+    border: "1px solid var(--obra-borda)", background: "var(--obra-dark)",
+    color: "var(--obra-texto)", fontSize: 14, boxSizing: "border-box" as const,
   };
 
   useEffect(() => {
@@ -179,8 +179,8 @@ export default function ContatosPage() {
             borderRadius: 10,
             border: "none",
             cursor: "pointer",
-            background: "#c9a24a",
-            color: "#0a140f",
+            background: "var(--obra-dourado)",
+            color: "var(--obra-dark)",
             fontWeight: 800,
             fontSize: 13,
           }}
@@ -193,35 +193,35 @@ export default function ContatosPage() {
   }, [pathname, setSlot, mostraNovo]);
 
   return (
-    <div style={{ background: "#0a140f", minHeight: "100%", padding: "1.5rem" }}>
+    <div style={{ background: "var(--obra-dark)", minHeight: "100%", padding: "1.5rem" }}>
       {mostraNovo && (
-        <div style={{ background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 14, padding: 18, marginBottom: 20 }}>
-          <h2 style={{ color: "#e6edf3", fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>
+        <div style={{ background: "var(--obra-dark-2)", border: "1px solid var(--obra-borda)", borderRadius: 14, padding: 18, marginBottom: 20 }}>
+          <h2 style={{ color: "var(--obra-texto)", fontSize: 15, fontWeight: 700, margin: "0 0 14px" }}>
             {editando ? "Editar contato" : "Novo contato"}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
-                <label style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Nome *</label>
+                <label style={{ color: "var(--obra-texto-2)", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Nome *</label>
                 <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Nome" style={INPUT} />
               </div>
               <div>
-                <label style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Telefone *</label>
+                <label style={{ color: "var(--obra-texto-2)", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Telefone *</label>
                 <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: formatarTelefoneMascara(e.target.value) }))} placeholder="(11) 99999-9999" style={INPUT} />
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
-                <label style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>E-mail</label>
+                <label style={{ color: "var(--obra-texto-2)", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>E-mail</label>
                 <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@ex.com" type="email" style={INPUT} />
               </div>
               <div>
-                <label style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Cargo</label>
+                <label style={{ color: "var(--obra-texto-2)", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Cargo</label>
                 <input value={form.cargo} onChange={e => setForm(f => ({ ...f, cargo: e.target.value }))} placeholder="Ex: Gestor" style={INPUT} />
               </div>
             </div>
             <div>
-              <label style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Canal de notificação</label>
+              <label style={{ color: "var(--obra-texto-2)", fontSize: 11, fontWeight: 600, display: "block", marginBottom: 5 }}>Canal de notificação</label>
               <select value={form.canal} onChange={e => setForm(f => ({ ...f, canal: e.target.value }))} style={INPUT}>
                 <option value="whatsapp">WhatsApp</option>
                 <option value="email">E-mail</option>
@@ -229,25 +229,25 @@ export default function ContatosPage() {
               </select>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <p style={{ color: "#8b949e", fontSize: 11, fontWeight: 600, margin: 0 }}>Recebe notificações de:</p>
+              <p style={{ color: "var(--obra-texto-2)", fontSize: 11, fontWeight: 600, margin: 0 }}>Recebe notificações de:</p>
               {([
                 ["receber_novo_lead", "Novo lead"],
                 ["receber_aprovacao", "Aprovação pendente"],
                 ["receber_encaminhamento", "Encaminhamento"],
               ] as const).map(([key, label]) => (
                 <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "#e6edf3", fontSize: 13 }}>{label}</span>
+                  <span style={{ color: "var(--obra-texto)", fontSize: 13 }}>{label}</span>
                   <Toggle ativo={form[key]} onChange={() => setForm(f => ({ ...f, [key]: !f[key] }))} />
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button onClick={() => { resetForm(); setMostraNovo(false); }}
-                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #1d3a2c", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 13 }}>
+                style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid var(--obra-borda)", cursor: "pointer", background: "transparent", color: "var(--obra-texto-2)", fontSize: 13 }}>
                 Cancelar
               </button>
               <button onClick={salvar} disabled={salvando || !form.nome || !form.telefone}
-                style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", background: "#c9a24a", color: "#0a140f", fontWeight: 700, fontSize: 13, opacity: (!form.nome || !form.telefone) ? 0.5 : 1 }}>
+                style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", background: "var(--obra-dourado)", color: "var(--obra-dark)", fontWeight: 700, fontSize: 13, opacity: (!form.nome || !form.telefone) ? 0.5 : 1 }}>
                 {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Adicionar contato"}
               </button>
             </div>
@@ -256,29 +256,29 @@ export default function ContatosPage() {
       )}
 
       {loading ? (
-        <div style={{ textAlign: "center", color: "#8b949e", padding: 40 }}>Carregando...</div>
+        <div style={{ textAlign: "center", color: "var(--obra-texto-2)", padding: 40 }}>Carregando...</div>
       ) : contatos.length === 0 ? (
         <div style={{ textAlign: "center", padding: 60 }}>
-          <p style={{ color: "#8b949e" }}>Nenhum contato configurado.</p>
-          <p style={{ color: "#484f58", fontSize: 12 }}>Adicione quem deve receber alertas de leads e aprovações.</p>
+          <p style={{ color: "var(--obra-texto-2)" }}>Nenhum contato configurado.</p>
+          <p style={{ color: "var(--obra-texto-3)", fontSize: 12 }}>Adicione quem deve receber alertas de leads e aprovações.</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {contatos.map(c => (
             <div key={c.id}
               style={{
-                background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 14, padding: 16,
+                background: "var(--obra-dark-2)", border: "1px solid var(--obra-borda)", borderRadius: 14, padding: 16,
                 opacity: c.ativo ? 1 : 0.5,
               }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <div>
-                  <p style={{ color: "#e6edf3", fontWeight: 700, fontSize: 14, margin: 0 }}>{c.nome}</p>
-                  <p style={{ color: "#8b949e", fontSize: 12, margin: "2px 0 0" }}>
+                  <p style={{ color: "var(--obra-texto)", fontWeight: 700, fontSize: 14, margin: 0 }}>{c.nome}</p>
+                  <p style={{ color: "var(--obra-texto-2)", fontSize: 12, margin: "2px 0 0" }}>
                     {c.cargo ? `${c.cargo} · ` : ""}{c.telefone}
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "#1d3a2c40", color: "#8b949e" }}>
+                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "var(--obra-dourado-glow)", color: "var(--obra-texto-2)" }}>
                     {CANAL_LABEL[c.canal] || c.canal}
                   </span>
                   <Toggle ativo={c.ativo} onChange={() => toggleAtivo(c)} />
@@ -291,7 +291,7 @@ export default function ContatosPage() {
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => iniciarEdicao(c)}
-                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid #1d3a2c", cursor: "pointer", background: "transparent", color: "#8b949e", fontSize: 12 }}>
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid var(--obra-borda)", cursor: "pointer", background: "transparent", color: "var(--obra-texto-2)", fontSize: 12 }}>
                   Editar
                 </button>
                 <button onClick={() => remover(c.id)}
