@@ -7,6 +7,15 @@ import {
   insertParceiroLogCompat,
 } from "@/lib/crm/parceiro-compat";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import { checkPortalVerifyRateLimit } from "@/lib/portal-rate-limit";
+
+function clientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "unknown"
+  );
+}
 
 function db() {
   return createClient(
@@ -38,6 +47,16 @@ async function buscarParceiroDuplicadoPublico(
 }
 
 export async function POST(request: NextRequest) {
+  // Rate-limit: máx. 5 cadastros por IP a cada 15 minutos (H-SEC-2).
+  const ip = clientIp(request);
+  const rl = checkPortalVerifyRateLimit(`parceiro-signup:${ip}`, 5, 15 * 60 * 1000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { erro: "Muitas tentativas. Tente novamente mais tarde." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
+
   const supabase = db();
   const tenantId = defaultTenantId();
 

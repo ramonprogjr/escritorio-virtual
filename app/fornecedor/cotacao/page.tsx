@@ -138,12 +138,14 @@ export default function CotacaoFornecedorPage() {
         <input
           className="w-full mb-2 px-3 py-2 rounded bg-[#0d1117] border border-[#30363d] text-sm"
           placeholder="Título"
+          aria-label="Título do pedido"
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
         />
         <textarea
           className="w-full mb-2 px-3 py-2 rounded bg-[#0d1117] border border-[#30363d] text-sm min-h-[80px]"
           placeholder="Descrição / especificação"
+          aria-label="Descrição / especificação do pedido"
           value={descricao}
           onChange={(e) => setDescricao(e.target.value)}
         />
@@ -184,18 +186,21 @@ export default function CotacaoFornecedorPage() {
             <input
               className="w-full mb-2 px-3 py-2 rounded bg-[#0d1117] border border-[#30363d] text-sm"
               placeholder="Nome do fornecedor"
+              aria-label="Nome do fornecedor"
               value={fnome}
               onChange={(e) => setFnome(e.target.value)}
             />
             <input
               className="w-full mb-2 px-3 py-2 rounded bg-[#0d1117] border border-[#30363d] text-sm"
               placeholder="Valor total (R$)"
+              aria-label="Valor total em reais"
               value={fvalor}
               onChange={(e) => setFvalor(e.target.value)}
             />
             <input
               className="w-full mb-2 px-3 py-2 rounded bg-[#0d1117] border border-[#30363d] text-sm"
               placeholder="Prazo (dias)"
+              aria-label="Prazo em dias"
               value={fprazo}
               onChange={(e) => setFprazo(e.target.value)}
             />

@@ -47,8 +47,12 @@ export async function POST(request: NextRequest) {
   if (especialidades.length === 0)
     return NextResponse.json({ error: "Escolha ao menos uma especialidade" }, { status: 400 });
 
-  const por = String(body.por || "").trim();
-  const convidadoPor = UUID_RE.test(por) ? por : null;
+  // H-SEC-3: o parâmetro `por` (UUID do convidador) NÃO é autenticado —
+  // qualquer UUID arbitrário pode ser forjado no link público.
+  // Atribuição real requer link assinado com HMAC (como parceiro-portal.ts).
+  // Por ora, gravamos cadastrado_por=null para preservar integridade do rastreio.
+  // TODO(B3.9): derivar convidadoPor de token HMAC assinado no link de convite.
+  const convidadoPor: string | null = null;
 
   const cpf = String(body.cpf || "").replace(/\D/g, "") || null;
   if (cpf) {

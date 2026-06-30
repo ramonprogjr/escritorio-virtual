@@ -17,6 +17,9 @@ function isPublicApiPath(pathname: string): boolean {
   if (pathname.startsWith("/api/cron/")) return true;
   if (pathname.startsWith("/api/ml/ciclo")) return true;
   if (pathname === "/api/auth/crm-session") return true;
+  // Cadastro público de parceiro via link da rede — acesso anônimo intencional;
+  // rate-limit aplicado no próprio handler (H-SEC-2).
+  if (pathname === "/api/parceiro/cadastro-publico") return true;
   return false;
 }
 

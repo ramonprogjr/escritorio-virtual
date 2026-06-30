@@ -1,7 +1,36 @@
 {
-  "geradoEm": "2026-06-30T03:23:51.502Z",
+  "geradoEm": "2026-06-30T03:44:42.362Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "ed3db2a6d227f5075024e0f6edc8dc860e114c78",
+      "hashCurto": "ed3db2a",
+      "mensagem": "E4 Cronograma + Curva-S (no peso do item) + R3 canonicalizar ambiente (auditada GO)",
+      "mensagemRaw": "feat(eng): E4 Cronograma + Curva-S (no peso do item) + R3 canonicalizar ambiente (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T03:44:28.000Z",
+      "hora": "00:44",
+      "arquivos": [
+        "app/api/crm/obras/[id]/cronograma/route.test.ts",
+        "app/api/crm/obras/[id]/cronograma/route.ts",
+        "app/api/crm/obras/[id]/itens/route.ts",
+        "app/crm/obras/[id]/page.tsx",
+        "components/crm/obras/ObraCronogramaSecao.tsx",
+        "docs/E2E-AUDITORIA-PLANO.md",
+        "lib/obras/cronograma.test.ts",
+        "lib/obras/cronograma.ts",
+        "lib/obras/escopo.test.ts",
+        "lib/obras/escopo.ts",
+        "supabase/migrations/20260820120000_e4_curva_s.sql"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 5,
+        "supabase/migrations": 1
+      }
+    },
     {
       "hash": "eccadfb56fab17d46bc04824798815260e8e9714",
       "hashCurto": "eccadfb",

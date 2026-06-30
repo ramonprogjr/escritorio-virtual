@@ -69,15 +69,15 @@ function FormConvite() {
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <input style={input} placeholder="Seu nome completo *" value={form.nome}
+        <input style={input} placeholder="Seu nome completo *" aria-label="Nome completo" value={form.nome}
           onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
-        <input style={input} placeholder="WhatsApp com DDD *" value={form.telefone}
+        <input style={input} placeholder="WhatsApp com DDD *" aria-label="WhatsApp com DDD" value={form.telefone}
           onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))} />
-        <input style={input} placeholder="CPF" value={form.cpf}
+        <input style={input} placeholder="CPF" aria-label="CPF" value={form.cpf}
           onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))} />
-        <input style={input} placeholder="Cidade" value={form.cidade}
+        <input style={input} placeholder="Cidade" aria-label="Cidade" value={form.cidade}
           onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
-        <select style={input} value={form.uf} onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))}>
+        <select style={input} aria-label="Estado (UF)" value={form.uf} onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))}>
           <option value="">Estado (UF)</option>
           {UFS.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
         </select>
@@ -107,7 +107,7 @@ function FormConvite() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <select style={input} value={form.experiencia} onChange={(e) => setForm((f) => ({ ...f, experiencia: e.target.value }))}>
+        <select style={input} aria-label="Tempo de experiência" value={form.experiencia} onChange={(e) => setForm((f) => ({ ...f, experiencia: e.target.value }))}>
           <option value="">Tempo de experiência</option>
           {EXPERIENCIAS.map((x) => <option key={x} value={x}>{x}</option>)}
         </select>

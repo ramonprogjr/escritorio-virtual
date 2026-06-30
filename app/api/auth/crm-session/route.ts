@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
           ? ` (${err.message})`
           : "";
       const msg = isNetworkishError(err)
-        ? `Não foi possível contactar o Supabase (rede ou certificado SSL).${hint} Em desenvolvimento local use \`npm run dev\` (workaround TLS no Node); se estiver a usar \`npm run dev:strict-tls\`, volte ao \`dev\`. Ver README.`
-        : `Falha ao validar a sessão com o fornecedor de autenticação.${hint}`;
+        ? `Não foi possível contatar o Supabase (rede ou certificado SSL).${hint} Em desenvolvimento local use \`npm run dev\` (workaround TLS no Node); se estiver usando \`npm run dev:strict-tls\`, volte ao \`dev\`. Ver README.`
+        : `Falha ao validar a sessão com o provedor de autenticação.${hint}`;
       return NextResponse.json({ error: msg }, { status: 502 });
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.error("[api/auth/crm-session] verify public.users:", err);
         return NextResponse.json(
-          { error: "Erro ao validar o perfil do utilizador na base de dados. Contacte o administrador." },
+          { error: "Erro ao validar o perfil do usuário na base de dados. Contate o administrador." },
           { status: 502 },
         );
       }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("[api/auth/crm-session] POST inesperado:", err);
     return NextResponse.json(
-      { error: "Erro interno ao concluir o login. Contacte o administrador." },
+      { error: "Erro interno ao concluir o login. Contate o administrador." },
       { status: 500 },
     );
   }
