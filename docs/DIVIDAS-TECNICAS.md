@@ -26,3 +26,11 @@
 
 ## Decisões de NEGÓCIO p/ o dono (não são dívida técnica — precisam dele)
 Comodato (condição de entrada?) · frete Lalamove (repasse vs spread) · KPIs iniciais do fornecedor · spread por modelo de contrato · qtd_padrão da taxonomia (adotei NULL/humano confirma) · política entregue-vs-aprovado no "Gerar Obra".
+
+## Fase 3a — ressalvas da auditoria (backlog)
+> Não-bloqueantes (veredito GO-com-ressalvas). Os 4 itens de higiene/honestidade JÁ foram corrigidos; estes ficam para o momento certo.
+- **(a) Foto da medição é `type=url` — falta upload nativo.** O `DrawerMedir` só aceita um link colado. A evidência fotográfica de CAMPO precisa de captura nativa: `<input type="file" accept="image/*" capture="environment">` + upload para o Supabase Storage (bucket de medições) → grava a URL pública/assinada em `foto_url`. Sem isso, na obra não há como tirar a foto na hora.
+- **(b) Histórico append-only sem UI.** O `GET /api/crm/obras/[id]/medicoes` (com `?item_id=`) já existe e devolve o histórico, mas NENHUMA tela consome. Falta uma seção "Medições do item" read-only (lista append-only: data, autor `criado_por`, qtd, pct resultante, foto, observação) — a prova visível do "nada-se-perde".
+- **(c) Snapshot de custo falha em silêncio (`console.warn`).** Em `app/api/aprovacoes/[id]/route.ts` e `lib/ia/aprovacoes.ts`, o `rpc_snapshot_custo_frente` é best-effort e, quando falha (ex.: E7b pendente), só loga no console. Registrar a falha em `hub_decision_logs` (ou tabela de reconciliação) para que o custo não-materializado seja conciliado depois — hoje some do radar se ninguém olhar o log do servidor.
+- **(d) `GET /medicoes` com `.limit(500)` sem paginação.** Obras longas com muitas medições truncam em 500 silenciosamente. Adicionar paginação (cursor por `criado_em`/`id`) quando a tela de histórico (b) for construída.
+- **(e) `CadastroPremiumSideover` herda cor azul Shadcn (#2d394b / #121a26).** O sideover usado pelo `DrawerMedir` (e outros) está fora da paleta da marca (verde + dourado Obra10+). Tokenizar para `--obra-*` / `--brand-*` no overhaul de design deferido.

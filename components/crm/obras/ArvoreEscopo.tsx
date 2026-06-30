@@ -34,8 +34,10 @@ import {
   TrendingUp,
   Coins,
   Activity,
+  Ruler,
 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
+import { DrawerMedir } from "@/components/crm/obras/DrawerMedir";
 import {
   LENTES,
   ROTULO_LENTE,
@@ -186,6 +188,9 @@ export function ArvoreEscopo({
     [ambientes]
   );
 
+  // Drawer "Medir" (E7c): item selecionado para medição formal. null = fechado.
+  const [itemMedir, setItemMedir] = useState<ItemEscopoCalc | null>(null);
+
   if (carregando) {
     return <p className="p-4 text-sm text-[#8b949e]">Carregando escopo…</p>;
   }
@@ -245,9 +250,19 @@ export function ArvoreEscopo({
             obraId={obraId}
             somenteLeitura={somenteLeitura}
             onSalvo={() => void carregar()}
+            onMedir={setItemMedir}
           />
         ))}
       </div>
+
+      {/* Drawer "Medir" (E7c): medição formal por item (append-only no servidor). */}
+      <DrawerMedir
+        open={itemMedir != null}
+        obraId={obraId}
+        item={itemMedir}
+        onClose={() => setItemMedir(null)}
+        onMedido={() => void carregar()}
+      />
     </div>
   );
 }
@@ -416,6 +431,7 @@ function SecaoAmbiente({
   obraId,
   somenteLeitura,
   onSalvo,
+  onMedir,
 }: {
   ambiente: NoAmbiente;
   lente: LenteEscopo;
@@ -425,6 +441,7 @@ function SecaoAmbiente({
   obraId: string;
   somenteLeitura: boolean;
   onSalvo: () => void;
+  onMedir: (item: ItemEscopoCalc) => void;
 }) {
   const [aberto, setAberto] = useState(true); // colapso agressivo é por DISCIPLINA; ambiente abre.
   const resumo = resumoLente(ambiente.subtotal, lente, persona);
@@ -467,6 +484,7 @@ function SecaoAmbiente({
               obraId={obraId}
               somenteLeitura={somenteLeitura}
               onSalvo={onSalvo}
+              onMedir={onMedir}
             />
           ))}
         </div>
@@ -485,6 +503,7 @@ function BlocoDisciplina({
   obraId,
   somenteLeitura,
   onSalvo,
+  onMedir,
 }: {
   disciplina: NoDisciplina;
   lente: LenteEscopo;
@@ -494,6 +513,7 @@ function BlocoDisciplina({
   obraId: string;
   somenteLeitura: boolean;
   onSalvo: () => void;
+  onMedir: (item: ItemEscopoCalc) => void;
 }) {
   const [aberto, setAberto] = useState(true);
   const raizes = disciplina.itens.filter((i) => i.parent_id == null);
@@ -535,6 +555,7 @@ function BlocoDisciplina({
               obraId={obraId}
               somenteLeitura={somenteLeitura}
               onSalvo={onSalvo}
+              onMedir={onMedir}
             />
           ))}
           {!somenteLeitura ? (
@@ -560,6 +581,7 @@ function LinhaItem({
   obraId,
   somenteLeitura,
   onSalvo,
+  onMedir,
 }: {
   item: ItemEscopoCalc;
   lente: LenteEscopo;
@@ -569,9 +591,12 @@ function LinhaItem({
   obraId: string;
   somenteLeitura: boolean;
   onSalvo: () => void;
+  onMedir: (item: ItemEscopoCalc) => void;
 }) {
   const [editando, setEditando] = useState(false);
   const valor = valorLente(item, lente, persona);
+  // "medido X de Y": quando há quantidade planejada, mostra o realizado estimado do pct atual.
+  const medidoDe = textoMedidoDe(item);
 
   return (
     <div className="rounded-lg border" style={{ borderColor: BORDA, background: BG_DEEP }}>
@@ -588,11 +613,26 @@ function LinhaItem({
             </p>
             <p className="truncate font-mono text-[10px]" style={{ color: "#8b949e" }}>
               {item.codigo}
-              {item.quantidade != null ? ` · ${item.quantidade}${item.unidade ? ` ${item.unidade}` : ""}` : ""}
+              {medidoDe ? ` · ${medidoDe}` : item.quantidade != null ? ` · ${item.quantidade}${item.unidade ? ` ${item.unidade}` : ""}` : ""}
             </p>
           </div>
         </button>
         <div className="flex flex-shrink-0 items-center gap-2">
+          {/* botão MEDIR (E7c): medição formal com evidência — Click-and-Go, por item */}
+          {!somenteLeitura ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMedir(item);
+              }}
+              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-bold"
+              style={{ borderColor: `${DOURADO}55`, color: DOURADO, background: BG_CARD }}
+              title="Registrar medição formal (com evidência)"
+            >
+              <Ruler className="h-3 w-3" /> Medir
+            </button>
+          ) : null}
           {/* barra de avanço sempre visível (mini) */}
           <div className="hidden h-1.5 w-16 overflow-hidden rounded-full sm:block" style={{ background: BG_CARD }}>
             <div className="h-full rounded-full" style={{ width: `${clamp(item.pct_avanco)}%`, background: DOURADO }} />
@@ -1172,6 +1212,20 @@ function clamp(v: number | null | undefined): number {
   const n = Number(v);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(100, n));
+}
+
+/**
+ * "medido X de Y" (design §4 verbo GERENCIAR): quando o item tem quantidade planejada, mostra o
+ * realizado ESTIMADO a partir do pct_avanco atual (X = pct% × Y). Sem quantidade planejada → null
+ * (a linha cai no fallback de quantidade simples). Honesto: é estimativa pelo %, não medição crua.
+ */
+function textoMedidoDe(item: ItemEscopoCalc): string | null {
+  const q = Number(item.quantidade);
+  if (!Number.isFinite(q) || q <= 0) return null;
+  const pct = clamp(item.pct_avanco);
+  const realizado = Math.round((pct / 100) * q * 100) / 100;
+  const un = item.unidade ? ` ${item.unidade}` : "";
+  return `medido ${realizado} de ${q}${un}`;
 }
 
 /** Valor formatado de um item conforme a lente (respeita persona p/ custo/margem). */
