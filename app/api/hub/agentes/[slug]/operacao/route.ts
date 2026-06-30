@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -8,19 +9,43 @@ function db() {
   );
 }
 
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
+    return NextResponse.json({ error: "Servico indisponivel" }, { status: 503 });
   }
+
+  // E-B2: guard de sessao + isolamento de tenant. Vaza custo_brl e prompts sem auth.
+  const g = await requireCrmSessao(req);
+  if ("error" in g) return g.error;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const supabase = db();
 
-  /** Histórico de execuções no painel (não é “lifetime” completo; ver CRM / relatórios para auditoria longa). */
+  // E-B2: verificar que o agente pertence ao tenant da sessao antes de devolver dados.
+  const { data: agenteRow } = await supabase
+    .from("hub_agente_identidade")
+    .select("agente_slug, tenant_id")
+    .eq("agente_slug", slug)
+    .maybeSingle();
+
+  if (!agenteRow || agenteForaDoTenant(agenteRow as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente nao encontrado" }, { status: 404 });
+  }
+
+  /** Historico de execucoes no painel (nao e "lifetime" completo; ver CRM / relatorios para auditoria longa). */
   const CICLOS_LOG_LIMIT = 150;
 
   const [ciclosR, logsR, acoesR, promptR] = await Promise.all([

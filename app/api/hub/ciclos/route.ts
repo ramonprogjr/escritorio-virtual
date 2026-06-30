@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateAndNormalizeCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 type CicloTipo = "continuo" | "programado" | "gatilho";
 
@@ -20,6 +21,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // E-B7 (GET): guard de sessão + filtro de tenant. Sem guard listava ciclos de TODOS os tenants.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const ativo = searchParams.get("ativo");
@@ -27,7 +32,13 @@ export async function GET(request: NextRequest) {
   const tipo = searchParams.get("tipo");
   const q = searchParams.get("q");
 
-  let query = supabase.from("hub_ciclos_ia").select("*").order("agente_slug").order("nome");
+  // Tenant SEMPRE da sessão — nunca do header (forjável).
+  let query = supabase
+    .from("hub_ciclos_ia")
+    .select("*")
+    .eq("tenant_id", g.ctx.tenantId)
+    .order("agente_slug")
+    .order("nome");
 
   if (ativo === "true") query = query.eq("ativo", true);
   if (ativo === "false") query = query.eq("ativo", false);
@@ -37,6 +48,17 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query;
   if (error) {
+    // Tolerância: se tenant_id não existir na tabela ainda (base antiga), cai sem filtro.
+    if (/tenant_id/i.test(error.message)) {
+      let fallbackQ = supabase.from("hub_ciclos_ia").select("*").order("agente_slug").order("nome");
+      if (ativo === "true") fallbackQ = fallbackQ.eq("ativo", true);
+      if (ativo === "false") fallbackQ = fallbackQ.eq("ativo", false);
+      if (agenteSlug) fallbackQ = fallbackQ.eq("agente_slug", agenteSlug);
+      if (tipo && isCicloTipo(tipo)) fallbackQ = fallbackQ.eq("tipo", tipo);
+      const { data: fd, error: fe } = await fallbackQ;
+      if (fe) return NextResponse.json({ error: fe.message }, { status: 500 });
+      return NextResponse.json({ ciclos: fd || [] });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -47,6 +69,10 @@ export async function POST(request: NextRequest) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  // E-B7 (POST): criar ciclo exige gestor + tenant da sessão.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
 
   let body: Record<string, unknown>;
   try {
@@ -97,10 +123,19 @@ export async function POST(request: NextRequest) {
     intervalo_minutos: intervalo,
     ativo: body.ativo === false ? false : true,
     configuracoes,
+    // E-B7: tenant_id SEMPRE da sessão — garante isolamento multi-tenant.
+    tenant_id: g.ctx.tenantId,
   };
 
   const supabase = db();
-  const { data, error } = await supabase.from("hub_ciclos_ia").insert(row).select("*").single();
+  let { data, error } = await supabase.from("hub_ciclos_ia").insert(row).select("*").single();
+
+  // Tolerância: base antiga sem coluna tenant_id — repete sem ela (isolamento degrada p/ legado).
+  if (error && /tenant_id/i.test(error.message || "")) {
+    const { tenant_id, ...rowSemTenant } = row;
+    ({ data, error } = await supabase.from("hub_ciclos_ia").insert(rowSemTenant).select("*").single());
+  }
+
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

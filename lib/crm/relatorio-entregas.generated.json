@@ -1,7 +1,36 @@
 {
-  "geradoEm": "2026-06-30T05:19:39.099Z",
+  "geradoEm": "2026-06-30T05:31:46.203Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "6265020bb192a650feb3feb752d45990de1f5297",
+      "hashCurto": "6265020",
+      "mensagem": "Domínio D (Financeiro) — leak da Contas a Pagar + RLS + governança da baixa",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio D (Financeiro) — leak da Contas a Pagar + RLS + governança da baixa",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T05:31:35.000Z",
+      "hora": "02:31",
+      "arquivos": [
+        "app/api/crm/financeiro/contas/pagar/[id]/route.ts",
+        "app/api/crm/financeiro/contas/receber/[id]/route.ts",
+        "app/api/crm/financeiro/contas/route.ts",
+        "app/crm/financeiro/pagar/page.tsx",
+        "components/crm/CrmFinanceDashboard.tsx",
+        "docs/E2E-DOMINIO-D-ACHADOS.md",
+        "hooks/useFinanceDashboard.ts",
+        "lib/crm/finance-dashboard-aggregate.ts",
+        "supabase/migrations/20260631120000_seg_rls_financeiro_tenant.sql",
+        "supabase/migrations/20260631130000_fin_auditoria_baixa.sql"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 2,
+        "lib/crm": 1,
+        "supabase/migrations": 2
+      }
+    },
     {
       "hash": "d59e8856d3d9154b087c44b2705efb4162ed8067",
       "hashCurto": "d59e885",

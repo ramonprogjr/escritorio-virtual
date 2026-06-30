@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateAndNormalizeCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 type CicloTipo = "continuo" | "programado" | "gatilho";
 
@@ -15,13 +16,29 @@ function isCicloTipo(v: unknown): v is CicloTipo {
   return v === "continuo" || v === "programado" || v === "gatilho";
 }
 
+/**
+ * Verifica se o ciclo pertence ao tenant da sessão.
+ * Tolerante: se tenant_id for null (base antiga sem migração) passa — sem coluna não há leak.
+ */
+function cicloForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  // E-B7 (GET): guard de sessão + isolamento de tenant.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
 
   const { id } = await params;
   const supabase = db();
@@ -32,7 +49,9 @@ export async function GET(
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data) return NextResponse.json({ error: "Ciclo não encontrado" }, { status: 404 });
+  if (!data || cicloForaDoTenant(data as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Ciclo não encontrado" }, { status: 404 });
+  }
   return NextResponse.json(data);
 }
 
@@ -43,6 +62,10 @@ export async function PATCH(
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
+
+  // E-B7 (PATCH): editar ciclo exige gestor + pertencer ao tenant.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
 
   const { id } = await params;
   let body: Record<string, unknown>;
@@ -100,6 +123,17 @@ export async function PATCH(
   }
 
   const supabase = db();
+
+  // E-B7 (PATCH): verificar tenant antes de atualizar.
+  const { data: atual } = await supabase
+    .from("hub_ciclos_ia")
+    .select("id, tenant_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!atual || cicloForaDoTenant(atual as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Ciclo não encontrado" }, { status: 404 });
+  }
+
   const { data, error } = await supabase
     .from("hub_ciclos_ia")
     .update(patch)
@@ -113,15 +147,29 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // E-B7 (DELETE): excluir ciclo exige gestor + pertencer ao tenant.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { id } = await params;
   const supabase = db();
+
+  // Verificar tenant antes do delete em cascata (irreversível).
+  const { data: alvo } = await supabase
+    .from("hub_ciclos_ia")
+    .select("id, tenant_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!alvo || cicloForaDoTenant(alvo as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Ciclo não encontrado" }, { status: 404 });
+  }
 
   const { data: rpcRaw, error: rpcErr } = await supabase.rpc("hub_delete_ciclo_cascade", {
     p_ciclo_id: id,

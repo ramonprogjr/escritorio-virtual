@@ -10,7 +10,7 @@ import {
   slugifyFerramentaCustomSlug,
   smartProviderValido,
 } from "@/lib/hub/ferramentas-custom-db";
-import { tenantIdFromRequest } from "@/lib/tenant-default";
+import { requireCrmOwner, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -20,8 +20,13 @@ function db() {
 }
 
 export async function GET(request: NextRequest) {
+  // E-B9 (GET): guard de sessão — listar ferramentas não é operação destrutiva.
+  // Tenant vem da sessão, não do header x-tenant-id (forjável).
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  const tenantId = g.ctx.tenantId;
   const all = new URL(request.url).searchParams.get("all") === "true";
   let q = supabase.from("hub_ferramentas_custom").select("*").eq("tenant_id", tenantId).order("titulo");
   if (!all) q = q.eq("ativo", true);
@@ -33,8 +38,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // E-B9 (POST): criar ferramenta custom exige owner — espelha restrição da UI.
+  const g = await requireCrmOwner(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
-  const tenantId = tenantIdFromRequest(request.headers);
+  const tenantId = g.ctx.tenantId;
 
   let body: Record<string, unknown>;
   try {
