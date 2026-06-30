@@ -1,7 +1,28 @@
 {
-  "geradoEm": "2026-06-30T19:01:18.308Z",
+  "geradoEm": "2026-06-30T19:28:03.956Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "4dcfaefe11c58664b284f75238046cdae4ddc6f9",
+      "hashCurto": "4dcfaef",
+      "mensagem": "cabeçalho ÚNICO no mobile (mata o chrome duplicado, ~122px) + scroll do dono — mesa UI/UX+design",
+      "mensagemRaw": "feat(mobile/ui): cabeçalho ÚNICO no mobile (mata o chrome duplicado, ~122px) + scroll do dono — mesa UI/UX+design",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T19:27:35.000Z",
+      "hora": "16:27",
+      "arquivos": [
+        "app/crm/layout.tsx",
+        "app/globals.css",
+        "components/crm/CrmMobileActionsBar.tsx",
+        "components/crm/CrmUniversalHeader.tsx",
+        "components/mobile/MobileShell.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 2,
+        "components/crm": 2
+      }
+    },
     {
       "hash": "d172cbc03f0b32653df3e704743a7cd0e4454be7",
       "hashCurto": "d172cbc",
@@ -6824,36 +6845,6 @@
       "areas": {
         "outros": 1,
         "lib/crm": 2
-      }
-    },
-    {
-      "hash": "91113423c9a33e2dff6d6e61ea276e9d4cee2238",
-      "hashCurto": "9111342",
-      "mensagem": "HANDOFF — estado, descobertas, bloqueios de ferramenta e como retomar",
-      "mensagemRaw": "docs(maratona): HANDOFF — estado, descobertas, bloqueios de ferramenta e como retomar",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T19:25:32.000Z",
-      "hora": "16:25",
-      "arquivos": [
-        "docs/HANDOFF.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "247f5a7a83c7e6ffb8cd5927fb4e2682eaef7a47",
-      "hashCurto": "247f5a7",
-      "mensagem": "Bloco B API GREEN (23/23) + passo 1 seguranca fechado + pre-condicao Bloco E",
-      "mensagemRaw": "docs(maratona): Bloco B API GREEN (23/23) + passo 1 seguranca fechado + pre-condicao Bloco E",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-23T19:23:34.000Z",
-      "hora": "16:23",
-      "arquivos": [
-        "docs/STATUS_MARATONA.md"
-      ],
-      "areas": {
-        "outros": 1
       }
     }
   ]
