@@ -40,12 +40,15 @@ export function CrmUniversalHeader() {
   );
 
   return (
-    <CrmPageHeader
-      title={title}
-      subtitle={subtitle}
-      actions={actions}
-      blendDesktopUnderlap
-      className="flex-shrink-0"
-    />
+    /* md:block — some no mobile (<768px); fica visível apenas no desktop */
+    <div className="hidden md:block flex-shrink-0">
+      <CrmPageHeader
+        title={title}
+        subtitle={subtitle}
+        actions={actions}
+        blendDesktopUnderlap
+        className="flex-shrink-0"
+      />
+    </div>
   );
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Plus, X, ChevronDown, Menu, Search } from "lucide-react";
+import { Plus, X, ChevronDown, Search } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -20,6 +20,7 @@ import { CrmTenantProvider } from "@/components/crm/CrmTenantContext";
 import { CrmSessionFooter } from "@/components/crm/CrmSessionFooter";
 import { CrmHeaderProvider } from "@/components/crm/CrmHeaderContext";
 import { CrmUniversalHeader } from "@/components/crm/CrmUniversalHeader";
+import { CrmMobileActionsBar } from "@/components/crm/CrmMobileActionsBar";
 import { CrmShellProvider } from "@/components/crm/CrmShellContext";
 import { CrmSidebarToggleButton } from "@/components/crm/CrmSidebarToggleButton";
 import { CrmCommandPalette } from "@/components/crm/CrmCommandPalette";
@@ -87,7 +88,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ [CRM_NAV_GROUPS[0].id]: true });
   const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({ administracao: true });
@@ -162,10 +162,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
       setOpenGroups(prev => (prev[activeGroupId] ? prev : { ...prev, [activeGroupId]: true }));
     }
   }, [activeGroupId]);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     try {
@@ -629,47 +625,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="relative z-[12] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:h-[calc(100dvh-1rem)] md:max-h-[calc(100dvh-1rem)] md:self-stretch md:rounded-r-xl md:bg-[#0a140f]">
-        <div
-          className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2 md:hidden sticky top-0 z-30 backdrop-blur-md supports-[backdrop-filter]:bg-[#0c1712]/90"
-          style={{
-            background: "rgba(15, 29, 22, 0.96)",
-            borderColor: "var(--obra-borda, #1d3a2c)",
-            paddingTop: "max(0.5rem, env(safe-area-inset-top))",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() =>
-              typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/crm")
-            }
-            className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-xl"
-            style={{
-              background: "var(--obra-dark-3, #16271e)",
-              color: "var(--obra-texto, #e6edf3)",
-              border: "1px solid var(--obra-borda, #1d3a2c)",
-              cursor: "pointer",
-            }}
-            aria-label="Voltar"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <div className="min-w-0 flex-1">
-            <Obra10BrandHeader size="sm" subtitle="CRM" titleClassName="!text-[11px]" subtitleClassName="!text-[8px] !text-[#a9c6b6]" />
-          </div>
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#1d3a2c] bg-[#0c1712] text-[#e6edf3] transition-colors hover:border-[#3d4f65] hover:bg-[#0e2a1e]"
-            style={{ cursor: "pointer" }}
-            aria-expanded={mobileMenuOpen}
-            aria-label="Abrir menu do CRM"
-          >
-            <Menu size={20} strokeWidth={1.75} aria-hidden />
-          </button>
-        </div>
-
         {shouldHideCrmUniversalHeader(pathname) ? (
           <div
             className="relative z-[12] hidden min-h-[4.25rem] flex-shrink-0 items-center border-b border-[rgba(48,54,61,0.45)] px-3 py-3.5 md:flex md:min-h-[4.5rem] md:px-2 md:py-4"
@@ -680,6 +635,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         ) : null}
 
         <CrmUniversalHeader />
+        <CrmMobileActionsBar />
 
         <div
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[env(safe-area-inset-bottom,0px)] md:pb-0"
@@ -689,200 +645,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
         </div>
-      <div
-        className={`fixed inset-0 z-[100] flex md:hidden transition-opacity duration-[250ms] ease-out ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Menu do CRM"
-        aria-hidden={!mobileMenuOpen}
-      >
-        <button
-          type="button"
-          className="absolute inset-0 m-0 cursor-default border-0 bg-[#0a140f]/85 p-0 backdrop-blur-sm"
-          style={{ WebkitTapHighlightColor: "transparent" }}
-          aria-label="Fechar menu"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-        <div
-          className={`relative flex h-full w-[min(100%,20rem)] max-w-[85vw] flex-col border-r border-[#1d3a2c] transition-transform duration-[250ms] ease-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
-          style={{
-            background: "#0c1712",
-            boxShadow: "4px 0 40px rgba(0,0,0,0.6), inset -1px 0 0 rgba(255,255,255,0.04)",
-            paddingTop: "env(safe-area-inset-top, 0px)",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          }}
-        >
-          <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-[#1d3a2c] bg-[#0c1712]/90 px-4 py-3.5">
-            <div className="min-w-0 flex-1">
-              <Obra10BrandHeader size="sm" subtitle="CRM" />
-            </div>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-[#1d3a2c] bg-[#0e2a1e] text-[#a9c6b6] transition-colors hover:border-[#3d4f65] hover:text-[#e6edf3]"
-              style={{ cursor: "pointer" }}
-              aria-label="Fechar"
-            >
-              <X size={20} strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-          <div className="flex-shrink-0 border-b border-[#1d3a2c] px-3 py-3">
-            <CrmSessionFooter variant="drawer" onNavigate={() => setMobileMenuOpen(false)} />
-          </div>
-          <nav className="min-h-0 flex-1 overflow-y-auto py-2" style={{ WebkitOverflowScrolling: "touch" }}>
-            {navGroups.map(group => {
-              const groupHasActive = group.items.some(item => isCrmNavPathActive(pathname, item.href));
-              if (group.items.length === 1) {
-                const only = group.items[0];
-                const active = isCrmNavPathActive(pathname, only.href);
-                return (
-                  <div key={group.id} className="px-2 pb-1">
-                    <Link
-                      href={only.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex min-h-[44px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                        active
-                          ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
-                          : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e] hover:text-[#c7d5e0]"
-                      }`}
-                    >
-                      <NavIcon Icon={group.sectionIcon} expanded />
-                      <span className="min-w-0 flex-1 truncate">{group.label}</span>
-                    </Link>
-                  </div>
-                );
-              }
-              const open = !!openGroups[group.id];
-              return (
-                <div key={group.id} className="px-2 pb-1">
-                  <button
-                    type="button"
-                    onClick={() => toggleDrawer(group.id)}
-                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors ${
-                      open || groupHasActive ? "bg-[#0e2a1e]" : "hover:bg-[#0e2a1e]/40"
-                    }`}
-                    style={{ border: "none", cursor: "pointer" }}
-                    aria-expanded={open}
-                  >
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5f8470]">{group.label}</span>
-                    <ChevronDown
-                      size={12}
-                      strokeWidth={2.5}
-                      className={`flex-shrink-0 text-[#5f8470] transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
-                      aria-hidden
-                    />
-                  </button>
-                  <div className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-                    <div className="min-h-0">
-                      <div className="space-y-0.5 py-1">
-                        {getNestedGroupMenu(group.id, group.label, group.items) ? (
-                          (() => {
-                            const nestedMenu = getNestedGroupMenu(group.id, group.label, group.items)!;
-                            const nestedItems = nestedMenu.children;
-                            const nestedActive = nestedItems.some(item =>
-                              isCrmNavPathActive(pathname, item.href),
-                            );
-                            const nestedOpen = openNestedGroups[group.id] ?? true;
-                            return (
-                              <div className="space-y-1">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setOpenNestedGroups(prev => ({
-                                      ...prev,
-                                      [group.id]: !(prev[group.id] ?? true),
-                                    }))
-                                  }
-                                  className={`flex min-h-[38px] w-full items-center justify-between rounded-lg border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                                    nestedActive
-                                      ? "border-[#c9a24a] bg-[#0e2a1e] text-[#c9a24a]"
-                                      : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e]/80 hover:text-[#e6edf3]"
-                                  }`}
-                                >
-                                  <span className="flex items-center gap-2.5">
-                                    <NavIcon Icon={nestedMenu.parentIcon} expanded />
-                                    <span>{nestedMenu.parentLabel}</span>
-                                  </span>
-                                  <ChevronDown
-                                    size={14}
-                                    strokeWidth={2.25}
-                                    className={`transition-transform ${nestedOpen ? "rotate-0" : "-rotate-90"}`}
-                                    aria-hidden
-                                  />
-                                </button>
-                                <div
-                                  className={`grid overflow-hidden pl-2 transition-[grid-template-rows] duration-200 ease-out ${
-                                    nestedOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                                  }`}
-                                >
-                                  <div className="space-y-0.5 overflow-hidden">
-                                    {nestedItems.map(item => {
-                                      const active = isCrmNavPathActive(pathname, item.href);
-                                      return (
-                                        <Link
-                                          key={item.href}
-                                          href={item.href}
-                                          onClick={() => setMobileMenuOpen(false)}
-                                          className={`flex min-h-[36px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                            active
-                                              ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
-                                              : "border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e] hover:text-[#c7d5e0]"
-                                          }`}
-                                        >
-                                          <NavIcon Icon={item.icon} expanded />
-                                          <CrmNavItemLabel item={item} expanded />
-                                        </Link>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          group.items.map(item => {
-                            const active = isCrmNavPathActive(pathname, item.href);
-                            return (
-                              <div key={item.href} className="relative">
-                                <Link
-                                  href={item.href}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className={`flex min-h-[38px] items-center gap-2.5 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                    active
-                                      ? "border-[#c9a24a] bg-[#003b2620] text-[#c9a24a]"
-                                      : `border-transparent text-[#a9c6b6] hover:bg-[#0e2a1e] hover:text-[#c7d5e0]${item.extra ? " pr-12" : ""}`
-                                  }`}
-                                >
-                                  <NavIcon Icon={item.icon} expanded />
-                                  <CrmNavItemLabel item={item} expanded />
-                                </Link>
-                                {item.extra && (
-                                  <Link
-                                    href={item.extra.href}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-sm font-black"
-                                    style={{
-                                      background: "var(--obra-dourado, #c9a24a)",
-                                      color: "var(--obra-verde, #003b26)",
-                                    }}
-                                    title={item.extra.label}
-                                  >
-                                    <Plus size={16} strokeWidth={2.5} aria-hidden />
-                                  </Link>
-                                )}
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
         </div>
         <CrmCommandPalette groups={navGroups} />
         <CrmQuickAdd role={userRole} />
