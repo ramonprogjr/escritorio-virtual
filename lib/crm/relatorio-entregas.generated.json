@@ -1,7 +1,30 @@
 {
-  "geradoEm": "2026-06-30T05:55:51.790Z",
+  "geradoEm": "2026-06-30T06:16:02.511Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "540647ba9cbf9607870f4ad03faadf2580965dbe",
+      "hashCurto": "540647b",
+      "mensagem": "Domínio F (Aprovações/escrow) — 3 furos do dinheiro + gate dourado (auditada GO)",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio F (Aprovações/escrow) — 3 furos do dinheiro + gate dourado (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T06:15:50.000Z",
+      "hora": "03:15",
+      "arquivos": [
+        "app/api/aprovacoes/route.ts",
+        "app/api/crm/tarefas/route.ts",
+        "app/api/hub/aprovacoes/[id]/route.ts",
+        "app/crm/aprovacoes/page.tsx",
+        "docs/E2E-DOMINIO-F-ACHADOS.md",
+        "lib/ia/aprovacoes-cascata.test.ts",
+        "lib/ia/aprovacoes.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 1,
+        "outros": 3
+      }
+    },
     {
       "hash": "b7854496616eab1d2ecc8e189374365d8393da14",
       "hashCurto": "b785449",
