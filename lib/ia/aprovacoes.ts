@@ -4,6 +4,7 @@
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import { isCrmOwnerRole, isCrmGestorRole } from "@/lib/crm/crm-permissoes";
 
 function supabase() {
   return createClient(
@@ -286,7 +287,8 @@ function montarCard(item: Record<string, unknown>): CardAprovacao {
 export async function aprovar(
   aprovacaoId: string,
   observacao?: string,
-  tenantId?: string | null
+  tenantId?: string | null,
+  aprovadorRole?: string | null
 ): Promise<{ sucesso: boolean; erro?: string }> {
   const tenant = (tenantId ?? "").trim();
   if (!tenant) return { sucesso: false, erro: "Tenant ausente" };
@@ -301,6 +303,26 @@ export async function aprovar(
     .single();
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
+
+  // F-D2 (decisão do dono): as 2 chaves do escrow exigem AUTORIDADES DISTINTAS.
+  // chave do HUB (pagamento_obra_hub = auditoria/plataforma) → nível OWNER.
+  // chave da ARQUITETURA (pagamento_obra_arq = execução) → nível GESTOR, NUNCA owner.
+  // Como cada usuário tem 1 nível, isso força que as 2 chaves venham de DUAS PESSOAS de
+  // papéis diferentes (duas autoridades reais), não dois cliques do mesmo gestor. Fail-closed:
+  // sem papel válido para o tipo, NÃO libera (e a cascata do escrow nem chega a rodar).
+  if (aprovacao.tipo === "pagamento_obra_hub" && !isCrmOwnerRole(aprovadorRole)) {
+    return { sucesso: false, erro: "A chave do Hub só pode ser autorizada por um owner." };
+  }
+  if (
+    aprovacao.tipo === "pagamento_obra_arq" &&
+    (!isCrmGestorRole(aprovadorRole) || isCrmOwnerRole(aprovadorRole))
+  ) {
+    return {
+      sucesso: false,
+      erro:
+        "A chave da Arquitetura deve ser autorizada por um gestor (não o owner) — são duas autoridades distintas.",
+    };
+  }
 
   // F-B3 IDEMPOTÊNCIA: condiciona o UPDATE a status='pendente' E verifica linhas afetadas.
   // Sem esta guarda, dois operadores (ou duplo-clique/retry) passam pelo SELECT acima, ambos

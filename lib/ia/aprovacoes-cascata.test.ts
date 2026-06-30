@@ -124,7 +124,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-99", obra_id: "obra-7", papel: "arquitetura" },
     };
 
-    const r = await aprovar("apr-arq-1", undefined, TENANT);
+    const r = await aprovar("apr-arq-1", undefined, TENANT, "gestor");
     expect(r.sucesso).toBe(true);
 
     const liberar = rpcCalls.filter((c) => c.nome === "rpc_liberar_escrow");
@@ -144,7 +144,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-99", obra_id: "obra-7", papel: "hub" },
     };
 
-    const r = await aprovar("apr-hub-1", undefined, TENANT);
+    const r = await aprovar("apr-hub-1", undefined, TENANT, "owner");
     expect(r.sucesso).toBe(true);
 
     const liberar = rpcCalls.filter((c) => c.nome === "rpc_liberar_escrow");
@@ -255,7 +255,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-12", obra_id: "obra-1" },
     };
 
-    await aprovar("apr-arq-2", undefined, OUTRO_TENANT);
+    await aprovar("apr-arq-2", undefined, OUTRO_TENANT, "gestor");
     const liberar = rpcCalls.find((c) => c.nome === "rpc_liberar_escrow");
     expect(liberar?.args.p_tenant_id).toBe(OUTRO_TENANT);
   });
@@ -303,7 +303,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-77", obra_id: "obra-7", papel: "arquitetura" },
     };
 
-    const r = await aprovar("apr-arq-idem", undefined, TENANT);
+    const r = await aprovar("apr-arq-idem", undefined, TENANT, "gestor");
     // Idempotente: o estado desejado já foi atingido → sucesso, mas SEM efeito colateral.
     expect(r.sucesso).toBe(true);
     // A trava exata do F-B3: a cascata de DINHEIRO não roda na 2ª passagem.
@@ -383,5 +383,48 @@ describe("AUT-1/SEC-8 — falha do snapshot de custo é logada para reconciliaç
     const r = await aprovar("apr-orc-log-4", undefined, TENANT);
     expect(r.sucesso).toBe(true);
     expect(decisionLogs().filter((l) => l.tipo === "snapshot_custo_falhou")).toHaveLength(0);
+  });
+});
+
+// ── F-D2 (decisão do dono): o escrow exige DUAS AUTORIDADES distintas (papéis).
+//    chave Hub → owner; chave Arquitetura → gestor (≠ owner). Fail-closed e ANTES da cascata. ──
+describe("F-D2 — escrow exige duas autoridades distintas (papéis)", () => {
+  it("chave HUB aprovada por gestor (não owner) → recusa e NENHUMA RPC (precisa de owner)", async () => {
+    aprovacaoRow = {
+      id: "apr-hub-fd2",
+      tipo: "pagamento_obra_hub",
+      agente_slug: "hub",
+      descricao: "Aprovação do Hub",
+      dados: { pagamento_id: "pag-1", obra_id: "obra-1" },
+    };
+    const r = await aprovar("apr-hub-fd2", undefined, TENANT, "gestor");
+    expect(r.sucesso).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
+  });
+
+  it("chave ARQUITETURA aprovada pelo owner → recusa e NENHUMA RPC (precisa de gestor ≠ owner)", async () => {
+    aprovacaoRow = {
+      id: "apr-arq-fd2",
+      tipo: "pagamento_obra_arq",
+      agente_slug: "hub",
+      descricao: "Aprovação da arquitetura",
+      dados: { pagamento_id: "pag-2", obra_id: "obra-2" },
+    };
+    const r = await aprovar("apr-arq-fd2", undefined, TENANT, "owner");
+    expect(r.sucesso).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
+  });
+
+  it("chave de dinheiro sem papel (fail-closed) → recusa e NENHUMA RPC", async () => {
+    aprovacaoRow = {
+      id: "apr-arq-fd2-norole",
+      tipo: "pagamento_obra_arq",
+      agente_slug: "hub",
+      descricao: "Aprovação da arquitetura",
+      dados: { pagamento_id: "pag-3", obra_id: "obra-3" },
+    };
+    const r = await aprovar("apr-arq-fd2-norole", undefined, TENANT);
+    expect(r.sucesso).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
   });
 });

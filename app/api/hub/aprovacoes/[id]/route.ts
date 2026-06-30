@@ -35,7 +35,8 @@ export async function PATCH(
   }
 
   if (status === "aprovado") {
-    const resultado = await aprovar(id, observacao, tenantId);
+    // F-D2: passa o papel da sessão p/ o gate das 2 chaves do escrow (Hub=owner, Arq=gestor≠owner).
+    const resultado = await aprovar(id, observacao, tenantId, g.ctx.role);
     if (!resultado.sucesso) {
       return NextResponse.json({ error: resultado.erro ?? "Falha ao aprovar" }, { status: 400 });
     }
