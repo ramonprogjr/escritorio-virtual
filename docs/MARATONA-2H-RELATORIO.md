@@ -2,7 +2,7 @@
 
 **Mandato (você, indo para a reunião):** *"analise no plano macro o que avançar que não dependa de mim; mesa redonda por etapa; o CEO aprova a maratona de 2h; auditoria mobile (design/UI/UX); depois rode E2E; passe para o CEO aprovar e avançar."*
 
-**Status: ✅ entregue.** 6 deploys na janela (#28→#33), todos com `tsc 0 + vitest verde + build 0 + git pull --rebase` antes do push. 1 agente por vez no tree principal, árvore verificada após cada, **zero worktree-pollution.**
+**Status: ✅ entregue.** 8 deploys na janela (#28→#35), todos com `tsc 0 + vitest verde + build 0 + git pull --rebase` antes do push. 1 agente por vez no tree principal, árvore verificada após cada, **zero worktree-pollution.**
 
 ---
 
@@ -22,6 +22,9 @@ Doc: [docs/MOBILE-AUDITORIA-ACHADOS.md](MOBILE-AUDITORIA-ACHADOS.md). **27 🔴 
 | **#31** | B2/C | **Alvos de toque 44px** em 8 controles (botões, chips, abas, kanban); **cores da marca** substituindo o azul/verde GitHub no chrome, sideovers e botões de salvar. |
 | **#32** | A | Recuperou **80px** em toda tela (padding-fantasma de uma tab-bar que não existe); **título** agora vem do menu (fim do "Obra10+" genérico); código morto removido. |
 | **#33** | D | **Grids de 4/3/2 colunas → 1 coluna no celular** (formulário de negócio, financeiro da obra, itens, lançamento). |
+| **#35** | E/CC-12 | **Tabelas de relatório/analytics → cards no mobile** (🔴): no celular o dado vira card legível em vez de ficar escondido atrás de scroll-X + tooltip (que não existe no toque). Desktop = tabela como hoje. |
+
+*(+#34: relatório desta maratona + limpeza de imports mortos que a auditoria do H-SEC-1 flagou.)*
 
 ### 4️⃣ E2E
 `tsc 0` + **vitest 666 verdes** após tudo. Build 0 em todos os deploys.
@@ -33,7 +36,7 @@ Doc: [docs/MOBILE-AUDITORIA-ACHADOS.md](MOBILE-AUDITORIA-ACHADOS.md). **27 🔴 
 Não tenho navegador/Playwright neste ambiente, então **não validei visualmente** — as mudanças são de código (CSS/layout), cobertas por tsc+build, mas o "como ficou na tela" é com você:
 1. **Review visual mobile geral** — confira as 4 telas que você mais usa no celular.
 2. **3º header (H2)** — o maior ganho restante (~52px) é remover o header que ainda duplica com o logo + drawer de avatar/logout. O agente **corretamente não removeu às cegas** (perderia o avatar/logout); o caminho seguro é migrar o `CrmSessionFooter` para o drawer do `MobileShell` antes. **Topo da próxima rodada, com você confirmando.**
-3. **Mobile restante (próxima rodada):** CC-12 (tabela de relatórios → cards no mobile, é 🔴), CC-4 (affordance de scroll horizontal), e o polish 🟢 por tela.
+3. **Mobile restante (próxima rodada):** CC-4 (affordance de scroll horizontal nos kanbans), e o polish 🟢 por tela. *(CC-12 já feito no #35.)*
 
 ## 🔴 Suas pendências de infra (do guia [docs/PENDENCIAS-DONO-INFRA.md](PENDENCIAS-DONO-INFRA.md))
 - **Render:** remover `NEXT_PUBLIC_INTERNAL_API_KEY` + `NEXT_PUBLIC_TENANT_ID` (pra a chave sair do bundle de vez) + **testar login** (mudança de auth do #28 — se destoar, reverto na hora) · setar `CRON_SECRET` · `GROQ_API_KEY` (destrava IA ao vivo).
