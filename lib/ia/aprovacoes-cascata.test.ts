@@ -15,33 +15,52 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
  */
 
 type RpcCall = { nome: string; args: Record<string, unknown> };
+type InsertCall = { tabela: string; linha: Record<string, unknown> };
 
 const rpcCalls: RpcCall[] = [];
+const insertCalls: InsertCall[] = [];
 let aprovacaoRow: Record<string, unknown> | null = null;
 // Quando true, rpc_snapshot_custo_frente devolve "function does not exist" (migração E7b pendente).
 let snapshotFuncaoAusente = false;
+// Quando set, rpc_snapshot_custo_frente devolve um erro REAL (não "função ausente") — deve ser logado.
+let snapshotErroReal: { code?: string; message?: string } | null = null;
+// Quando true, rpc_snapshot_custo_frente LANÇA exceção (falha de rede) — também deve ser logado.
+let snapshotLancaExcecao = false;
 
-function makeQuery() {
+function makeQuery(tabela: string) {
   // Builder encadeável: todo método devolve o próprio builder; os terminais resolvem com a aprovação.
   const q: Record<string, unknown> = {};
   q.select = () => q;
   q.update = () => q;
-  q.insert = () => Promise.resolve({ data: null, error: null });
+  q.insert = (linha: Record<string, unknown>) => {
+    insertCalls.push({ tabela, linha });
+    return Promise.resolve({ data: null, error: null });
+  };
   q.eq = () => q;
   q.single = () => Promise.resolve({ data: aprovacaoRow, error: null });
   return q;
 }
 
 const fakeClient = {
-  from: () => makeQuery(),
+  from: (tabela: string) => makeQuery(tabela),
   rpc: (nome: string, args: Record<string, unknown>) => {
     rpcCalls.push({ nome, args });
-    // E7c: simula a função de snapshot ainda não migrada (E7b pendente) → erro tolerado.
-    if (nome === "rpc_snapshot_custo_frente" && snapshotFuncaoAusente) {
-      return Promise.resolve({
-        data: null,
-        error: { code: "42883", message: "function rpc_snapshot_custo_frente(uuid, uuid, uuid) does not exist" },
-      });
+    if (nome === "rpc_snapshot_custo_frente") {
+      // E7c: simula a função de snapshot ainda não migrada (E7b pendente) → erro tolerado, NÃO logado.
+      if (snapshotFuncaoAusente) {
+        return Promise.resolve({
+          data: null,
+          error: { code: "42883", message: "function rpc_snapshot_custo_frente(uuid, uuid, uuid) does not exist" },
+        });
+      }
+      // AUT-1/SEC-8: exceção de rede → o catch loga a falha de reconciliação.
+      if (snapshotLancaExcecao) {
+        return Promise.reject(new Error("network down"));
+      }
+      // AUT-1/SEC-8: erro REAL (não "função ausente") → deve ser logado p/ reconciliação.
+      if (snapshotErroReal) {
+        return Promise.resolve({ data: null, error: snapshotErroReal });
+      }
     }
     return Promise.resolve({ data: { ok: true }, error: null });
   },
@@ -59,12 +78,20 @@ const OUTRO_TENANT = "11111111-1111-4111-8111-111111111111";
 
 beforeEach(() => {
   rpcCalls.length = 0;
+  insertCalls.length = 0;
   aprovacaoRow = null;
   snapshotFuncaoAusente = false;
+  snapshotErroReal = null;
+  snapshotLancaExcecao = false;
   // Garante que supabase() encontra as envs (createClient é mockado, mas o ! exige string).
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
 });
+
+/** Helper: linhas inseridas em hub_decision_logs (o log de decisões/reconciliação). */
+function decisionLogs(): Record<string, unknown>[] {
+  return insertCalls.filter((c) => c.tabela === "hub_decision_logs").map((c) => c.linha);
+}
 
 describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → executarAcaoAprovada → RPC)", () => {
   it("aprovar a chave ARQUITETURA do pagamento → chama rpc_liberar_escrow com pagamento + tenant", async () => {
@@ -239,5 +266,77 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
     expect(r.sucesso).toBe(true);
     expect(rpcCalls.some((c) => c.nome === "rpc_liberar_escrow")).toBe(false);
     expect(rpcCalls.some((c) => c.nome === "rpc_aprovar_orcamento_frente")).toBe(false);
+  });
+});
+
+// ── AUT-1 / SEC-8 (integridade financeira): a falha REAL do snapshot de custo é REGISTRADA em
+//    hub_decision_logs para reconciliação. A ausência da FUNÇÃO (E7b pendente) continua silenciosa.
+describe("AUT-1/SEC-8 — falha do snapshot de custo é logada para reconciliação", () => {
+  it("erro REAL do snapshot (não 'função ausente') → grava log de reconciliação com tenant", async () => {
+    snapshotErroReal = { code: "P0001", message: "snapshot violou invariante de custo" };
+    aprovacaoRow = {
+      id: "apr-orc-log-1",
+      tipo: "orcamento_frente",
+      agente_slug: "hub",
+      descricao: "Aprovar orçamento",
+      dados: { orcamento_id: "orc-201", obra_id: "obra-20", frente_id: "frente-7" },
+    };
+
+    const r = await aprovar("apr-orc-log-1", undefined, TENANT);
+    // A aprovação NÃO quebra (best-effort), mas a falha do snapshot deixa rastro.
+    expect(r.sucesso).toBe(true);
+
+    const falhas = decisionLogs().filter((l) => l.tipo === "snapshot_custo_falhou");
+    expect(falhas).toHaveLength(1);
+    expect(falhas[0]).toMatchObject({ tenant_id: TENANT, resultado: "falha_snapshot_custo" });
+    expect(String(falhas[0].descricao)).toContain("obra-20");
+    expect(String(falhas[0].descricao)).toContain("frente-7");
+  });
+
+  it("EXCEÇÃO de rede no snapshot → grava log de reconciliação (não some no catch)", async () => {
+    snapshotLancaExcecao = true;
+    aprovacaoRow = {
+      id: "apr-orc-log-2",
+      tipo: "orcamento_frente",
+      agente_slug: "hub",
+      descricao: "Aprovar orçamento",
+      dados: { orcamento_id: "orc-202", obra_id: "obra-21" },
+    };
+
+    const r = await aprovar("apr-orc-log-2", undefined, TENANT);
+    expect(r.sucesso).toBe(true);
+    const falhas = decisionLogs().filter((l) => l.tipo === "snapshot_custo_falhou");
+    expect(falhas).toHaveLength(1);
+    expect(falhas[0]).toMatchObject({ tenant_id: TENANT });
+    // frente "todas" quando o card não traz frente_id.
+    expect(String(falhas[0].descricao)).toContain("todas");
+  });
+
+  it("'função ausente' (E7b pendente) → NÃO loga falha (estado esperado, não erro)", async () => {
+    snapshotFuncaoAusente = true;
+    aprovacaoRow = {
+      id: "apr-orc-log-3",
+      tipo: "orcamento_frente",
+      agente_slug: "hub",
+      descricao: "Aprovar orçamento",
+      dados: { orcamento_id: "orc-203", obra_id: "obra-22", frente_id: "frente-1" },
+    };
+
+    const r = await aprovar("apr-orc-log-3", undefined, TENANT);
+    expect(r.sucesso).toBe(true);
+    expect(decisionLogs().filter((l) => l.tipo === "snapshot_custo_falhou")).toHaveLength(0);
+  });
+
+  it("snapshot OK → NÃO loga falha (caminho feliz)", async () => {
+    aprovacaoRow = {
+      id: "apr-orc-log-4",
+      tipo: "orcamento_frente",
+      agente_slug: "hub",
+      descricao: "Aprovar orçamento",
+      dados: { orcamento_id: "orc-204", obra_id: "obra-23", frente_id: "frente-2" },
+    };
+    const r = await aprovar("apr-orc-log-4", undefined, TENANT);
+    expect(r.sucesso).toBe(true);
+    expect(decisionLogs().filter((l) => l.tipo === "snapshot_custo_falhou")).toHaveLength(0);
   });
 });

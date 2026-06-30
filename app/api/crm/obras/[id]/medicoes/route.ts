@@ -58,7 +58,17 @@ async function assertObraDoTenant(
   return null;
 }
 
-/** GET = histórico de medições (auditoria). ?item_id= filtra um item; sem ele = a obra inteira. */
+/**
+ * GET = histórico de medições (auditoria), paginado por cursor.
+ *
+ * Query params:
+ *   ?item_id=<uuid>   — filtra um item específico (omitir = obra inteira)
+ *   ?limit=<n>        — itens por página (padrão 30, máx 100)
+ *   ?cursor=<valor>   — cursor opaco (criado_em|id da última linha retornada); omitir = primeira página
+ *
+ * Resposta: { data, next_cursor, has_more, migracao_pendente }
+ * next_cursor é null quando não há mais páginas.
+ */
 export async function GET(request: NextRequest, { params }: Params) {
   const g = await requireCrmSessao(request);
   if ("error" in g) return g.error;
@@ -73,24 +83,84 @@ export async function GET(request: NextRequest, { params }: Params) {
   const url = new URL(request.url);
   const itemId = url.searchParams.get("item_id")?.trim() || "";
 
+  // ── Paginação por cursor (AUT-4: remove .limit(500) fixo) ──────────────────
+  // O cursor é opaco para o cliente: codifica criado_em + id para evitar
+  // duplicatas em registros com o mesmo timestamp.
+  const PAGE_SIZE = Math.min(
+    Math.max(1, parseInt(url.searchParams.get("limit") ?? "30", 10) || 30),
+    100
+  );
+  const cursorRaw = url.searchParams.get("cursor")?.trim() || "";
+  let cursorCriadoEm: string | null = null;
+  let cursorId: string | null = null;
+  if (cursorRaw) {
+    try {
+      const decoded = Buffer.from(cursorRaw, "base64url").toString("utf-8");
+      const sep = decoded.indexOf("|");
+      if (sep > 0) {
+        cursorCriadoEm = decoded.slice(0, sep);
+        cursorId = decoded.slice(sep + 1);
+      }
+    } catch {
+      // cursor corrompido → ignora, começa da primeira página
+    }
+  }
+
+  // Pedimos PAGE_SIZE + 1 para saber se há próxima página sem query extra.
   let q = crmDb()
     .from("hub_obra_medicoes")
     .select(SELECT_MEDICAO)
     .eq("obra_id", obraId)
     .eq("tenant_id", g.ctx.tenantId) // defesa em profundidade (medições nunca são globais)
     .order("criado_em", { ascending: false })
-    .limit(500);
+    .order("id", { ascending: false })
+    .limit(PAGE_SIZE + 1);
+
   if (itemId) q = q.eq("item_id", itemId);
+
+  // Aplica o filtro do cursor: linhas ANTERIORES ao ponto de corte (ordem DESC).
+  // Usa "lt" em criado_em; desempate por id "lt" quando criado_em igual.
+  if (cursorCriadoEm) {
+    // Supabase não suporta OR em .filter() diretamente via SDK tipado →
+    // usamos o método .or() que aceita sintaxe de filtro de query string.
+    q = q.or(
+      `criado_em.lt.${cursorCriadoEm},and(criado_em.eq.${cursorCriadoEm},id.lt.${cursorId ?? ""})`
+    );
+  }
 
   const { data, error } = await q;
   if (error) {
     // Sem a migração E7c, a tabela não existe → histórico vazio + aviso honesto (não quebra).
     if (ehTabelaAusente(error)) {
-      return NextResponse.json({ data: [], migracao_pendente: true, aviso: AVISO_PENDENTE });
+      return NextResponse.json({
+        data: [],
+        next_cursor: null,
+        has_more: false,
+        migracao_pendente: true,
+        aviso: AVISO_PENDENTE,
+      });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ data: data ?? [], migracao_pendente: false });
+
+  const rows = data ?? [];
+  const has_more = rows.length > PAGE_SIZE;
+  const pageRows = has_more ? rows.slice(0, PAGE_SIZE) : rows;
+
+  // Gera o cursor para a próxima página a partir da última linha desta.
+  let next_cursor: string | null = null;
+  if (has_more && pageRows.length > 0) {
+    const last = pageRows[pageRows.length - 1] as Record<string, unknown>;
+    const raw = `${String(last.criado_em ?? "")}|${String(last.id ?? "")}`;
+    next_cursor = Buffer.from(raw).toString("base64url");
+  }
+
+  return NextResponse.json({
+    data: pageRows,
+    next_cursor,
+    has_more,
+    migracao_pendente: false,
+  });
 }
 
 /**

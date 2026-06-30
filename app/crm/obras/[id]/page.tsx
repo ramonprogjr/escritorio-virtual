@@ -7,6 +7,7 @@ import { ArvoreEscopo } from "@/components/crm/obras/ArvoreEscopo";
 import { ObraItensSecao } from "@/components/crm/obras/ObraItensSecao";
 import { ObraComprasEstoqueSecao } from "@/components/crm/obras/ObraComprasEstoqueSecao";
 import { ObraFinanceiroSecao } from "@/components/crm/obras/ObraFinanceiroSecao";
+import { SecaoHistoricoMedicoes } from "@/components/crm/obras/SecaoHistoricoMedicoes";
 
 type ObraPainel = {
   id: string;
@@ -109,7 +110,10 @@ export default function ObraPainelPage() {
       {aba === "escopo" ? (
         <ArvoreEscopo obraId={id} obraCodigo={obra.codigo} obraTitulo={obra.titulo} />
       ) : aba === "itens" ? (
-        <ObraItensSecao obraId={id} />
+        <>
+          <ObraItensSecao obraId={id} />
+          <SecaoHistoricoMedicoes obraId={id} titulo="Histórico de medições da obra" />
+        </>
       ) : aba === "compras" ? (
         <ObraComprasEstoqueSecao obraId={id} />
       ) : aba === "financeiro" ? (

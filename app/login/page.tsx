@@ -32,6 +32,28 @@ function messageForAuthRequestFailure(err: unknown): string {
   );
 }
 
+function traduzirErroAuth(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login credentials") || m.includes("invalid credentials") || m.includes("wrong password"))
+    return "E-mail ou senha incorretos. Verifique e tente novamente.";
+  if (m.includes("email not confirmed"))
+    return "E-mail ainda não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.";
+  if (m.includes("too many requests") || m.includes("rate limit"))
+    return "Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.";
+  if (m.includes("user not found") || m.includes("no user found"))
+    return "Não foi possível iniciar sessão. Verifique o e-mail ou contate o administrador.";
+  if (m.includes("email already") || m.includes("already registered"))
+    return "Este e-mail já está cadastrado.";
+  if (m.includes("password") && (m.includes("weak") || m.includes("short")))
+    return "A senha deve ter pelo menos 6 caracteres.";
+  if (m.includes("network") || m.includes("fetch"))
+    return "Falha de conexão. Verifique a sua internet e tente novamente.";
+  if (m.includes("token") || m.includes("expired") || m.includes("invalid token"))
+    return "Link expirado ou inválido. Solicite um novo link de recuperação.";
+  // Fallback: retorna PT genérico sem vazar o técnico
+  return "Não foi possível iniciar sessão. Tente novamente ou contate o administrador.";
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -85,7 +107,7 @@ function LoginForm() {
       });
       if (result.error) {
         setLoading(false);
-        setMsg(result.error.message);
+        setMsg(traduzirErroAuth(result.error.message));
         return;
       }
       data = result.data;

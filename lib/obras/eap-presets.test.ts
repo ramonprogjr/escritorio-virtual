@@ -7,6 +7,8 @@ import {
   codigoFrenteFromNome,
   frentesDoPresetParaInsert,
   mapTipologiaParaTipoObra,
+  mapTipologiaParaSegmento,
+  getPresetPorSegmento,
   TIPOS_OBRA,
 } from "./eap-presets";
 
@@ -36,6 +38,43 @@ describe("eap-presets — mapTipologiaParaTipoObra (A2)", () => {
     for (const slug of ["residencial", "corporativo", "interiores", "reforma", "comercial", "paisagismo", "xpto"]) {
       const tipo = mapTipologiaParaTipoObra(slug);
       expect(getPresetPorTipo(tipo)).toBeDefined();
+    }
+  });
+});
+
+// R1 (ESTRUTURA-UNIFICADA §7 Fase 0) — handoff Arq→Obra: a tipologia do projeto deriva o SEGMENTO
+// que o orquestrador /gerar-obra passa a criarObraComEAP. SÓ com um segmento VÁLIDO a obra nasce
+// com a árvore ambiente→item (semearItensPorAmbiente); sem mapeamento → null (degrade genérico).
+describe("eap-presets — mapTipologiaParaSegmento (R1 handoff)", () => {
+  it("mapeia as tipologias com preset por segmento", () => {
+    expect(mapTipologiaParaSegmento("residencial")).toBe("residencial");
+    expect(mapTipologiaParaSegmento("comercial")).toBe("comercial");
+    expect(mapTipologiaParaSegmento("corporativo")).toBe("corporativo");
+    expect(mapTipologiaParaSegmento("clinicas")).toBe("clinicas");
+    expect(mapTipologiaParaSegmento("clinica")).toBe("clinicas"); // sinônimo singular
+    expect(mapTipologiaParaSegmento("pdv")).toBe("pdv");
+  });
+
+  it("é case-insensitive e tolera espaços", () => {
+    expect(mapTipologiaParaSegmento("  Residencial  ")).toBe("residencial");
+    expect(mapTipologiaParaSegmento("PDV")).toBe("pdv");
+  });
+
+  it("degrade SEGURO = null para tipologias sem preset por segmento (não força segmento errado)", () => {
+    expect(mapTipologiaParaSegmento("interiores")).toBeNull();
+    expect(mapTipologiaParaSegmento("reforma")).toBeNull();
+    expect(mapTipologiaParaSegmento("paisagismo")).toBeNull();
+    expect(mapTipologiaParaSegmento(null)).toBeNull();
+    expect(mapTipologiaParaSegmento(undefined)).toBeNull();
+    expect(mapTipologiaParaSegmento("")).toBeNull();
+    expect(mapTipologiaParaSegmento("loft futurista")).toBeNull();
+  });
+
+  it("todo segmento mapeado tem preset por segmento (a obra nasce com itens por ambiente)", () => {
+    for (const tipologia of ["residencial", "comercial", "corporativo", "clinicas", "pdv"]) {
+      const seg = mapTipologiaParaSegmento(tipologia);
+      expect(seg).not.toBeNull();
+      expect(getPresetPorSegmento(seg as string)).toBeDefined();
     }
   });
 });
