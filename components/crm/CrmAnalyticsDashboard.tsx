@@ -61,12 +61,12 @@ function KpiCardView({ kpi }: { kpi: KpiCard }) {
         <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-bold ${badge.cls}`}>{badge.label}</span>
       </div>
       <div className="flex items-end justify-between gap-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-xs text-[#8b949e]">Atual</p>
-          <p className="text-lg font-bold text-[#e6edf3]">{formatValor(kpi)}</p>
+          <p className="truncate text-lg font-bold text-[#e6edf3]" title={formatValor(kpi)}>{formatValor(kpi)}</p>
         </div>
         {kpi.valor_meta != null && (
-          <div className="text-right">
+          <div className="shrink-0 text-right">
             <p className="text-xs text-[#8b949e]">Meta</p>
             <p className="text-sm font-bold text-[#e6edf3]">
               {kpi.unidade === "BRL" ? moedaPipeline(kpi.valor_meta) : `${kpi.valor_meta}${kpi.unidade === "%" ? "%" : ""}`}
@@ -258,6 +258,15 @@ export function CrmAnalyticsDashboard() {
     void carregarPipelines();
   }, [carregarPipelines]);
 
+  // A6: pré-seleciona o primeiro pipeline disponível ao carregar, para o funil de negócios não ficar vazio.
+  useEffect(() => {
+    if (pipelines.length > 0 && mercadoSelecionado == null) {
+      const primeiro = pipelines[0];
+      const sigla = primeiro?.mercado_sigla?.trim().toUpperCase() as PrefixoMercado | undefined;
+      if (sigla) setMercadoSelecionado(sigla);
+    }
+  }, [pipelines, mercadoSelecionado]);
+
   useEffect(() => {
     void carregar();
   }, [carregar]);
@@ -446,7 +455,7 @@ export function CrmAnalyticsDashboard() {
               />
               <MetricMini label="Agentes IA ativos" value={data.atendimento.agentesAtivos} cor="#4db3c4" href="/crm/agentes" />
               <MetricMini
-                label="Aprovações pendentes"
+                label="Aprovações pendentes (ao vivo)"
                 value={data.metricas.aprovacoesPendentes}
                 cor={data.metricas.aprovacoesPendentes > 0 ? "#f85149" : "#3fb950"}
                 href="/crm/aprovacoes"

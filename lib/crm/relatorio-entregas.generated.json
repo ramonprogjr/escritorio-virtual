@@ -1,7 +1,33 @@
 {
-  "geradoEm": "2026-06-30T06:16:02.511Z",
+  "geradoEm": "2026-06-30T13:55:03.812Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "2cbc089b6bcbf80d6816b9f91fe324963f61db72",
+      "hashCurto": "2cbc089",
+      "mensagem": "Domínio G (Admin/Config) — endpoint sem auth + tracker de dev exposto (PII)",
+      "mensagemRaw": "fix(seguranca/e2e): Domínio G (Admin/Config) — endpoint sem auth + tracker de dev exposto (PII)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T13:54:34.000Z",
+      "hora": "10:54",
+      "arquivos": [
+        "app/api/crm/contatos/route.ts",
+        "app/api/hub/followup-config/route.ts",
+        "app/crm/contatos/page.tsx",
+        "app/crm/progresso-sistema/page.tsx",
+        "app/crm/usuarios/page.tsx",
+        "components/crm/ProgressoSistemaDashboard.tsx",
+        "docs/E2E-DOMINIO-G-ACHADOS.md",
+        "lib/crm/server-owner-guard.ts"
+      ],
+      "areas": {
+        "app/api": 2,
+        "app/crm": 3,
+        "components/crm": 1,
+        "outros": 1,
+        "lib/crm": 1
+      }
+    },
     {
       "hash": "540647ba9cbf9607870f4ad03faadf2580965dbe",
       "hashCurto": "540647b",

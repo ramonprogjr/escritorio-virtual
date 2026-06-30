@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       .eq("tenant_id", tenantId)
       .in("status", ["aberto", "em_negociacao"]),
     supabase.from("hub_leads_crm").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("criado_em", since),
-    supabase.from("hub_aprovacoes").select("id", { count: "exact", head: true }).eq("status", "pendente"),
+    supabase.from("hub_aprovacoes").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "pendente"),
     supabase
       .from("hub_fila_mensagens")
       .select("id", { count: "exact", head: true })

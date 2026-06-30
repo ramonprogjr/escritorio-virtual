@@ -14,12 +14,20 @@ export function FunilOperacionalChart({ items }: Props) {
   const maxCount = Math.max(...items.map((i) => i.count), 0);
   const topo = maxCount > 0 ? maxCount : 1;
 
+  const ariaLabel = items.length === 0
+    ? "Funil operacional sem dados"
+    : items.map((i) => `${i.label}: ${i.count}`).join(", ");
+
   return (
-    <div className="space-y-2">
+    <div
+      className="space-y-2"
+      role="img"
+      aria-label={ariaLabel}
+    >
       {items.map((item) => {
         const pct = maxCount > 0 ? Math.round((item.count / topo) * 100) : 0;
         return (
-          <div key={item.label} className="flex items-center gap-2">
+          <div key={item.label} className="flex items-center gap-2" aria-hidden="true">
             <span
               className="min-w-[7rem] shrink-0 truncate text-right text-[10px] font-bold text-[#8b949e] sm:max-w-[9rem]"
               title={item.label}
