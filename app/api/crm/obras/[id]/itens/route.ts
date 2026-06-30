@@ -18,6 +18,7 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn } from "@/lib/tenant-default";
 import { sessaoPodeEscreverCusto } from "@/lib/obras/persona-escopo";
+import { canonicalizarAmbiente } from "@/lib/obras/escopo";
 import {
   isAndamentoItem,
   isSituacaoItem,
@@ -235,8 +236,9 @@ export async function POST(request: NextRequest, { params }: Params) {
   // lista fechada — para "Sala"/"sala "/"SALA" agregarem no MESMO subtotal por ambiente (a fonte da
   // fragmentação dos subtotais). Toda escrita em hub_obra_itens.ambiente passa por aqui.
   const camposE0b: Record<string, unknown> = {};
-  if (typeof body.ambiente === "string" && body.ambiente.trim()) {
-    camposE0b.ambiente = body.ambiente.trim().toLowerCase();
+  const ambienteCanon = canonicalizarAmbiente(typeof body.ambiente === "string" ? body.ambiente : null);
+  if (ambienteCanon) {
+    camposE0b.ambiente = ambienteCanon;
   }
   if (typeof body.taxonomia_id === "string" && body.taxonomia_id.trim()) camposE0b.taxonomia_id = body.taxonomia_id.trim();
 

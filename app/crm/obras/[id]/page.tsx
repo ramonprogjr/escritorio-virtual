@@ -7,6 +7,7 @@ import { ArvoreEscopo } from "@/components/crm/obras/ArvoreEscopo";
 import { ObraItensSecao } from "@/components/crm/obras/ObraItensSecao";
 import { ObraComprasEstoqueSecao } from "@/components/crm/obras/ObraComprasEstoqueSecao";
 import { ObraFinanceiroSecao } from "@/components/crm/obras/ObraFinanceiroSecao";
+import { ObraCronogramaSecao } from "@/components/crm/obras/ObraCronogramaSecao";
 import { SecaoHistoricoMedicoes } from "@/components/crm/obras/SecaoHistoricoMedicoes";
 
 type ObraPainel = {
@@ -23,7 +24,7 @@ const BORDA = "#1d3a2c";
 const BG_CARD = "#0f1d16";
 const DOURADO = "#c9a24a";
 
-type Aba = "escopo" | "painel" | "itens" | "compras" | "financeiro";
+type Aba = "escopo" | "painel" | "itens" | "cronograma" | "compras" | "financeiro";
 
 export default function ObraPainelPage() {
   const { id } = useParams<{ id: string }>();
@@ -78,6 +79,7 @@ export default function ObraPainelPage() {
         {([
           { id: "escopo", rotulo: "Escopo" },
           { id: "itens", rotulo: "Itens & Avanço" },
+          { id: "cronograma", rotulo: "Cronograma" },
           { id: "compras", rotulo: "Compras & Estoque" },
           { id: "financeiro", rotulo: "Financeiro" },
           { id: "painel", rotulo: "Painel" },
@@ -114,6 +116,8 @@ export default function ObraPainelPage() {
           <ObraItensSecao obraId={id} />
           <SecaoHistoricoMedicoes obraId={id} titulo="Histórico de medições da obra" />
         </>
+      ) : aba === "cronograma" ? (
+        <ObraCronogramaSecao obraId={id} />
       ) : aba === "compras" ? (
         <ObraComprasEstoqueSecao obraId={id} />
       ) : aba === "financeiro" ? (

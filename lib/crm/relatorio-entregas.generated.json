@@ -1,7 +1,49 @@
 {
-  "geradoEm": "2026-06-30T02:50:25.535Z",
+  "geradoEm": "2026-06-30T03:23:51.502Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "eccadfb56fab17d46bc04824798815260e8e9714",
+      "hashCurto": "eccadfb",
+      "mensagem": "Onda 1 — 16 pendências autônomas (integridade, segurança, UI/UX, dados) auditada",
+      "mensagemRaw": "fix(pendencias): Onda 1 — 16 pendências autônomas (integridade, segurança, UI/UX, dados) auditada",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T03:23:05.000Z",
+      "hora": "00:23",
+      "arquivos": [
+        "app/agentes/page.tsx",
+        "app/api/copiloto/executar/auditoria.test.ts",
+        "app/api/copiloto/executar/route.ts",
+        "app/api/crm/obras/[id]/medicoes/route.ts",
+        "app/api/leads/route.ts",
+        "app/comando/page.tsx",
+        "app/crm/obras/[id]/page.tsx",
+        "app/login/page.tsx",
+        "components/crm/cadastro/CadastroPremiumSideover.tsx",
+        "components/crm/obras/DrawerMedir.tsx",
+        "components/crm/obras/ObraComprasEstoqueSecao.tsx",
+        "components/crm/obras/SecaoHistoricoMedicoes.tsx",
+        "components/office/AgentsDrawer.tsx",
+        "docs/DIVIDAS-TECNICAS.md",
+        "docs/ORCAMENTARIA-SETOR-DESIGN.md",
+        "lib/crm/garantir-pessoa-lead.test.ts",
+        "lib/crm/garantir-pessoa-lead.ts",
+        "lib/ia/aprovacoes-cascata.test.ts",
+        "lib/ia/aprovacoes.ts",
+        "lib/obras/eap-presets.test.ts",
+        "supabase/migrations/20260818120000_sec_rls_e5_anon.sql",
+        "supabase/migrations/20260819120000_aut7_drop_idx_taxonomia_tenant_redundante.sql"
+      ],
+      "areas": {
+        "outros": 8,
+        "app/api": 4,
+        "app/crm": 1,
+        "app/hub": 1,
+        "components/crm": 4,
+        "lib/crm": 2,
+        "supabase/migrations": 2
+      }
+    },
     {
       "hash": "9d2b7d7f6c4612f4c91d5fe884b0b1ac2539de91",
       "hashCurto": "9d2b7d7",
