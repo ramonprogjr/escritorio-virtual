@@ -172,7 +172,7 @@ export default function Relatorios() {
                 key={e.id}
                 type="button"
                 onClick={() => setEntidadeAtiva(e.id)}
-                className="rounded-lg px-3 py-2 text-xs font-bold transition-colors"
+                className="min-h-11 rounded-lg px-3 py-2 text-xs font-bold transition-colors"
                 style={{
                   background: entidadeAtiva === e.id ? "#1d3a2c" : "#16271e",
                   color: entidadeAtiva === e.id ? "#e6edf3" : "#8b949e",

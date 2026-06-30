@@ -10,7 +10,7 @@ interface Props { children: React.ReactNode; }
 
 function mobileFallback(children: React.ReactNode) {
   return (
-    <div className="min-h-[100dvh]" style={{ background: "#0d1117" }}>
+    <div className="min-h-[100dvh]" style={{ background: "#0a140f" }}>
       {children}
     </div>
   );

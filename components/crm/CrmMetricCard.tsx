@@ -14,7 +14,7 @@ type Props = {
 export function CrmMetricCardSkeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-4 ${className}`}
+      className={`animate-pulse rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4 ${className}`}
       aria-hidden
     >
       <div className="mb-2 h-3 w-24 rounded bg-[#16271e]" />

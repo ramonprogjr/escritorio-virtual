@@ -632,7 +632,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         <div
           className="flex flex-shrink-0 items-center justify-between gap-2 border-b px-3 py-2 md:hidden sticky top-0 z-30 backdrop-blur-md supports-[backdrop-filter]:bg-[#0c1712]/90"
           style={{
-            background: "rgba(22, 27, 34, 0.96)",
+            background: "rgba(15, 29, 22, 0.96)",
             borderColor: "var(--obra-borda, #1d3a2c)",
             paddingTop: "max(0.5rem, env(safe-area-inset-top))",
           }}

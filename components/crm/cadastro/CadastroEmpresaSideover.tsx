@@ -315,7 +315,7 @@ export function CadastroEmpresaSideover({
                 padding: "10px 16px",
                 borderRadius: 8,
                 border: "none",
-                background: "#da3633",
+                background: "#f85149",
                 color: "#fff",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -349,9 +349,9 @@ export function CadastroEmpresaSideover({
           style={{
             padding: "10px 20px",
             borderRadius: 8,
-            border: "none",
-            background: "#238636",
-            color: "#fff",
+            border: "1px solid rgba(201,162,74,0.35)",
+            background: "#003b26",
+            color: "#c9a24a",
             fontWeight: 700,
             cursor: "pointer",
           }}
