@@ -86,6 +86,9 @@ type ScRow = {
 
 type SubAba = "sc" | "inventario";
 
+/** Tipos de movimentação manual disparados pelo card de inventário (entrada nasce da SC). */
+type TipoMovManual = "saida" | "devolucao";
+
 export function ObraComprasEstoqueSecao({ obraId }: { obraId: string }) {
   const [subAba, setSubAba] = useState<SubAba>("sc");
   const [migracaoPendente, setMigracaoPendente] = useState(false);
@@ -685,7 +688,12 @@ function PainelInventario({
   const [inv, setInv] = useState<InventarioRow[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [filtro, setFiltro] = useState("");
-  const [movItem, setMovItem] = useState<InventarioRow | null>(null);
+  // Guarda o item E o tipo pretendido (saída/devolução): o card abre o drawer já no
+  // tipo certo — sem isto ambos os botões abriam sempre em "saída" (AUT-12).
+  const [movAlvo, setMovAlvo] = useState<{ item: InventarioRow; tipo: TipoMovManual } | null>(null);
+  const abrirMov = useCallback((item: InventarioRow, tipo: TipoMovManual) => {
+    setMovAlvo({ item, tipo });
+  }, []);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -774,11 +782,11 @@ function PainelInventario({
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                  <button type="button" onClick={() => setMovItem(r)} style={botaoSecundario}>
+                  <button type="button" onClick={() => abrirMov(r, "saida")} style={botaoSecundario}>
                     <ArrowDownToLine size={13} style={{ verticalAlign: "-2px", marginRight: 4, transform: "rotate(180deg)" }} />
                     Saída
                   </button>
-                  <button type="button" onClick={() => setMovItem(r)} style={botaoSecundario}>
+                  <button type="button" onClick={() => abrirMov(r, "devolucao")} style={botaoSecundario}>
                     <Undo2 size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
                     Devolução
                   </button>
@@ -789,13 +797,14 @@ function PainelInventario({
         </div>
       )}
 
-      {movItem && (
+      {movAlvo && (
         <DrawerMovimentacao
           obraId={obraId}
-          item={movItem}
-          onFechar={() => setMovItem(null)}
+          item={movAlvo.item}
+          tipoInicial={movAlvo.tipo}
+          onFechar={() => setMovAlvo(null)}
           onRegistrada={() => {
-            setMovItem(null);
+            setMovAlvo(null);
             void carregar();
           }}
           onMigracaoPendente={onMigracaoPendente}
@@ -809,17 +818,19 @@ function PainelInventario({
 function DrawerMovimentacao({
   obraId,
   item,
+  tipoInicial,
   onFechar,
   onRegistrada,
   onMigracaoPendente,
 }: {
   obraId: string;
   item: InventarioRow;
+  tipoInicial: TipoMovManual;
   onFechar: () => void;
   onRegistrada: () => void;
   onMigracaoPendente: (v: boolean) => void;
 }) {
-  const [tipo, setTipo] = useState<"saida" | "devolucao">("saida");
+  const [tipo, setTipo] = useState<TipoMovManual>(tipoInicial);
   const [qtd, setQtd] = useState(1);
   const [motivo, setMotivo] = useState("");
   const [salvando, setSalvando] = useState(false);

@@ -58,7 +58,7 @@ export function CadastroPremiumSideover({
           width: "min(640px, 100vw)",
           zIndex: 211,
           background: "#0f1d16",
-          borderLeft: "1px solid #2d394b",
+          borderLeft: "1px solid var(--obra-borda,#1d3a2c)",
           boxShadow: "-12px 0 32px rgba(0,0,0,0.45)",
           display: "flex",
           flexDirection: "column",
@@ -67,10 +67,10 @@ export function CadastroPremiumSideover({
       >
         <div
           style={{
-            borderBottom: "1px solid #2d394b",
+            borderBottom: "1px solid var(--obra-borda,#1d3a2c)",
             padding: 16,
             paddingTop: "max(16px, env(safe-area-inset-top))",
-            background: "linear-gradient(180deg,#121a26 0%, #101722 100%)",
+            background: "linear-gradient(180deg, var(--obra-dark-2,#0f1d16) 0%, var(--obra-dark,#0a140f) 100%)",
             flexShrink: 0,
           }}
         >
@@ -84,7 +84,7 @@ export function CadastroPremiumSideover({
                 Icon={Icon}
               />
               <div style={{ minWidth: 0 }}>
-                <p style={{ margin: 0, color: "#8ea1ba", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>
+                <p style={{ margin: 0, color: "var(--obra-texto-2,#8b949e)", fontSize: 11, letterSpacing: 0.8, fontWeight: 700 }}>
                   {kindLabel}
                 </p>
                 <h3 style={{ margin: "3px 0 0", color: "#e6edf3", fontSize: 17, wordBreak: "break-word" }}>
@@ -93,7 +93,7 @@ export function CadastroPremiumSideover({
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8 }}>
                   {badge}
                   {subtitle ? (
-                    <span style={{ fontSize: 11, color: "#7f90a8" }}>{subtitle}</span>
+                    <span style={{ fontSize: 11, color: "var(--obra-texto-2,#8b949e)" }}>{subtitle}</span>
                   ) : null}
                 </div>
               </div>
@@ -103,9 +103,9 @@ export function CadastroPremiumSideover({
               onClick={onClose}
               aria-label="Fechar"
               style={{
-                border: "1px solid #344256",
-                background: "#1d2633",
-                color: "#9eb0c8",
+                border: "1px solid var(--obra-borda,#1d3a2c)",
+                background: "var(--obra-dark-3,#16271e)",
+                color: "var(--obra-texto-2,#8b949e)",
                 borderRadius: 8,
                 width: 34,
                 height: 34,
@@ -129,7 +129,7 @@ export function CadastroPremiumSideover({
               flexShrink: 0,
               padding: "14px 20px",
               paddingBottom: "max(14px, env(safe-area-inset-bottom))",
-              borderTop: "1px solid #2d394b",
+              borderTop: "1px solid var(--obra-borda,#1d3a2c)",
               display: "flex",
               gap: 10,
               justifyContent: "flex-end",
@@ -167,7 +167,7 @@ export function CadastroSideoverPanel({
       }}
     >
       {temCabecalho ? (
-        <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(37, 48, 66, 0.9)" }}>
+        <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--obra-borda,#1d3a2c)" }}>
           {titulo != null ? (
             <p style={{ color: "#8ea1ba", fontSize: 11, margin: 0, fontWeight: 700 }}>{titulo}</p>
           ) : null}

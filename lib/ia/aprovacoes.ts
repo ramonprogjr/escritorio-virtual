@@ -47,11 +47,41 @@ function isMissingPgFunction(err: { code?: string; message?: string } | null): b
 }
 
 /**
+ * AUT-1 / SEC-8 (integridade financeira): registra no log de decisões que o snapshot de custo
+ * FALHOU por um erro REAL (não "função ausente"). Best-effort puro — nunca lança, nunca bloqueia.
+ * Usa registrarDecisao (tenant SEMPRE; tolera a coluna tenant_id ausente). Sem isto, um custo
+ * não-materializado some do radar (só ia para console.warn, invisível à reconciliação).
+ */
+async function logarFalhaSnapshot(
+  db: ReturnType<typeof supabase>,
+  tenant: string,
+  obraId: string,
+  frenteId: string | null,
+  detalhe: string
+): Promise<void> {
+  try {
+    await registrarDecisao(db, tenant, {
+      agente_slug: "hub",
+      tipo: "snapshot_custo_falhou",
+      descricao: `Snapshot de custo da frente falhou (reconciliar): obra=${obraId} frente=${
+        frenteId ?? "todas"
+      } — ${detalhe}`.slice(0, 1000),
+      aprovado_por: "sistema",
+      resultado: "falha_snapshot_custo",
+    });
+  } catch {
+    // O log de reconciliação é best-effort sobre best-effort — nunca afeta a aprovação.
+  }
+}
+
+/**
  * E7c (Fase 3a — decisão #1): copia o snapshot de custo dos orçamentos APROVADOS da frente para o
  * item-mãe, via rpc_snapshot_custo_frente (E7b). TOLERANTE: se a função ainda não existe (migração
  * E7b pendente), ignora silenciosamente — a aprovação JAMAIS quebra por causa do snapshot de custo.
- * tenant_id é sempre o da sessão (já validado em aprovar()). Qualquer outro erro também é tolerado
- * (apenas logado): o snapshot é um efeito secundário do gate, nunca um bloqueador do dinheiro.
+ * tenant_id é sempre o da sessão (já validado em aprovar()). Qualquer outro erro também é tolerado,
+ * mas AGORA é REGISTRADO em hub_decision_logs (AUT-1/SEC-8): o snapshot é um efeito secundário do
+ * gate, nunca um bloqueador do dinheiro — porém um custo que não materializou precisa de rastro para
+ * reconciliação, não pode evaporar num console.warn.
  */
 async function snapshotCustoFrenteTolerante(
   db: ReturnType<typeof supabase>,
@@ -65,12 +95,21 @@ async function snapshotCustoFrenteTolerante(
       p_frente_id: frenteId,
       p_tenant_id: tenant,
     });
+    // A ausência da FUNÇÃO (E7b não aplicada) continua silenciosa — é estado esperado, não falha.
     if (error && !isMissingPgFunction(error)) {
       console.warn("[APROVAÇÕES] snapshot de custo falhou (ignorado, não bloqueia):", error.message);
+      await logarFalhaSnapshot(db, tenant, obraId, frenteId, error.message || "erro_desconhecido");
     }
   } catch (e) {
     // Falha de rede/qualquer exceção: o snapshot é best-effort. A aprovação já foi gravada.
     console.warn("[APROVAÇÕES] snapshot de custo lançou exceção (ignorado):", e);
+    await logarFalhaSnapshot(
+      db,
+      tenant,
+      obraId,
+      frenteId,
+      e instanceof Error ? e.message : "excecao_desconhecida"
+    );
   }
 }
 

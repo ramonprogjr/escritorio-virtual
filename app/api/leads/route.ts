@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
+import { garantirPessoaParaLead } from "@/lib/crm/garantir-pessoa-lead";
+import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -25,20 +27,45 @@ export async function POST(request: NextRequest) {
   const body = await request.json() as Record<string, unknown>;
   if (!body.nome) return NextResponse.json({ error: "nome required" }, { status: 400 });
 
-  const row = await prepararRowHubLeadInsert(db(), {
-    nome: body.nome,
-    telefone: body.telefone ?? null,
-    email: body.email ?? null,
-    origem: body.origem ?? "outro",
-    campanha: body.campanha ?? null,
-    estagio: body.estagio ?? "novo",
-    valor_estimado: body.valor_estimado ?? 0,
-    score: body.score ?? 50,
-    tags: body.tags ?? [],
-    metadata: { origem_cadastro: "api_leads_legacy" },
+  const supabase = db();
+  const tenantId = defaultTenantId();
+
+  // CÓDIGO ÚNICO (AUT-2): todo lead garante UMA hub_pessoas (dedup por CPF e/ou
+  // telefone — não duplica; vincula pessoa_id ao lead). Antes esta rota legada
+  // inseria lead SEM pessoa, criando lead órfão sem código PES.
+  const pessoa = await garantirPessoaParaLead(supabase, tenantId, {
+    nome: typeof body.nome === "string" ? body.nome : null,
+    telefone: typeof body.telefone === "string" ? body.telefone : null,
+    documento: typeof body.documento === "string" ? body.documento : null,
+    origem: typeof body.origem === "string" ? body.origem : "outro",
   });
 
-  const { data, error } = await db().from("hub_leads_crm").insert(row).select().single();
+  const row = await prepararRowHubLeadInsert(
+    supabase,
+    {
+      nome: body.nome,
+      telefone: body.telefone ?? null,
+      email: body.email ?? null,
+      origem: body.origem ?? "outro",
+      campanha: body.campanha ?? null,
+      estagio: body.estagio ?? "novo",
+      valor_estimado: body.valor_estimado ?? 0,
+      score: body.score ?? 50,
+      tags: body.tags ?? [],
+      ...(pessoa.pessoaId ? { pessoa_id: pessoa.pessoaId } : {}),
+      metadata: { origem_cadastro: "api_leads_legacy" },
+    },
+    { pessoa_codigo: pessoa.codigo }
+  );
+
+  let { data, error } = await supabase.from("hub_leads_crm").insert(row).select().single();
+
+  // Schema legado sem a coluna pessoa_id → regrava o lead sem o vínculo (a pessoa
+  // já foi garantida; o lead não fica órfão da gravação por causa de uma coluna).
+  if (error && isMissingPgColumn(error, "pessoa_id")) {
+    const { pessoa_id: _omit, ...semPessoa } = row;
+    ({ data, error } = await supabase.from("hub_leads_crm").insert(semPessoa).select().single());
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });

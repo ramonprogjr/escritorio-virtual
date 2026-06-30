@@ -228,7 +228,7 @@ export function AgentsDrawer({ aberto, onFechar, onAgenteClick }: AgentsDrawerPr
         {/* Footer */}
         <div className="px-4 py-3 border-t border-gray-800 flex-shrink-0">
           <a
-            href="/agentes"
+            href="/crm/agentes"
             className="block w-full text-center bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 text-xs font-medium rounded-lg py-2 transition-colors"
           >
             Configurar Agentes →

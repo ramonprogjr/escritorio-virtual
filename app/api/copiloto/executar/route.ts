@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { executarFerramentaHub } from "@/lib/hub/executar-ferramenta-ia";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
+import { isMissingPgColumn } from "@/lib/tenant-default";
 import {
   COPILOTO_AGENTE_SLUG,
   CopilotoSegredoAusenteError,
@@ -9,6 +11,51 @@ import {
   nivelDaFerramenta,
   validarConfirmacao,
 } from "@/lib/copiloto/copiloto-core";
+
+/**
+ * SEC-7 (auditoria das tools de ESCRITA da IA): grava QUEM/QUAL ferramenta/QUANDO/tenant em
+ * hub_decision_logs quando o copiloto executa uma escrita. Este endpoint é o ÚNICO caminho de
+ * escrita do copiloto (HMAC + allowlist + confirmação humana já validados acima), então é o
+ * chokepoint correto — uma linha por escrita, sem instrumentar cada tool.
+ *
+ * TOLERÂNCIA (igual lib/ia/aprovacoes.ts): tenant_id é gravado SEMPRE (service_role bypassa RLS —
+ * log de ação da IA não pode nascer órfão); se a coluna tenant_id ainda não existe (migração E7
+ * pendente), repete o INSERT sem ela. Best-effort puro: NUNCA quebra a execução da ferramenta —
+ * a auditoria é efeito secundário, não bloqueador.
+ */
+function auditDb() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
+export async function auditarEscritaCopiloto(
+  tenant: string,
+  ferramenta: string,
+  leadId: string,
+  sucesso: boolean
+): Promise<void> {
+  try {
+    const db = auditDb();
+    const linha: Record<string, unknown> = {
+      agente_slug: COPILOTO_AGENTE_SLUG,
+      tipo: "ferramenta_ia_escrita",
+      descricao: `Copiloto executou ${ferramenta}${leadId ? ` (lead ${leadId})` : ""}`,
+      lead_id: leadId || null,
+      aprovado_por: "humano",
+      resultado: sucesso ? "executado" : "falhou",
+    };
+    const tenantTrim = (tenant ?? "").trim();
+    const comTenant = tenantTrim ? { tenant_id: tenantTrim, ...linha } : linha;
+    const { error } = await db.from("hub_decision_logs").insert(comTenant);
+    if (error && tenantTrim && isMissingPgColumn(error, "tenant_id")) {
+      await db.from("hub_decision_logs").insert(linha); // migração E7 (tenant_id) ainda não aplicada
+    }
+  } catch {
+    // Auditoria best-effort: nunca afeta a resposta ao usuário.
+  }
+}
 
 /**
  * POST { ferramenta, params, confirmacaoId, ts, contexto:{ leadId? } }
@@ -101,11 +148,17 @@ export async function POST(request: NextRequest) {
       ...(ehEscrita && !semLead ? { modoOperacao: "canal_whatsapp" } : {}),
     });
   } catch (e) {
+    // SEC-7: registra a tentativa de escrita que FALHOU por exceção (auditoria não some no erro).
+    if (ehEscrita) await auditarEscritaCopiloto(auth.tenantId, ferramenta, leadId, false);
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Falha ao executar." },
       { status: 500 }
     );
   }
+
+  // SEC-7: auditoria da ESCRITA da IA (quem/qual ferramenta/quando/tenant). Só para escrita —
+  // leitura não muda dados. Best-effort: não bloqueia a resposta nem falha o request.
+  if (ehEscrita) await auditarEscritaCopiloto(auth.tenantId, ferramenta, leadId, true);
 
   let resultado: unknown = resultadoStr;
   try {

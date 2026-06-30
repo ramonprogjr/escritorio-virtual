@@ -1,0 +1,34 @@
+-- ============================================================================
+-- AUT-7 — DROP do índice redundante `idx_taxonomia_tenant` (custo de escrita à toa)
+--         (higiene da EAP/taxonomia — sem mudança de comportamento)
+--
+-- ⚠️  NÃO aplicar — janela do dono.
+--     100% ADITIVA-NEGATIVA (só remove um índice redundante), REVERSÍVEL e segura.
+--
+-- POR QUE É REDUNDANTE:
+--   A tabela hub_obra_taxonomia (criada em 20260711120000_e0b_taxonomia_ambiente_segmento.sql)
+--   já tem a constraint UNIQUE:
+--       hub_obra_taxonomia_codigo_uniq UNIQUE NULLS NOT DISTINCT (tenant_id, codigo)
+--   que cria um índice B-tree implícito com PREFIXO = tenant_id. Qualquer consulta que
+--   filtra/ordena por `tenant_id` (ou por `tenant_id, codigo`) já é servida por esse índice
+--   do UNIQUE. O índice EXTRA `idx_taxonomia_tenant (tenant_id)` é, portanto, redundante:
+--   só duplica trabalho em todo INSERT/UPDATE (mais um índice a manter) sem ganho de leitura.
+--
+--   (Os outros índices da tabela NÃO são afetados e permanecem:
+--      - idx_taxonomia_disc (disciplina_slug, ativo, ordem) — leitura por disciplina;
+--      - idx_taxonomia_fts (GIN to_tsvector) — busca textual da IA;
+--      - idx_taxonomia_sin (GIN sinonimos) — busca por sinônimo;
+--      - o índice implícito do UNIQUE (tenant_id, codigo) — cobre o filtro por tenant.)
+--
+-- ⚠️  ORDEM DE APPLY: depende de 20260711120000 (E0.5) já ter criado a tabela/índice.
+--     O timestamp deste arquivo (20260819120000) garante que roda DEPOIS.
+--     Idempotente: DROP INDEX IF EXISTS — se o índice já não existir, não falha.
+-- ============================================================================
+
+DROP INDEX IF EXISTS public.idx_taxonomia_tenant;
+
+-- ============================================================================
+-- ROLLBACK (se necessário — recria o índice exatamente como em 20260711120000):
+--   CREATE INDEX IF NOT EXISTS idx_taxonomia_tenant
+--     ON public.hub_obra_taxonomia (tenant_id);
+-- ============================================================================

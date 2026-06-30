@@ -1,7 +1,30 @@
 {
-  "geradoEm": "2026-06-30T01:27:56.668Z",
+  "geradoEm": "2026-06-30T02:50:25.535Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "9d2b7d7f6c4612f4c91d5fe884b0b1ac2539de91",
+      "hashCurto": "9d2b7d7",
+      "mensagem": "Orçamentária v1 (obra) — memorial + planilha da mesma árvore",
+      "mensagemRaw": "feat(orcamentaria): Orçamentária v1 (obra) — memorial + planilha da mesma árvore",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-06-30T02:48:17.000Z",
+      "hora": "23:48",
+      "arquivos": [
+        "app/crm/obras/[id]/page.tsx",
+        "components/crm/obras/ArvoreEscopo.tsx",
+        "docs/MISTRAL-RESOLVER-AMANHA.md",
+        "docs/PENDENCIAS-BACKLOG-TRIAGE.md",
+        "docs/PLANO-NOITE.md",
+        "lib/obras/orcamentaria.test.ts",
+        "lib/obras/orcamentaria.ts"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "components/crm": 1,
+        "outros": 5
+      }
+    },
     {
       "hash": "2893cb0e14eaf4af0f62f094f27abd95f19638c1",
       "hashCurto": "2893cb0",
