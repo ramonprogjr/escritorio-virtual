@@ -45,17 +45,17 @@ export function CrmPageHeader({
 
   return (
     <header
-      className={`relative z-[12] flex min-h-[4.25rem] flex-shrink-0 items-start justify-between gap-3 border-b border-[rgba(48,54,61,0.45)] px-3 py-3.5 md:min-h-[4.5rem] md:items-center md:gap-4 md:border-b md:border-[rgba(48,54,61,0.35)] md:pl-2 md:pr-6 md:py-4 ${
+      className={`relative z-[12] flex min-h-[4.25rem] flex-shrink-0 items-start justify-between gap-3 border-b border-[rgba(48,54,61,0.45)] px-3 py-3.5 md:min-h-[4.5rem] md:flex-wrap md:items-center md:gap-x-4 md:gap-y-2 md:border-b md:border-[rgba(48,54,61,0.35)] md:pl-2 md:pr-6 md:py-4 ${
         blendDesktopUnderlap
           ? "max-md:[background:var(--crm-header-grad)] max-md:[box-shadow:inset_0_-1px_0_rgba(0,0,0,0.22)] md:!bg-[var(--crm-header-chrome-solid)] md:!shadow-none"
           : ""
       } ${className}`}
       style={barStyle}
     >
-      <div className="flex min-w-0 flex-1 items-start gap-2 md:items-center md:gap-2.5">
+      <div className="flex min-w-0 flex-1 items-start gap-2 md:min-w-[13rem] md:items-center md:gap-2.5">
         <CrmSidebarToggleButton variant="header" className="mt-0.5 shrink-0 md:mt-0" />
         <div className="min-w-0 flex-1">
-          <h1 className="text-[1.0625rem] font-bold leading-tight tracking-tight text-white md:text-xl">{title}</h1>
+          <h1 className="truncate text-[1.0625rem] font-bold leading-tight tracking-tight text-white md:text-xl">{title}</h1>
           {subtitle != null && subtitle !== "" ? (
             <div className="mt-0.5 text-xs leading-snug md:text-sm" style={{ color: "var(--obra-texto-2, #8b949e)" }}>
               {subtitle}
