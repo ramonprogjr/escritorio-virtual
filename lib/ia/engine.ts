@@ -327,6 +327,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
               modoOperacao:
                 (ferrIaRow as { modo_operacao?: string | null } | null | undefined)?.modo_operacao ?? null,
             }),
+          tenantId: ctx.tenantId ?? defaultTenantId(),
         })
       : await completarChatPreferindoMistral({
           systemPrompt,

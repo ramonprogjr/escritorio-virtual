@@ -9,6 +9,7 @@ import {
   type MistralChatToolDefinition,
 } from "@/lib/ia/mistral-chat-tools";
 import { blocoInstrucoesFerramentasCrmWhatsapp } from "@/lib/ia/bloco-ferramentas-crm-whatsapp";
+import { assertSaldoAntesDoLLM } from "@/lib/ia/metering";
 
 const MAX_TOOL_ROUNDS = 6;
 
@@ -18,6 +19,13 @@ type ToolCallExecLog = {
   resultadoPreview: string;
 };
 
+/**
+ * `tenantId` (opcional): quando presente, roda o gate `assertSaldoAntesDoLLM` ANTES de
+ * gastar qualquer token (mesmo padrão de `completarChatPreferindoMistral` em
+ * `lib/ia/llm-completion.ts`). Em modo sombra (default) o gate nunca bloqueia, só loga;
+ * em modo bloqueio, com saldo insuficiente, retorna erro sem chamar o provedor. Call
+ * sites sem `tenantId` mantêm o comportamento anterior (sem gate).
+ */
 export async function completarChatComFerramentasMistral(params: {
   systemPrompt: string;
   mensagens: Array<{ role: "user" | "assistant"; content: string }>;
@@ -27,6 +35,7 @@ export async function completarChatComFerramentasMistral(params: {
   /** Playbook Unificado no bucket — menus list (5) / button (2). */
   playbookPublicado?: boolean;
   executarTool: (nome: string, argumentosSerializados: string) => Promise<string>;
+  tenantId?: string;
 }): Promise<
   | {
       ok: true;
@@ -38,6 +47,13 @@ export async function completarChatComFerramentasMistral(params: {
     }
   | { ok: false; erro: string }
 > {
+  if (params.tenantId?.trim()) {
+    const gate = await assertSaldoAntesDoLLM(params.tenantId.trim());
+    if (!gate.permitido) {
+      return { ok: false, erro: "Saldo de créditos de IA esgotado. Recarregue os Tijolos para continuar." };
+    }
+  }
+
   const mistralKey = process.env.MISTRAL_API_KEY?.trim();
   if (!mistralKey) {
     return { ok: false, erro: "MISTRAL_API_KEY não configurada." };

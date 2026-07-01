@@ -62,6 +62,13 @@ export type GerarPlaybookOpts = {
   modeloFromDb?: string;
   /** Modelo da última tentativa de auto-fix (mais robusto). Default "claude-sonnet-4-6". */
   modeloAutoFix?: string;
+  /**
+   * Tenant da sessão do caller (nunca do body). Repassado a cada chamada `llm(...)` para que
+   * `completarChatPreferindoMistral` rode o gate `assertSaldoAntesDoLLM` ANTES de gastar tokens
+   * (mesmo padrão do chokepoint em `lib/ia/llm-completion.ts`). Opcional — quando ausente, o
+   * comportamento é o mesmo de antes (sem gate).
+   */
+  tenantId?: string;
 };
 
 const MODELO_BASE_PADRAO = "mistral";
@@ -238,6 +245,7 @@ export async function gerarPlaybookViaIa(
     mensagens: [{ role: "user", content: `## Descrição\n${descricao}\n\n## Agente\n${nome}` }],
     modeloFromDb: modeloBase,
     maxTokens: 1400,
+    tenantId: opts.tenantId,
   });
   if (!r1.ok) return { ok: false, erro: `Falha ao gerar as regras: ${r1.erro}`, usos };
   usos.push({ fase: "narrativa", modeloLog: r1.modeloLog, tokensEntrada: r1.tokensEntrada, tokensSaida: r1.tokensSaida });
@@ -256,6 +264,7 @@ export async function gerarPlaybookViaIa(
       mensagens: [{ role: "user", content: buildUserFluxo(descricao, regras, ehAutoFix ? ultimosErros : undefined) }],
       modeloFromDb: modelo,
       maxTokens: 3000,
+      tenantId: opts.tenantId,
     });
     if (!r.ok) {
       ultimosErros = [`Erro do provedor IA: ${r.erro}`];
