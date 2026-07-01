@@ -333,6 +333,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
           mensagens,
           modeloFromDb: modelo,
           maxTokens: 1024,
+          tenantId: ctx.tenantId ?? defaultTenantId(),
         });
     // Se tools Mistral falharem (ex.: 503 temporário), tenta sem tools antes de desistir.
     if (!out.ok && podeToolsMistral) {
@@ -341,6 +342,7 @@ export async function processarMensagem(ctx: ContextoMensagem): Promise<Resultad
         mensagens,
         modeloFromDb: modelo,
         maxTokens: 1024,
+        tenantId: ctx.tenantId ?? defaultTenantId(),
       });
       if (fallbackSemTools.ok) {
         out = fallbackSemTools;
@@ -633,6 +635,8 @@ export async function processarDemandaInterna(demanda: Demanda & {
       mensagens: [{ role: "user", content: `${demanda.titulo}\n\n${demanda.mensagem}` }],
       modeloFromDb: agente.modelo,
       maxTokens: 2048,
+      // demanda interna sem sessão → mesmo padrão do criarAprovacao acima (defaultTenantId()).
+      tenantId: defaultTenantId(),
     });
     if (!saida.ok) return { sucesso: false, erro: saida.erro };
 

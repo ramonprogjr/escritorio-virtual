@@ -1,7 +1,27 @@
 {
-  "geradoEm": "2026-07-01T13:16:17.148Z",
+  "geradoEm": "2026-07-01T13:26:07.735Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "30eafdb857b5535da8f16aaa59c76bbbac54ce01",
+      "hashCurto": "30eafdb",
+      "mensagem": "Batch 4 — últimas flags da varredura (leads GET tenant + ml/ciclo guard + atendimento tenant-scope + rate-limit CNPJ)",
+      "mensagemRaw": "fix(seguranca): Batch 4 — últimas flags da varredura (leads GET tenant + ml/ciclo guard + atendimento tenant-scope + rate-limit CNPJ)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T13:25:55.000Z",
+      "hora": "10:25",
+      "arquivos": [
+        "app/api/crm/atendimento/send/route.ts",
+        "app/api/crm/consultar-cnpj/route.ts",
+        "app/api/leads/route.ts",
+        "app/api/ml/ciclo/route.ts",
+        "lib/crm/atendimento-handoff.ts"
+      ],
+      "areas": {
+        "app/api": 4,
+        "lib/crm": 1
+      }
+    },
     {
       "hash": "71bb5f450b3f94aa32fb1f4ca291c1a0016f220c",
       "hashCurto": "71bb5f4",
@@ -6571,23 +6591,6 @@
         "app/crm/negocios/[id]/page.tsx"
       ],
       "areas": {
-        "app/crm": 1
-      }
-    },
-    {
-      "hash": "249b3a1b2f5f2198de31ec7c9e0f17a0caefef3c",
-      "hashCurto": "249b3a1",
-      "mensagem": "CRM manual #4 — ficha do negocio: proxima-acao auto-save + nota na timeline",
-      "mensagemRaw": "feat(crm): CRM manual #4 — ficha do negocio: proxima-acao auto-save + nota na timeline",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T13:25:03.000Z",
-      "hora": "10:25",
-      "arquivos": [
-        "app/api/crm/negocios/[id]/nota/route.ts",
-        "app/crm/negocios/[id]/page.tsx"
-      ],
-      "areas": {
-        "app/api": 1,
         "app/crm": 1
       }
     }
