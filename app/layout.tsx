@@ -46,8 +46,8 @@ export const viewport: Viewport = {
   themeColor: "#003b26",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // a11y (WCAG 1.4.4): permitir zoom/pinch — removidos maximumScale:1 e userScalable:false.
+  // O auto-zoom de input do iOS já é evitado por font-size:16px nos inputs (globals.css), não aqui.
   viewportFit: "cover",
 };
 

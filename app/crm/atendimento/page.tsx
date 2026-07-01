@@ -180,31 +180,38 @@ function AtendimentoContent() {
 
   async function carregarLeads() {
     const qs = filtro !== "todos" ? `?estagio=${filtro}` : "";
-    const res = await fetch(`/api/crm/atendimento${qs}`, { headers: internalApiHeaders() });
-    const json = await res.json();
-    setLeads((json.leads ?? []).map((d: Record<string, unknown>) => ({
-      id: d.id as string,
-      nome: (d.nome as string) || "Lead",
-      telefone: d.telefone as string,
-      email: d.email as string,
-      estagio: (d.estagio as string) || "novo",
-      origem: (d.origem as string) || "whatsapp",
-      valor_estimado: d.valor_estimado as number,
-      criado_em: d.criado_em as string,
-      agente_responsavel: d.agente_responsavel as string,
-      humano_responsavel: d.humano_responsavel as string,
-      score: d.score as number,
-      ultimo_contato: d.ultimo_contato as string,
-      campanha: d.campanha as string,
-      proxima_acao: d.proxima_acao as string,
-      data_proxima_acao: d.data_proxima_acao as string,
-      interesse_principal: d.interesse_principal as string,
-      tags: Array.isArray(d.tags) ? (d.tags as string[]) : [],
-      observacoes: d.observacoes,
-      metadata: (d.metadata && typeof d.metadata === "object" ? d.metadata : undefined) as Record<string, unknown> | undefined,
-    })));
-    leadsCarregados.current = true;
-    setCarregando(false);
+    try {
+      const res = await fetch(`/api/crm/atendimento${qs}`, { headers: internalApiHeaders() });
+      if (!res.ok) throw new Error(`Falha ao carregar atendimento (HTTP ${res.status})`);
+      const json = await res.json();
+      setLeads((json.leads ?? []).map((d: Record<string, unknown>) => ({
+        id: d.id as string,
+        nome: (d.nome as string) || "Lead",
+        telefone: d.telefone as string,
+        email: d.email as string,
+        estagio: (d.estagio as string) || "novo",
+        origem: (d.origem as string) || "whatsapp",
+        valor_estimado: d.valor_estimado as number,
+        criado_em: d.criado_em as string,
+        agente_responsavel: d.agente_responsavel as string,
+        humano_responsavel: d.humano_responsavel as string,
+        score: d.score as number,
+        ultimo_contato: d.ultimo_contato as string,
+        campanha: d.campanha as string,
+        proxima_acao: d.proxima_acao as string,
+        data_proxima_acao: d.data_proxima_acao as string,
+        interesse_principal: d.interesse_principal as string,
+        tags: Array.isArray(d.tags) ? (d.tags as string[]) : [],
+        observacoes: d.observacoes,
+        metadata: (d.metadata && typeof d.metadata === "object" ? d.metadata : undefined) as Record<string, unknown> | undefined,
+      })));
+    } catch (e) {
+      // Não deixa a tela em loading infinito se a API falhar (auth/rede).
+      if (process.env.NODE_ENV !== "production") console.warn("carregarLeads falhou:", e);
+    } finally {
+      leadsCarregados.current = true;
+      setCarregando(false);
+    }
   }
 
   // ── Mensagens ────────────────────────────────────────────────────────────
