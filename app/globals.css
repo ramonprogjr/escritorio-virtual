@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* FONTES da marca — variáveis usadas pelo body/Tailwind. As fontes são carregadas
+   via <link> em app/layout.tsx (runtime, o navegador baixa do Google), NÃO no build.
+   Isso impede que o build do Render quebre ao tentar baixar as fontes. */
+:root {
+  --font-poppins: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-playfair: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-space-mono: "Space Mono", "JetBrains Mono", "Courier New", monospace;
+}
+
 html, body {
   overflow-x: hidden;
   max-width: 100vw;

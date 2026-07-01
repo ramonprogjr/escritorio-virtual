@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
-import { Poppins, Playfair_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 
 /** Fora do chunk crítico app/layout.js — evita ChunkLoadError por bundle pesado (MobileShell/Supabase). */
@@ -12,26 +11,10 @@ const ToastViewport = dynamic(() =>
   import("@/components/crm/toast").then((m) => m.ToastViewport),
 );
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-poppins",
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
-  display: "swap",
-});
+// FONTES: carregadas via <link> em runtime (browser baixa do Google), NÃO no build.
+// Antes usávamos next/font/google, que baixa as fontes DURANTE o build — e o build do
+// Render falhava quando não conseguia alcançar o Google Fonts (deploys travados).
+// As variáveis --font-* são definidas em globals.css (:root).
 
 export const metadata: Metadata = {
   title: "Obra10+",
@@ -74,11 +57,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${poppins.variable} ${playfair.variable} ${spaceMono.variable} h-full antialiased`}
-    >
-      <body className={`${poppins.className} min-h-full flex flex-col`}>
+    <html lang="pt-BR" className="h-full antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Space+Mono:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-full flex flex-col">
         <MobileDetector>{children}</MobileDetector>
         <IOSInstallBanner />
         <ToastViewport />
