@@ -1,0 +1,35 @@
+# Gate de qualidade/segurança: type-check + testes (inclui guard-coverage,
+# que impede rota /api nova nascer com service-role sem guard — proxy.ts
+# não roda como middleware real, então este é o gate que resta).
+# Self-contained: sem secrets (tsc e vitest não tocam serviços externos).
+name: CI
+
+on:
+  push:
+    branches:
+      - wendel/dev
+      - feature/escritorio-visual
+  pull_request:
+    branches:
+      - wendel/dev
+      - feature/escritorio-visual
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Type-check (tsc --noEmit)
+        run: npx tsc --noEmit
+
+      - name: Testes (vitest)
+        run: npx vitest run

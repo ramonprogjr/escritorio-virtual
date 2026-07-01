@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -8,10 +9,14 @@ function db() {
   );
 }
 
+/** Detalhe do agente no mapa mobile do escritório — exige sessão CRM ativa (Batch 5). */
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
+  const g = await requireCrmSessao(req);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
   }

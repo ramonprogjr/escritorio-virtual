@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -8,7 +9,11 @@ function db() {
   );
 }
 
-export async function GET() {
+/** Mapa mobile do escritório (tela interna) — exige sessão CRM ativa (Batch 5). */
+export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json([]);
   }

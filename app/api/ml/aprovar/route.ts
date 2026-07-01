@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { aplicarMudancaConfirmada } from "@/lib/ia/ml";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
+/** Aprova/rejeita/aplica mudanças propostas pelo ML — só owner/gestor (Batch 5). */
 export async function POST(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   try {
     const { sugestaoId, acao, motivo, confirmacao } = await request.json();
 
