@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { HUB_PREFIXO_CODIGO, type HubPrefixoCodigo } from "@/lib/crm/codigos-rastreio";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 // Legado: PES-2026-0001 · Compacto (atual): PS2026001 / NGIMB2026001 (negócio embute mercado).
 const CODIGO_REGEX_LEGADO = /^(PES|EMP|LED|NEG|PAR|IMO)-\d{4}-\d{4}$/i;
@@ -42,9 +43,19 @@ function prefixoDeCodigo(codigo: string): HubPrefixoCodigo | null {
   return COMPACTO_PARA_LEGADO[codigo.slice(0, 2).toUpperCase()] ?? null;
 }
 
+/**
+ * Resolve a cadeia de rastreio para um código único (PES/EMP/LED/NEG/PAR/IMO).
+ *
+ * SEGURANÇA: `tenantId` é OBRIGATÓRIO — os códigos são sequenciais/enumeráveis
+ * (ex. `PS2026001`), então sem filtro de tenant qualquer sessão CRM conseguiria
+ * varrer PII (nome/telefone/email) e dados de negócio de OUTRO tenant só
+ * incrementando o número. Cada query abaixo aplica `tenantScopeOrFilter`
+ * (tenant atual + legado sem tenant_id), igual ao resto do CRM.
+ */
 export async function resolverRastreioCodigo(
   supabase: SupabaseClient,
-  codigoRaw: string
+  codigoRaw: string,
+  tenantId: string
 ): Promise<RastreioCadeia | null> {
   const codigo = normalizarCodigoRastreio(codigoRaw);
   if (!codigo) return null;
@@ -52,6 +63,7 @@ export async function resolverRastreioCodigo(
   const prefixo = prefixoDeCodigo(codigo);
   if (!prefixo) return null;
 
+  const scope = tenantScopeOrFilter(tenantId);
   const vinculos: RastreioNo[] = [];
   const negocios: RastreioNo[] = [];
   let principal: RastreioNo | null = null;
@@ -61,6 +73,7 @@ export async function resolverRastreioCodigo(
       .from("hub_pessoas")
       .select("id, codigo, nome, telefone, email")
       .eq("codigo", codigo)
+      .or(scope)
       .maybeSingle();
     if (!data) return null;
     principal = {
@@ -105,6 +118,7 @@ export async function resolverRastreioCodigo(
       .from("hub_empresas")
       .select("id, codigo, razao_social, nome_fantasia")
       .eq("codigo", codigo)
+      .or(scope)
       .maybeSingle();
     if (!data) return null;
     principal = {
@@ -133,6 +147,7 @@ export async function resolverRastreioCodigo(
       .from("hub_leads_crm")
       .select("id, codigo, nome, estagio, pessoa_id, negocio_id, metadata")
       .eq("codigo", codigo)
+      .or(scope)
       .maybeSingle();
     if (!data) return null;
     principal = {
@@ -181,6 +196,7 @@ export async function resolverRastreioCodigo(
       .from("hub_negocios")
       .select("id, codigo, titulo, status, motivo_perda, lead_id, pessoa_id")
       .eq("codigo", codigo)
+      .or(scope)
       .maybeSingle();
     if (!data) return null;
     principal = {
@@ -222,6 +238,7 @@ export async function resolverRastreioCodigo(
       .from("hub_parceiros")
       .select("id, codigo, nome, telefone")
       .eq("codigo", codigo)
+      .or(scope)
       .maybeSingle();
     if (!data) return null;
     principal = {
@@ -236,6 +253,7 @@ export async function resolverRastreioCodigo(
       .from("hub_imoveis")
       .select("id, codigo, titulo")
       .eq("codigo", codigo)
+      .or(scope)
       .maybeSingle();
     if (!data) return null;
     principal = {

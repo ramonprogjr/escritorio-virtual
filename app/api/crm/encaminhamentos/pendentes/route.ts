@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import type { CandidatoParceiro } from "@/lib/crm/distribuir-lead";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -23,12 +24,16 @@ function parseCriterio(raw: string | null | undefined): {
 }
 
 export async function GET(request: NextRequest) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+
   const status = new URL(request.url).searchParams.get("status") || "aguardando_validacao";
 
   const { data, error } = await db()
     .from("hub_encaminhamentos")
     .select("id, lead_id, segmento, status, criterio_selecao, encaminhado_para, sugerido_ia, criado_em")
     .eq("status", status)
+    .eq("tenant_id", g.ctx.tenantId)
     .order("criado_em", { ascending: false })
     .limit(50);
 

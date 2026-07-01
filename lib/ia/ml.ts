@@ -9,10 +9,11 @@ import { createClient } from "@supabase/supabase-js";
 import { criarAprovacao } from "./aprovacoes";
 
 function supabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // fail-closed: sem fallback para a anon key — client de service_role nunca deve
+  // silenciosamente rodar com privilégio anon divergente (Batch 3).
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key?.trim()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente — serviço indisponível.");
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key);
 }
 
 function anthropic() {

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -34,6 +35,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Guard (middleware é morto → cada rota se protege). Controla limite de gasto/autonomia
+  // financeira dos agentes de IA — crítico, exige gestor/owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
@@ -84,9 +90,14 @@ export async function PATCH(
 
 /** DELETE — remove regra. */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Guard (middleware é morto → cada rota se protege). Controla limite de gasto/autonomia
+  // financeira dos agentes de IA — crítico, exige gestor/owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -9,6 +10,11 @@ function db() {
 }
 
 export async function GET(request: NextRequest) {
+  // Guard (middleware é morto → cada rota se protege). hub_alertas é recurso global
+  // do Hub (sem tenant_id) — gate por nível (gestor/owner), sem filtro de tenant.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }

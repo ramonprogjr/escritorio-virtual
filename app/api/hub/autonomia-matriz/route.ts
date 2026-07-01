@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -18,6 +19,12 @@ function validarCanal(c: string | null | undefined): string | null {
 
 /** GET ?agente_slug= — lista regras da matriz do agente (ordem: prioridade DESC). */
 export async function GET(request: NextRequest) {
+  // Guard (middleware é morto → cada rota se protege). hub_autonomia_matriz controla
+  // limite de gasto/autonomia dos agentes de IA — recurso global do Hub (sem tenant_id),
+  // gate por nível (gestor/owner).
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
@@ -53,6 +60,11 @@ type BodyPost = {
 
 /** POST — cria linha da matriz (service role). */
 export async function POST(request: NextRequest) {
+  // Guard (middleware é morto → cada rota se protege). Controla limite de gasto/autonomia
+  // financeira dos agentes de IA — crítico, exige gestor/owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }

@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
+// FLAG PRO DONO: esta rota é chamada hoje por app/fornecedor/cotacao/page.tsx (marcada
+// como "protótipo" na própria UI). Não existe mecanismo de identidade de fornecedor
+// externo real para cotações (diferente do portal de parceiros, que usa link HMAC
+// assinado — ver lib/parceiro-portal.ts + app/api/parceiros/portal/verify). Enquanto
+// essa decisão de design não for tomada, a rota exige sessão CRM (como as demais de
+// /api/cotacoes) — ou seja, o "fornecedor" preenchendo a proposta precisa ser um
+// operador logado no CRM digitando em nome do fornecedor. Se o objetivo é o PRÓPRIO
+// fornecedor (sem conta) preencher a proposta, é preciso desenhar um token assinado
+// por pedido/fornecedor (mesmo padrão HMAC do portal de parceiros) antes de reabrir.
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3 — cotações eram 100% públicas).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -12,6 +24,11 @@ export async function POST(
   request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
+  const supabase = db();
+  if (!supabase) return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
+
   const { id: pedidoId } = await ctx.params;
   let body: {
     fornecedor_nome?: string;
@@ -28,11 +45,11 @@ export async function POST(
   const nome = typeof body.fornecedor_nome === "string" ? body.fornecedor_nome.trim() : "";
   if (!nome) return NextResponse.json({ erro: "fornecedor_nome é obrigatório" }, { status: 400 });
 
-  const supabase = db();
   const { data: pedido, error: pe } = await supabase
     .from("hub_cotacoes_pedidos")
     .select("id, status")
     .eq("id", pedidoId)
+    .eq("tenant_id", g.ctx.tenantId)
     .single();
 
   if (pe || !pedido) return NextResponse.json({ erro: "Pedido não encontrado" }, { status: 404 });

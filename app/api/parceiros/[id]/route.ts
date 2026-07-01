@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import {
   isMissingPgColumn,
@@ -9,9 +9,11 @@ import { MERCADOS_PREFIXO } from "@/lib/crm/negocio-cadastro";
 import { parceiroParaFornecedor } from "@/lib/crm/parceiro-fornecedor-map";
 
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -108,6 +110,7 @@ export async function PATCH(
   const { campos } = parsed;
 
   const supabase = db();
+  if (!supabase) return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
   // Tenant SEMPRE da sessão autenticada (g.ctx), NUNCA do header x-tenant-id (forjável).
   // Espelha o GET irmão; fecha o vetor de um gestor editar parceiro de outro tenant.
   const tenantId = g.ctx.tenantId;
@@ -193,7 +196,7 @@ type ParceiroAtualizado = {
  * Best-effort por design — encapsulado em try/catch; falha aqui jamais derruba o PATCH.
  */
 async function sincronizarEspelhoFornecedor(
-  supabase: ReturnType<typeof db>,
+  supabase: SupabaseClient,
   parceiro: ParceiroAtualizado | null,
   tenantId: string
 ): Promise<void> {

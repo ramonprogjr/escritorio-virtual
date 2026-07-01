@@ -6,14 +6,21 @@ import { DEFAULT_OBRA10_TENANT_ID, defaultTenantId, isMissingPgColumn } from "@/
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
 export async function GET() {
-  const { data, error } = await db()
+  // NOTA (flag pro dono): este GET segue sem guard de sessão — fora do escopo desta
+  // rodada (item 5 = só o fallback de key). Ver relatório final: candidato a
+  // requireCrmSessao numa próxima passada, hoje lista leads sem checar tenant/sessão.
+  const supabase = db();
+  if (!supabase) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
+  const { data, error } = await supabase
     .from("hub_leads_crm")
     .select("id, nome, telefone, origem, estagio, score, valor_estimado, agente_responsavel, humano_responsavel, criado_em, atualizado_em")
     .not("estagio", "in", "(perdido,ganho)")
@@ -29,6 +36,7 @@ export async function POST(request: NextRequest) {
   if (!body.nome) return NextResponse.json({ error: "nome required" }, { status: 400 });
 
   const supabase = db();
+  if (!supabase) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   const tenantId = defaultTenantId();
 
   // CÓDIGO ÚNICO (AUT-2): todo lead garante UMA hub_pessoas (dedup por CPF e/ou
@@ -99,6 +107,7 @@ export async function PATCH(request: NextRequest) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const supabase = db();
+  if (!supabase) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
 
   // Guard de posse: 404 se o lead for de outro tenant (service-role bypassa RLS). Legado
   // sem tenant_id (NULL/Obra10 padrão) é tratado como partilhado, mesmo critério das

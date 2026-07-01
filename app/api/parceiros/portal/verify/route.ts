@@ -4,9 +4,11 @@ import { parceiroPortalValido } from "@/lib/parceiro-portal";
 import { checkPortalVerifyRateLimit } from "@/lib/portal-rate-limit";
 
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -47,6 +49,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = db();
+  if (!supabase) return NextResponse.json({ ok: false, erro: "Serviço indisponível" }, { status: 503 });
   const { data: parceiro, error } = await supabase
     .from("hub_parceiros")
     .select(
