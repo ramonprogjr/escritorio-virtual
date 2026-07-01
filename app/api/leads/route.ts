@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { garantirPessoaParaLead } from "@/lib/crm/garantir-pessoa-lead";
-import { DEFAULT_OBRA10_TENANT_ID, defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import {
+  DEFAULT_OBRA10_TENANT_ID,
+  defaultTenantId,
+  isMissingPgColumn,
+  tenantScopeOrFilter,
+} from "@/lib/tenant-default";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
@@ -14,16 +19,19 @@ function db() {
   );
 }
 
-export async function GET() {
-  // NOTA (flag pro dono): este GET segue sem guard de sessão — fora do escopo desta
-  // rodada (item 5 = só o fallback de key). Ver relatório final: candidato a
-  // requireCrmSessao numa próxima passada, hoje lista leads sem checar tenant/sessão.
+export async function GET(request: NextRequest) {
+  // Balde B (item 1): guard + escopo de tenant — este GET listava PII (nome/telefone)
+  // sem sessão e sem filtro, vazando leads de qualquer tenant para qualquer chamador.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   if (!supabase) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   const { data, error } = await supabase
     .from("hub_leads_crm")
     .select("id, nome, telefone, origem, estagio, score, valor_estimado, agente_responsavel, humano_responsavel, criado_em, atualizado_em")
     .not("estagio", "in", "(perdido,ganho)")
+    .or(tenantScopeOrFilter(g.ctx.tenantId))
     .order("score", { ascending: false })
     .limit(20);
 

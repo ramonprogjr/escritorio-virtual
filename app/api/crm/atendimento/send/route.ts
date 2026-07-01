@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { defaultTenantId } from "@/lib/tenant-default";
+import { tenantScopeOrFilter } from "@/lib/tenant-default";
 import { whatsappConfigured, whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
 import { crmApiConfigError, resolveCallerAuthId } from "@/lib/crm/crm-api-auth";
 import {
@@ -54,11 +54,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Busca lead: telefone, humano_responsavel, agente_responsavel
+  // Busca lead: telefone, humano_responsavel, agente_responsavel — escopada ao tenant
+  // do operador (defesa em profundidade cross-tenant; legado sem tenant_id incluso).
   const { data: lead, error: leadErr } = await supabase
     .from("hub_leads_crm")
     .select("id, telefone, humano_responsavel, agente_responsavel")
     .eq("id", leadId)
+    .or(tenantScopeOrFilter(operador.tenantId))
     .maybeSingle();
 
   if (leadErr) {
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest) {
   }
 
   const agora = new Date().toISOString();
-  const tenantId = defaultTenantId();
+  const tenantId = operador.tenantId;
 
   const filaMetadata = sendSkipped
     ? { origem: "crm_atendimento", whatsapp_skipped: true, motivo: "provedor_ausente_ou_dry_run" }
@@ -170,12 +172,14 @@ export async function POST(request: NextRequest) {
     feito_por: operador.slug,
     feito_por_tipo: "humano",
     metadata: { origem: "crm_atendimento", operador_nome: operador.nome },
+    tenant_id: tenantId,
   });
 
   await supabase
     .from("hub_leads_crm")
     .update({ ultimo_contato: agora, atualizado_em: agora })
-    .eq("id", leadId);
+    .eq("id", leadId)
+    .or(tenantScopeOrFilter(tenantId));
 
   return NextResponse.json({
     ok: true,
