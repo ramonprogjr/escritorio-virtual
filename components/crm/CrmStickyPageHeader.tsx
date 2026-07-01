@@ -16,14 +16,23 @@ type CrmStickyPageHeaderProps = {
 
 /**
  * CRM page title strip: Obra10 dark surface, gold edge hint, stays visible while the layout scroll area moves.
+ *
+ * Mobile-aware: on <768px the MobileShell already renders the route title in its own
+ * fixed header, so `title` is hidden here to avoid duplicating it. `description` and
+ * `actions` still render on mobile. When neither is present on mobile, the whole header
+ * is hidden (via `md:block` on the wrapper) so we don't ship an empty sticky bar.
  */
 export function CrmStickyPageHeader({ title, description, actions, className = "" }: CrmStickyPageHeaderProps) {
+  const hasMobileContent = description != null || actions != null;
+
   return (
-    <header className={`${HEADER_SURFACE} px-3 py-3 sm:px-5 sm:py-3.5 ${className}`.trim()}>
+    <header
+      className={`${HEADER_SURFACE} px-3 py-3 sm:px-5 sm:py-3.5 ${hasMobileContent ? "" : "hidden md:block"} ${className}`.trim()}
+    >
       <div className="flex flex-col gap-3 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between min-[480px]:gap-4">
         <div className="min-w-0 flex-1">
-          <div className="text-base sm:text-lg font-black tracking-tight text-[#e6edf3]">{title}</div>
-          {description != null && <div className="mt-0.5 text-xs text-[#8b949e]">{description}</div>}
+          <div className="hidden text-base sm:text-lg font-black tracking-tight text-[#e6edf3] md:block">{title}</div>
+          {description != null && <div className="mt-0.5 text-xs text-[#8b949e] md:mt-0.5">{description}</div>}
         </div>
         {actions != null && (
           <div className="flex w-full min-w-0 flex-col gap-2 min-[480px]:w-auto min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-end">

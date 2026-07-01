@@ -109,7 +109,7 @@ export default function CanaisEntradaPage() {
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Radio size={22} color="#c9a24a" aria-hidden />
-        <h1 style={{ margin: 0, fontSize: 22 }}>Canais de entrada</h1>
+        <h1 className="hidden md:block" style={{ margin: 0, fontSize: 22 }}>Canais de entrada</h1>
       </div>
       <p style={{ margin: "0 0 16px", color: "#8b949e", fontSize: 13, maxWidth: 760 }}>
         Registro das fontes de lead (WhatsApp, Meta, Google, site, indicação). O <strong style={{ color: "#c9a24a" }}>origem</strong>{" "}

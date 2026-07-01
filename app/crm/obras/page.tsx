@@ -458,7 +458,7 @@ function ObrasPageInner() {
       {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <h1 className="flex items-center gap-2 text-lg font-bold text-[#e6edf3]">
+          <h1 className="hidden items-center gap-2 text-lg font-bold text-[#e6edf3] md:flex">
             <HardHat className="h-5 w-5" style={{ color: DOURADO }} />
             Obras
           </h1>

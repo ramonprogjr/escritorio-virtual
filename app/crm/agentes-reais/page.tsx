@@ -74,7 +74,7 @@ export default function CopilotoCentralPage() {
             <Mic size={24} />
           </div>
           <div>
-            <h1 style={{ color: "#e6edf3", fontSize: 19, fontWeight: 800, margin: 0 }}>Copiloto de Voz</h1>
+            <h1 className="hidden md:block" style={{ color: "#e6edf3", fontSize: 19, fontWeight: 800, margin: 0 }}>Copiloto de Voz</h1>
             <p style={{ color: "#8b949e", fontSize: 13, lineHeight: 1.6, margin: "6px 0 0" }}>
               O botão verde flutuante aparece em <strong style={{ color: "#cdd9d2" }}>qualquer tela</strong> do CRM, no
               computador e no celular. Arraste para onde não atrapalhe. Toque, fale, e ele entende — sempre mostrando a

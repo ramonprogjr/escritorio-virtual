@@ -545,7 +545,7 @@ export default function LeadFichaPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border text-gray-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+            className="hidden h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border text-gray-400 transition-colors hover:bg-white/[0.06] hover:text-white md:flex"
             style={{ borderColor: BORDER_SUBTLE }}
             aria-label="Voltar"
           >

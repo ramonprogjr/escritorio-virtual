@@ -177,7 +177,7 @@ export default function ParceiroDetalhePage() {
       {/* Header */}
       <div className="px-4 py-3 flex items-start gap-3 sticky top-0 z-10"
         style={{ background: "#0f1d16", borderBottom: "1px solid #1d3a2c" }}>
-        <button onClick={() => router.back()} style={{ color: "#8b949e", background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", paddingTop: 2 }}>←</button>
+        <button onClick={() => router.back()} className="hidden md:inline-block" style={{ color: "#8b949e", background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", paddingTop: 2 }}>←</button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-white font-bold truncate">{parceiro.nome}</h1>

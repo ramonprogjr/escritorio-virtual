@@ -153,7 +153,9 @@ export default function EspecialistasPage() {
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <HardHat size={22} color="#c9a24a" aria-hidden />
-        <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>Especialistas</h1>
+        <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>
+          <span className="hidden md:inline">Especialistas</span>
+        </h1>
         <button
           type="button"
           onClick={() => void copiarLinkConvite()}

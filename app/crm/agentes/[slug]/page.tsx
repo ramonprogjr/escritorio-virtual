@@ -932,6 +932,7 @@ export default function AgentePage() {
               type="button"
               onClick={() => router.back()}
               aria-label="Voltar"
+              className="hidden md:flex"
               style={{
                 width: 36,
                 height: 36,
@@ -940,7 +941,6 @@ export default function AgentePage() {
                 background: "#16271e",
                 color: "#c9d1d9",
                 cursor: "pointer",
-                display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
