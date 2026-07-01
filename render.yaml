@@ -1,20 +1,34 @@
 # Render Blueprint — https://render.com/docs/infrastructure-as-code
 #
 # --- Web service (`escritorio-virtual`) env (mirror `.env.example`; never commit secrets) ---
-# Required for this app on Render:
-#   NEXT_PUBLIC_SUPABASE_URL
-#   NEXT_PUBLIC_SUPABASE_ANON_KEY
-#   SUPABASE_SERVICE_ROLE_KEY
-#   NEXT_PUBLIC_APP_URL          — https://<seu-servico>.onrender.com (sem barra final)
-#   CRON_SECRET                   — Bearer token for /api/cron/dispatch-ciclos (see lib/cron-auth.ts)
-#   MISTRAL_API_KEY               — IA no webhook WhatsApp, briefing, Agent Builder E Copiloto de Voz (OBRIGATÓRIA p/ qualquer IA)
-#   COPILOTO_HMAC_SECRET          — assina as propostas do Copiloto de Voz (gere: openssl rand -hex 32)
+#
+# CRÍTICAS — o sistema não funciona sem estas:
+#   NEXT_PUBLIC_SUPABASE_URL      — URL do projeto Supabase
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY — chave pública Supabase (baked no bundle de build)
+#   SUPABASE_SERVICE_ROLE_KEY     — chave server-side (bypassa RLS)
+#   NEXT_PUBLIC_APP_URL           — https://<seu-servico>.onrender.com (sem barra final; baked no bundle)
+#   INTERNAL_API_KEY              — auth de chamadas internas servidor→servidor (lib/internal-api-auth.ts)
+#   NEXT_PUBLIC_INTERNAL_API_KEY  — mesmo valor de INTERNAL_API_KEY, exposto ao client
+#   CRON_SECRET                   — Bearer token p/ /api/cron/dispatch-ciclos (lib/cron-auth.ts)
+#
+# IA — cadeia de fallback: Mistral (primário) → Anthropic → Groq:
+#   MISTRAL_API_KEY               — OBRIGATÓRIA: RAG/embeddings, chat WhatsApp, sync de agentes
+#   ANTHROPIC_API_KEY             — NECESSÁRIA: fallback do Mistral; briefing-chat retorna 503 sem nenhuma das duas
+#   GROQ_API_KEY                  — OPCIONAL: 3º fallback; mantém resiliência
+#
+# WhatsApp (UAZAPI):
 #   UAZAPI_BASE_URL               — ex. https://smartvenda.uazapi.com
 #   UAZAPI_ADMIN_TOKEN            — criar instância / sync webhook na ficha do agente
-#   WEBHOOK_SECRET                — mesmo valor no header da UAZAPI (x-webhook-secret ou Bearer)
-#   DEFAULT_TENANT_ID             — 00000000-0000-4000-8000-000000000001
-#   NEXT_PUBLIC_CRM_PLAYBOOK_FLOW_VISUAL_SIDEOVER — "true" liga o editor visual de fluxo (build-time)
-# Supabase: aplicar migrações (incl. 20260605120000_ensure_hub_leads_crm_tenant.sql) antes do go-live.
+#   WEBHOOK_SECRET                — HMAC verificação de assinatura do webhook UAZAPI
+#   WHATSAPP_VERIFY_TOKEN         — token de verificação do webhook WhatsApp (GET inicial)
+#
+# Voz/Copiloto:
+#   COPILOTO_HMAC_SECRET          — assina propostas do Copiloto de Voz (gere: openssl rand -hex 32)
+#
+# VARS OBSOLETAS — NÃO adicionar no dashboard (worker removido, ver comentário abaixo):
+#   WORKER_BATCH_SIZE, WORKER_CONCURRENCY, WORKER_POLL_MS — eram do Background Worker que foi removido
+#
+# Supabase: aplicar migrações antes do go-live.
 # WhatsApp: após deploy, abrir agente → QR/pareamento (sincroniza webhook para NEXT_PUBLIC_APP_URL/api/whatsapp/webhook).
 #
 # Processamento de jobs WhatsApp: feito pelo próprio web service via webhook trigger
@@ -48,12 +62,22 @@ services:
         sync: false
       - key: NEXT_PUBLIC_APP_URL
         sync: false
+      # --- Auth interno ---
+      - key: INTERNAL_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_INTERNAL_API_KEY
+        sync: false
+      # --- Cron ---
       - key: CRON_SECRET
         sync: false
+      # --- IA: Mistral (primário) → Anthropic (fallback) → Groq (último recurso) ---
       - key: MISTRAL_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      # --- WhatsApp / UAZAPI ---
       - key: UAZAPI_BASE_URL
         sync: false
       - key: UAZAPI_ADMIN_TOKEN
@@ -62,16 +86,22 @@ services:
         sync: false
       - key: WEBHOOK_SECRET_HEADER
         value: x-webhook-secret
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_PROVIDER
+        value: "uazapi"
+      - key: WHATSAPP_JOB_PROCESSOR
+        sync: false
+      # --- Copiloto de Voz ---
+      - key: COPILOTO_HMAC_SECRET
+        sync: false
+      # --- Tenant / infra ---
       - key: DEFAULT_TENANT_ID
         value: "00000000-0000-4000-8000-000000000001"
       - key: MISTRAL_CHAT_TIMEOUT_MS
         value: "30000"
       - key: MISTRAL_CHAT_RETRIES
         value: "1"
-      - key: COPILOTO_HMAC_SECRET
-        sync: false
-      - key: WHATSAPP_PROVIDER
-        value: "uazapi"
       # Editor visual de fluxo do playbook (ficha do agente → Calibração → "Editar fluxo visual").
       # NEXT_PUBLIC_* é build-time: o webpack inlina "true" no bundle durante `npm run build`.
       # (default em dev = ligado; em prod precisa ser declarado explicitamente — ver lib/crm/feature-flags.ts)
