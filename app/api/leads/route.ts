@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { garantirPessoaParaLead } from "@/lib/crm/garantir-pessoa-lead";
-import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import { DEFAULT_OBRA10_TENANT_ID, defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -71,13 +72,68 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(data, { status: 201 });
 }
 
+// Campos que o PATCH pode alterar. Whitelist estrita: proíbe id/tenant_id/pessoa_id/codigo/
+// role e qualquer campo de identidade — só dados operacionais do lead.
+const LEAD_PATCH_ALLOWED = [
+  "nome",
+  "telefone",
+  "email",
+  "origem",
+  "campanha",
+  "estagio",
+  "valor_estimado",
+  "score",
+  "tags",
+  "agente_responsavel",
+  "humano_responsavel",
+  "proxima_acao",
+  "proxima_acao_em",
+] as const;
+
 export async function PATCH(request: NextRequest) {
-  const body = await request.json() as Record<string, unknown>;
-  const { id, ...updates } = body;
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const id = typeof body.id === "string" ? body.id.trim() : "";
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  updates.atualizado_em = new Date().toISOString();
-  const { error } = await db().from("hub_leads_crm").update(updates).eq("id", id as string);
+  const supabase = db();
+
+  // Guard de posse: 404 se o lead for de outro tenant (service-role bypassa RLS). Legado
+  // sem tenant_id (NULL/Obra10 padrão) é tratado como partilhado, mesmo critério das
+  // outras rotas CRM (ver app/api/crm/pessoas/[id]/route.ts).
+  const { data: existente, error: fetchErr } = await supabase
+    .from("hub_leads_crm")
+    .select("id, tenant_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchErr && !isMissingPgColumn(fetchErr, "tenant_id")) {
+    return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+  }
+  if (!existente) {
+    return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  }
+  const tid =
+    (existente as { tenant_id?: string | null }).tenant_id != null
+      ? String((existente as { tenant_id?: string | null }).tenant_id).trim()
+      : "";
+  if (tid && tid !== g.ctx.tenantId && tid !== DEFAULT_OBRA10_TENANT_ID) {
+    return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  }
+
+  // Whitelist: só campos operacionais passam — nunca tenant_id/pessoa_id/codigo/role/id.
+  const updates: Record<string, unknown> = { atualizado_em: new Date().toISOString() };
+  for (const key of LEAD_PATCH_ALLOWED) {
+    if (key in body) updates[key] = body[key];
+  }
+
+  if (Object.keys(updates).length === 1) {
+    return NextResponse.json({ error: "Nenhum campo para atualizar" }, { status: 400 });
+  }
+
+  const { error } = await supabase.from("hub_leads_crm").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

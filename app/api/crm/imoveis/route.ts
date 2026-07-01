@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { gerarCodigoSequencial, HUB_PREFIXO_CODIGO } from "@/lib/crm/codigos-rastreio";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
+import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -16,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = db();
   const { searchParams } = new URL(request.url);
-  const busca = searchParams.get("busca") || "";
+  const busca = sanitizarBuscaPostgrest(searchParams.get("busca") || "");
   const atoParam = searchParams.get("ativo");
   const ativo = atoParam !== "false"; // default true
   const tipo = searchParams.get("tipo") || "";
@@ -24,6 +26,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status") || "";
   const offset = parseInt(searchParams.get("offset") || "0");
   const limit = 20;
+  const tenantId = g.ctx.tenantId;
 
   let query = supabase
     .from("hub_imoveis")
@@ -32,6 +35,7 @@ export async function GET(request: NextRequest) {
       { count: "exact" }
     )
     .eq("ativo", ativo)
+    .or(tenantScopeOrFilter(tenantId))
     .order("criado_em", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -51,7 +55,12 @@ export async function GET(request: NextRequest) {
   }
 
   // Contagem REAL por finalidade sobre todo o conjunto ativo (não só a página de 20).
-  let finQuery = supabase.from("hub_imoveis").select("finalidade").eq("ativo", ativo).limit(5000);
+  let finQuery = supabase
+    .from("hub_imoveis")
+    .select("finalidade")
+    .eq("ativo", ativo)
+    .or(tenantScopeOrFilter(tenantId))
+    .limit(5000);
   if (tipo) finQuery = finQuery.eq("tipo", tipo);
   if (status) finQuery = finQuery.eq("status", status);
   if (busca) {
@@ -103,9 +112,14 @@ export async function POST(request: NextRequest) {
     dormitorios: body.dormitorios != null ? Number(body.dormitorios) : null,
     area_total_m2: body.area_total_m2 != null ? Number(body.area_total_m2) : null,
     ativo: body.ativo !== false,
+    tenant_id: g.ctx.tenantId,
   };
 
-  const { data, error } = await supabase.from("hub_imoveis").insert(row).select().single();
+  let { data, error } = await supabase.from("hub_imoveis").insert(row).select().single();
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    const { tenant_id: _omit, ...semTenant } = row;
+    ({ data, error } = await supabase.from("hub_imoveis").insert(semTenant).select().single());
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data }, { status: 201 });
 }

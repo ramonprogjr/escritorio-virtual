@@ -8,6 +8,7 @@ import {
 } from "@/lib/crm/lead-cadastro";
 import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 function db() {
   return createClient(
@@ -148,7 +149,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
-  const busca = searchParams.get("busca") || "";
+  const busca = sanitizarBuscaPostgrest(searchParams.get("busca") || "");
 
   const supabase = db();
   let query = supabase

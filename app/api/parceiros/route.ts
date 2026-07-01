@@ -10,6 +10,7 @@ import { HUB_PARCEIRO_LIST_SELECT } from "@/lib/crm/parceiro-list-fetch";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { rateLimitExcedido } from "@/lib/rate-limit-memoria";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 function db() {
   return createClient(
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
   const mercado = searchParams.get("mercado");
-  const busca = searchParams.get("busca");
+  const busca = sanitizarBuscaPostgrest(searchParams.get("busca") || "");
   const tenantId = g.ctx.tenantId;
 
   const runList = (select: string, withTenantFilter: boolean) => {
