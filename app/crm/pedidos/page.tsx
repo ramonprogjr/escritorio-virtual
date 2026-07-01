@@ -115,7 +115,7 @@ function PedidosPageInner() {
     <div className="min-h-full bg-[#0a140f] p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-[#e6edf3]">Pedidos de material</h1>
+          <h1 className="hidden text-lg font-bold text-[#e6edf3] md:block">Pedidos de material</h1>
           <p className="text-xs text-[#8b949e]">Criar e acompanhar pedidos por obra</p>
         </div>
         <button

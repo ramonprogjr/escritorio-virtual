@@ -111,7 +111,7 @@ function ContasReceberInner() {
             <Link href="/crm/financeiro" className="text-[11px] font-bold text-[#c9a24a] hover:underline">
               ← Visão financeira
             </Link>
-            <h1 className="mt-1 text-lg font-bold text-[#e6edf3]">Contas a receber</h1>
+            <h1 className="mt-1 hidden text-lg font-bold text-[#e6edf3] md:block">Contas a receber</h1>
           </div>
           <div className="flex gap-2">
             <button

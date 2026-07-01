@@ -147,7 +147,9 @@ export default function FornecedoresPage() {
     <div style={{ padding: 24, maxWidth: 1000, color: "#e6edf3" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Handshake size={22} color="#c9a24a" aria-hidden />
-        <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>Fornecedores</h1>
+        <h1 style={{ margin: 0, fontSize: 22, flex: 1 }}>
+          <span className="hidden md:inline">Fornecedores</span>
+        </h1>
         <button
           type="button"
           onClick={() => {

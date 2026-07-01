@@ -48,7 +48,25 @@ export function mobilePageTitle(pathname: string): string {
 
   // Overrides de detalhe — sub-rotas onde o label do item pai não é o ideal
   if (pathname.startsWith("/crm/leads/")) return "Lead";
+  if (pathname.startsWith("/crm/lead/")) return "Lead";
+  if (pathname === "/crm/agentes/novo") return "Novo agente IA";
   if (pathname.startsWith("/crm/agentes/")) return "Agente IA";
+  if (pathname === "/crm/parceiros/novo") return "Convidar Parceiro";
+  if (pathname.startsWith("/crm/parceiros/")) return "Parceiro";
+  // /crm/empresas (Administração) = tenants/"Escritórios"; /crm/empresas/[id] é a FICHA
+  // de empresa-cliente PJ (Cadastros) — rótulo diferente para não confundir os dois.
+  if (pathname.startsWith("/crm/empresas/")) return "Empresa";
+  if (pathname.startsWith("/crm/pessoas/duplicatas")) return "Duplicatas";
+  if (pathname.startsWith("/crm/pessoas/")) return "Pessoa";
+  if (pathname === "/crm/pessoas") return "Pessoas";
+
+  // Rotas fora de CRM_NAV_GROUPS (saíram do menu ou são telas soltas) — sem override
+  // aqui cairiam no fallback genérico "Obra10+".
+  if (pathname === "/crm/analytics" || pathname === "/crm/kpis") return "Analytics";
+  if (pathname === "/crm/relatorios") return "Relatórios";
+  if (pathname === "/crm/conteudo") return "Conteúdo & Copy";
+  if (pathname === "/crm/onboarding-tenant") return "Onboarding";
+  if (pathname === "/crm/progresso-sistema") return "Progresso sistema";
 
   // Deriva a partir de CRM_NAV_GROUPS (mesma fonte do menu lateral/drawer)
   for (const group of CRM_NAV_GROUPS) {

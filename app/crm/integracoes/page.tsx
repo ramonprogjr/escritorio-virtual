@@ -45,7 +45,7 @@ export default function IntegracoesPage() {
       >
         ← Configurações
       </Link>
-      <h1 className="text-xl font-bold text-[#e6edf3]">Integrações</h1>
+      <h1 className="hidden text-xl font-bold text-[#e6edf3] md:block">Integrações</h1>
       <p className="mt-1 text-sm text-[#8b949e]">Estado real das credenciais no ambiente.</p>
 
       {loading ? (
