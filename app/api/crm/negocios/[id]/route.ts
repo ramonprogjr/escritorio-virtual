@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
@@ -214,6 +215,31 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       valor_anterior: etapaAnterior || null,
       valor_novo: String(data.etapa),
       motivo: merged.motivo_perda,
+      tenant_id: tenantId,
+    });
+
+    // Keystone F4 (hub_eventos): evento de FUNIL para KPIs/dashboards. Best-effort — nunca
+    // bloqueia o PATCH. ganho/perdido são as métricas de dinheiro; demais → etapa_mudou.
+    const etapaNova = String(data.etapa);
+    await registrarEvento(supabase, {
+      event_type:
+        etapaNova === "ganho"
+          ? "negocio_ganho"
+          : etapaNova === "perdido"
+            ? "negocio_perdido"
+            : "negocio_etapa_mudou",
+      entity_type: "negocio",
+      entity_id: id,
+      negocio_id: id,
+      lead_id: data.lead_id ? String(data.lead_id) : null,
+      ator: "humano",
+      payload: {
+        etapa_anterior: etapaAnterior || null,
+        etapa_nova: etapaNova,
+        ...(etapaNova === "perdido" && merged.motivo_perda
+          ? { motivo: String(merged.motivo_perda) }
+          : {}),
+      },
       tenant_id: tenantId,
     });
   }

@@ -1,7 +1,29 @@
 {
-  "geradoEm": "2026-07-01T20:37:06.205Z",
+  "geradoEm": "2026-07-01T20:45:58.045Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "ee35216a8c268734aca16b237e146777de086c60",
+      "hashCurto": "ee35216",
+      "mensagem": "reforça guard-test (detecta crmHandoffDb) + redige erro cru nas rotas públicas",
+      "mensagemRaw": "fix(seguranca): reforça guard-test (detecta crmHandoffDb) + redige erro cru nas rotas públicas",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T20:39:34.000Z",
+      "hora": "17:39",
+      "arquivos": [
+        "app/api/parceiro/cadastro-publico/route.ts",
+        "app/api/public/cadastro-empresa/route.ts",
+        "app/api/public/especialista/route.ts",
+        "app/api/public/lead-hub/route.ts",
+        "lib/crm/guard-coverage.test.ts",
+        "lib/http/erro-publico.ts"
+      ],
+      "areas": {
+        "app/api": 4,
+        "lib/crm": 1,
+        "outros": 1
+      }
+    },
     {
       "hash": "7aae1f28b31921dca579fde0d0aef807508e96a6",
       "hashCurto": "7aae1f2",

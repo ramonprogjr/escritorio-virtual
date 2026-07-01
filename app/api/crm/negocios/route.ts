@@ -7,6 +7,7 @@ import {
 } from "@/lib/crm/negocio-cadastro";
 import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { criarVinculosNegocio } from "@/lib/crm/negocio-vinculos";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
 import { isMissingPgColumn, isTenantFkError, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
@@ -564,6 +565,22 @@ export async function POST(request: NextRequest) {
     const status = code === "PGRST205" ? 503 : 500;
     return NextResponse.json({ error: detail, detail }, { status });
   }
+
+  // Keystone F4 (hub_eventos): ENTRADA no funil. Best-effort — nunca bloqueia a criação.
+  await registrarEvento(supabase, {
+    event_type: "negocio_criado",
+    entity_type: "negocio",
+    entity_id: String(created.id),
+    negocio_id: String(created.id),
+    lead_id: leadsSelecionados[0]?.id ?? null,
+    ator: "humano",
+    payload: {
+      etapa: d.etapa,
+      prefixo_mercado: d.prefixo_mercado,
+      valor_estimado: d.valor_estimado ?? null,
+    },
+    tenant_id: tenantId,
+  });
 
   try {
     await criarVinculosNegocio(supabase, {
