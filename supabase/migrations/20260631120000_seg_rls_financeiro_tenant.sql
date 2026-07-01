@@ -17,7 +17,9 @@
 --   3. Cria policies tenant-scoped (select/insert/update) para authenticated + service_role.
 --   4. DELETE permanece exclusivo ao service_role (server usa service key, bypassa RLS).
 --
--- Idempotente: CREATE POLICY IF NOT EXISTS + DROP POLICY IF EXISTS + REVOKE (idempotente por si).
+-- Idempotente: DROP POLICY IF EXISTS antes de cada CREATE POLICY + REVOKE (idempotente por si).
+-- NOTA (fix 01/jul): Postgres NÃO suporta `CREATE POLICY IF NOT EXISTS` (SQL inválido) — trocado
+-- por `DROP POLICY IF EXISTS <nome>; CREATE POLICY <nome>` em cada policy (mesmo efeito, válido).
 -- Reversível: ver bloco de rollback ao final.
 --
 -- Verificar estado atual antes de aplicar:
@@ -35,17 +37,20 @@ DROP POLICY IF EXISTS hub_contas_pagar_service ON public.hub_contas_pagar;
 REVOKE ALL ON public.hub_contas_pagar FROM anon;
 
 -- 3. Policies tenant-scoped para authenticated
-CREATE POLICY IF NOT EXISTS hub_contas_pagar_auth_select
+DROP POLICY IF EXISTS hub_contas_pagar_auth_select ON public.hub_contas_pagar;
+CREATE POLICY hub_contas_pagar_auth_select
   ON public.hub_contas_pagar
   FOR SELECT TO authenticated
   USING (tenant_id = public.current_user_tenant_id() OR tenant_id IS NULL);
 
-CREATE POLICY IF NOT EXISTS hub_contas_pagar_auth_insert
+DROP POLICY IF EXISTS hub_contas_pagar_auth_insert ON public.hub_contas_pagar;
+CREATE POLICY hub_contas_pagar_auth_insert
   ON public.hub_contas_pagar
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id = public.current_user_tenant_id() OR tenant_id IS NULL);
 
-CREATE POLICY IF NOT EXISTS hub_contas_pagar_auth_update
+DROP POLICY IF EXISTS hub_contas_pagar_auth_update ON public.hub_contas_pagar;
+CREATE POLICY hub_contas_pagar_auth_update
   ON public.hub_contas_pagar
   FOR UPDATE TO authenticated
   USING (tenant_id = public.current_user_tenant_id() OR tenant_id IS NULL)
@@ -62,17 +67,20 @@ DROP POLICY IF EXISTS hub_contas_receber_service ON public.hub_contas_receber;
 
 REVOKE ALL ON public.hub_contas_receber FROM anon;
 
-CREATE POLICY IF NOT EXISTS hub_contas_receber_auth_select
+DROP POLICY IF EXISTS hub_contas_receber_auth_select ON public.hub_contas_receber;
+CREATE POLICY hub_contas_receber_auth_select
   ON public.hub_contas_receber
   FOR SELECT TO authenticated
   USING (tenant_id = public.current_user_tenant_id() OR tenant_id IS NULL);
 
-CREATE POLICY IF NOT EXISTS hub_contas_receber_auth_insert
+DROP POLICY IF EXISTS hub_contas_receber_auth_insert ON public.hub_contas_receber;
+CREATE POLICY hub_contas_receber_auth_insert
   ON public.hub_contas_receber
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id = public.current_user_tenant_id() OR tenant_id IS NULL);
 
-CREATE POLICY IF NOT EXISTS hub_contas_receber_auth_update
+DROP POLICY IF EXISTS hub_contas_receber_auth_update ON public.hub_contas_receber;
+CREATE POLICY hub_contas_receber_auth_update
   ON public.hub_contas_receber
   FOR UPDATE TO authenticated
   USING (tenant_id = public.current_user_tenant_id() OR tenant_id IS NULL)
