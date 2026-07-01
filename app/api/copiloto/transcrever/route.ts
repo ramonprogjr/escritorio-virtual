@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { groqTranscreverAudioBuffer } from "@/lib/ia/groq-transcribe-audio";
 import { mistralTranscreverAudioBuffer } from "@/lib/whatsapp/mistral-transcribe-audio";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 
@@ -25,16 +26,22 @@ export async function POST(request: NextRequest) {
   }
 
   const buffer = Buffer.from(await audio.arrayBuffer());
-  const tr = await mistralTranscreverAudioBuffer(
-    buffer,
-    "copiloto.webm",
-    (audio as Blob).type || undefined
-  );
+  const mimeType = (audio as Blob).type || undefined;
+  const fileName = "copiloto.webm";
+
+  let tr = await mistralTranscreverAudioBuffer(buffer, fileName, mimeType);
+  if (!tr.ok && tr.erro === "mistral_api_key_ausente") {
+    tr = await groqTranscreverAudioBuffer(buffer, fileName, mimeType);
+  } else if (!tr.ok && process.env.GROQ_API_KEY?.trim()) {
+    const groq = await groqTranscreverAudioBuffer(buffer, fileName, mimeType);
+    if (groq.ok) tr = groq;
+  }
+
   if (!tr.ok) {
     const amigavel =
-      tr.erro === "mistral_api_key_ausente"
-        ? "Transcrição indisponível (sem chave Mistral)."
-        : tr.erro === "mistral_transcricao_vazia"
+      tr.erro === "mistral_api_key_ausente" || tr.erro === "groq_api_key_ausente"
+        ? "Transcrição indisponível (sem chave de IA configurada no servidor)."
+        : tr.erro === "mistral_transcricao_vazia" || tr.erro === "groq_transcricao_vazia"
           ? "Não entendi o áudio. Fale mais perto do microfone."
           : `Falha ao transcrever: ${tr.erro}`;
     return NextResponse.json({ error: amigavel }, { status: 502 });

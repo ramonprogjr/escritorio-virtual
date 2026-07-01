@@ -28,6 +28,9 @@
 # VARS OBSOLETAS — NÃO adicionar no dashboard (worker removido, ver comentário abaixo):
 #   WORKER_BATCH_SIZE, WORKER_CONCURRENCY, WORKER_POLL_MS — eram do Background Worker que foi removido
 #
+# Após adicionar ou alterar env vars no dashboard, acione Manual Deploy no serviço web
+# (Render não reinicia automaticamente) — confira MISTRAL/ANTHROPIC/GROQ em /api/health (owner).
+#
 # Supabase: aplicar migrações antes do go-live.
 # WhatsApp: após deploy, abrir agente → QR/pareamento (sincroniza webhook para NEXT_PUBLIC_APP_URL/api/whatsapp/webhook).
 #
