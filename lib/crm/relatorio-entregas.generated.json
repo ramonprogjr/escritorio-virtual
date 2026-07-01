@@ -1,7 +1,25 @@
 {
-  "geradoEm": "2026-07-01T13:26:07.735Z",
+  "geradoEm": "2026-07-01T13:34:01.427Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "715e464205e458b10f74cdc6a6f365175dca9cdc",
+      "hashCurto": "715e464",
+      "mensagem": "gate atômico de saldo de créditos ANTES do LLM (modo sombra) — auditoria #23/#36",
+      "mensagemRaw": "feat(ia/custo): gate atômico de saldo de créditos ANTES do LLM (modo sombra) — auditoria #23/#36",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T13:33:49.000Z",
+      "hora": "10:33",
+      "arquivos": [
+        "lib/ia/engine.ts",
+        "lib/ia/llm-completion.ts",
+        "lib/ia/metering.test.ts",
+        "lib/ia/metering.ts"
+      ],
+      "areas": {
+        "outros": 4
+      }
+    },
     {
       "hash": "30eafdb857b5535da8f16aaa59c76bbbac54ce01",
       "hashCurto": "30eafdb",
@@ -6577,21 +6595,6 @@
       ],
       "areas": {
         "app/hub": 1
-      }
-    },
-    {
-      "hash": "5af9129f5c7b21025d448ddaae2792f08631f669",
-      "hashCurto": "5af9129",
-      "mensagem": "CRM manual #4 (fecha) — vinculo pessoa<->negocio editavel na ficha",
-      "mensagemRaw": "feat(crm): CRM manual #4 (fecha) — vinculo pessoa<->negocio editavel na ficha",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T13:30:28.000Z",
-      "hora": "10:30",
-      "arquivos": [
-        "app/crm/negocios/[id]/page.tsx"
-      ],
-      "areas": {
-        "app/crm": 1
       }
     }
   ]

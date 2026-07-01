@@ -4,6 +4,7 @@ import { buildLeadEstagioPatch } from "@/lib/crm/estagio-map";
 import { validarMudancaEstagioLead } from "@/lib/crm/lead-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -176,6 +177,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       valor_anterior: estagioAnterior || null,
       valor_novo: estagioNovo,
       motivo: merged.motivo_perda,
+      tenant_id: tenantId,
+    });
+
+    // Keystone F4 (hub_eventos): instrumentação best-effort — nunca bloqueia o PATCH do lead.
+    await registrarEvento(supabase, {
+      event_type: "estagio_alterado",
+      entity_type: "lead",
+      entity_id: id,
+      lead_id: id,
+      ator: "humano",
+      payload: { de: estagioAnterior || null, para: estagioNovo, motivo_perda: merged.motivo_perda ?? null },
       tenant_id: tenantId,
     });
   }

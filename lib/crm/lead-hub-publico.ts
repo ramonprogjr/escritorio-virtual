@@ -5,6 +5,7 @@ import {
   prepararRowHubLeadInsert,
 } from "@/lib/crm/lead-cadastro";
 import { defaultTenantId } from "@/lib/tenant-default";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 export type LeadHubPublicoInput = {
   empresa: string;
@@ -116,6 +117,18 @@ export async function executarLeadHubPublico(
       } catch {
         /* actividade opcional */
       }
+
+      // Keystone F4 (hub_eventos): instrumentação best-effort — nunca bloqueia o intake público.
+      await registrarEvento(supabase, {
+        event_type: "lead_criado",
+        entity_type: "lead",
+        entity_id: leadId,
+        lead_id: leadId,
+        ator: "sistema",
+        payload: { origem: "site", empresa: input.empresa },
+        tenant_id: tenantId,
+      });
+
       return { ok: true, leadId, codigo };
     }
     lastError = error;
