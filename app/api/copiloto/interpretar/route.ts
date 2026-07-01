@@ -46,16 +46,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Roteamento: usa o sentinel "mistral" para ir direto ao Mistral (provedor primário).
-  // completarChatPreferindoMistral usa Anthropic apenas como fallback (quando
-  // ANTHROPIC_API_KEY está presente e o Mistral falha) — nenhuma trava depende disso.
-  //
-  // HISTÓRICO DO BUG: o commit anterior usava modeloFromDb = "claude-haiku" (ID incompleto).
-  // isAnthropicModelId("claude-haiku") retorna true (começa com "claude-"), logo a lib
-  // tentava Anthropic PRIMEIRO com model ID inválido → falha 400 invalid_request_error →
-  // anthropicErroProvavelmenteRecuperavelComMistral() não detecta esse erro como recuperável
-  // → nunca chegava ao Mistral mesmo com MISTRAL_API_KEY configurada.
-  const modeloFromDb = "mistral";
+  // Escolhe o provedor disponível: Mistral (primário) → Anthropic → Groq.
+  const hasMistral = !!process.env.MISTRAL_API_KEY?.trim();
+  const hasAnthropic = !!process.env.ANTHROPIC_API_KEY?.trim();
+  const hasGroq = !!process.env.GROQ_API_KEY?.trim();
+  const modeloFromDb = hasMistral
+    ? "mistral"
+    : hasAnthropic
+      ? "claude-haiku-4-5-20251001"
+      : hasGroq
+        ? "groq"
+        : "mistral";
 
   const r = await completarChatPreferindoMistral({
     systemPrompt: construirPromptCopiloto({ rota, temLead }),
@@ -64,9 +65,6 @@ export async function POST(request: NextRequest) {
     maxTokens: 500,
   });
   if (!r.ok) {
-    const hasMistral = !!process.env.MISTRAL_API_KEY?.trim();
-    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY?.trim();
-    const hasGroq = !!process.env.GROQ_API_KEY?.trim();
     const nenhuma = !hasMistral && !hasAnthropic && !hasGroq;
     const msg = nenhuma
       ? "IA não configurada no servidor. Peça ao administrador para verificar as chaves de IA e fazer um novo deploy."
