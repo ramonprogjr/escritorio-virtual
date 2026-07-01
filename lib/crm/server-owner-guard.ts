@@ -10,24 +10,9 @@
  * que não têm acesso ao objeto `Request` e usam `cookies()` de `next/headers`.
  */
 import { cookies } from "next/headers";
-import { CRM_ACCESS_COOKIE } from "@/lib/auth/crm-session";
+import { CRM_ACCESS_COOKIE, fetchAuthUserFromAccessToken } from "@/lib/auth/crm-session";
 import { crmDb } from "@/lib/crm/supabase-server";
 import { isCrmOwnerRole } from "@/lib/crm/crm-permissoes";
-
-function decodeJwtSub(token: string): string | null {
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const json = Buffer.from(
-      payload.replace(/-/g, "+").replace(/_/g, "/"),
-      "base64"
-    ).toString("utf8");
-    const sub = JSON.parse(json)?.sub;
-    return typeof sub === "string" && sub.trim() ? sub.trim() : null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Retorna `true` apenas quando há sessão válida com papel `owner`.
@@ -40,7 +25,10 @@ export async function verifyServerOwner(): Promise<boolean> {
     const token = jar.get(CRM_ACCESS_COOKIE)?.value?.trim();
     if (!token) return false;
 
-    const authId = decodeJwtSub(token);
+    // Valida o token na fonte (Supabase) — assinatura + expiração. Antes só decodificava o
+    // `sub` local, confiando no proxy morto → cookie forjado passava como owner.
+    const authUser = await fetchAuthUserFromAccessToken(token);
+    const authId = authUser?.id;
     if (!authId) return false;
 
     const { data, error } = await crmDb()

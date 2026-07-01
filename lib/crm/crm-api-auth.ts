@@ -8,45 +8,38 @@ import {
   type CrmNivel,
 } from "@/lib/crm/crm-permissoes";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
-import { CRM_ACCESS_COOKIE } from "@/lib/auth/crm-session";
+import { CRM_ACCESS_COOKIE, fetchAuthUserFromAccessToken } from "@/lib/auth/crm-session";
 import { NextResponse } from "next/server";
 
-/** `sub` do JWT de sessão = auth.users.id. O proxy já validou assinatura/expiração;
- *  aqui só decodificamos localmente para derivar a identidade do token (não de header). */
-function decodeJwtSub(token: string): string | null {
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const json = Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
-    const sub = JSON.parse(json)?.sub;
-    return typeof sub === "string" && sub.trim() ? sub.trim() : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Identidade autoritativa = cookie de sessão httpOnly (`obra10_crm_access`), não header arbitrário. */
-function authIdFromSessionCookie(request: Request): string | null {
+/** Extrai o access token CRU do cookie de sessão httpOnly (sem decodificar/validar). */
+function accessTokenFromCookie(request: Request): string | null {
   const cookie = request.headers.get("cookie") || "";
   const m = cookie.match(new RegExp("(?:^|;\\s*)" + CRM_ACCESS_COOKIE + "=([^;]+)"));
   if (!m) return null;
-  let token: string;
   try {
-    token = decodeURIComponent(m[1]);
+    return decodeURIComponent(m[1]);
   } catch {
-    return null; // cookie percent-encoding inválido → trata como ausente (evita 500)
+    return null; // percent-encoding inválido → trata como ausente (evita 500)
   }
-  return decodeJwtSub(token);
 }
 
 /**
- * Identidade do chamador para rotas CRM: a sessão (cookie httpOnly validado pelo proxy)
- * tem PRIORIDADE; o header `x-caller-auth-id` (forjável) só vale para chamador interno
- * SEM cookie (já gated por `x-api-key` no proxy). Use em qualquer rota que precise saber
- * "quem é o operador" — nunca confie no header diretamente.
+ * Identidade do chamador = cookie de sessão VALIDADO no Supabase (`/auth/v1/user` confere
+ * assinatura + expiração). ANTES o `sub` era só decodificado localmente (base64) confiando
+ * que o middleware validava — mas o middleware (`proxy.ts`) está MORTO, então um cookie
+ * FORJADO com `sub` arbitrário passava como se fosse aquele usuário (bypass de auth). Agora
+ * validamos de fato na fonte.
+ *
+ * O header `x-caller-auth-id` NÃO é mais fallback aqui — era um valor vindo do cliente,
+ * forjável e sem gate. O caminho interno server-to-server (cron/worker) é tratado só em
+ * `getCallerContext`, gated por `requireInternalApiKey`. Fail-closed: token
+ * ausente/inválido/expirado → null.
  */
-export function resolveCallerAuthId(request: Request): string | null {
-  return authIdFromSessionCookie(request) ?? (request.headers.get("x-caller-auth-id")?.trim() || null);
+export async function resolveCallerAuthId(request: Request): Promise<string | null> {
+  const token = accessTokenFromCookie(request);
+  if (!token) return null;
+  const user = await fetchAuthUserFromAccessToken(token);
+  return user?.id ?? null;
 }
 
 export function crmApiConfigError(): NextResponse | null {
@@ -86,16 +79,28 @@ export async function getCallerContext(
   // `x-caller-auth-id` — por isso esse caminho continua gated pela chave. Com cookie de
   // sessão presente (já validado pelo proxy), NÃO exigimos a chave; senão o browser
   // (sem x-api-key) tomaria 401 em toda chamada.
-  const cookieAuthId = authIdFromSessionCookie(request);
-  if (!cookieAuthId) {
-    const keyErr = requireInternalApiKey(request);
-    if (keyErr) return { error: keyErr };
+  // Cookie de sessão VALIDADO na fonte (Supabase) — prioridade absoluta.
+  const cookieAuthId = await resolveCallerAuthId(request);
+
+  // Sem cookie válido → caminho interno server-to-server. Exige INTERNAL_API_KEY CONFIGURADA
+  // E x-api-key correta. Fail-closed: se a chave não está definida no ambiente, o header é
+  // REJEITADO — senão um `x-caller-auth-id` forjado (valor vindo do cliente) passaria sem gate
+  // (requireInternalApiKey é leniente quando a env está vazia). Nunca confiar no header sem a chave.
+  let authId = cookieAuthId;
+  if (!authId) {
+    const expected = process.env.INTERNAL_API_KEY?.trim();
+    const got = request.headers.get("x-api-key")?.trim();
+    if (!expected || got !== expected) {
+      return {
+        error: NextResponse.json(
+          { error: "Sessão inválida ou identidade ausente." },
+          { status: 401 }
+        ),
+      };
+    }
+    authId = request.headers.get("x-caller-auth-id")?.trim() || null;
   }
 
-  // Identidade: cookie httpOnly (validado pelo proxy) tem prioridade. O header
-  // `x-caller-auth-id` (forjável) só é fallback no caminho interno SEM cookie — que já
-  // passou pelo gate da chave acima. Com cookie presente, o header é IGNORADO.
-  const authId = cookieAuthId ?? resolveCallerAuthId(request);
   if (!authId) {
     return {
       error: NextResponse.json(

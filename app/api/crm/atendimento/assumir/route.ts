@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const configErr = crmApiConfigError();
   if (configErr) return configErr;
 
-  const authId = resolveCallerAuthId(request);
+  const authId = await resolveCallerAuthId(request);
   if (!authId) {
     return NextResponse.json(
       { error: "Sessão inválida ou identidade ausente." },
