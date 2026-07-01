@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { gerarCodigoParceiro } from "@/lib/crm/parceiro-cadastro";
 import {
   insertParceiroCaptacaoCompat,
@@ -18,14 +18,16 @@ function clientIp(request: NextRequest): string {
 }
 
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
 async function buscarParceiroDuplicadoPublico(
-  supabase: ReturnType<typeof db>,
+  supabase: SupabaseClient,
   params: { field: "telefone" | "cpf" | "cnpj"; value: string }
 ) {
   let { data, error } = await supabase
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = db();
+  if (!supabase) return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
   const tenantId = defaultTenantId();
 
   try {

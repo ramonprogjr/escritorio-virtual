@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { gerarCodigoParceiro } from "@/lib/crm/parceiro-cadastro";
 import {
   insertParceiroCaptacaoCompat,
@@ -13,9 +13,11 @@ import { rateLimitExcedido } from "@/lib/rate-limit-memoria";
 import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -50,7 +52,7 @@ function isParceiroCompatError(err: unknown): boolean {
 }
 
 async function buscarParceiroDuplicado(
-  supabase: ReturnType<typeof db>,
+  supabase: SupabaseClient,
   params: { field: "cpf" | "cnpj" | "telefone"; value: string; tenantScope: string }
 ) {
   let query = supabase
@@ -80,6 +82,7 @@ export async function GET(request: NextRequest) {
   if ("error" in g) return g.error;
 
   const supabase = db();
+  if (!supabase) return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
   const mercado = searchParams.get("mercado");
@@ -115,6 +118,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const supabase = db();
+  if (!supabase) return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
   // Captação pública mas HUB-only: rate-limit anti-spam por IP + tenant SEMPRE do Hub
   // (defaultTenantId), nunca do header (era forjável → escrita cross-tenant).
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "desconhecido";

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 
 function db() {
+  // fail-closed: sem fallback para a anon key (Batch 3 — cotações eram 100% públicas).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -12,16 +15,21 @@ function db() {
  * Cria card em hub_aprovacoes para decisão humana (documento mestre: nada financeiro sem aprovação).
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  const { id: pedidoId } = await ctx.params;
+  const g = await requireCrmComercial(request);
+  if ("error" in g) return g.error;
   const supabase = db();
+  if (!supabase) return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
+
+  const { id: pedidoId } = await ctx.params;
 
   const { data: pedido, error: pe } = await supabase
     .from("hub_cotacoes_pedidos")
     .select("id, titulo, descricao, status, tenant_id")
     .eq("id", pedidoId)
+    .eq("tenant_id", g.ctx.tenantId)
     .single();
 
   if (pe || !pedido) return NextResponse.json({ erro: "Pedido não encontrado" }, { status: 404 });
@@ -49,6 +57,7 @@ export async function POST(
   const { data: aprovacao, error: ae } = await supabase
     .from("hub_aprovacoes")
     .insert({
+      tenant_id: g.ctx.tenantId,
       tipo: "cotacao_fornecedor",
       agente_slug: "diretor_geral_ia",
       descricao: `Escolha de fornecedor — pedido: ${pedido.titulo}`,

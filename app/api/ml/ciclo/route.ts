@@ -33,10 +33,12 @@ export async function POST(request: NextRequest) {
       varrerSistema(),
     ]);
 
-    const db = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // fail-closed: sem fallback para a anon key (Batch 3).
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey?.trim()) {
+      return NextResponse.json({ sucesso: false, erro: "Serviço indisponível" }, { status: 503 });
+    }
+    const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
     const { data: agentes } = await db
       .from("hub_agente_identidade")
       .select("agente_slug")
@@ -84,10 +86,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
     }
     try {
-      const db = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      // fail-closed: sem fallback para a anon key (Batch 3).
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceKey?.trim()) {
+        return NextResponse.json({ sucesso: false, erro: "Serviço indisponível" }, { status: 503 });
+      }
+      const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
       const { data: agentes } = await db
         .from("hub_agente_identidade")
         .select("agente_slug")
@@ -111,10 +115,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const db = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // fail-closed: sem fallback para a anon key (Batch 3).
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey?.trim()) {
+      return NextResponse.json({ erro: "Serviço indisponível" }, { status: 503 });
+    }
+    const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
 
     const [sugestoes, historicos, acoes, kpisForaMeta] = await Promise.all([
       db.from("hub_ml_sugestoes").select("*").eq("status", "pendente").order("criado_em", { ascending: false }),

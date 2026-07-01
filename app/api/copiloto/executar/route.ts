@@ -24,10 +24,12 @@ import {
  * a auditoria é efeito secundário, não bloqueador.
  */
 function auditDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // fail-closed: sem fallback para a anon key — client de service_role nunca deve
+  // silenciosamente rodar com privilégio anon divergente (Batch 3). auditarEscritaCopiloto()
+  // já envolve tudo em try/catch (best-effort) — lançar aqui não quebra a execução da ferramenta.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key?.trim()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente — serviço indisponível.");
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key);
 }
 
 export async function auditarEscritaCopiloto(
