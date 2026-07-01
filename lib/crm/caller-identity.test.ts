@@ -1,49 +1,59 @@
-import { describe, expect, it } from "vitest";
-import { resolveCallerAuthId } from "./crm-api-auth";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 
-/** Monta um JWT fake (header.payload.sig) com o `sub` desejado. */
-function fakeJwt(sub: string): string {
-  const b64 = (o: unknown) =>
-    Buffer.from(JSON.stringify(o)).toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
-  return `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ sub })}.assinatura-irrelevante`;
-}
+// Mocka a validação do token no Supabase — o teste controla o que `/auth/v1/user` "responde".
+// Assim provamos que a identidade vem da VALIDAÇÃO na fonte, não do `sub` cru do cookie.
+vi.mock("@/lib/auth/crm-session", () => ({
+  CRM_ACCESS_COOKIE: "obra10_crm_access",
+  fetchAuthUserFromAccessToken: vi.fn(),
+}));
+
+import { resolveCallerAuthId } from "./crm-api-auth";
+import { fetchAuthUserFromAccessToken } from "@/lib/auth/crm-session";
+
+const COOKIE = "obra10_crm_access";
+const mockFetch = vi.mocked(fetchAuthUserFromAccessToken);
 
 function req(headers: Record<string, string>): Request {
   return new Request("http://localhost/api/crm/x", { headers });
 }
 
-const COOKIE = "obra10_crm_access";
+describe("resolveCallerAuthId — valida o token na FONTE (Supabase), não confia no sub cru do cookie", () => {
+  beforeEach(() => mockFetch.mockReset());
 
-describe("resolveCallerAuthId — identidade vem do cookie de sessão, não do header forjável", () => {
-  it("usa o sub do cookie e IGNORA o x-caller-auth-id quando há cookie", () => {
-    const r = req({
-      cookie: `${COOKIE}=${fakeJwt("user-real")}`,
-      "x-caller-auth-id": "user-FORJADO",
-    });
-    expect(resolveCallerAuthId(r)).toBe("user-real");
+  it("token VÁLIDO (Supabase confirma) → retorna o id validado", async () => {
+    mockFetch.mockResolvedValue({ id: "user-real" });
+    const r = req({ cookie: `${COOKIE}=um.token.qualquer` });
+    expect(await resolveCallerAuthId(r)).toBe("user-real");
+    expect(mockFetch).toHaveBeenCalledWith("um.token.qualquer");
   });
 
-  it("parseia o cookie mesmo com outros cookies antes", () => {
-    const r = req({ cookie: `foo=1; ${COOKIE}=${fakeJwt("user-real")}; bar=2` });
-    expect(resolveCallerAuthId(r)).toBe("user-real");
+  it("cookie FORJADO (Supabase rejeita → null) → NÃO autentica (o bypass está fechado)", async () => {
+    mockFetch.mockResolvedValue(null);
+    const r = req({ cookie: `${COOKIE}=forjado.sub-do-dono.sem-assinatura` });
+    expect(await resolveCallerAuthId(r)).toBeNull();
   });
 
-  it("sem cookie, cai no header (chamador interno já gated por x-api-key no proxy)", () => {
-    expect(resolveCallerAuthId(req({ "x-caller-auth-id": "interno-123" }))).toBe("interno-123");
+  it("parseia o cookie mesmo com outros cookies antes", async () => {
+    mockFetch.mockResolvedValue({ id: "user-real" });
+    const r = req({ cookie: `foo=1; ${COOKIE}=tok; bar=2` });
+    expect(await resolveCallerAuthId(r)).toBe("user-real");
+    expect(mockFetch).toHaveBeenCalledWith("tok");
   });
 
-  it("sem cookie e sem header → null", () => {
-    expect(resolveCallerAuthId(req({}))).toBeNull();
+  it("sem cookie → null, e nem chega a consultar o Supabase", async () => {
+    expect(await resolveCallerAuthId(req({}))).toBeNull();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("cookie com token malformado → não lança; cai no header se houver", () => {
-    const r = req({ cookie: `${COOKIE}=%E0%A4%A; outra=x`, "x-caller-auth-id": "fallback-1" });
-    expect(resolveCallerAuthId(r)).toBe("fallback-1");
+  it("IGNORA o x-caller-auth-id (não é mais fallback — era um header forjável do cliente)", async () => {
+    mockFetch.mockResolvedValue(null);
+    const r = req({ "x-caller-auth-id": "user-FORJADO" });
+    expect(await resolveCallerAuthId(r)).toBeNull();
   });
 
-  it("cookie sem claim sub → trata como ausente", () => {
-    const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64").replace(/=+$/, "");
-    const semSub = `${b64({ alg: "HS256" })}.${b64({ foo: "bar" })}.x`;
-    expect(resolveCallerAuthId(req({ cookie: `${COOKIE}=${semSub}` }))).toBeNull();
+  it("cookie com percent-encoding inválido → null (não lança, não consulta)", async () => {
+    const r = req({ cookie: `${COOKIE}=%E0%A4%A` });
+    expect(await resolveCallerAuthId(r)).toBeNull();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

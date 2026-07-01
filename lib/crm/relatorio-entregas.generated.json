@@ -1,7 +1,53 @@
 {
-  "geradoEm": "2026-07-01T20:45:58.045Z",
+  "geradoEm": "2026-07-01T23:29:13.077Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "a695053a6964b958f81792daa02a7dd9836b678e",
+      "hashCurto": "a695053",
+      "mensagem": "security: remove backup-auto.yml — vazava PII de leads + token WhatsApp pro git",
+      "mensagemRaw": "security: remove backup-auto.yml — vazava PII de leads + token WhatsApp pro git",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T21:23:00.000Z",
+      "hora": "18:23",
+      "arquivos": [
+        ".github/workflows/backup-auto.yml"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "81da81ff0a3bdee76444c2d087e4667c7c7c3411",
+      "hashCurto": "81da81f",
+      "mensagem": "registra a janela autônoma 01/jul tarde no LOG-DEPLOYS (Batch 5 + gate + funil KPI)",
+      "mensagemRaw": "docs: registra a janela autônoma 01/jul tarde no LOG-DEPLOYS (Batch 5 + gate + funil KPI)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T20:52:13.000Z",
+      "hora": "17:52",
+      "arquivos": [
+        "docs/LOG-DEPLOYS.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "3d4b59cb3da921367cd0a9e4135c9d4bbd6f49b7",
+      "hashCurto": "3d4b59c",
+      "mensagem": "instrumenta o funil de negócio em hub_eventos (keystone F4)",
+      "mensagemRaw": "feat(kpi): instrumenta o funil de negócio em hub_eventos (keystone F4)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T20:48:21.000Z",
+      "hora": "17:48",
+      "arquivos": [
+        "app/api/crm/negocios/[id]/route.ts",
+        "app/api/crm/negocios/route.ts"
+      ],
+      "areas": {
+        "app/api": 2
+      }
+    },
     {
       "hash": "ee35216a8c268734aca16b237e146777de086c60",
       "hashCurto": "ee35216",
@@ -5878,335 +5924,6 @@
       "hora": "20:34",
       "arquivos": [
         "docs/PLANO-EXECUTIVO-BLOCOS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "488710e3d1e9b0ec43f860d918709a6f4e68f276",
-      "hashCurto": "488710e",
-      "mensagem": "B4 fatia segura — migracao rls_crm_core_close_holes (autorizada, apply pendente)",
-      "mensagemRaw": "docs(sql): B4 fatia segura — migracao rls_crm_core_close_holes (autorizada, apply pendente)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T23:27:01.000Z",
-      "hora": "20:27",
-      "arquivos": [
-        "docs/PENDENCIAS.md",
-        "docs/sql/20260624-rls-crm-core-close-holes-AUTORIZADA-pendente-apply.sql"
-      ],
-      "areas": {
-        "outros": 2
-      }
-    },
-    {
-      "hash": "e5b638332482282111a2d60b8cd4609d96707bce",
-      "hashCurto": "e5b6383",
-      "mensagem": "PENDENCIAS — passo 1 (polish seguro) 100% fechado (#6, Negocios palette, Ctrl+K)",
-      "mensagemRaw": "docs: PENDENCIAS — passo 1 (polish seguro) 100% fechado (#6, Negocios palette, Ctrl+K)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:58:54.000Z",
-      "hora": "19:58",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "fefb01c25c9e902cf66945ae14bd0b8067602faf",
-      "hashCurto": "fefb01c",
-      "mensagem": "dica de Ctrl+K na sidebar (descoberta da paleta de comandos)",
-      "mensagemRaw": "feat(crm): dica de Ctrl+K na sidebar (descoberta da paleta de comandos)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:57:50.000Z",
-      "hora": "19:57",
-      "arquivos": [
-        "app/crm/layout.tsx"
-      ],
-      "areas": {
-        "app/crm": 1
-      }
-    },
-    {
-      "hash": "9f5288f05b138ca7079f6f01ba741d4311abfa28",
-      "hashCurto": "9f5288f",
-      "mensagem": "tokeniza tabela-lista de Negocios (--obra-*) — fecha lacuna da auditoria",
-      "mensagemRaw": "style(crm): tokeniza tabela-lista de Negocios (--obra-*) — fecha lacuna da auditoria",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:55:27.000Z",
-      "hora": "19:55",
-      "arquivos": [
-        "app/crm/negocios/page.tsx"
-      ],
-      "areas": {
-        "app/crm": 1
-      }
-    },
-    {
-      "hash": "3ce7b9e85398030297c6e399d5b124eb4b096dcb",
-      "hashCurto": "3ce7b9e",
-      "mensagem": "Onda D #6 — alert()/confirm() nativos -> CrmConfirmDialog + strip dark",
-      "mensagemRaw": "feat(crm): Onda D #6 — alert()/confirm() nativos -> CrmConfirmDialog + strip dark",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:53:51.000Z",
-      "hora": "19:53",
-      "arquivos": [
-        "app/crm/cadastro/page.tsx",
-        "app/crm/leads/page.tsx"
-      ],
-      "areas": {
-        "app/crm": 2
-      }
-    },
-    {
-      "hash": "34db1b3e10f35eeeedc8c63b17ec64641489efde",
-      "hashCurto": "34db1b3",
-      "mensagem": "auditoria do plano — corrige drifts (178->182, polimento feito, B1 ✅) + 2 lacunas",
-      "mensagemRaw": "docs: auditoria do plano — corrige drifts (178->182, polimento feito, B1 ✅) + 2 lacunas",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:47:30.000Z",
-      "hora": "19:47",
-      "arquivos": [
-        "docs/PENDENCIAS.md",
-        "docs/PLANO-EXECUTIVO-BLOCOS.md"
-      ],
-      "areas": {
-        "outros": 2
-      }
-    },
-    {
-      "hash": "296dc22ca9923ce8b3970899f5c117e2ecb8776a",
-      "hashCurto": "296dc22",
-      "mensagem": "PENDENCIAS — Ondas C e D#8 concluidas; D#6 (alert/confirm) deferido com abordagem pronta",
-      "mensagemRaw": "docs: PENDENCIAS — Ondas C e D#8 concluidas; D#6 (alert/confirm) deferido com abordagem pronta",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:41:34.000Z",
-      "hora": "19:41",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "63d7e372c3a0d43c53d5d272020d5467f341e390",
-      "hashCurto": "63d7e37",
-      "mensagem": "Onda D #8 — respostas rapidas (templates) no inbox + label IA dinamico",
-      "mensagemRaw": "feat(crm): Onda D #8 — respostas rapidas (templates) no inbox + label IA dinamico",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:39:32.000Z",
-      "hora": "19:39",
-      "arquivos": [
-        "app/crm/atendimento/page.tsx"
-      ],
-      "areas": {
-        "app/crm": 1
-      }
-    },
-    {
-      "hash": "e0a3db0b011c2f4b64b5e9eecd6057b36b70ab35",
-      "hashCurto": "e0a3db0",
-      "mensagem": "Onda C — selo de SLA textual no card de lead + dashboard por urgencia",
-      "mensagemRaw": "feat(crm): Onda C — selo de SLA textual no card de lead + dashboard por urgencia",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:36:32.000Z",
-      "hora": "19:36",
-      "arquivos": [
-        "app/crm/page.tsx",
-        "components/crm/leads/LeadKanbanCard.tsx"
-      ],
-      "areas": {
-        "app/crm": 1,
-        "components/crm": 1
-      }
-    },
-    {
-      "hash": "20450f7c63c86df2d453bb8c676210bedf032ac6",
-      "hashCurto": "20450f7",
-      "mensagem": "PENDENCIAS — Onda B concluida (tabela tokenizada + lucide); Ctrl+K hint sub-item",
-      "mensagemRaw": "docs: PENDENCIAS — Onda B concluida (tabela tokenizada + lucide); Ctrl+K hint sub-item",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:29:50.000Z",
-      "hora": "19:29",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "5aef594335f10a8d74341b84b91dc64dcfe72bff",
-      "hashCurto": "5aef594",
-      "mensagem": "Onda B — tabela de leads tokenizada (--obra-*) + quick-actions com Lucide",
-      "mensagemRaw": "style(crm): Onda B — tabela de leads tokenizada (--obra-*) + quick-actions com Lucide",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:29:13.000Z",
-      "hora": "19:29",
-      "arquivos": [
-        "app/crm/leads/page.tsx"
-      ],
-      "areas": {
-        "app/crm": 1
-      }
-    },
-    {
-      "hash": "4681865ca9b58fd690e80547ffa3bb6aa1518617",
-      "hashCurto": "4681865",
-      "mensagem": "PENDENCIAS — plano UI/UX em 4 ondas (auditoria + diretor); Onda A concluida",
-      "mensagemRaw": "docs: PENDENCIAS — plano UI/UX em 4 ondas (auditoria + diretor); Onda A concluida",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:25:39.000Z",
-      "hora": "19:25",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "77195dfd8fedf96997b4a62aa04885cd5d68b448",
-      "hashCurto": "77195df",
-      "mensagem": "PT-BR — \"Desative/Registros/ativar\" no config de pipeline (Onda A)",
-      "mensagemRaw": "chore(crm): PT-BR — \"Desative/Registros/ativar\" no config de pipeline (Onda A)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:24:31.000Z",
-      "hora": "19:24",
-      "arquivos": [
-        "components/crm/leads/PipelineConfigSideover.tsx"
-      ],
-      "areas": {
-        "components/crm": 1
-      }
-    },
-    {
-      "hash": "8e7970e8b52f553d521176f32d078196dfbf69c2",
-      "hashCurto": "8e7970e",
-      "mensagem": "Onda A — cabecalho contextual no sideover + PT-BR/ocultar slug no config de pipeline",
-      "mensagemRaw": "fix(crm): Onda A — cabecalho contextual no sideover + PT-BR/ocultar slug no config de pipeline",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T22:21:39.000Z",
-      "hora": "19:21",
-      "arquivos": [
-        "components/crm/cadastro/CadastroPremiumSideover.tsx",
-        "components/crm/leads/PipelineConfigSideover.tsx"
-      ],
-      "areas": {
-        "components/crm": 2
-      }
-    },
-    {
-      "hash": "3d0011a6ef3d7c79db3e8617d78a5a7e79ff6508",
-      "hashCurto": "3d0011a",
-      "mensagem": "PENDENCIAS — Bloco 3 (fatia segura) completo e verificado pos-RLS",
-      "mensagemRaw": "docs: PENDENCIAS — Bloco 3 (fatia segura) completo e verificado pos-RLS",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:59:35.000Z",
-      "hora": "18:59",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "ac0e501a2f3de77d3b7a5a0189f0e41b45a3cd34",
-      "hashCurto": "ac0e501",
-      "mensagem": "RLS tenant-aware de hub_pipeline_estagios APLICADO (autorizado)",
-      "mensagemRaw": "chore(db): RLS tenant-aware de hub_pipeline_estagios APLICADO (autorizado)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:57:05.000Z",
-      "hora": "18:57",
-      "arquivos": [
-        "docs/PENDENCIAS.md",
-        "docs/sql/20260624-rls-pipeline-estagios-tenant-APPLIED.sql"
-      ],
-      "areas": {
-        "outros": 2
-      }
-    },
-    {
-      "hash": "87ad84ba198d4c3b7470e7103cc68fefcbf2537d",
-      "hashCurto": "87ad84b",
-      "mensagem": "PROPOSTA de RLS tenant-aware em hub_pipeline_estagios (nao aplicada)",
-      "mensagemRaw": "docs(sql): PROPOSTA de RLS tenant-aware em hub_pipeline_estagios (nao aplicada)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:22:38.000Z",
-      "hora": "18:22",
-      "arquivos": [
-        "docs/PENDENCIAS.md",
-        "docs/sql/20260624-rls-pipeline-estagios-tenant-PROPOSTA.sql"
-      ],
-      "areas": {
-        "outros": 2
-      }
-    },
-    {
-      "hash": "d2f9f9f3132394497dedcdbc1c3d456f5f798af1",
-      "hashCurto": "d2f9f9f",
-      "mensagem": "PENDENCIAS — decisao do diretor (B3 fatia) + achado RLS pipelines (anon-open)",
-      "mensagemRaw": "docs: PENDENCIAS — decisao do diretor (B3 fatia) + achado RLS pipelines (anon-open)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:13:40.000Z",
-      "hora": "18:13",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "306c8675e2103a95acae1a951387fdc4f874b2c4",
-      "hashCurto": "306c867",
-      "mensagem": "Bloco 3 — cartao acionavel (proxima-acao no negocio + frescor reutilizavel)",
-      "mensagemRaw": "feat(crm): Bloco 3 — cartao acionavel (proxima-acao no negocio + frescor reutilizavel)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:11:17.000Z",
-      "hora": "18:11",
-      "arquivos": [
-        "app/crm/negocios/page.tsx",
-        "components/crm/leads/LeadKanbanCard.tsx",
-        "components/crm/negocios/NegocioKanbanCard.tsx",
-        "lib/crm/sla-frescor.test.ts",
-        "lib/crm/sla-frescor.ts"
-      ],
-      "areas": {
-        "app/crm": 1,
-        "components/crm": 2,
-        "lib/crm": 2
-      }
-    },
-    {
-      "hash": "8f6589c575b940a1a697b54479c139eb4598df29",
-      "hashCurto": "8f6589c",
-      "mensagem": "PENDENCIAS — validacao visual do lead OK + fix login 401 registrado",
-      "mensagemRaw": "docs: PENDENCIAS — validacao visual do lead OK + fix login 401 registrado",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:01:28.000Z",
-      "hora": "18:01",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "c22f9ddf28f7ce4969fb7c67b5b4596631a32163",
-      "hashCurto": "c22f9dd",
-      "mensagem": "login intermitente — retry em falha transitoria ao validar token (crm-session)",
-      "mensagemRaw": "fix(auth): login intermitente — retry em falha transitoria ao validar token (crm-session)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T21:00:41.000Z",
-      "hora": "18:00",
-      "arquivos": [
-        "lib/auth/crm-session.ts"
       ],
       "areas": {
         "outros": 1

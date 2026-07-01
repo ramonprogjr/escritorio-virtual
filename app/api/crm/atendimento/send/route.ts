@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
   const configErr = crmApiConfigError();
   if (configErr) return configErr;
 
-  // Identidade do operador (obrigatória) — do cookie de sessão, não de header forjável
-  const authId = resolveCallerAuthId(request);
+  // Identidade do operador (obrigatória) — cookie de sessão VALIDADO na fonte (Supabase)
+  const authId = await resolveCallerAuthId(request);
   if (!authId) {
     return NextResponse.json(
       { error: "Sessão inválida ou identidade ausente." },
