@@ -199,6 +199,8 @@ export async function executarBriefingReply(params: {
   historico: BriefingMensagemLinha[];
   mensagemUsuario: string;
   memoriasAgenteBloco?: string;
+  /** Tenant da sessão do caller — repassado ao gate `assertSaldoAntesDoLLM` (opcional). */
+  tenantId?: string;
 }): Promise<BriefingReplyResult> {
   const fontesConhecimento: PromptFonteConhecimento[] = [
     {
@@ -247,6 +249,7 @@ export async function executarBriefingReply(params: {
     mensagens,
     modeloFromDb: params.modelo,
     maxTokens: 2048,
+    tenantId: params.tenantId,
   });
   if (!out.ok) throw new Error(out.erro);
 
@@ -268,6 +271,8 @@ export async function executarSimulacaoCanalReply(params: {
   mensagemUsuario: string;
   simulacaoWaPlaybookComplete?: boolean;
   simulacaoWaPlaybookAnswers?: Record<string, string>;
+  /** Tenant da sessão do caller — repassado ao gate `assertSaldoAntesDoLLM` (opcional). */
+  tenantId?: string;
 }): Promise<BriefingReplyResult> {
   const turnosConversa = params.historico.map((m) => ({
     role: (m.papel === "user" ? "user" : "assistant") as "user" | "assistant",
@@ -303,6 +308,7 @@ export async function executarSimulacaoCanalReply(params: {
     mensagens,
     modeloFromDb: pc.modelo,
     maxTokens: 2048,
+    tenantId: params.tenantId,
   });
   if (!out.ok) throw new Error(out.erro);
 
@@ -332,6 +338,8 @@ export async function executarSimulacaoWhatsappReply(params: {
   mensagemUsuario: string;
   menuChoiceId?: string | null;
   flowState?: BriefingFlowSimState | null;
+  /** Tenant da sessão do caller — repassado ao gate `assertSaldoAntesDoLLM` (opcional). */
+  tenantId?: string;
 }): Promise<BriefingSimCanalResult> {
   const prior = params.flowState ?? emptyBriefingFlowSimState();
   const emFaseIa = prior.complete && prior.handoff_ia;
@@ -364,6 +372,7 @@ export async function executarSimulacaoWhatsappReply(params: {
             mensagemUsuario: params.mensagemUsuario,
             simulacaoWaPlaybookComplete: true,
             simulacaoWaPlaybookAnswers: fluxo.state.answers,
+            tenantId: params.tenantId,
           });
         } catch (e) {
           const detalhe = e instanceof Error ? e.message : "IA indisponível";
@@ -400,6 +409,7 @@ export async function executarSimulacaoWhatsappReply(params: {
     mensagemUsuario: params.mensagemUsuario,
     simulacaoWaPlaybookComplete: emFaseIa || prior.complete,
     simulacaoWaPlaybookAnswers: prior.answers,
+    tenantId: params.tenantId,
   });
 
   const nextState: BriefingFlowSimState = emFaseIa

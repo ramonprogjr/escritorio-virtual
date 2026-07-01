@@ -115,6 +115,7 @@ export async function POST(
       historico,
       mensagemUsuario: mensagem,
       modelo,
+      tenantId: g.ctx.tenantId,
     });
 
     return NextResponse.json({

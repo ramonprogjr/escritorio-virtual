@@ -160,6 +160,7 @@ export async function POST(
     agenteNome: (agenteRow.nome as string | null) ?? slug,
     agenteSlug: slug,
     modeloFromDb: (agenteRow.modelo_padrao as string | null) ?? undefined,
+    tenantId,
   });
 
   // Metering (Tijolos): best-effort, por fase de geração — nunca bloqueia a resposta.

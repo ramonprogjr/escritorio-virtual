@@ -309,6 +309,7 @@ export async function POST(
         mensagemUsuario: textoUser,
         menuChoiceId: body.menu_choice_id ?? null,
         flowState,
+        tenantId: g.ctx.tenantId,
       });
       resultado = sim.ia ?? {
         texto: sim.partes.map((p) => p.display).join("\n\n"),
@@ -441,6 +442,7 @@ export async function POST(
         agenteSlug: slug,
         historico: historicoParaModelo,
         mensagemUsuario: textoUser,
+        tenantId: g.ctx.tenantId,
       });
     } else {
       const snapshot = await montarSnapshotOperacionalReadOnly(
@@ -459,6 +461,7 @@ export async function POST(
         historico: historicoParaModelo,
         mensagemUsuario: textoUser,
         memoriasAgenteBloco,
+        tenantId: g.ctx.tenantId,
       });
     }
   } catch (e) {

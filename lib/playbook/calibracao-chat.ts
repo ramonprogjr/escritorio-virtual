@@ -61,6 +61,8 @@ export async function executarCalibracaoPlaybookReply(params: {
   historico: CalibracaoMensagemLinha[];
   mensagemUsuario: string;
   modelo?: string;
+  /** Tenant da sessão do caller — repassado ao gate `assertSaldoAntesDoLLM` (opcional). */
+  tenantId?: string;
 }): Promise<{
   texto: string;
   modelo: string;
@@ -86,6 +88,7 @@ export async function executarCalibracaoPlaybookReply(params: {
     mensagens: messages,
     modeloFromDb: params.modelo?.trim() || "mistral",
     maxTokens: 2500,
+    tenantId: params.tenantId,
   });
 
   if (!completion.ok) {

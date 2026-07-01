@@ -1,7 +1,29 @@
 {
-  "geradoEm": "2026-07-01T13:34:01.427Z",
+  "geradoEm": "2026-07-01T13:42:54.628Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "55ccc5f4f3af91f35b192eaa22b05f64a9fda488",
+      "hashCurto": "55ccc5f",
+      "mensagem": "hub_eventos — instrumentação best-effort dos pontos-chave (fundação de KPIs reais)",
+      "mensagemRaw": "feat(fase1): hub_eventos — instrumentação best-effort dos pontos-chave (fundação de KPIs reais)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T13:42:42.000Z",
+      "hora": "10:42",
+      "arquivos": [
+        "app/api/crm/atendimento/send/route.ts",
+        "app/api/crm/leads/[id]/route.ts",
+        "app/api/crm/leads/route.ts",
+        "lib/crm/lead-hub-publico.ts",
+        "lib/crm/registrar-evento.test.ts",
+        "lib/ia/aprovacoes.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "lib/crm": 2,
+        "outros": 1
+      }
+    },
     {
       "hash": "715e464205e458b10f74cdc6a6f365175dca9cdc",
       "hashCurto": "715e464",
@@ -6580,21 +6602,6 @@
       ],
       "areas": {
         "outros": 1
-      }
-    },
-    {
-      "hash": "c49ec8aa654b5ee0f02be77303be350ccbb95574",
-      "hashCurto": "c49ec8a",
-      "mensagem": "login falhava com autofill do navegador (campos preenchidos, state vazio)",
-      "mensagemRaw": "fix(login): login falhava com autofill do navegador (campos preenchidos, state vazio)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T13:38:46.000Z",
-      "hora": "10:38",
-      "arquivos": [
-        "app/login/page.tsx"
-      ],
-      "areas": {
-        "app/hub": 1
       }
     }
   ]
