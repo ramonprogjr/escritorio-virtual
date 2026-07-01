@@ -9,6 +9,7 @@ import {
 import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 function db() {
   return createClient(
@@ -285,6 +286,17 @@ export async function POST(request: NextRequest) {
       descricao: "Lead criado manualmente no CRM",
       feito_por: "humano",
       feito_por_tipo: "humano",
+    });
+
+    // Keystone F4 (hub_eventos): instrumentação best-effort — nunca bloqueia a criação do lead.
+    await registrarEvento(supabase, {
+      event_type: "lead_criado",
+      entity_type: "lead",
+      entity_id: String(created.id),
+      lead_id: String(created.id),
+      ator: "humano",
+      payload: { origem: d.origem, estagio: d.estagio },
+      tenant_id: tenantId,
     });
   }
 

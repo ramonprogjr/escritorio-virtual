@@ -8,6 +8,7 @@ import {
   resolveOperador,
   tokenUazapiPorAgente,
 } from "@/lib/crm/atendimento-handoff";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 function onlyDigits(s: string): string {
   return s.replace(/\D/g, "");
@@ -180,6 +181,17 @@ export async function POST(request: NextRequest) {
     .update({ ultimo_contato: agora, atualizado_em: agora })
     .eq("id", leadId)
     .or(tenantScopeOrFilter(tenantId));
+
+  // Keystone F4 (hub_eventos): instrumentação best-effort — nunca bloqueia o envio da mensagem.
+  await registrarEvento(supabase, {
+    event_type: "mensagem_enviada",
+    entity_type: "lead",
+    entity_id: leadId,
+    lead_id: leadId,
+    ator: operador.slug,
+    payload: { canal: "whatsapp", skipped: sendSkipped },
+    tenant_id: tenantId,
+  });
 
   return NextResponse.json({
     ok: true,

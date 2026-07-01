@@ -5,6 +5,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import { isCrmOwnerRole, isCrmGestorRole } from "@/lib/crm/crm-permissoes";
+import { registrarEvento } from "@/lib/crm/registrar-evento";
 
 function supabase() {
   // fail-closed: sem fallback para a anon key — client de service_role nunca deve
@@ -366,6 +367,17 @@ export async function aprovar(
     resultado: "aprovado",
   });
 
+  // Keystone F4 (hub_eventos): instrumentação best-effort — nunca bloqueia a aprovação.
+  await registrarEvento(db, {
+    event_type: "aprovacao_decidida",
+    entity_type: "aprovacao",
+    entity_id: aprovacaoId,
+    lead_id: (aprovacao.lead_id as string) ?? null,
+    ator: "humano",
+    payload: { tipo: aprovacao.tipo, resultado: "aprovado" },
+    tenant_id: tenant,
+  });
+
   // Executa a ação aprovada (cascata do gate dourado — escopada ao tenant da sessão)
   await executarAcaoAprovada(aprovacao, tenant);
 
@@ -430,6 +442,17 @@ export async function rejeitar(
     valor_envolvido: aprovacao.valor_envolvido || 0,
     aprovado_por: "humano",
     resultado: `rejeitado: ${motivo}`,
+  });
+
+  // Keystone F4 (hub_eventos): instrumentação best-effort — nunca bloqueia a rejeição.
+  await registrarEvento(db, {
+    event_type: "aprovacao_decidida",
+    entity_type: "aprovacao",
+    entity_id: aprovacaoId,
+    lead_id: (aprovacao.lead_id as string) ?? null,
+    ator: "humano",
+    payload: { tipo: aprovacao.tipo, resultado: "rejeitado", motivo },
+    tenant_id: tenant,
   });
 
   // Notifica o agente que a ação foi rejeitada para refazer
