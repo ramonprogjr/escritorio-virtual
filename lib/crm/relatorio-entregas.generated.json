@@ -1,7 +1,28 @@
 {
-  "geradoEm": "2026-07-01T23:29:13.077Z",
+  "geradoEm": "2026-07-01T23:46:25.410Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "a54447c74bb1d2b54131e7de103421ee7864266f",
+      "hashCurto": "a54447c",
+      "mensagem": "valida a sessão na FONTE (fecha bypass de cookie forjado + header x-caller-auth-id)",
+      "mensagemRaw": "fix(seguranca): valida a sessão na FONTE (fecha bypass de cookie forjado + header x-caller-auth-id)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T23:30:29.000Z",
+      "hora": "20:30",
+      "arquivos": [
+        "app/api/crm/atendimento/assumir/route.ts",
+        "app/api/crm/atendimento/devolver/route.ts",
+        "app/api/crm/atendimento/send/route.ts",
+        "lib/crm/caller-identity.test.ts",
+        "lib/crm/crm-api-auth.ts",
+        "lib/crm/server-owner-guard.ts"
+      ],
+      "areas": {
+        "app/api": 3,
+        "lib/crm": 3
+      }
+    },
     {
       "hash": "a695053a6964b958f81792daa02a7dd9836b678e",
       "hashCurto": "a695053",
@@ -5912,21 +5933,6 @@
       ],
       "areas": {
         "outros": 2
-      }
-    },
-    {
-      "hash": "e8a6afd56e7d5c6dc8ce7719b656d864dcab2905",
-      "hashCurto": "e8a6afd",
-      "mensagem": "+ Bloco 3.9 Fundacao Multi-Tenant (pre-req de B4/B5) — achado da mesa redonda",
-      "mensagemRaw": "docs(plano): + Bloco 3.9 Fundacao Multi-Tenant (pre-req de B4/B5) — achado da mesa redonda",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T23:34:24.000Z",
-      "hora": "20:34",
-      "arquivos": [
-        "docs/PLANO-EXECUTIVO-BLOCOS.md"
-      ],
-      "areas": {
-        "outros": 1
       }
     }
   ]
