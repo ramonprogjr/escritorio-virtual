@@ -3,6 +3,7 @@ import { rodarCicloML, cobrarSubordinados, medirKPIs, registrarResultadoCronKpis
 import { varrerSistema, monitorarTrafego } from "@/lib/ia/monitor";
 import { createClient } from "@supabase/supabase-js";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 export async function POST(request: NextRequest) {
   if (!cronRequestAuthorized(request)) {
@@ -113,6 +114,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ sucesso: false, erro: errMsg }, { status: 500 });
     }
   }
+
+  // Balde B (item 2): dashboard de status ML (sugestões/histórico/KPIs fora de meta em
+  // todo o sistema) sem guard nenhum — qualquer chamador via GET via a fila interna da IA.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
 
   try {
     // fail-closed: sem fallback para a anon key (Batch 3).

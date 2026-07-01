@@ -1,7 +1,112 @@
 {
-  "geradoEm": "2026-07-01T04:40:11.564Z",
+  "geradoEm": "2026-07-01T13:16:17.148Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "71bb5f450b3f94aa32fb1f4ca291c1a0016f220c",
+      "hashCurto": "71bb5f4",
+      "mensagem": "Batch 3 — fecha 7 rotas críticas abertas + cotações/encaminhamentos + fail-closed em 19 arquivos (auditada GO)",
+      "mensagemRaw": "fix(seguranca): Batch 3 — fecha 7 rotas críticas abertas + cotações/encaminhamentos + fail-closed em 19 arquivos (auditada GO)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T13:16:04.000Z",
+      "hora": "10:16",
+      "arquivos": [
+        "app/api/ciclos/atendente/route.ts",
+        "app/api/ciclos/diretor/route.ts",
+        "app/api/ciclos/gerente/route.ts",
+        "app/api/copiloto/executar/route.ts",
+        "app/api/cotacoes/pedidos/[id]/respostas/route.ts",
+        "app/api/cotacoes/pedidos/[id]/route.ts",
+        "app/api/cotacoes/pedidos/[id]/submeter-aprovacao/route.ts",
+        "app/api/cotacoes/pedidos/route.ts",
+        "app/api/crm/encaminhamentos/[id]/aprovar/route.ts",
+        "app/api/crm/encaminhamentos/pendentes/route.ts",
+        "app/api/crm/encaminhamentos/route.ts",
+        "app/api/crm/leads/[id]/propostas/[propostaId]/route.ts",
+        "app/api/crm/rastreio/route.ts",
+        "app/api/hub/alertas/[id]/route.ts",
+        "app/api/hub/alertas/route.ts",
+        "app/api/hub/autonomia-matriz/[id]/route.ts",
+        "app/api/hub/autonomia-matriz/route.ts",
+        "app/api/hub/ciclos-log/route.ts",
+        "app/api/leads/route.ts",
+        "app/api/ml/ciclo/route.ts",
+        "app/api/parceiro/cadastro-publico/route.ts",
+        "app/api/parceiros/[id]/modulo/route.ts",
+        "app/api/parceiros/[id]/route.ts",
+        "app/api/parceiros/portal/verify/route.ts",
+        "app/api/parceiros/route.ts",
+        "lib/crm/resolver-rastreio-codigo.ts",
+        "lib/hub/executar-ferramenta-ia.ts",
+        "lib/ia/aprovacoes.ts",
+        "lib/ia/engine.ts",
+        "lib/ia/ml.ts",
+        "lib/ia/monitor.ts",
+        "lib/ia/prompt-builder.ts",
+        "lib/ia/router.ts",
+        "lib/ia/storage.ts"
+      ],
+      "areas": {
+        "app/api": 25,
+        "lib/crm": 1,
+        "lib/hub": 1,
+        "outros": 7
+      }
+    },
+    {
+      "hash": "03ef7e8255b49e1398bb7015bdf2f0dd548ae07a",
+      "hashCurto": "03ef7e8",
+      "mensagem": "auditoria de direção do projeto — relatório-mãe + status/proposta/MVP/cronograma/sprints/decisões",
+      "mensagemRaw": "docs(diagnostico): auditoria de direção do projeto — relatório-mãe + status/proposta/MVP/cronograma/sprints/decisões",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T12:50:40.000Z",
+      "hora": "09:50",
+      "arquivos": [
+        "docs/CRONOGRAMA-PROJETO.md",
+        "docs/DECISOES-PENDENTES.md",
+        "docs/DIAGNOSTICO-PROJETO-ROADMAP-CRONOGRAMA.md",
+        "docs/ESCOPO-MVP-V1-V2.md",
+        "docs/MAPA-ATIVIDADES.md",
+        "docs/PLANO-90-180-365-DIAS.md",
+        "docs/PROPOSTA-INICIAL-E-EVOLUCAO.md",
+        "docs/ROADMAP-EXECUCAO.md",
+        "docs/STATUS-MODULOS.md"
+      ],
+      "areas": {
+        "outros": 9
+      }
+    },
+    {
+      "hash": "09dbe41098de02ea73925a560e82e5183db2d8bb",
+      "hashCurto": "09dbe41",
+      "mensagem": "guard + fail-closed em /api/atividades (agendamento era anônimo)",
+      "mensagemRaw": "fix(seguranca): guard + fail-closed em /api/atividades (agendamento era anônimo)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T11:40:52.000Z",
+      "hora": "08:40",
+      "arquivos": [
+        "app/api/atividades/route.ts"
+      ],
+      "areas": {
+        "app/api": 1
+      }
+    },
+    {
+      "hash": "811d8cc1de92a29da35f5615f4fac2bcbf03f8e8",
+      "hashCurto": "811d8cc",
+      "mensagem": "organiza estado + índice-mestre + log de deploys + ponto de retorno (pedido do dono)",
+      "mensagemRaw": "docs: organiza estado + índice-mestre + log de deploys + ponto de retorno (pedido do dono)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T11:24:43.000Z",
+      "hora": "08:24",
+      "arquivos": [
+        "docs/00-LEIA-PRIMEIRO-ESTADO.md",
+        "docs/LOG-DEPLOYS.md"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
     {
       "hash": "43e81770b91362657a4fed0b2012716af82d2fc2",
       "hashCurto": "43e8177",
@@ -6484,89 +6589,6 @@
       "areas": {
         "app/api": 1,
         "app/crm": 1
-      }
-    },
-    {
-      "hash": "a6aa4c578bf8fe37dfb1b77e0cc376065cf3a602",
-      "hashCurto": "a6aa4c5",
-      "mensagem": "CRM manual #3 — canais de entrada (registro de fontes de lead) + UI",
-      "mensagemRaw": "feat(crm): CRM manual #3 — canais de entrada (registro de fontes de lead) + UI",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T12:47:43.000Z",
-      "hora": "09:47",
-      "arquivos": [
-        "app/api/crm/canais-entrada/[id]/route.ts",
-        "app/api/crm/canais-entrada/route.ts",
-        "app/crm/canais-entrada/page.tsx",
-        "docs/sql/F3-canais-entrada-APPLIED.sql",
-        "lib/crm-nav-groups.ts",
-        "lib/crm/crm-permissoes.ts"
-      ],
-      "areas": {
-        "app/api": 2,
-        "app/crm": 1,
-        "outros": 2,
-        "lib/crm": 1
-      }
-    },
-    {
-      "hash": "471038caec9ffab1990979689c81adb0a86ba2de",
-      "hashCurto": "471038c",
-      "mensagem": "CRM manual #4 (parte) — colunas customizaveis nas listas (Pessoas/Empresas)",
-      "mensagemRaw": "feat(crm): CRM manual #4 (parte) — colunas customizaveis nas listas (Pessoas/Empresas)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T12:19:24.000Z",
-      "hora": "09:19",
-      "arquivos": [
-        "app/crm/cadastro/page.tsx",
-        "components/crm/cadastro/ColunasMenu.tsx",
-        "lib/crm/use-colunas-visiveis.ts"
-      ],
-      "areas": {
-        "app/crm": 1,
-        "components/crm": 1,
-        "lib/crm": 1
-      }
-    },
-    {
-      "hash": "6ebff6f14f0b4a24a86b50585e7771432c9ec4c1",
-      "hashCurto": "6ebff6f",
-      "mensagem": "CRM manual #2 — roteamento automatico de leads configuravel (regras + UI)",
-      "mensagemRaw": "feat(crm): CRM manual #2 — roteamento automatico de leads configuravel (regras + UI)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:51:34.000Z",
-      "hora": "01:51",
-      "arquivos": [
-        "app/api/crm/distribuicao/regras/[id]/route.ts",
-        "app/api/crm/distribuicao/regras/route.ts",
-        "app/api/whatsapp/webhook/route.ts",
-        "app/crm/distribuicao/page.tsx",
-        "docs/sql/F2-roteamento-leads-APPLIED.sql",
-        "lib/crm-nav-groups.ts",
-        "lib/crm/crm-permissoes.ts",
-        "lib/crm/lead-routing-config.ts",
-        "lib/crm/salvar-super-cadastro.ts"
-      ],
-      "areas": {
-        "app/api": 3,
-        "app/crm": 1,
-        "outros": 2,
-        "lib/crm": 3
-      }
-    },
-    {
-      "hash": "f66ea15d24ef99a88ac092f0712b615f09216852",
-      "hashCurto": "f66ea15",
-      "mensagem": "F1.1 — negocio flexivel estilo Pipedrive (pessoa_id e lead_id opcionais)",
-      "mensagemRaw": "feat(crm): F1.1 — negocio flexivel estilo Pipedrive (pessoa_id e lead_id opcionais)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:44:13.000Z",
-      "hora": "01:44",
-      "arquivos": [
-        "docs/sql/F1-1-negocio-flexivel-APPLIED.sql"
-      ],
-      "areas": {
-        "outros": 1
       }
     }
   ]

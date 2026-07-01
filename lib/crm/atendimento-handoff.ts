@@ -3,7 +3,7 @@
  * Usada tanto pelo assumir/devolver via UI quanto como helper para testes.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
+import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { telefoneConversaId } from "@/lib/crm/isolamento-conversa-lead";
 
 export function crmHandoffDb(): SupabaseClient {
@@ -20,6 +20,9 @@ export interface OperadorInfo {
   nome: string;
   email: string;
   role: string;
+  /** Tenant do operador (users.tenant_id, ou default quando ausente/legado). Defesa em
+   *  profundidade cross-tenant nas queries de lead/mensagem do handoff. */
+  tenantId: string;
 }
 
 /**
@@ -30,22 +33,42 @@ export async function resolveOperador(
   supabase: SupabaseClient,
   authId: string
 ): Promise<OperadorInfo | null> {
-  const { data, error } = await supabase
+  let select = "id, auth_id, name, email, role, status, tenant_id";
+  let { data, error } = await supabase
     .from("users")
-    .select("id, auth_id, name, email, role, status")
+    .select(select)
     .eq("auth_id", authId)
     .maybeSingle();
 
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    select = "id, auth_id, name, email, role, status";
+    ({ data, error } = await supabase.from("users").select(select).eq("auth_id", authId).maybeSingle());
+  }
+
   if (error || !data) return null;
 
-  const status = String(data.status ?? "").toLowerCase();
+  const row = data as {
+    name?: string | null;
+    email?: string | null;
+    role?: string | null;
+    status?: string | null;
+    tenant_id?: string | null;
+  };
+
+  const status = String(row.status ?? "").toLowerCase();
   if (status && status !== "ativo") return null;
 
+  const tenantId =
+    row.tenant_id != null && String(row.tenant_id).trim()
+      ? String(row.tenant_id)
+      : defaultTenantId();
+
   return {
-    slug: slugFromUser(data),
-    nome: (data.name as string | null)?.trim() || (data.email as string).split("@")[0],
-    email: (data.email as string) ?? "",
-    role: (data.role as string) ?? "",
+    slug: slugFromUser(row),
+    nome: row.name?.trim() || (row.email as string).split("@")[0],
+    email: row.email ?? "",
+    role: row.role ?? "",
+    tenantId,
   };
 }
 
@@ -102,11 +125,13 @@ export async function assumirAtendimentoCrm(
   const { leadId, operador } = params;
   const agora = new Date().toISOString();
 
-  // Busca lead para obter telefone e metadata
+  // Busca lead para obter telefone e metadata — escopada ao tenant do operador (defesa
+  // em profundidade cross-tenant; legado sem tenant_id continua alcançável via tenantScopeOrFilter).
   const { data: lead, error: leadErr } = await supabase
     .from("hub_leads_crm")
     .select("id, telefone, humano_responsavel, metadata")
     .eq("id", leadId)
+    .or(tenantScopeOrFilter(operador.tenantId))
     .maybeSingle();
 
   if (leadErr) return { ok: false, jobsCancelados: 0, erro: leadErr.message };
@@ -138,10 +163,18 @@ export async function assumirAtendimentoCrm(
     },
   };
 
-  let upd = await supabase.from("hub_leads_crm").update(leadPatch).eq("id", leadId);
+  let upd = await supabase
+    .from("hub_leads_crm")
+    .update(leadPatch)
+    .eq("id", leadId)
+    .or(tenantScopeOrFilter(operador.tenantId));
   if (upd.error && isMissingPgColumn(upd.error, "ultimo_contato")) {
     const { ultimo_contato: _u, ...semUltimo } = leadPatch;
-    upd = await supabase.from("hub_leads_crm").update(semUltimo).eq("id", leadId);
+    upd = await supabase
+      .from("hub_leads_crm")
+      .update(semUltimo)
+      .eq("id", leadId)
+      .or(tenantScopeOrFilter(operador.tenantId));
   }
   if (upd.error) return { ok: false, jobsCancelados: 0, erro: upd.error.message };
 
@@ -177,7 +210,7 @@ export async function assumirAtendimentoCrm(
       feito_por: operador.slug,
       feito_por_tipo: "humano",
       metadata: { via: "crm", jobs_cancelados: jobsCancelados },
-      tenant_id: defaultTenantId(),
+      tenant_id: operador.tenantId,
     });
   } catch (e) {
     console.warn("[HANDOFF] atividade:", e);
@@ -200,10 +233,12 @@ export async function devolverAtendimentoIA(
   const { leadId, operador } = params;
   const agora = new Date().toISOString();
 
+  // Escopado ao tenant do operador — defesa em profundidade cross-tenant.
   const { data: lead, error: leadErr } = await supabase
     .from("hub_leads_crm")
     .select("id, metadata")
     .eq("id", leadId)
+    .or(tenantScopeOrFilter(operador.tenantId))
     .maybeSingle();
 
   if (leadErr) return { ok: false, erro: leadErr.message };
@@ -225,7 +260,11 @@ export async function devolverAtendimentoIA(
     },
   };
 
-  const upd = await supabase.from("hub_leads_crm").update(leadPatch).eq("id", leadId);
+  const upd = await supabase
+    .from("hub_leads_crm")
+    .update(leadPatch)
+    .eq("id", leadId)
+    .or(tenantScopeOrFilter(operador.tenantId));
   if (upd.error) return { ok: false, erro: upd.error.message };
 
   // Reativa IA na conversa
@@ -256,7 +295,7 @@ export async function devolverAtendimentoIA(
       feito_por: operador.slug,
       feito_por_tipo: "humano",
       metadata: { via: "crm" },
-      tenant_id: defaultTenantId(),
+      tenant_id: operador.tenantId,
     });
   } catch (e) {
     console.warn("[HANDOFF] atividade devolver:", e);
