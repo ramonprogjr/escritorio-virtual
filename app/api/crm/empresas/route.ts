@@ -7,6 +7,7 @@ import {
 } from "@/lib/crm/empresa-cadastro";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 function db() {
   return createClient(
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = db();
   const { searchParams } = new URL(request.url);
-  const busca = searchParams.get("busca") || "";
+  const busca = sanitizarBuscaPostgrest(searchParams.get("busca") || "");
   const atoParam = searchParams.get("ativo");
   const ativo = atoParam === "" ? null : atoParam !== "false";
   const segmento = searchParams.get("segmento") || "";
@@ -146,9 +147,8 @@ export async function GET(request: NextRequest) {
       query = query.eq("estado", estado);
     }
     if (busca) {
-      const b = busca.replace(/%/g, "");
       query = query.or(
-        `razao_social.ilike.%${b}%,nome_fantasia.ilike.%${b}%,cnpj.ilike.%${b}%,email.ilike.%${b}%,codigo.ilike.%${b}%`
+        `razao_social.ilike.%${busca}%,nome_fantasia.ilike.%${busca}%,cnpj.ilike.%${busca}%,email.ilike.%${busca}%,codigo.ilike.%${busca}%`
       );
     }
     return query;

@@ -14,6 +14,7 @@ import {
 } from "@/lib/crm/pessoa-cadastro";
 import { defaultTenantId, isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 function db() {
   return createClient(
@@ -152,9 +153,8 @@ async function listarPessoas(
     }
 
     if (params.busca) {
-      const b = params.busca.replace(/%/g, "");
       query = query.or(
-        `nome.ilike.%${b}%,email.ilike.%${b}%,telefone.ilike.%${b}%,codigo.ilike.%${b}%,documento.ilike.%${b}%`
+        `nome.ilike.%${params.busca}%,email.ilike.%${params.busca}%,telefone.ilike.%${params.busca}%,codigo.ilike.%${params.busca}%,documento.ilike.%${params.busca}%`
       );
     }
     if (params.tipo_pessoa) {
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = db();
   const { searchParams } = new URL(request.url);
-  const busca = searchParams.get("busca") || "";
+  const busca = sanitizarBuscaPostgrest(searchParams.get("busca") || "");
   const tipo_pessoa = searchParams.get("tipo_pessoa") || "";
   const estado = searchParams.get("estado") || "";
   const origem = searchParams.get("origem") || "";

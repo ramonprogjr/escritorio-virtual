@@ -7,6 +7,8 @@ import {
   RAG_BUCKET,
   reindexarDocumentoRagFromStorage,
 } from "@/lib/hub/rag";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { DEFAULT_OBRA10_TENANT_ID } from "@/lib/tenant-default";
 
 const MAX_RAG_DOCUMENTOS_POR_AGENTE = 3;
 
@@ -17,7 +19,12 @@ function db() {
   );
 }
 
-async function carregarAgente(supabase: ReturnType<typeof db>, slug: string) {
+/**
+ * Carrega o agente E confina ao tenant do caller: 404 se o agente pertencer a outro
+ * escritório (service-role bypassa RLS). NULL/Obra10 padrão = legado partilhado, mesmo
+ * critério de app/api/crm/pessoas/[id]/route.ts.
+ */
+async function carregarAgente(supabase: ReturnType<typeof db>, slug: string, tenantId: string) {
   const { data, error } = await supabase
     .from("hub_agente_identidade")
     .select("agente_slug, tenant_id")
@@ -26,7 +33,13 @@ async function carregarAgente(supabase: ReturnType<typeof db>, slug: string) {
 
   if (error) return { error: error.message };
   if (!data) return { error: "Agente não encontrado.", status: 404 };
-  return { data: data as { agente_slug: string; tenant_id?: string | null } };
+
+  const row = data as { agente_slug: string; tenant_id?: string | null };
+  const tid = row.tenant_id != null ? String(row.tenant_id).trim() : "";
+  if (tid && tid !== tenantId && tid !== DEFAULT_OBRA10_TENANT_ID) {
+    return { error: "Agente não encontrado.", status: 404 };
+  }
+  return { data: row };
 }
 
 function isRagMigrationMissing(message: string): boolean {
@@ -40,9 +53,12 @@ function isRagMigrationMissing(message: string): boolean {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
@@ -51,7 +67,7 @@ export async function GET(
   const slug = decodeURIComponent(raw);
   const supabase = db();
 
-  const agente = await carregarAgente(supabase, slug);
+  const agente = await carregarAgente(supabase, slug, g.ctx.tenantId);
   if ("error" in agente) {
     return NextResponse.json({ error: agente.error }, { status: agente.status ?? 500 });
   }
@@ -76,6 +92,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
@@ -84,7 +103,7 @@ export async function POST(
   const slug = decodeURIComponent(raw);
   const supabase = db();
 
-  const agente = await carregarAgente(supabase, slug);
+  const agente = await carregarAgente(supabase, slug, g.ctx.tenantId);
   if ("error" in agente) {
     return NextResponse.json({ error: agente.error }, { status: agente.status ?? 500 });
   }
@@ -196,6 +215,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
@@ -208,7 +230,7 @@ export async function PATCH(
   }
 
   const supabase = db();
-  const agente = await carregarAgente(supabase, slug);
+  const agente = await carregarAgente(supabase, slug, g.ctx.tenantId);
   if ("error" in agente) {
     return NextResponse.json({ error: agente.error }, { status: agente.status ?? 500 });
   }
@@ -262,6 +284,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
@@ -274,7 +299,7 @@ export async function DELETE(
   }
 
   const supabase = db();
-  const agente = await carregarAgente(supabase, slug);
+  const agente = await carregarAgente(supabase, slug, g.ctx.tenantId);
   if ("error" in agente) {
     return NextResponse.json({ error: agente.error }, { status: agente.status ?? 500 });
   }

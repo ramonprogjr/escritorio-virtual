@@ -11,6 +11,7 @@ import { resolverPipelineNegocioPorMercado } from "@/lib/crm/resolve-pipeline";
 import { isMissingPgColumn, isTenantFkError, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { legacyNegocioTipoFromMercado } from "@/lib/crm/negocio-tipo";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 function db() {
   return createClient(
@@ -297,7 +298,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = db();
   const { searchParams } = new URL(request.url);
-  const busca = searchParams.get("busca") || "";
+  const busca = sanitizarBuscaPostgrest(searchParams.get("busca") || "");
   const status = searchParams.get("status") || "";
   const etapa = searchParams.get("etapa") || "";
   const prefixo = searchParams.get("prefixo_mercado") || "";
