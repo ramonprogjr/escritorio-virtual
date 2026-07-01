@@ -16,6 +16,16 @@
 | `43e8177` | **UX críticos:** reabilita zoom (WCAG 1.4.4) + fim do loading infinito no Atendimento. Push dos 3 juntos (rede tinha caído). | tsc0 vitest666 build0 |
 | — | **Organização:** docs/00-LEIA-PRIMEIRO-ESTADO, LOG-DEPLOYS, tag de retorno, memória compactada. Mapa: MACRO-PLAN-ATUALIZADO. | — |
 
+## 01/jul/2026 (tarde) — Blindagem anti-regressão + funil KPI (janela autônoma)
+| Commit | O quê | Gate |
+|---|---|---|
+| (já no ar) | **Batch 3/4 + gate de créditos + /api/atividades** — varredura das 152 rotas → críticas fechadas + fail-closed em 19 arqs; `assertSaldoAntesDoLLM` (modo sombra). | tsc0 vitest679 |
+| `7aae1f2` | **Batch 5** — fecha as 4 últimas rotas service-role SEM guard nenhum (`/api/agentes` GET→sessao/POST+PATCH→gestor, `/agentes/mobile`, `/agentes/[slug]/detalhes`, `/ml/aprovar`→gestor). `/api/agentes` GET **vazava `uazapi_instance_token`** (credencial WhatsApp) → `sanitizarAgenteHubParaCliente`. **`lib/crm/guard-coverage.test.ts`** = gate que QUEBRA O BUILD se rota nova usar service-role sem guard/allowlist. **`.github/workflows/ci.yml`** (tsc+vitest). Verificado por auditoria adversarial (4 lentes); `ml/aprovar` "cross-tenant" = falso-positivo (ML é Hub-global). | tsc0 vitest682 build0 |
+| `ee35216` | Reforça o gate (passa a detectar `crmHandoffDb`) + **`lib/http/erro-publico.ts`** redige o erro cru nas 4 rotas PÚBLICAS (não vaza tabela/coluna do Postgres). | tsc0 vitest682 build0 |
+| `3d4b59c` | **Funil KPI (hub_eventos)** — instrumenta `negocio_criado` (POST) + `negocio_ganho/perdido/etapa_mudou` (PATCH) best-effort. Funil capta→fecha completo (`lead_criado`+`estagio_alterado` já existiam). | tsc0 vitest682 build0 |
+
+**🔴 Parado para a JANELA DO DONO (fazer juntos):** 17 migrações (docs/PLANO-APLICAR-MIGRACOES) + escrow `GREATEST`/`FOR UPDATE` + rotate `service_role` + del `backup-auto.yml` + `.env` fora do OneDrive + Mistral key + **ligar middleware** (proxy.ts tem `export function proxy`+config do Next 16, mas o manifest sai vazio no 16.2.4 → provável flag no next.config OU rename; auditar `isPublicApiPath` + testar login juntos).
+
 ## 30/jun/2026 (tarde) — Maratona mobile + decisões do dono
 | Deploy | O quê |
 |---|---|
