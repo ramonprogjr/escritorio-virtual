@@ -5,12 +5,22 @@ import {
   type CalibracaoMensagemLinha,
 } from "@/lib/playbook/calibracao-chat";
 import { loadCurrentPlaybookMarkdown } from "@/lib/playbook/custom-playbook";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
 }
 
 const MAX_MENSAGEM_LEN = 12_000;
@@ -39,6 +49,10 @@ export async function POST(
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
 
+  // Chama IA (custo) para calibrar o playbook do agente — exige sessão CRM ativa.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const supabase = db();
@@ -64,12 +78,14 @@ export async function POST(
 
   const { data: agente, error: agErr } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug, nome, cargo, modelo_padrao")
+    .select("agente_slug, nome, cargo, modelo_padrao, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
   if (agErr) return NextResponse.json({ error: agErr.message }, { status: 500 });
-  if (!agente) return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  }
 
   let playbookMarkdown =
     typeof body.markdown_rascunho === "string" && body.markdown_rascunho.trim()

@@ -3,12 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { uploadCustomPlaybookForAgent } from "@/lib/playbook/custom-playbook";
 import { parsePlaybookFlowFromMarkdown } from "@/lib/playbook/flow-parse";
 import { validatePlaybookFlowDefinition } from "@/lib/playbook/flow-validate";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
 }
 
 export async function POST(
@@ -18,6 +28,10 @@ export async function POST(
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
+
+  // Upload de playbook customizado — escrita, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
 
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.toLowerCase().includes("multipart/form-data")) {
@@ -29,6 +43,17 @@ export async function POST(
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
+  const supabase = db();
+
+  const { data: agenteRow } = await supabase
+    .from("hub_agente_identidade")
+    .select("agente_slug, tenant_id")
+    .eq("agente_slug", slug)
+    .maybeSingle();
+
+  if (!agenteRow || agenteForaDoTenant(agenteRow as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  }
 
   let form: FormData;
   try {
@@ -63,7 +88,6 @@ export async function POST(
     }
   }
 
-  const supabase = db();
   const result = await uploadCustomPlaybookForAgent(supabase, slug, file);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });

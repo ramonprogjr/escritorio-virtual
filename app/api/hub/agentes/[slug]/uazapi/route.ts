@@ -25,6 +25,16 @@ import {
   syncWebhooksUazapi,
 } from "@/lib/whatsapp/uazapi-webhook-sync";
 import { resolverTokenCatalogoProxyCidades } from "@/lib/whatsapp/uazapi-proxy-cities-token";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
 
 async function resolverQrRespostaUazapi(
   payload: unknown,
@@ -76,6 +86,10 @@ export async function POST(
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // Conecta/desconecta/elimina instância WhatsApp — operação privilegiada, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
@@ -109,7 +123,7 @@ export async function POST(
   const { data: agente, error: loadErr } = await supabase
     .from("hub_agente_identidade")
     .select(
-      "agente_slug, modo_operacao, uazapi_instance_id, uazapi_instance_token, uazapi_instance_name, uazapi_connection_status, uazapi_proxy_country, uazapi_proxy_state, uazapi_proxy_city"
+      "agente_slug, modo_operacao, uazapi_instance_id, uazapi_instance_token, uazapi_instance_name, uazapi_connection_status, uazapi_proxy_country, uazapi_proxy_state, uazapi_proxy_city, tenant_id"
     )
     .eq("agente_slug", slug)
     .maybeSingle();
@@ -117,7 +131,7 @@ export async function POST(
   if (loadErr) {
     return NextResponse.json({ error: loadErr.message }, { status: 500 });
   }
-  if (!agente) {
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 

@@ -2,12 +2,22 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { loadCurrentPlaybookMarkdown } from "@/lib/playbook/custom-playbook";
 import { analyzePlaybookWithMistral, buildLocalPlaybookAnalysisFallback } from "@/lib/playbook/mistral-analysis";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
 }
 
 export async function POST(
@@ -18,9 +28,23 @@ export async function POST(
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
 
+  // Chama Mistral (custo) e lê o playbook do agente — exige sessão CRM ativa.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const supabase = db();
+
+  const { data: agenteRow } = await supabase
+    .from("hub_agente_identidade")
+    .select("agente_slug, tenant_id")
+    .eq("agente_slug", slug)
+    .maybeSingle();
+
+  if (!agenteRow || agenteForaDoTenant(agenteRow as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  }
 
   let markdown: string | null = null;
   let origemPlaybook: "conteudo_body" | "object_path" | "public_url" = "object_path";

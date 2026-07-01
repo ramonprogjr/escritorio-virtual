@@ -5,6 +5,7 @@ import {
   type SecaoConhecimentoId,
   gerarConhecimentoSecaoComIa,
 } from "@/lib/hub/sugerir-conhecimento-secao";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function isSecao(v: unknown): v is SecaoConhecimentoId {
   return typeof v === "string" && (SECOES_CONHECIMENTO_IDS as readonly string[]).includes(v);
@@ -29,6 +30,10 @@ function parseCargo(body: Record<string, unknown>): CargoContextoSugerir | null 
 }
 
 export async function POST(request: NextRequest) {
+  // Chama IA (custo) para sugerir conteúdo de conhecimento — exige gestor ou owner (wizard interno).
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

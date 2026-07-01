@@ -1,7 +1,108 @@
 {
-  "geradoEm": "2026-07-01T02:27:34.872Z",
+  "geradoEm": "2026-07-01T03:21:34.377Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "66ab6b50f47a1acbcb1907ba3d0b2197dcc0ce07",
+      "hashCurto": "66ab6b5",
+      "mensagem": "verificação tela-a-tela do cabeçalho único — 9 títulos + fim das redundâncias + mapa do macro",
+      "mensagemRaw": "fix(mobile/ui): verificação tela-a-tela do cabeçalho único — 9 títulos + fim das redundâncias + mapa do macro",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T03:21:20.000Z",
+      "hora": "00:21",
+      "arquivos": [
+        "app/crm/agentes-reais/page.tsx",
+        "app/crm/agentes/[slug]/page.tsx",
+        "app/crm/canais-entrada/page.tsx",
+        "app/crm/especialistas/page.tsx",
+        "app/crm/financeiro/pagar/page.tsx",
+        "app/crm/financeiro/receber/page.tsx",
+        "app/crm/fornecedores/page.tsx",
+        "app/crm/integracoes/page.tsx",
+        "app/crm/leads/[id]/page.tsx",
+        "app/crm/obras/page.tsx",
+        "app/crm/parceiros/[id]/page.tsx",
+        "app/crm/pedidos/page.tsx",
+        "components/crm/CrmStickyPageHeader.tsx",
+        "docs/MACRO-PLAN-ATUALIZADO.md",
+        "lib/mobile/nav.ts"
+      ],
+      "areas": {
+        "app/crm": 12,
+        "components/crm": 1,
+        "outros": 2
+      }
+    },
+    {
+      "hash": "83dd244168769a73fa6fbd78b6a5210d1b1166b5",
+      "hashCurto": "83dd244",
+      "mensagem": "escolhe provedor IA disponivel e mitiga EBUSY do OneDrive em dev",
+      "mensagemRaw": "fix(copiloto): escolhe provedor IA disponivel e mitiga EBUSY do OneDrive em dev",
+      "autor": "Obra10+",
+      "dataIso": "2026-07-01T03:12:30.000Z",
+      "hora": "00:12",
+      "arquivos": [
+        "app/api/copiloto/interpretar/route.ts",
+        "next.config.ts",
+        "scripts/dev-insecure-tls.cjs"
+      ],
+      "areas": {
+        "app/api": 1,
+        "outros": 2
+      }
+    },
+    {
+      "hash": "d11e74629b6a4da4023052db60f7de1b94f037b3",
+      "hashCurto": "d11e746",
+      "mensagem": "mensagem de IA clara, Groq Whisper STT e health das chaves",
+      "mensagemRaw": "fix(copiloto): mensagem de IA clara, Groq Whisper STT e health das chaves",
+      "autor": "Obra10+",
+      "dataIso": "2026-07-01T03:03:41.000Z",
+      "hora": "00:03",
+      "arquivos": [
+        "app/api/copiloto/interpretar/route.ts",
+        "app/api/copiloto/transcrever/route.ts",
+        "lib/crm/health-checks.ts",
+        "lib/ia/groq-transcribe-audio.ts",
+        "render.yaml"
+      ],
+      "areas": {
+        "app/api": 2,
+        "lib/crm": 1,
+        "outros": 2
+      }
+    },
+    {
+      "hash": "8d61af3e4c57aceca26e93a9f1dbaa3ecdb4a0c7",
+      "hashCurto": "8d61af3",
+      "mensagem": "atualiza render.yaml com novas env vars e documentacao",
+      "mensagemRaw": "chore(infra): atualiza render.yaml com novas env vars e documentacao",
+      "autor": "Obra10+",
+      "dataIso": "2026-07-01T02:52:13.000Z",
+      "hora": "23:52",
+      "arquivos": [
+        "render.yaml"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "a1f3eac86c0d9af7634de867eece87a18b958dfd",
+      "hashCurto": "a1f3eac",
+      "mensagem": "fontes via <link> em runtime em vez de next/font/google (destrava o build do Render)",
+      "mensagemRaw": "fix(build): fontes via <link> em runtime em vez de next/font/google (destrava o build do Render)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T02:30:25.000Z",
+      "hora": "23:30",
+      "arquivos": [
+        "app/globals.css",
+        "app/layout.tsx"
+      ],
+      "areas": {
+        "outros": 2
+      }
+    },
     {
       "hash": "07efc742aa227d974127b51e3d2e6d40762969c8",
       "hashCurto": "07efc74",
@@ -6484,92 +6585,6 @@
         "app/api": 3,
         "outros": 1,
         "lib/crm": 5
-      }
-    },
-    {
-      "hash": "7a0b648586d975022f576c82d37d193341ff68d7",
-      "hashCurto": "7a0b648",
-      "mensagem": "Rede B2-B4 — cadastro de Fornecedores + Especialistas (API + telas + menu)",
-      "mensagemRaw": "feat(crm): Rede B2-B4 — cadastro de Fornecedores + Especialistas (API + telas + menu)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T03:19:26.000Z",
-      "hora": "00:19",
-      "arquivos": [
-        "app/api/crm/especialistas/route.ts",
-        "app/api/crm/fornecedores/route.ts",
-        "app/crm/especialistas/page.tsx",
-        "app/crm/fornecedores/page.tsx",
-        "app/crm/layout.tsx",
-        "lib/crm-nav-groups.ts",
-        "lib/crm/crm-nav-permissoes.test.ts"
-      ],
-      "areas": {
-        "app/api": 2,
-        "app/crm": 3,
-        "outros": 1,
-        "lib/crm": 1
-      }
-    },
-    {
-      "hash": "e498741c85b745c67b7b897362680d933e9b27a3",
-      "hashCurto": "e498741",
-      "mensagem": "Rede B1 — tabelas hub_fornecedores + hub_especialistas (formato Membros) + RLS",
-      "mensagemRaw": "feat(crm): Rede B1 — tabelas hub_fornecedores + hub_especialistas (formato Membros) + RLS",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T03:12:50.000Z",
-      "hora": "00:12",
-      "arquivos": [
-        "docs/sql/bloco-rede-B1-APPLIED.sql"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "89628b9d00e026ae98be6246f1f2443b62166f21",
-      "hashCurto": "89628b9",
-      "mensagem": "menu P1 polish — multiplos grupos abertos + grupos de 1 item viram link direto",
-      "mensagemRaw": "feat(crm): menu P1 polish — multiplos grupos abertos + grupos de 1 item viram link direto",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T03:00:19.000Z",
-      "hora": "00:00",
-      "arquivos": [
-        "app/crm/layout.tsx"
-      ],
-      "areas": {
-        "app/crm": 1
-      }
-    },
-    {
-      "hash": "d91d9496b35a8408999f1c0c34e9c1edcdc762d6",
-      "hashCurto": "d91d949",
-      "mensagem": "menu P1 — paleta de comando ⌘K/Ctrl+K \"ir para…\"",
-      "mensagemRaw": "feat(crm): menu P1 — paleta de comando ⌘K/Ctrl+K \"ir para…\"",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T02:43:15.000Z",
-      "hora": "23:43",
-      "arquivos": [
-        "app/crm/layout.tsx",
-        "components/crm/CrmCommandPalette.tsx"
-      ],
-      "areas": {
-        "app/crm": 1,
-        "components/crm": 1
-      }
-    },
-    {
-      "hash": "77be217d258da85b72d9c11e7af8162a76c0df92",
-      "hashCurto": "77be217",
-      "mensagem": "menu P1 estrutura — reordena pelo fluxo de valor + Aprovacoes em destaque + grupo Rede",
-      "mensagemRaw": "feat(crm): menu P1 estrutura — reordena pelo fluxo de valor + Aprovacoes em destaque + grupo Rede",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T02:33:27.000Z",
-      "hora": "23:33",
-      "arquivos": [
-        "lib/crm-nav-groups.ts"
-      ],
-      "areas": {
-        "outros": 1
       }
     }
   ]

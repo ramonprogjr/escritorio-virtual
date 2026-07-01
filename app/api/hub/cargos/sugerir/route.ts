@@ -5,6 +5,7 @@ import {
   type CargoCatalogoContextRow,
   type MercadoContextRow,
 } from "@/lib/hub/sugerir-cargo-catalogo";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -18,6 +19,10 @@ function db() {
  * Devolve campos sugeridos para `hub_cargos_catalogo` com base nos cargos e mercados activos no Hub.
  */
 export async function POST(request: NextRequest) {
+  // Chama Mistral (custo) para sugerir campos de cargo — exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -12,6 +13,10 @@ type RpcRow = { ok?: boolean; error?: string; slug?: string };
 
 /** POST { slugs: string[] } — elimina cada slug via RPC (delete_authorized). */
 export async function POST(request: NextRequest) {
+  // Exclusão em lote de cargos — destrutivo, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
 
   let body: Record<string, unknown>;
