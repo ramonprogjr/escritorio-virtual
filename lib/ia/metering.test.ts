@@ -1,5 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { registrarConsumoIA, saldoCreditos, carregarTabelaPrecos, CONFIG_PADRAO } from "./metering";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import {
+  registrarConsumoIA,
+  saldoCreditos,
+  carregarTabelaPrecos,
+  CONFIG_PADRAO,
+  assertSaldoAntesDoLLM,
+} from "./metering";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -132,5 +138,84 @@ describe("saldoCreditos", () => {
 describe("CONFIG_PADRAO", () => {
   it("reflete as decisões do dono", () => {
     expect(CONFIG_PADRAO).toEqual({ markup: 10, fxUsdBrl: 6, valorCreditoBrl: 0.1 });
+  });
+});
+
+describe("assertSaldoAntesDoLLM", () => {
+  const ORIGINAL_ENV = process.env.IA_HARD_CAP;
+
+  afterEach(() => {
+    if (ORIGINAL_ENV === undefined) delete process.env.IA_HARD_CAP;
+    else process.env.IA_HARD_CAP = ORIGINAL_ENV;
+    vi.restoreAllMocks();
+  });
+
+  it("modo sombra (env ausente) com saldo negativo → permitido=true + aviso logado", async () => {
+    delete process.env.IA_HARD_CAP;
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { db } = makeDb({ hub_ia_creditos_mov: [{ creditos: -50 }] });
+
+    const r = await assertSaldoAntesDoLLM("t1", undefined, db as never);
+
+    expect(r).toEqual({ permitido: true, saldo: -50, modo: "sombra" });
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it("modo sombra (env != 'on') com saldo negativo → permitido=true, sem bloquear", async () => {
+    process.env.IA_HARD_CAP = "off";
+    const { db } = makeDb({ hub_ia_creditos_mov: [{ creditos: -1 }] });
+
+    const r = await assertSaldoAntesDoLLM("t1", undefined, db as never);
+
+    expect(r.permitido).toBe(true);
+    expect(r.modo).toBe("sombra");
+  });
+
+  it("modo bloqueio (IA_HARD_CAP=on) com saldo insuficiente → permitido=false", async () => {
+    process.env.IA_HARD_CAP = "on";
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { db } = makeDb({ hub_ia_creditos_mov: [{ creditos: -10 }] });
+
+    const r = await assertSaldoAntesDoLLM("t1", undefined, db as never);
+
+    expect(r).toEqual({ permitido: false, saldo: -10, modo: "bloqueio" });
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it("modo bloqueio (IA_HARD_CAP=on) com saldo suficiente → permitido=true", async () => {
+    process.env.IA_HARD_CAP = "on";
+    const { db } = makeDb({ hub_ia_creditos_mov: [{ creditos: 100 }, { creditos: -30 }] });
+
+    const r = await assertSaldoAntesDoLLM("t1", undefined, db as never);
+
+    expect(r).toEqual({ permitido: true, saldo: 70, modo: "bloqueio" });
+  });
+
+  it("erro ao consultar saldo → fail-open (permitido=true) mesmo em modo bloqueio", async () => {
+    process.env.IA_HARD_CAP = "on";
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const db = {
+      from() {
+        throw new Error("conexão caiu");
+      },
+    };
+
+    const r = await assertSaldoAntesDoLLM("t1", undefined, db as never);
+
+    // saldoCreditos já é tolerante e devolveria 0 (sem lançar) — cobre também o
+    // caso em que algo além dela falha inesperadamente: nunca trava o fluxo de IA.
+    expect(r.permitido).toBe(true);
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining("bloqueado"));
+  });
+
+  it("saldo suficiente em modo sombra → permitido=true, sem aviso de saldo negativo", async () => {
+    delete process.env.IA_HARD_CAP;
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { db } = makeDb({ hub_ia_creditos_mov: [{ creditos: 200 }] });
+
+    const r = await assertSaldoAntesDoLLM("t1", undefined, db as never);
+
+    expect(r).toEqual({ permitido: true, saldo: 200, modo: "sombra" });
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });

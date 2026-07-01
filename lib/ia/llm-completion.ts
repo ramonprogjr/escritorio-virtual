@@ -7,6 +7,7 @@ import {
 } from "./hub-model-defaults";
 import { mistralChatCompletion } from "./mistral-chat";
 import { groqChatCompletion } from "./groq-chat";
+import { assertSaldoAntesDoLLM } from "./metering";
 
 /**
  * Testa se um erro Anthropic pode ser recuperado tentando o Mistral.
@@ -31,16 +32,31 @@ function anthropicErroProvavelmenteRecuperavelComMistral(raw: string, type?: str
   );
 }
 
-/** Preferir Mistral quando o modelo não é explicitamente Claude; Anthropic para IDs `claude-*`. */
+/**
+ * Preferir Mistral quando o modelo não é explicitamente Claude; Anthropic para IDs `claude-*`.
+ *
+ * `tenantId` (opcional): quando presente, roda o gate `assertSaldoAntesDoLLM` ANTES de
+ * gastar qualquer token. Em modo sombra (default — `IA_HARD_CAP` != "on") o gate nunca
+ * bloqueia, só loga; em modo bloqueio, com saldo insuficiente, retorna erro sem chamar
+ * nenhum provedor. Call sites sem `tenantId` mantêm o comportamento anterior (sem gate).
+ */
 export async function completarChatPreferindoMistral(params: {
   systemPrompt: string;
   mensagens: Array<{ role: "user" | "assistant"; content: string }>;
   modeloFromDb: string;
   maxTokens?: number;
+  tenantId?: string;
 }): Promise<
   | { ok: true; texto: string; tokensEntrada: number; tokensSaida: number; modeloLog: string }
   | { ok: false; erro: string }
 > {
+  if (params.tenantId?.trim()) {
+    const gate = await assertSaldoAntesDoLLM(params.tenantId.trim());
+    if (!gate.permitido) {
+      return { ok: false, erro: "Saldo de créditos de IA esgotado. Recarregue os Tijolos para continuar." };
+    }
+  }
+
   const modeloResolved = resolveInferenceModelId(params.modeloFromDb);
   const mistralKey = process.env.MISTRAL_API_KEY?.trim();
   const anthropicKey = process.env.ANTHROPIC_API_KEY?.trim();

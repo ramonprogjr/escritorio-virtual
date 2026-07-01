@@ -134,3 +134,58 @@ export async function saldoCreditos(tenantId: string, db: SupabaseLike = crmDb()
     return 0;
   }
 }
+
+export type ResultadoGateSaldo = {
+  /** Se a chamada ao LLM pode prosseguir. Em modo sombra é SEMPRE true (fail-open). */
+  permitido: boolean;
+  saldo: number;
+  modo: "sombra" | "bloqueio";
+};
+
+/**
+ * Gate ATÔMICO de saldo, a ser checado ANTES de gastar tokens no LLM (chokepoint).
+ *
+ * Modo é decidido pela env `IA_HARD_CAP`:
+ *  - Ausente/diferente de "on" → **modo sombra** (default absoluto): `permitido=true` SEMPRE;
+ *    só loga um aviso estruturado quando o saldo já estaria negativo. Não bloqueia ninguém.
+ *  - `"on"` → **modo bloqueio**: `permitido=false` quando o saldo é insuficiente (< 0).
+ *
+ * Fail-safe: qualquer erro ao consultar o saldo (rede, tabela ausente, etc.) devolve
+ * `permitido=true` — nunca travar o atendimento por falha de LEITURA da carteira.
+ * `saldoCreditos` já é, por si, tolerante a erro (retorna 0), então o catch aqui cobre
+ * apenas falhas inesperadas fora dela.
+ */
+export async function assertSaldoAntesDoLLM(
+  tenantId: string,
+  _estimativaTokens?: number,
+  db: SupabaseLike = crmDb(),
+): Promise<ResultadoGateSaldo> {
+  const hardCapLigado = (process.env.IA_HARD_CAP ?? "").trim().toLowerCase() === "on";
+  const modo: "sombra" | "bloqueio" = hardCapLigado ? "bloqueio" : "sombra";
+
+  let saldo: number;
+  try {
+    saldo = await saldoCreditos(tenantId, db);
+  } catch (e) {
+    console.warn("[METERING] assertSaldoAntesDoLLM: erro ao consultar saldo — fail-open", e);
+    return { permitido: true, saldo: 0, modo };
+  }
+
+  const saldoInsuficiente = saldo < 0;
+
+  if (!hardCapLigado) {
+    if (saldoInsuficiente) {
+      console.warn(
+        `[METERING] tenant ${tenantId} com saldo negativo (${saldo} Tijolos) — modo sombra, NÃO bloqueando (IA_HARD_CAP != "on")`,
+      );
+    }
+    return { permitido: true, saldo, modo };
+  }
+
+  if (saldoInsuficiente) {
+    console.warn(`[METERING] tenant ${tenantId} bloqueado por saldo insuficiente (${saldo} Tijolos) — IA_HARD_CAP=on`);
+    return { permitido: false, saldo, modo };
+  }
+
+  return { permitido: true, saldo, modo };
+}
