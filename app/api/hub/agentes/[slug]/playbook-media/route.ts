@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
 const PLAYBOOK_MEDIA_BUCKET = "playbook-media";
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -25,7 +26,11 @@ function db() {
   );
 }
 
-async function carregarAgente(supabase: ReturnType<typeof db>, slug: string) {
+async function carregarAgente(
+  supabase: ReturnType<typeof db>,
+  slug: string,
+  tenantId: string
+) {
   const { data, error } = await supabase
     .from("hub_agente_identidade")
     .select("agente_slug, tenant_id")
@@ -33,8 +38,11 @@ async function carregarAgente(supabase: ReturnType<typeof db>, slug: string) {
     .maybeSingle();
 
   if (error) return { error: error.message };
-  if (!data) return { error: "Agente não encontrado.", status: 404 };
-  return { data: data as { agente_slug: string; tenant_id?: string | null } };
+  const row = data as { agente_slug: string; tenant_id?: string | null } | null;
+  if (!row || (row.tenant_id != null && String(row.tenant_id) !== tenantId)) {
+    return { error: "Agente não encontrado.", status: 404 };
+  }
+  return { data: row };
 }
 
 function sanitizeFileName(name: string): string {
@@ -67,11 +75,15 @@ export async function POST(
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
 
+  // Upload de mídia do playbook — operação de escrita, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const supabase = db();
 
-  const agente = await carregarAgente(supabase, slug);
+  const agente = await carregarAgente(supabase, slug, g.ctx.tenantId);
   if ("error" in agente) {
     return NextResponse.json({ error: agente.error }, { status: agente.status ?? 500 });
   }
@@ -146,6 +158,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
 
+  // Remoção de mídia — destrutivo, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const path = new URL(request.url).searchParams.get("path")?.trim();
@@ -160,7 +176,7 @@ export async function DELETE(
 
   const supabase = db();
 
-  const agente = await carregarAgente(supabase, slug);
+  const agente = await carregarAgente(supabase, slug, g.ctx.tenantId);
   if ("error" in agente) {
     return NextResponse.json({ error: agente.error }, { status: agente.status ?? 500 });
   }

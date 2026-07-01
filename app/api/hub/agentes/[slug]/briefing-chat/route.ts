@@ -14,6 +14,16 @@ import {
   resolverFlowStateParaSimulacao,
 } from "@/lib/playbook/briefing-flow-simulator";
 import { extrairESalvarMemoriasAgente, formatarBlocoMemoriasAgente, listarMemoriasAgente } from "@/lib/ia/memoria-agente";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
 
 function db() {
   return createClient(
@@ -92,6 +102,10 @@ export async function GET(
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
+  // Guard de sessão + isolamento de tenant — expõe histórico de conversas e prompts.
+  const g = await requireCrmSessao(req);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const sessaoId = req.nextUrl.searchParams.get("sessao_id");
@@ -102,12 +116,14 @@ export async function GET(
 
   const { data: agente, error: agErr } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug, nome")
+    .select("agente_slug, nome, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
   if (agErr) return NextResponse.json({ error: agErr.message }, { status: 500 });
-  if (!agente) return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+  }
 
   const { data: sessoes, error: sErr } = await supabase
     .from("hub_crm_agente_briefing_sessao")
@@ -168,6 +184,10 @@ export async function POST(
     );
   }
 
+  // Guard de sessão — chama IA (custo) e grava mensagens/memórias do agente.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
 
@@ -195,12 +215,14 @@ export async function POST(
 
   const { data: agente, error: agErr } = await supabase
     .from("hub_agente_identidade")
-    .select("agente_slug, nome, cargo, modelo_padrao, system_prompt_base")
+    .select("agente_slug, nome, cargo, modelo_padrao, system_prompt_base, tenant_id")
     .eq("agente_slug", slug)
     .maybeSingle();
 
   if (agErr) return NextResponse.json({ error: agErr.message }, { status: 500 });
-  if (!agente) return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+  if (!agente || agenteForaDoTenant(agente as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
+  }
 
   const modelo =
     (typeof agente.modelo_padrao === "string" && agente.modelo_padrao.trim())

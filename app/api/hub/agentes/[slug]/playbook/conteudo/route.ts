@@ -6,6 +6,7 @@ import {
 } from "@/lib/playbook/custom-playbook";
 import { assessPlaybookFlowInMarkdown } from "@/lib/playbook/playbook-flow-ui";
 import { ensureMarkdownWithWhatsappFlow } from "@/lib/playbook/playbook-flow-template";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -14,17 +15,30 @@ function db() {
   );
 }
 
+/** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
+function agenteForaDoTenant(
+  row: { tenant_id?: string | null } | null | undefined,
+  tenantId: string
+): boolean {
+  if (!row) return false;
+  return row.tenant_id != null && String(row.tenant_id) !== tenantId;
+}
+
 /**
  * GET — conteúdo Markdown publicado + metadados.
  * PUT — publica Markdown editado (upsert no bucket + refs em hub_agente_identidade).
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
+
+  // Leitura do playbook — exige sessão CRM ativa + isolamento de tenant.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
@@ -33,13 +47,15 @@ export async function GET(
   const { data: meta, error: metaErr } = await supabase
     .from("hub_agente_identidade")
     .select(
-      "agente_slug, nome, cargo, area, instrucao_modo, playbook_object_path, playbook_public_url, playbook_generated_at, playbook_source_hash"
+      "agente_slug, nome, cargo, area, instrucao_modo, playbook_object_path, playbook_public_url, playbook_generated_at, playbook_source_hash, tenant_id"
     )
     .eq("agente_slug", slug)
     .maybeSingle();
 
   if (metaErr) return NextResponse.json({ error: metaErr.message }, { status: 500 });
-  if (!meta) return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  if (!meta || agenteForaDoTenant(meta as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  }
 
   const loaded = await loadCurrentPlaybookMarkdown(supabase, slug, {
     objectPath: meta.playbook_object_path as string | null,
@@ -96,9 +112,23 @@ export async function PUT(
     return NextResponse.json({ error: "Serviço indisponível." }, { status: 503 });
   }
 
+  // Publica o playbook (grava no bucket + refs) — exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
   const supabase = db();
+
+  const { data: agenteRow } = await supabase
+    .from("hub_agente_identidade")
+    .select("agente_slug, tenant_id")
+    .eq("agente_slug", slug)
+    .maybeSingle();
+
+  if (!agenteRow || agenteForaDoTenant(agenteRow as { tenant_id?: string | null }, g.ctx.tenantId)) {
+    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+  }
 
   let body: { markdown?: unknown; content?: unknown };
   try {

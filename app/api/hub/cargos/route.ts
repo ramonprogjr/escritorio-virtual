@@ -6,6 +6,7 @@ import {
   modeloCriticoForHubInsert,
   modeloPadraoForHubInsert,
 } from "@/lib/ia/hub-model-defaults";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function db() {
   return createClient(
@@ -149,6 +150,10 @@ function defaultsAtendimentoPorTipoCargo(input: {
 }
 
 export async function GET(request: NextRequest) {
+  // Catálogo interno de cargos — exige sessão CRM ativa.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { searchParams } = new URL(request.url);
   const all = searchParams.get("all") === "true";
@@ -173,6 +178,10 @@ export async function GET(request: NextRequest) {
 
 /** Corpo para criar cargo — `titulo` obrigatório; `slug` opcional (derivado do título). */
 export async function POST(request: NextRequest) {
+  // Criação de cargo no catálogo — administrativo, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
 
   let body: Record<string, unknown>;
@@ -259,6 +268,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  // Atualização de cargo no catálogo — administrativo, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
 
   let body: Record<string, unknown>;
@@ -391,6 +404,10 @@ export async function PATCH(request: NextRequest) {
 
 /** Query: ?slug= — elimina via RPC com SET LOCAL app.delete_authorized (trigger delete). */
 export async function DELETE(request: NextRequest) {
+  // Exclusão de cargo do catálogo — destrutivo, exige gestor ou owner.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const slug = new URL(request.url).searchParams.get("slug")?.trim();
   if (!slug) {
