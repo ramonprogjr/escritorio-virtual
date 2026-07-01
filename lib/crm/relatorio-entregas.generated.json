@@ -1,7 +1,29 @@
 {
-  "geradoEm": "2026-07-01T20:26:47.559Z",
+  "geradoEm": "2026-07-01T20:37:06.205Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "7aae1f28b31921dca579fde0d0aef807508e96a6",
+      "hashCurto": "7aae1f2",
+      "mensagem": "Batch 5 — guards em rotas /api abertas + fim do vazamento do token WhatsApp + teste de cobertura de guard + CI",
+      "mensagemRaw": "fix(seguranca): Batch 5 — guards em rotas /api abertas + fim do vazamento do token WhatsApp + teste de cobertura de guard + CI",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T20:30:13.000Z",
+      "hora": "17:30",
+      "arquivos": [
+        ".github/workflows/ci.yml",
+        "app/api/agentes/[slug]/detalhes/route.ts",
+        "app/api/agentes/mobile/route.ts",
+        "app/api/agentes/route.ts",
+        "app/api/ml/aprovar/route.ts",
+        "lib/crm/guard-coverage.test.ts"
+      ],
+      "areas": {
+        "outros": 1,
+        "app/api": 4,
+        "lib/crm": 1
+      }
+    },
     {
       "hash": "47d2e198f16bc472173b879092be2d7ea1139b72",
       "hashCurto": "47d2e19",

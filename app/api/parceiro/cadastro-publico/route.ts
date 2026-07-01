@@ -185,7 +185,11 @@ export async function POST(request: NextRequest) {
       warning: warnings.length ? warnings.join(" | ") : null,
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Erro desconhecido";
-    return NextResponse.json({ erro: msg }, { status: 500 });
+    // Rota pública: loga o detalhe no servidor, devolve msg genérica (não vaza schema Postgres).
+    console.error("[erro-publico:parceiro-cadastro]", err instanceof Error ? err.message : String(err));
+    return NextResponse.json(
+      { erro: "Não foi possível concluir o cadastro. Tente novamente." },
+      { status: 500 }
+    );
   }
 }

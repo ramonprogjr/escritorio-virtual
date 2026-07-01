@@ -23,9 +23,14 @@ import path from "node:path";
 const ROOT = path.resolve(__dirname, "..", "..");
 const API_DIR = path.join(ROOT, "app", "api");
 
-/** Detecta uso do client Supabase privilegiado (service-role — bypassa RLS). */
+/**
+ * Detecta uso do client Supabase privilegiado (service-role — bypassa RLS).
+ * Inclui `crmHandoffDb(` (helper de atendimento que constrói o client service-role
+ * internamente) — sem ele, uma rota nova que só usa crmHandoffDb escaparia do gate
+ * (falso negativo apontado pela auditoria adversarial do Batch 5).
+ */
 const SERVICE_ROLE_RE =
-  /SUPABASE_SERVICE_ROLE_KEY|crmDb\s*\(|crmSupabaseAdmin|supabaseAdmin|createClient\([^)]*SERVICE_ROLE/;
+  /SUPABASE_SERVICE_ROLE_KEY|crmDb\s*\(|crmHandoffDb\s*\(|crmSupabaseAdmin|supabaseAdmin|createClient\([^)]*SERVICE_ROLE/;
 
 /**
  * Guards reconhecidos como suficientes. Inclui os guards de sessão/role do CRM

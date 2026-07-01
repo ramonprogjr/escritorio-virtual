@@ -3,6 +3,7 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { defaultTenantId } from "@/lib/tenant-default";
 import { checkPortalVerifyRateLimit } from "@/lib/portal-rate-limit";
 import { ESPECIALIDADES } from "@/lib/crm/especialidades";
+import { erroPublico500 } from "@/lib/http/erro-publico";
 
 /**
  * Auto-cadastro PÚBLICO de especialista (mão de obra) via link de convite.
@@ -87,6 +88,6 @@ export async function POST(request: NextRequest) {
   };
 
   const { error } = await crmDb().from("hub_especialistas").insert(row).select("id").single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return erroPublico500("especialista", error);
   return NextResponse.json({ ok: true, codigo }, { status: 201 });
 }

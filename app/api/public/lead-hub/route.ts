@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { crmDb } from "@/lib/crm/supabase-server";
 import { executarLeadHubPublico, validarLeadHubPublico } from "@/lib/crm/lead-hub-publico";
 import { checkPortalVerifyRateLimit } from "@/lib/portal-rate-limit";
+import { erroPublico500 } from "@/lib/http/erro-publico";
 
 function clientIp(request: NextRequest): string {
   return (
@@ -43,7 +44,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Erro ao registar lead.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return erroPublico500("lead-hub", e);
   }
 }
