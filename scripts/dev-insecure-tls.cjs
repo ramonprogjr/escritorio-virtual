@@ -6,7 +6,10 @@
  * `npm run dev` usa este script por defeito. Para verificação TLS normal: `npm run dev:strict-tls`.
  * Nunca uses NODE_TLS_REJECT_UNAUTHORIZED=0 em produção (`next start`).
  */
+const path = require("path");
 const port = process.env.PORT || "3001";
+const cwd = path.join(__dirname, "..");
+const onOneDrive = /OneDrive/i.test(cwd);
 console.warn(
   "\n[dev] NODE_TLS_REJECT_UNAUTHORIZED=0 (só este processo; use npm run dev:strict-tls se não precisares)\n"
 );
@@ -15,6 +18,13 @@ console.warn(
     `     Com servidor a correr: npm run open:dev\n` +
     `     Cache dev: .next-dev/ (exclua esta pasta do OneDrive se houver erros de chunk)\n`
 );
+if (onOneDrive) {
+  console.warn(
+    "[dev] AVISO OneDrive: o projeto está em pasta sincronizada. Se o copiloto/API falhar com EBUSY,\n" +
+      "     pause a sincronização do OneDrive OU mova o projeto para ex. C:\\dev\\escritorio-virtual\n" +
+      "     OU exclua a pasta .next-dev da sincronização e apague .next-dev antes de npm run dev.\n"
+  );
+}
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 /** Next dev exige NODE_ENV=development; se o shell tiver production, o PostCSS/Tailwind falha em globals.css. */
 process.env.NODE_ENV = "development";

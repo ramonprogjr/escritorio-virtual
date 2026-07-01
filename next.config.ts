@@ -26,11 +26,11 @@ const nextConfig: NextConfig = {
     }
     if (dev) {
       // Evita falhas de PackFileCacheStrategy (rename/open) em pastas sincronizadas pelo OneDrive.
-      config.cache = { type: "memory" };
-      config.snapshot = {
-        ...config.snapshot,
-        managedPaths: [],
-        immutablePaths: [],
+      config.cache = false;
+      config.watchOptions = {
+        ...config.watchOptions,
+        poll: 1000,
+        aggregateTimeout: 300,
       };
     }
     return config;
