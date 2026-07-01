@@ -67,7 +67,11 @@ export async function POST(request: NextRequest) {
     const hasMistral = !!process.env.MISTRAL_API_KEY?.trim();
     const hasAnthropic = !!process.env.ANTHROPIC_API_KEY?.trim();
     const hasGroq = !!process.env.GROQ_API_KEY?.trim();
-    return NextResponse.json({ error: `IA indisponível: ${r.erro} [mistral=${hasMistral} anthropic=${hasAnthropic} groq=${hasGroq}]` }, { status: 502 });
+    const nenhuma = !hasMistral && !hasAnthropic && !hasGroq;
+    const msg = nenhuma
+      ? "IA não configurada no servidor. Peça ao administrador para verificar as chaves de IA e fazer um novo deploy."
+      : `IA indisponível: ${r.erro}`;
+    return NextResponse.json({ error: msg }, { status: 502 });
   }
 
   void registrarConsumoIA({
