@@ -5,6 +5,8 @@ import {
   modeloCriticoForHubInsert,
   modeloPadraoForHubInsert,
 } from "@/lib/ia/hub-model-defaults";
+import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { sanitizarAgenteHubParaCliente } from "@/lib/hub/sanitize-agente-hub-public";
 
 function db() {
   return createClient(
@@ -13,7 +15,11 @@ function db() {
   );
 }
 
-export async function GET() {
+/** Leitura (mapa do escritório): sessão CRM ativa basta (Batch 5). */
+export async function GET(request: NextRequest) {
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const { data: agentes } = await supabase
     .from("hub_agente_identidade")
@@ -42,7 +48,9 @@ export async function GET() {
     const kpisForaMeta = kpis.data?.filter((k: Record<string, unknown>) => k.nivel_alerta !== "ok").length || 0;
 
     return {
-      ...ag,
+      // Batch 5+: espelha /hub/agentes — remove uazapi_instance_token (credencial WhatsApp)
+      // antes de devolver ao cliente. Antes vazava o token a qualquer sessão CRM.
+      ...sanitizarAgenteHubParaCliente(ag as Record<string, unknown>),
       personalidade: personalidade.data,
       metricas: {
         conversas24h: totalLogs,
@@ -58,7 +66,11 @@ export async function GET() {
   return NextResponse.json(agentesEnriquecidos);
 }
 
+/** Criação de agente: mudança estrutural — só owner/gestor (Batch 5). */
 export async function POST(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const body = await request.json() as Record<string, unknown>;
 
@@ -203,7 +215,11 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ sucesso: true, agente });
 }
 
+/** Edição de agente: mudança estrutural — só owner/gestor (Batch 5). */
 export async function PATCH(request: NextRequest) {
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const supabase = db();
   const body = await request.json() as Record<string, unknown>;
   const { agente_slug, conhecimentos, ...dadosAgente } = body;
