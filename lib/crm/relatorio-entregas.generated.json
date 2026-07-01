@@ -1,7 +1,80 @@
 {
-  "geradoEm": "2026-07-01T03:21:34.377Z",
+  "geradoEm": "2026-07-01T04:40:11.564Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "43e81770b91362657a4fed0b2012716af82d2fc2",
+      "hashCurto": "43e8177",
+      "mensagem": "reabilita zoom (WCAG 1.4.4) + fim do loading infinito no Atendimento",
+      "mensagemRaw": "fix(a11y/ux): reabilita zoom (WCAG 1.4.4) + fim do loading infinito no Atendimento",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T04:39:36.000Z",
+      "hora": "01:39",
+      "arquivos": [
+        "app/crm/atendimento/page.tsx",
+        "app/layout.tsx"
+      ],
+      "areas": {
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
+    {
+      "hash": "f08289aba8c71ed369ec6022e35e630afe700725",
+      "hashCurto": "f08289a",
+      "mensagem": "Batch 2 — IDOR imóveis + PATCH /api/leads mass-assignment + rag-documentos + injeção da busca",
+      "mensagemRaw": "fix(seguranca): Batch 2 — IDOR imóveis + PATCH /api/leads mass-assignment + rag-documentos + injeção da busca",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T04:36:55.000Z",
+      "hora": "01:36",
+      "arquivos": [
+        "app/api/crm/empresas/route.ts",
+        "app/api/crm/imoveis/[id]/route.ts",
+        "app/api/crm/imoveis/route.ts",
+        "app/api/crm/leads/route.ts",
+        "app/api/crm/negocios/route.ts",
+        "app/api/crm/pessoas/route.ts",
+        "app/api/hub/agentes/[slug]/rag-documentos/route.ts",
+        "app/api/leads/route.ts",
+        "app/api/parceiros/route.ts",
+        "lib/crm/sanitizar-busca-postgrest.ts"
+      ],
+      "areas": {
+        "app/api": 9,
+        "lib/crm": 1
+      }
+    },
+    {
+      "hash": "9e5c7b9acb97d2e92e5a886d80962cea4a3b8783",
+      "hashCurto": "9e5c7b9",
+      "mensagem": "Batch 1 — guards nas rotas privilegiadas de agentes/cargos abertas (middleware morto)",
+      "mensagemRaw": "fix(seguranca): Batch 1 — guards nas rotas privilegiadas de agentes/cargos abertas (middleware morto)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T04:28:23.000Z",
+      "hora": "01:28",
+      "arquivos": [
+        "app/api/hub/agentes/[slug]/arquivar/route.ts",
+        "app/api/hub/agentes/[slug]/briefing-chat/route.ts",
+        "app/api/hub/agentes/[slug]/playbook-media/route.ts",
+        "app/api/hub/agentes/[slug]/playbook/analisar/route.ts",
+        "app/api/hub/agentes/[slug]/playbook/calibracao-chat/route.ts",
+        "app/api/hub/agentes/[slug]/playbook/conteudo/route.ts",
+        "app/api/hub/agentes/[slug]/playbook/route.ts",
+        "app/api/hub/agentes/[slug]/playbook/upload/route.ts",
+        "app/api/hub/agentes/[slug]/uazapi/route.ts",
+        "app/api/hub/agentes/sugerir-conhecimento/route.ts",
+        "app/api/hub/cargos/delete-batch/route.ts",
+        "app/api/hub/cargos/route.ts",
+        "app/api/hub/cargos/sugerir/route.ts",
+        "docs/AUDITORIA-ENTERPRISE.md",
+        "docs/RELATORIO-AVANCO-01jul.md",
+        "docs/REMEDIACAO-AUDITORIA.md"
+      ],
+      "areas": {
+        "app/api": 13,
+        "outros": 3
+      }
+    },
     {
       "hash": "66ab6b50f47a1acbcb1907ba3d0b2197dcc0ce07",
       "hashCurto": "66ab6b5",
@@ -6494,97 +6567,6 @@
       ],
       "areas": {
         "outros": 1
-      }
-    },
-    {
-      "hash": "ee80c1282164b3edd3567dca1e4a26e0bf792fde",
-      "hashCurto": "ee80c12",
-      "mensagem": "CRM manual #1 — Especialistas e Fornecedores editaveis (antes era cria-e-esquece)",
-      "mensagemRaw": "feat(crm): CRM manual #1 — Especialistas e Fornecedores editaveis (antes era cria-e-esquece)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:31:29.000Z",
-      "hora": "01:31",
-      "arquivos": [
-        "app/api/crm/especialistas/[id]/route.ts",
-        "app/api/crm/fornecedores/[id]/route.ts",
-        "app/crm/especialistas/page.tsx",
-        "app/crm/fornecedores/page.tsx"
-      ],
-      "areas": {
-        "app/api": 2,
-        "app/crm": 2
-      }
-    },
-    {
-      "hash": "50d20647d8b0015c2048e10703108f3967be0aea",
-      "hashCurto": "50d2064",
-      "mensagem": "refina plano — foco mercados (IMB/ARQ/ENG/SRV + obra), analytics generativo via Claude",
-      "mensagemRaw": "docs(crm): refina plano — foco mercados (IMB/ARQ/ENG/SRV + obra), analytics generativo via Claude",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:14:21.000Z",
-      "hora": "01:14",
-      "arquivos": [
-        "docs/design-cadastro-pipedrive-ia.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "8e82e7dc9a253c1743627674f1a59ae556ce16f0",
-      "hashCurto": "8e82e7d",
-      "mensagem": "plano de cadastro relacional estilo Pipedrive + campos Membros + IA-first",
-      "mensagemRaw": "docs(crm): plano de cadastro relacional estilo Pipedrive + campos Membros + IA-first",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:08:31.000Z",
-      "hora": "01:08",
-      "arquivos": [
-        "docs/design-cadastro-pipedrive-ia.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "7f8a5bd9c5adda74f948a8762046c2df5e148206",
-      "hashCurto": "7f8a5bd",
-      "mensagem": "negocio auto-resolve pipeline por mercado (entra no funil do mercado)",
-      "mensagemRaw": "feat(crm): negocio auto-resolve pipeline por mercado (entra no funil do mercado)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:05:32.000Z",
-      "hora": "01:05",
-      "arquivos": [
-        "app/api/crm/negocios/route.ts",
-        "lib/crm/resolve-pipeline.ts"
-      ],
-      "areas": {
-        "app/api": 1,
-        "lib/crm": 1
-      }
-    },
-    {
-      "hash": "5f03b4e9201fa28a0598fc2dc4de633239d91044",
-      "hashCurto": "5f03b4e",
-      "mensagem": "codigos de rastreio atomicos no formato compacto (PS2026001 / NGIMB2026001)",
-      "mensagemRaw": "fix(crm): codigos de rastreio atomicos no formato compacto (PS2026001 / NGIMB2026001)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T04:01:18.000Z",
-      "hora": "01:01",
-      "arquivos": [
-        "app/api/crm/imoveis/route.ts",
-        "app/api/crm/leads/[id]/converter-negocio/route.ts",
-        "app/api/crm/negocios/route.ts",
-        "docs/sql/codigos-rastreio-APPLIED.sql",
-        "lib/crm/codigos-rastreio.test.ts",
-        "lib/crm/codigos-rastreio.ts",
-        "lib/crm/negocio-cadastro.ts",
-        "lib/crm/resolver-rastreio-codigo.test.ts",
-        "lib/crm/resolver-rastreio-codigo.ts"
-      ],
-      "areas": {
-        "app/api": 3,
-        "outros": 1,
-        "lib/crm": 5
       }
     }
   ]
