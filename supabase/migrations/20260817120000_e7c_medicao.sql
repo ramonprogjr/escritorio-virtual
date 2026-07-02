@@ -77,6 +77,9 @@ CREATE INDEX IF NOT EXISTS idx_hub_obra_medicoes_tenant
 
 ALTER TABLE public.hub_obra_medicoes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS hub_obra_medicoes_rls ON public.hub_obra_medicoes;
+-- FIX 02/jul: dropar os nomes REAIS antes de criar (idempotente — a tabela já existe de sessão anterior).
+DROP POLICY IF EXISTS hub_obra_medicoes_select ON public.hub_obra_medicoes;
+DROP POLICY IF EXISTS hub_obra_medicoes_insert ON public.hub_obra_medicoes;
 -- APPEND-ONLY na própria policy: FOR SELECT e FOR INSERT (sem UPDATE/DELETE). Mesmo um tenant
 -- legítimo NÃO altera/apaga uma medição da sua obra — só insere outra. (espelha o extrato de escrow.)
 CREATE POLICY hub_obra_medicoes_select ON public.hub_obra_medicoes FOR SELECT TO authenticated

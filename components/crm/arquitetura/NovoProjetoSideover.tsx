@@ -78,13 +78,13 @@ export function NovoProjetoSideover({
         kind: "pessoa",
         value: `pessoa:${p.id}`,
         label: p.nome || "Pessoa sem nome",
-        sub: p.codigo || "Pessoa",
+        sub: "Pessoa",
       }));
       const emp: ClienteOpt[] = (eJson.data ?? []).map((e) => ({
         kind: "empresa",
         value: `empresa:${e.id}`,
         label: e.nome_fantasia || e.razao_social || "Empresa sem nome",
-        sub: e.codigo || "Empresa",
+        sub: "Empresa",
       }));
       setClientes([...pess, ...emp]);
     } catch {
@@ -155,8 +155,6 @@ export function NovoProjetoSideover({
       setSalvando(false);
     }
   }
-
-  const codigoPreview = `PRJ-${new Date().getFullYear()}-####`;
 
   return (
     <CadastroPremiumSideover
@@ -237,8 +235,8 @@ export function NovoProjetoSideover({
                 options={clientes}
                 loading={clientesLoading}
                 clearable
-                placeholder="Buscar cliente · nome / código…"
-                searchPlaceholder="Nome, código…"
+                placeholder="Buscar cliente · nome…"
+                searchPlaceholder="Nome…"
                 emptyLabel="Nenhum cliente cadastrado ainda."
               />
             </div>
@@ -266,12 +264,6 @@ export function NovoProjetoSideover({
                 placeholder="ex.: 248"
                 className="w-full rounded-lg border border-[#1d3a2c] bg-[#0f1d16] px-3 py-2 text-sm text-[#e6edf3]"
               />
-            </div>
-            <div className="rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2">
-              <span className="text-[11px] text-[#8b949e]">Código (automático)</span>
-              <p className="font-mono text-sm font-bold" style={{ color: DOURADO }}>
-                {codigoPreview}
-              </p>
             </div>
             <p className="text-[11px] leading-relaxed text-[#6e7781]">
               O projeto nasce em <strong className="text-[#8b949e]">Briefing</strong>. Você poderá montar o

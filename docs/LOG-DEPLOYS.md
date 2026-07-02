@@ -7,6 +7,19 @@
 
 ---
 
+## 02/jul/2026 — SÉRIE AEC COMPLETA no ar (janela do dono, via SQL Editor)
+> Aplicada JUNTO com o dono (ele colou o bundle no SQL Editor e clicou Run; Code preparou/verificou via MCP read-only + Playwright). O classificador barrou (corretamente) todo apply automático em prod — o dono fez a última milha. **NÃO registrado em `schema_migrations`** (SQL Editor não trilha), mas o schema está verificado no banco.
+>
+> **Descoberta:** o schema AEC já estava ~90% aplicado de sessões anteriores. O bundle (`docs/APLICAR-NO-SQL-EDITOR-aec-restante-TX.sql`, 10 migrações e0b→e4, envolto em `BEGIN/COMMIT`) foi **completude idempotente**. Valor real = **4 bugs reais corrigidos** que travavam a completude:
+> 1. `idx_taxonomia_fts` usava `array_to_string` (STABLE) → 42P17. Fix: função IMMUTABLE `hub_obra_taxonomia_fts_doc`.
+> 2. e6 indexava `hub_aprovacoes.tenant_id` — **coluna nunca existiu** (42703). Fix: e6 adiciona `tenant_id` (aditivo, nullable; escrow filtra por tenant).
+> 3. e7c dropava policy `_rls` (nome errado) e recriava `_select/_insert` sem dropar → 42710. Fix: dropa os nomes reais.
+> 4. e4/`hub_obra_avanco_diario` tinha o mesmo bug do e7c. Fix idem.
+>
+> **Verificado (MCP):** 13/13 tabelas AEC, RLS ligada em 14/14 (incl. hub_aprovacoes), índice FTS + função OK, `hub_aprovacoes.tenant_id` OK, colunas custo/BDI/ambiente em hub_obra_itens OK. Migração de arquivos com os 4 fixes commitada nos `.sql`.
+>
+> ⚠️ **Escrow segue DORMENTE** — schema criado, mas a RPC `rpc_liberar_escrow` mantém o bug `GREATEST`/`FOR UPDATE`. **Não ativar** até o fix #5. Também instalado: **Supabase CLI** (`npx supabase` 2.109.0, devDependency) p/ futuras migrações.
+
 ## 01/jul/2026 — Auditoria enterprise + remediação de segurança
 | Commit | O quê | Gate |
 |---|---|---|

@@ -96,10 +96,13 @@ export default function PessoaDetalhePage() {
       empresa_id: string;
       codigo: string | null;
       razao_social: string;
+      nome_fantasia?: string | null;
       cargo: string | null;
     }>;
     leads: Array<{ id: string; nome: string; estagio: string | null }>;
     negocios: Array<{ id: string; codigo: string | null; titulo: string }>;
+    obras: Array<{ id: string; titulo: string }>;
+    projetos: Array<{ id: string; titulo: string }>;
   } | null>(null);
 
   const carregar = useCallback(async () => {
@@ -279,8 +282,7 @@ export default function PessoaDetalhePage() {
                   {pessoa.nome}
                 </h1>
                 <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8b949e" }}>
-                  {pessoa.codigo || "—"}
-                  {pessoa.telefone ? ` · ${pessoa.telefone}` : ""}
+                  {pessoa.telefone || "—"}
                 </p>
               </>
             )}
@@ -318,7 +320,6 @@ export default function PessoaDetalhePage() {
                 gap: 20,
               }}
             >
-              <Campo label="Código" value={pessoa.codigo || "—"} />
               <Campo label="Tipo" value={labelTipoPessoa(pessoa.tipo_pessoa)} />
               <Campo label={docLabel} value={formatDocumento(pessoa)} />
               <Campo label="E-mail" value={pessoa.email || "—"} />
@@ -366,8 +367,15 @@ export default function PessoaDetalhePage() {
           )}
           {tab === "relacionados" && (
             <CadastroFichaRelacionados
+              empresas={(vinculos?.empresas ?? []).map((e) => ({
+                id: e.empresa_id,
+                nome: e.razao_social || e.nome_fantasia || "—",
+                sub: e.cargo,
+              }))}
               leads={vinculos?.leads ?? []}
               negocios={vinculos?.negocios ?? []}
+              obras={vinculos?.obras ?? []}
+              projetos={vinculos?.projetos ?? []}
               variant="page"
             />
           )}

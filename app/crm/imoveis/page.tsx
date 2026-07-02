@@ -610,7 +610,6 @@ export default function ImoveisPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 740 }}>
               <thead>
                 <tr>
-                  <th style={TH}>Código</th>
                   <th style={TH}>Título</th>
                   <th style={TH}>Tipo</th>
                   <th style={TH}>Finalidade</th>
@@ -631,7 +630,6 @@ export default function ImoveisPage() {
                       onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#0f1d16"; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
                     >
-                      <td style={{ ...TD, color: "#8b949e", fontSize: 12 }}>{im.codigo || "—"}</td>
                       <td style={{ ...TD, fontWeight: 600, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>
                         {im.titulo || "Sem título"}
                       </td>

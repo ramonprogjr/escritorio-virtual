@@ -286,7 +286,7 @@ export default function EspecialistasPage() {
                   {e.verificado ? <BadgeCheck size={15} color="#34d399" aria-label="Verificado" /> : null}
                 </p>
                 <p style={{ margin: 0, fontSize: 12, color: "#8b949e" }}>
-                  {e.codigo ? `${e.codigo} · ` : ""}{e.especialidade_principal || (e.especialidades && e.especialidades[0]) || "—"}
+                  {e.especialidade_principal || (e.especialidades && e.especialidades[0]) || "—"}
                   {e.cidade ? ` · ${e.cidade}${e.uf ? `/${e.uf}` : ""}` : ""}{e.tem_equipe ? " · com equipe" : ""}
                 </p>
               </div>

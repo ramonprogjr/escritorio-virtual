@@ -78,8 +78,8 @@ export default function ObraPainelPage() {
           ← Obras
         </button>
         <h1 className="mt-1 text-xl font-bold sm:text-2xl">{obra.titulo}</h1>
-        <p className="font-mono text-xs text-[#8aa99a]">
-          {obra.codigo} · {obra.status}
+        <p className="text-xs text-[#8aa99a]">
+          {obra.status}
         </p>
         <p className="mt-2 text-sm text-[#c8d6cd]">{localizacao}</p>
 

@@ -5,7 +5,6 @@ import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
-import { derivarEntregaDoNegocio, type DerivarEntregaResult } from "@/lib/crm/derivar-entrega";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -244,19 +243,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     });
   }
 
-  // Esteira de entrega: ao FECHAR o negócio (etapa→ganho), gera a entrega (obra/projeto)
-  // automaticamente, na área certa. Best-effort — não falha o PATCH se a derivação tiver problema.
-  let entrega: DerivarEntregaResult | null = null;
-  if (String(data.etapa) === "ganho" && etapaAnterior !== "ganho") {
-    try {
-      entrega = await derivarEntregaDoNegocio(supabase, id, {
-        tenant_id: tenantId,
-        origem: "automatica",
-      });
-    } catch (e) {
-      console.warn("[esteira] derivar entrega ao fechar falhou (segue):", e);
-    }
-  }
+  // PROPOR + CONFIRMAR (decisão do dono 02/jul — Tier 0.10): ao GANHAR, o sistema NÃO cria a
+  // entrega (obra/projeto) sozinho. Um "ganho" por engano criaria uma obra REAL que a regra
+  // "nada se apaga" tornaria lixo imortal em produção. A criação é um gate HUMANO: o painel
+  // "Negócio ganho — gerar entrega" na ficha do negócio chama POST /negocios/[id]/converter-obra
+  // no clique. A derivação (derivarEntregaDoNegocio) segue viva, idempotente, atrás desse clique.
 
   // O SELECT de retorno é o legado (tipagem estável); reanexa proxima_acao_em quando suportada,
   // para o cliente receber a data atualizada/gravada sem nova consulta.
@@ -265,5 +256,5 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       ? { ...data, proxima_acao_em: patch.proxima_acao_em ?? null }
       : data;
 
-  return NextResponse.json({ data: dataOut, entrega });
+  return NextResponse.json({ data: dataOut });
 }

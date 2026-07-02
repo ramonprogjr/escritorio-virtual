@@ -72,6 +72,8 @@ export default function EmpresaDetalhePage() {
       cargo: string | null;
     }>;
     negocios: Array<{ id: string; codigo: string | null; titulo: string }>;
+    obras: Array<{ id: string; titulo: string }>;
+    projetos: Array<{ id: string; titulo: string }>;
   } | null>(null);
 
   const carregar = useCallback(async () => {
@@ -264,8 +266,7 @@ export default function EmpresaDetalhePage() {
                   <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8b949e" }}>{empresa.nome_fantasia}</p>
                 )}
                 <p style={{ margin: "6px 0 0", fontSize: 12, color: "#8b949e" }}>
-                  {empresa.codigo || "—"}
-                  {empresa.cnpj ? ` · CNPJ ${formatarCnpjMascara(empresa.cnpj)}` : ""}
+                  {empresa.cnpj ? `CNPJ ${formatarCnpjMascara(empresa.cnpj)}` : "—"}
                 </p>
               </>
             )}
@@ -327,7 +328,6 @@ export default function EmpresaDetalhePage() {
                 gap: 20,
               }}
             >
-              <Campo label="Código" value={empresa.codigo || "—"} />
               <Campo label="Mercado" value={labelMercadoPrefixo(empresa.prefixo_mercado)} />
               <Campo label="Segmento" value={labelEmpresaSegmento(empresa.segmento)} />
               <Campo label="E-mail" value={empresa.email || "—"} />
@@ -373,7 +373,17 @@ export default function EmpresaDetalhePage() {
             <CadastroVinculosPessoaEmpresa entityType="empresa" entityId={id} variant="page" />
           )}
           {tab === "relacionados" && (
-            <CadastroFichaRelacionados negocios={vinculos?.negocios ?? []} variant="page" />
+            <CadastroFichaRelacionados
+              pessoas={(vinculos?.pessoas ?? []).map((p) => ({
+                id: p.pessoa_id,
+                nome: p.nome,
+                sub: p.cargo,
+              }))}
+              negocios={vinculos?.negocios ?? []}
+              obras={vinculos?.obras ?? []}
+              projetos={vinculos?.projetos ?? []}
+              variant="page"
+            />
           )}
         </CadastroFichaTabs>
       </div>

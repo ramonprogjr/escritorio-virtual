@@ -437,7 +437,6 @@ export function CadastroContactoSideover({
       onClose={onClose}
       kindLabel={mode === "edit" ? "EDITAR CONTACTO" : "CONTACTO"}
       title={pessoa?.nome || (loading ? "Carregando…" : "—")}
-      subtitle={pessoa?.codigo || undefined}
       Icon={User}
       badge={
         pessoa?.tipo_pessoa ? (
@@ -499,7 +498,7 @@ export function CadastroContactoSideover({
           <AgenteSideoverEntityCard
             accent="#c9a24a"
             Icon={User}
-            avatarCaption={pessoa.codigo || "Cadastro"}
+            avatarCaption="Cadastro"
             footer={
               <AgenteSideoverInfoGrid
                 rows={[
@@ -538,7 +537,6 @@ export function CadastroContactoSideover({
             >
               <AgenteSideoverInfoGrid
                 rows={[
-                  { label: "Código", value: pessoa.codigo || "—" },
                   { label: "Tipo", value: pessoa.tipo_pessoa || "—" },
                   { label: "Documento", value: docFmt },
                   ...(pessoa.tipo_pessoa === "PJ"

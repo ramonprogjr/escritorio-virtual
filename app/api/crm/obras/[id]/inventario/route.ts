@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
-import { assertObraDoTenant, ehTabelaAusente } from "../sc/route";
+import { assertObraDoTenant, ehTabelaAusente } from "@/lib/crm/obra-route-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 

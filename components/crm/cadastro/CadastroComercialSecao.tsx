@@ -244,8 +244,7 @@ export function CadastroComercialSecao({
             lineHeight: 1.45,
           }}
         >
-          Ao guardar, será criado um código <strong>LED-{new Date().getFullYear()}-####</strong> no funil{" "}
-          {mercados.length > 0 ? mercados.join(", ") : "IMB"}.
+          Ao guardar, o contato entra no funil como novo lead.
         </p>
       ) : null}
 

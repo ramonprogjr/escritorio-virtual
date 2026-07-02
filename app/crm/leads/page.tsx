@@ -982,14 +982,6 @@ export default function LeadsPage() {
                       className="border-b border-[#1d3a2c]/60 hover:bg-[#0f1d16]/60 cursor-pointer transition-colors">
                       <td className="px-4 py-3">
                         <p className="text-[#e6edf3] font-bold">{lead.nome}</p>
-                        {(lead.codigo || lead._pessoa_codigo) && (
-                          <p className="text-[#c9a24a] font-mono text-xs mt-0.5">
-                            {lead.codigo || lead._pessoa_codigo}
-                            {lead.codigo && lead._pessoa_codigo && lead.codigo !== lead._pessoa_codigo && (
-                              <span className="text-[#8b949e]"> · {lead._pessoa_codigo}</span>
-                            )}
-                          </p>
-                        )}
                         {lead.telefone && <p className="text-[#8b949e] text-xs">{lead.telefone}</p>}
                       </td>
                       <td className="px-4 py-3">
@@ -1261,8 +1253,7 @@ export default function LeadsPage() {
           open={leadRapidoOpen}
           onClose={() => setLeadRapidoOpen(false)}
           onSaved={(lead) => {
-            const cod = lead.codigo ? ` (${lead.codigo})` : "";
-            setSucessoLead(`Lead criado${cod}.`);
+            setSucessoLead(`Lead criado.`);
             void carregar();
           }}
         />

@@ -120,9 +120,6 @@ export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white">
                 {r.lead_nome}
-                {r.lead_codigo ? (
-                  <span className="ml-1 font-mono text-[10px] text-[#c9a24a]">{r.lead_codigo}</span>
-                ) : null}
               </p>
               <p className="text-xs text-[#8b949e]">
                 {r.segmento ?? "—"} → {r.parceiro_sugerido ?? "Parceiro sugerido"}

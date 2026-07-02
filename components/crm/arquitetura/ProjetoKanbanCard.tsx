@@ -158,11 +158,8 @@ export function ProjetoKanbanCard({
         </div>
       </div>
 
-      {/* L2 — código mono dourado + responsável */}
+      {/* L2 — responsável */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-        <span style={{ fontSize: 10, fontFamily: "ui-monospace, monospace", color: "rgba(201, 162, 74, 0.92)" }}>
-          {projeto.codigo ?? "—"}
-        </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "#8b949e", fontSize: 10.5, fontWeight: 600 }}>
           <User size={11} aria-hidden />
           {projeto.cliente_nome?.trim() || "Sem cliente"}

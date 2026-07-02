@@ -32,7 +32,7 @@ type Params = { params: Promise<{ id: string }> };
 
 const AVISO_PENDENTE = "Financeiro ainda não ativo (migração E6 pendente — janela do dono).";
 
-export function ehTabelaAusente(error: { message?: string } | null): boolean {
+function ehTabelaAusente(error: { message?: string } | null): boolean {
   if (!error) return false;
   return isMissingPgColumn(error) || /relation .*does not exist|column .* does not exist/i.test(error.message ?? "");
 }
