@@ -104,9 +104,9 @@ export default function DashboardPage() {
       rota: "/crm/distribuicao",
     },
     {
-      label: "Modelos IA ativos",
+      label: "Agentes cadastrados",
       valor: m.agentesAtivos,
-      sub: "agentes no hub",
+      sub: "no hub — IA liga com a chave",
       cor: "#4db3c4",
       rota: "/crm/agentes",
     },

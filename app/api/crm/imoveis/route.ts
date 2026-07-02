@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     titulo,
     tipo: body.tipo || "apartamento",
     finalidade: body.finalidade || "venda",
-    status: body.status || "captacao",
+    status: body.status || "disponivel", // 'captacao' viola hub_imoveis_status_check → 23514 (IM1 do laudo)
     valor: body.valor != null ? Number(body.valor) : null,
     cidade: body.cidade || null,
     estado: body.estado || null,
@@ -120,6 +120,9 @@ export async function POST(request: NextRequest) {
     const { tenant_id: _omit, ...semTenant } = row;
     ({ data, error } = await supabase.from("hub_imoveis").insert(semTenant).select().single());
   }
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[imoveis] POST falhou:", error.message); // não expõe SQL cru ao cliente (AP2/IM2)
+    return NextResponse.json({ error: "Não foi possível salvar o imóvel." }, { status: 500 });
+  }
   return NextResponse.json({ data }, { status: 201 });
 }

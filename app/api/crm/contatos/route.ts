@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { isMissingPgColumn } from "@/lib/tenant-default";
 
 /**
  * Contatos de notificação (quem recebe alertas de novo lead / aprovação / encaminhamento).
@@ -18,13 +19,25 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
-  const { data, error } = await crmDb()
+  let { data, error } = await crmDb()
     .from("hub_contatos_notificacao")
     .select(SELECT)
     .eq("tenant_id", g.ctx.tenantId)
     .order("nome", { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // CN1: tabela ainda sem coluna tenant_id (migração multi-tenant não aplicada) → 42703. Sem coluna
+  // não há como escopar; com 1 tenant é seguro. Some quando a migração criar a coluna.
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    ({ data, error } = await crmDb()
+      .from("hub_contatos_notificacao")
+      .select(SELECT)
+      .order("nome", { ascending: true }));
+  }
+
+  if (error) {
+    console.error("[contatos] GET falhou:", error.message); // não expõe SQL cru (EN3)
+    return NextResponse.json({ error: "Não foi possível carregar os contatos." }, { status: 500 });
+  }
   return NextResponse.json({ data: data ?? [] });
 }
 
@@ -56,12 +69,20 @@ export async function POST(request: NextRequest) {
     tenant_id: g.ctx.tenantId,
   };
 
-  const { data, error } = await crmDb()
+  let { data, error } = await crmDb()
     .from("hub_contatos_notificacao")
     .insert(row)
     .select(SELECT)
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    const { tenant_id: _omit, ...semTenant } = row;
+    ({ data, error } = await crmDb().from("hub_contatos_notificacao").insert(semTenant).select(SELECT).single());
+  }
+
+  if (error) {
+    console.error("[contatos] POST falhou:", error.message);
+    return NextResponse.json({ error: "Não foi possível salvar o contato." }, { status: 500 });
+  }
   return NextResponse.json({ data }, { status: 201 });
 }

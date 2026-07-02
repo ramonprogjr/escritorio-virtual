@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { getCallerContext } from "@/lib/crm/crm-api-auth";
+import { isMissingPgColumn } from "@/lib/tenant-default";
 
 function db() {
   return createClient(
@@ -23,16 +24,26 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || "pendente";
 
-  const query = db()
+  let { data, error } = await db()
     .from("hub_aprovacoes")
     .select("*")
     .eq("tenant_id", tenantId)
     .eq("status", status)
     .order("criado_em", { ascending: false });
 
-  const { data, error } = await query;
+  // AP1: hub_aprovacoes ainda sem a coluna tenant_id (migração multi-tenant não aplicada) → 42703.
+  // Sem a coluna não há como escopar; com 1 tenant hoje é seguro. Some quando a migração criar a coluna.
+  if (error && isMissingPgColumn(error, "tenant_id")) {
+    ({ data, error } = await db()
+      .from("hub_aprovacoes")
+      .select("*")
+      .eq("status", status)
+      .order("criado_em", { ascending: false }));
+  }
+
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[aprovacoes] GET falhou:", error.message); // não expõe SQL cru (AP2)
+    return NextResponse.json({ error: "Não foi possível carregar as aprovações." }, { status: 500 });
   }
 
   const aprovacoes = (data ?? []).map((row: Record<string, unknown>) => ({
