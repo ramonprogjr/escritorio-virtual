@@ -1,8 +1,10 @@
 -- ============================================================================
 -- HARDENING: fixa o search_path de 35 funções (advisor "Function Search Path Mutable").
 --
--- ⚠️  Preparada 01/jul (noite). APLICAR na janela do dono (junto do #2), via
---     Supabase MCP apply_migration OU colar no SQL Editor. NÃO aplicada ainda.
+-- ✅ APLICADA 01/jul (noite) via Supabase MCP apply_migration (janela do dono, presente).
+--    Verificado nos advisors: "Function Search Path Mutable" 35 → 2 (as 2 restantes são
+--    funções da extensão pgvector, lang C — deixadas de propósito: não se altera função
+--    de extensão). 0 ERROS antes e depois. Reversível: ALTER FUNCTION ... RESET search_path;
 --
 -- Por quê: função sem search_path fixo herda o do chamador → um objeto plantado
 --   num schema no path poderia ser resolvido no lugar do esperado (injeção de
