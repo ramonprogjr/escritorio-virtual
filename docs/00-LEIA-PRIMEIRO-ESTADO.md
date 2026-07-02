@@ -12,6 +12,9 @@ Estes são os documentos que valem AGORA — auditorias de direção + o modelo 
 | # | Doc | O que é |
 |---|---|---|
 | 🧱 | [MODELO-OPERACIONAL-TENANT.md](MODELO-OPERACIONAL-TENANT.md) | **(01/jul noite)** o MODELO do produto: tenant-primeiro, carteira→central, serviço universal, fonte-única/lentes, preditivo. **A "coluna".** |
+| 📋 | [insumos-do-dono/LAUDO-DETALHADO-POR-TELA.md](insumos-do-dono/LAUDO-DETALHADO-POR-TELA.md) | **(02/jul)** laudo de produto do dono, 33 telas, funcionalidade-primeiro. |
+| 🧭 | [DECISAO-CEO-LAUDO.md](DECISAO-CEO-LAUDO.md) | **decisão de CEO sobre o laudo** (verificado no código): o que já consertei, o que depende de você, o que o laudo errou. |
+| 🧮 | [MAPA-NECESSIDADES-SISTEMICAS.md](MAPA-NECESSIDADES-SISTEMICAS.md) | mesa-redonda da planilha real: modelo de dados, cascatas, o que alimenta o preditivo, gaps. |
 | 🧭 | [DIAGNOSTICO-PROJETO-ROADMAP-CRONOGRAMA.md](DIAGNOSTICO-PROJETO-ROADMAP-CRONOGRAMA.md) | auditoria de DIREÇÃO (onde estamos, o que falta, cenários) |
 | 📅 | [CRONOGRAMA-PROJETO.md](CRONOGRAMA-PROJETO.md) · [ROADMAP-EXECUCAO.md](ROADMAP-EXECUCAO.md) | cronograma + ordem de execução |
 | 📊 | [STATUS-MODULOS.md](STATUS-MODULOS.md) · [MAPA-ATIVIDADES.md](MAPA-ATIVIDADES.md) | status por módulo + atividades |

@@ -4,9 +4,23 @@
 
 ---
 
-# 🧭 Decisão de CEO — laudo de produto (33 telas)
+## ✅ STATUS DE EXECUÇÃO (noite 01→02/jul) — o que EU JÁ FIZ
+Já **no ar** (verificado contra o DB/código + gate tsc/vitest/build + deploy):
+- **IM1** (tela 12 Imóveis não criava: default `'captacao'` violava o CHECK) → `'disponivel'`. ✅ `8ad24f6`
+- **AP1** (tela 09 Aprovações quebrada) + **CN1** (tela 30 Contatos quebrada): `.eq(tenant_id)` em tabela sem a coluna → tolerância `isMissingPgColumn`. ✅ `8ad24f6`
+- **AP2/IM2/EN3** (SQL cru do Postgres vazando no erro) → mensagem genérica + log no servidor. ✅ `8ad24f6`
+- **D2** (KPI "Modelos IA ativos" era contagem de agentes, enganoso com IA off) → relabel honesto. ✅ `8ad24f6`
+- **L2/L3** (6 de 8 leads sumiam do kanban): tradução ciclo-de-vida→coluna de vendas + teste de regressão. ✅ `e87e64c`
 
-> Documento de decisão. Leitura de 5 min. Sem enfeite: o que o Claude já conserta sozinho, o que trava na sua janela, e o que o laudo errou.
+**Preparado, aguardando SUA JANELA** (é migração de prod, não aplico dormindo):
+- **N1** (tela 04 Negócios → 500): FK legada `hub_negocios_lead_id_fkey→hub_leads` (morta) confirmada no DB. Migração de 1 linha pronta em `supabase/migrations/20260702001500_fix_negocios_drop_fk_legada.sql`. Aplicar destrava a criação de negócio.
+
+**Não mexi (verificação REFUTOU):** L1 (409 já tratado no front), AR1/PR1/EM1/CF1 (RBAC — auditado como owner/super-admin; acesso é por design, não bug).
+**Deferido (P1, não crítico):** N2 (Ganhos com status "Aberto"), D1 (funil do Dashboard — mesma raiz do L2, em outro componente).
+
+---
+
+# 🧭 Veredito detalhado da mesa-redonda
 
 ---
 
