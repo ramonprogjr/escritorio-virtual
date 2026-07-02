@@ -128,14 +128,6 @@ export function LeadKanbanCard({
     null;
   const origemCor = ORIGENS_COLOR[lead.origem || ""] || "#6B7280";
 
-  const codigos = [
-    lead.codigo,
-    lead._pessoa_codigo && lead.codigo !== lead._pessoa_codigo
-      ? lead._pessoa_codigo
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
   const linhaSecundaria = [
     labelMercadoLead(lead.metadata),
     lead.agente_responsavel || null,
@@ -278,22 +270,6 @@ export function LeadKanbanCard({
             {linhaSecundaria}
           </span>
         </div>
-        {codigos ? (
-          <p
-            style={{
-              margin: "0 0 8px",
-              fontSize: 11,
-              fontFamily: "ui-monospace, monospace",
-              color: "rgba(201, 162, 74, 0.92)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            title={codigos}
-          >
-            {codigos}
-          </p>
-        ) : null}
         {lead.valor_estimado > 0 ? (
           <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 800, color: "#22c55e" }}>
             {moeda(lead.valor_estimado)}

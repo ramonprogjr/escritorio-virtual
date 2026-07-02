@@ -287,7 +287,7 @@ export default function NegociosPage() {
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar por título ou código..."
+            placeholder="Buscar por título ou cliente..."
             className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-52"
           />
           <select
@@ -603,7 +603,6 @@ export default function NegociosPage() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-bold text-[#e6edf3]">{negocio.titulo}</p>
-                            <p className="font-mono text-xs text-[#c9a24a]">{negocio.codigo}</p>
                           </div>
                           {etapaAtiva ? (
                             <span
@@ -663,7 +662,6 @@ export default function NegociosPage() {
                       >
                         <td className="px-4 py-3">
                           <p className="font-bold text-white">{negocio.titulo}</p>
-                          <p className="mt-0.5 font-mono text-xs text-[#c9a24a]">{negocio.codigo}</p>
                         </td>
                         <td className="px-4 py-3">
                           <span

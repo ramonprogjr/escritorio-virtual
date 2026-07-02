@@ -4,14 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
-import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
+import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFichaRelacionados";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { FinanceiroNovoLancamentoModal } from "@/components/crm/FinanceiroNovoLancamentoModal";
 import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
-import type { RastreioCadeia } from "@/lib/crm/resolver-rastreio-codigo";
 
 type NegocioDetalhe = {
   id: string;
@@ -104,6 +103,16 @@ type TimelineItem = {
 
 type PessoaMini = { id: string; nome: string; codigo?: string | null };
 
+type NamedRef = { id: string; nome: string };
+type Relacionados = {
+  pessoas: NamedRef[];
+  empresas: NamedRef[];
+  leads: NamedRef[];
+  obras: NamedRef[];
+  projetos: NamedRef[];
+  linhagem: { pai: NamedRef | null; raiz: NamedRef | null; filhos: NamedRef[] };
+};
+
 function formatCurrency(v: number | null) {
   if (v == null) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -120,7 +129,7 @@ export default function NegocioDetalhePage() {
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", valor_estimado: "" });
   const [salvando, setSalvando] = useState(false);
-  const [rastreio, setRastreio] = useState<RastreioCadeia | null>(null);
+  const [relacionados, setRelacionados] = useState<Relacionados | null>(null);
   const [motivoPendente, setMotivoPendente] = useState<string | null>(null);
   const [motivoSelecionado, setMotivoSelecionado] = useState("");
   const [derivando, setDerivando] = useState(false);
@@ -188,16 +197,18 @@ export default function NegocioDetalhePage() {
     void carregar();
   }, [carregar]);
 
+  // Rastreio AUTOMÁTICO name-only: relacionados do negócio (pessoas/empresas/leads/obras/
+  // projetos) + linhagem (origem/derivados). Substitui o CrmRastreioCadeia (que mostrava código).
   useEffect(() => {
-    if (!negocio?.codigo) return;
+    if (!id) return;
     void (async () => {
-      const res = await fetch(`/api/crm/rastreio?codigo=${encodeURIComponent(negocio.codigo!)}`, {
-        credentials: "include",
+      const res = await fetch(`/api/crm/negocios/${encodeURIComponent(id)}/relacionados`, {
+        headers: internalApiHeaders(),
       });
-      const json = (await res.json().catch(() => ({}))) as { data?: RastreioCadeia };
-      if (res.ok && json.data) setRastreio(json.data);
+      const json = (await res.json().catch(() => ({}))) as { data?: Relacionados };
+      if (res.ok && json.data) setRelacionados(json.data);
     })();
-  }, [negocio?.codigo]);
+  }, [id]);
 
   async function salvarEdicao() {
     setSalvando(true);
@@ -433,9 +444,7 @@ export default function NegocioDetalhePage() {
         return;
       }
       const label = json.tipo === "projeto" ? "Projeto" : "Obra";
-      setDerivadoMsg(
-        `${label} ${json.data?.codigo ?? ""} ${json.ja_existia ? "já existia" : "criada"}.`.trim()
-      );
+      setDerivadoMsg(`${label} ${json.ja_existia ? "já existia" : "criada"}.`.trim());
       void carregar();
     } catch {
       setDerivadoMsg("Erro de rede.");
@@ -478,7 +487,6 @@ export default function NegocioDetalhePage() {
           Arquivar
         </button>
       </div>
-      <p style={{ margin: 0, color: "#8b949e", fontFamily: "monospace" }}>{negocio.codigo}</p>
       {negocio.motivo_perda ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, color: "#f87171" }}>
           Motivo perda: {MOTIVOS_PERDA_LABEL[negocio.motivo_perda] ?? negocio.motivo_perda}
@@ -527,9 +535,77 @@ export default function NegocioDetalhePage() {
         </div>
       ) : null}
 
-      {rastreio ? (
-        <div style={{ marginTop: 20 }}>
-          <CrmRastreioCadeia cadeia={rastreio} />
+      {relacionados ? (
+        <div
+          style={{
+            marginTop: 20,
+            padding: 14,
+            borderRadius: 10,
+            border: "1px solid #1d3a2c",
+            background: "#0f1d16",
+          }}
+        >
+          <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 700, color: "#8b949e" }}>
+            RELACIONADOS
+          </p>
+          <CadastroFichaRelacionados
+            pessoas={relacionados.pessoas}
+            empresas={relacionados.empresas}
+            leads={relacionados.leads}
+            obras={relacionados.obras}
+            projetos={relacionados.projetos}
+            variant="page"
+          />
+          {relacionados.linhagem.pai ||
+          relacionados.linhagem.raiz ||
+          relacionados.linhagem.filhos.length > 0 ? (
+            <div style={{ marginTop: 24 }}>
+              <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#8b949e" }}>
+                ORIGEM / DERIVADOS
+              </p>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {relacionados.linhagem.raiz ? (
+                  <li style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
+                    <span style={{ marginRight: 8, fontSize: 11, color: "#8b949e", textTransform: "uppercase" }}>
+                      Raiz
+                    </span>
+                    <Link
+                      href={`/crm/negocios/${relacionados.linhagem.raiz.id}`}
+                      style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
+                    >
+                      {relacionados.linhagem.raiz.nome}
+                    </Link>
+                  </li>
+                ) : null}
+                {relacionados.linhagem.pai ? (
+                  <li style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
+                    <span style={{ marginRight: 8, fontSize: 11, color: "#8b949e", textTransform: "uppercase" }}>
+                      Origem
+                    </span>
+                    <Link
+                      href={`/crm/negocios/${relacionados.linhagem.pai.id}`}
+                      style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
+                    >
+                      {relacionados.linhagem.pai.nome}
+                    </Link>
+                  </li>
+                ) : null}
+                {relacionados.linhagem.filhos.map((f) => (
+                  <li key={f.id} style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
+                    <span style={{ marginRight: 8, fontSize: 11, color: "#8b949e", textTransform: "uppercase" }}>
+                      Derivado
+                    </span>
+                    <Link
+                      href={`/crm/negocios/${f.id}`}
+                      style={{ color: "#c9a24a", textDecoration: "none", fontWeight: 600 }}
+                    >
+                      {f.nome}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -686,7 +762,6 @@ export default function NegocioDetalhePage() {
         {pessoaVinc ? (
           <Link href={`/crm/pessoas/${pessoaVinc.id}`} style={{ color: "#e6edf3", fontWeight: 600, fontSize: 14 }}>
             {pessoaVinc.nome}
-            {pessoaVinc.codigo ? <span style={{ color: "#8b949e", fontFamily: "monospace", fontSize: 12 }}> · {pessoaVinc.codigo}</span> : null}
           </Link>
         ) : (
           <p style={{ margin: 0, color: "#8b949e", fontSize: 13 }}>Nenhuma pessoa vinculada.</p>
@@ -696,7 +771,7 @@ export default function NegocioDetalhePage() {
             <input
               value={buscaPessoa}
               onChange={(e) => void buscarPessoas(e.target.value)}
-              placeholder="Buscar por nome, telefone ou código…"
+              placeholder="Buscar por nome ou telefone…"
               autoFocus
               style={{ width: "100%", padding: 9, borderRadius: 8, border: "1px solid #1d3a2c", background: "#0a140f", color: "#e6edf3", fontSize: 13 }}
             />
@@ -706,7 +781,6 @@ export default function NegocioDetalhePage() {
                   <button key={p.id} type="button" onClick={() => void definirPessoa(p)}
                     style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", border: "none", borderTop: i ? "1px solid #16271e" : "none", background: "transparent", color: "#e6edf3", fontSize: 13, cursor: "pointer" }}>
                     {p.nome}
-                    {p.codigo ? <span style={{ color: "#8b949e", fontFamily: "monospace", fontSize: 11 }}> · {p.codigo}</span> : null}
                   </button>
                 ))}
               </div>
@@ -1023,7 +1097,7 @@ export default function NegocioDetalhePage() {
         }}
         tipoInicial="receber"
         prefill={{
-          descricao: [negocio.titulo, negocio.codigo].filter(Boolean).join(" · "),
+          descricao: negocio.titulo || "",
           valor: negocio.valor_fechado ?? negocio.valor_estimado ?? undefined,
           clienteNome: pessoaVinc?.nome ?? leadNome ?? undefined,
           negocioId: negocio.id,

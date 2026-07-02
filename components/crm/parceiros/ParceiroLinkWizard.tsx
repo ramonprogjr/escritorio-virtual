@@ -96,7 +96,7 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
                 Link da rede de parceiros
               </h3>
               <p style={{ margin: "8px 0 0", color: OB.texto2, fontSize: 12, lineHeight: 1.45 }}>
-                Um único link para todos. Cada inscrição gera um código único (ex.: PAR-2026-0001).
+                Um único link para todos. Cada inscrição entra automaticamente na sua rede de parceiros.
               </p>
             </div>
             <button

@@ -367,7 +367,6 @@ export function CadastroEmpresaSideover({
       onClose={onClose}
       kindLabel={mode === "edit" ? "EDITAR EMPRESA" : "EMPRESA"}
       title={empresa?.razao_social || (loading ? "Carregando…" : "—")}
-      subtitle={empresa?.codigo || undefined}
       Icon={Building2}
       accent="#2f9e8f"
       badge={
@@ -437,7 +436,7 @@ export function CadastroEmpresaSideover({
           <AgenteSideoverEntityCard
             accent="#2f9e8f"
             Icon={Building2}
-            avatarCaption={empresa.codigo || "Empresa"}
+            avatarCaption="Empresa"
             footer={
               <AgenteSideoverInfoGrid
                 rows={[
@@ -473,7 +472,6 @@ export function CadastroEmpresaSideover({
             >
               <AgenteSideoverInfoGrid
                 rows={[
-                  { label: "Código", value: empresa.codigo || "—" },
                   { label: "Razão social", value: empresa.razao_social },
                   { label: "Nome fantasia", value: empresa.nome_fantasia || "—" },
                   { label: "CNPJ", value: cnpjFmt },

@@ -92,13 +92,13 @@ export function NovaObraSideover({
         kind: "pessoa",
         value: `pessoa:${p.id}`,
         label: p.nome || "Pessoa sem nome",
-        sub: p.codigo || "Pessoa",
+        sub: "Pessoa",
       }));
       const emp: ClienteOpt[] = (eJson.data ?? []).map((e) => ({
         kind: "empresa",
         value: `empresa:${e.id}`,
         label: e.nome_fantasia || e.razao_social || "Empresa sem nome",
-        sub: e.codigo || "Empresa",
+        sub: "Empresa",
       }));
       setClientes([...pess, ...emp]);
     } catch {
@@ -188,8 +188,6 @@ export function NovaObraSideover({
     : TIPOS_OBRA.filter((t) => TIPOS_OBRA_PRINCIPAIS.includes(t.slug));
   const frentesAtivas = frentes.filter((f) => f.on).length;
 
-  const codigoPreview = `${tipoMeta?.prefixo ?? "OBR"}-${new Date().getFullYear()}-####`;
-
   return (
     <CadastroPremiumSideover
       open={open}
@@ -255,8 +253,8 @@ export function NovaObraSideover({
                 options={clientes}
                 loading={clientesLoading}
                 clearable
-                placeholder="Buscar cliente · nome / código…"
-                searchPlaceholder="Nome, código…"
+                placeholder="Buscar cliente · nome…"
+                searchPlaceholder="Nome…"
                 emptyLabel="Nenhum cliente cadastrado ainda."
               />
               <button
@@ -373,12 +371,6 @@ export function NovaObraSideover({
                 {tipoMeta?.label}
                 {clienteSelecionado ? ` · ${clienteSelecionado.label}` : ""}
               </p>
-              <div className="rounded-lg border border-[#1d3a2c] bg-[#0a140f] px-3 py-2">
-                <span className="text-[11px] text-[#8b949e]">Código (automático)</span>
-                <p className="font-mono text-sm font-bold" style={{ color: DOURADO }}>
-                  {codigoPreview}
-                </p>
-              </div>
               <p className="text-xs text-[#8b949e]">
                 A IA já montou a EAP ({frentesAtivas} frentes do preset{" "}
                 {presetEfetivo?.nome ?? "—"}

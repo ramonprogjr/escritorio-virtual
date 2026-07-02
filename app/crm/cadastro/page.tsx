@@ -403,8 +403,8 @@ export default function CadastroPage() {
 
   const buscaPlaceholder =
     filtroRegisto === "empresas"
-      ? "Buscar razão social, código, CNPJ ou email…"
-      : "Buscar nome, código, CPF/CNPJ, email ou telefone…";
+      ? "Buscar razão social, CNPJ ou email…"
+      : "Buscar nome, CPF/CNPJ, email ou telefone…";
 
   const headerActions = useMemo(
     () => (
@@ -563,8 +563,7 @@ export default function CadastroPage() {
         setContactoId(null);
         setContactoMode(null);
       }
-      const codigo = data.codigo ? ` (${data.codigo})` : "";
-      setSucessoCadastro(`${tipo === "empresa" ? "Empresa" : "Cadastro"} excluído${codigo}.`);
+      setSucessoCadastro(`${tipo === "empresa" ? "Empresa" : "Cadastro"} excluído.`);
       if (tipo === "empresa") invalidarEmpresas();
       else invalidarPessoas();
     } catch (e) {
@@ -636,10 +635,7 @@ export default function CadastroPage() {
     pessoa?: Record<string, unknown>;
   }) {
     setWizardOpen(false);
-    const codigos = [result?.codigo_pessoa, result?.codigo_lead].filter(Boolean).join(" · ");
-    let msg = codigos
-      ? `Cadastro gravado (${codigos}).`
-      : "Cadastro gravado com sucesso.";
+    let msg = "Cadastro gravado com sucesso.";
     if (result?.aviso) msg += ` ${result.aviso}`;
     setSucessoCadastro(msg);
 
@@ -661,9 +657,6 @@ export default function CadastroPage() {
       title: (p: PessoaListaRow) => String(p.nome),
       subtitle: (p: PessoaListaRow) => (
         <>
-          {p.codigo != null && String(p.codigo).trim() !== "" && (
-            <p className="mt-0.5 font-mono text-[10px] text-[#c9a24a]/90">{String(p.codigo)}</p>
-          )}
           {p.telefone != null && String(p.telefone).trim() !== "" && (
             <div className="mt-0.5">
               <CrmTelefoneCell telefone={String(p.telefone)} compact />
@@ -680,9 +673,6 @@ export default function CadastroPage() {
       title: (e: EmpresaListaRow) => String(e.razao_social),
       subtitle: (e: EmpresaListaRow) => (
         <>
-          {e.codigo != null && String(e.codigo).trim() !== "" && (
-            <p className="mt-0.5 font-mono text-[10px] text-[#c9a24a]/90">{String(e.codigo)}</p>
-          )}
           {e.cnpj != null && String(e.cnpj).trim() !== "" && (
             <p className="text-xs text-[#8b949e]">{String(e.cnpj)}</p>
           )}
@@ -845,7 +835,7 @@ export default function CadastroPage() {
                     setContactoMode("edit");
                   }}
                   onDelete={(p) => {
-                    const label = p.codigo ? `${p.nome} (${p.codigo})` : String(p.nome);
+                    const label = String(p.nome);
                     void excluirRegistro(p.id, "pessoa", label);
                   }}
                 />
@@ -876,7 +866,7 @@ export default function CadastroPage() {
                   setContactoMode("edit");
                 }}
                 onDelete={(p) => {
-                  const label = p.codigo ? `${p.nome} (${p.codigo})` : String(p.nome);
+                  const label = String(p.nome);
                   void excluirRegistro(p.id, "pessoa", label);
                 }}
               />
@@ -928,7 +918,7 @@ export default function CadastroPage() {
                     setEmpresaMode("edit");
                   }}
                   onDelete={(e) => {
-                    const label = e.codigo ? `${e.razao_social} (${e.codigo})` : String(e.razao_social);
+                    const label = String(e.razao_social);
                     void excluirRegistro(e.id, "empresa", label);
                   }}
                 />
@@ -959,7 +949,7 @@ export default function CadastroPage() {
                   setEmpresaMode("edit");
                 }}
                 onDelete={(e) => {
-                  const label = e.codigo ? `${e.razao_social} (${e.codigo})` : String(e.razao_social);
+                  const label = String(e.razao_social);
                   void excluirRegistro(e.id, "empresa", label);
                 }}
               />

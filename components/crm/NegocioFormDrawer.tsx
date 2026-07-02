@@ -327,7 +327,6 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
         id: p.id,
         tipo: "pessoa",
         nome: p.nome,
-        sub: p.codigo || undefined,
         busca: `${p.nome} ${p.codigo ?? ""}`.toLowerCase(),
       });
     }
@@ -338,7 +337,6 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
         id: e.id,
         tipo: "empresa",
         nome,
-        sub: e.codigo || undefined,
         busca: `${nome} ${e.codigo ?? ""}`.toLowerCase(),
       });
     }
@@ -348,7 +346,6 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
         id: pa.id,
         tipo: "parceiro",
         nome: pa.nome,
-        sub: pa.codigo || undefined,
         busca: `${pa.nome} ${pa.codigo ?? ""}`.toLowerCase(),
       });
     }
@@ -400,19 +397,18 @@ export function NegocioFormDrawer({ open, onClose, onSaved, pipelineId, defaultM
 
   function labelPessoa(id: string) {
     const item = pessoas.find((pessoa) => pessoa.id === id);
-    return item ? `${item.nome}${item.codigo ? ` (${item.codigo})` : ""}` : id;
+    return item ? item.nome : id;
   }
 
   function labelEmpresa(id: string) {
     const item = empresas.find((empresa) => empresa.id === id);
     if (!item) return id;
-    const nome = item.nome_fantasia || item.razao_social;
-    return `${nome}${item.codigo ? ` (${item.codigo})` : ""}`;
+    return item.nome_fantasia || item.razao_social;
   }
 
   function labelParceiro(id: string) {
     const item = parceiros.find((parceiro) => parceiro.id === id);
-    return item ? `${item.nome}${item.codigo ? ` (${item.codigo})` : ""}` : id;
+    return item ? item.nome : id;
   }
 
   const stepIndex = WIZARD_STEPS.findIndex((item) => item.id === step);

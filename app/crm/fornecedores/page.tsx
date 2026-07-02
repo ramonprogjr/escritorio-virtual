@@ -303,7 +303,7 @@ export default function FornecedoresPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{f.nome}</p>
                   <p style={{ margin: 0, fontSize: 12, color: "#8b949e" }}>
-                    {f.codigo ? `${f.codigo} · ` : ""}{mercados.length ? mercados.join(" · ") : f.area_atuacao || "—"}{f.cidade ? ` · ${f.cidade}${f.estado ? `/${f.estado}` : ""}` : ""}
+                    {mercados.length ? mercados.join(" · ") : f.area_atuacao || "—"}{f.cidade ? ` · ${f.cidade}${f.estado ? `/${f.estado}` : ""}` : ""}
                   </p>
                 </div>
                 {noMotor && (

@@ -240,7 +240,7 @@ export function CrmOQuePrecisaDeVoce({
                         {l.nome || `Lead ${l.id.slice(0, 8)}`}
                       </p>
                       <p className="text-xs text-[#6e7681]">
-                        {l.codigo ? `${l.codigo} · ` : ""}sem próxima ação
+                        sem próxima ação
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

@@ -74,7 +74,7 @@ function ContasReceberInner() {
         mapaOrigem = Object.fromEntries(
           negs.map((n) => [
             String(n.id),
-            String(n.titulo ?? n.codigo ?? "").trim(),
+            String(n.titulo ?? "").trim(),
           ])
         );
       }

@@ -203,7 +203,7 @@ export default function ParceirosPage() {
         <CadastroFiltrosBar
           busca={busca}
           onBuscaChange={setBusca}
-          buscaPlaceholder="Buscar nome, código, telefone, email ou especialidade…"
+          buscaPlaceholder="Buscar nome, telefone, email ou especialidade…"
           onLimpar={limparFiltros}
           selects={[
             ...(aba === "captacao"

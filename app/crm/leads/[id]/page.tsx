@@ -11,7 +11,6 @@ import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
 import { LeadPropostasPanel } from "@/components/crm/LeadPropostasPanel";
 import { DistribuirLeadPanel } from "@/components/crm/DistribuirLeadPanel";
 import {
-  codigoParticipante,
   emailExibicao,
   type PessoaMini,
   ultimaMensagemExibicao,
@@ -466,10 +465,6 @@ export default function LeadFichaPage() {
       : "parceiro";
 
   const camposDados: { label: string; value: string }[] = [
-    {
-      label: "Código participante",
-      value: codigoParticipante(pessoaHub),
-    },
     { label: "Score", value: `${lead.score ?? 0}/100` },
     { label: "Origem", value: (lead.origem as string) || "—" },
     {
@@ -567,11 +562,6 @@ export default function LeadFichaPage() {
                 {estagio}
               </span>
             </div>
-            {(lead.codigo as string | undefined) && (
-              <p className="mt-0.5 font-mono text-xs font-semibold text-[#c9a24a]">
-                {String(lead.codigo)}
-              </p>
-            )}
             <p className="mt-0.5 truncate text-xs" style={{ color: "#7d8a99" }}>
               {lead.telefone as string} · {lead.origem as string}
               {(lead.valor_estimado as number) > 0 &&
@@ -885,23 +875,17 @@ export default function LeadFichaPage() {
                         {pessoaHub ? (
                           <>
                             <span className="text-[#6b7280]">Participante</span>{" "}
-                            {pessoaHub.codigo ? (
-                              <span className="font-mono font-semibold text-[#c9a24a]">{pessoaHub.codigo}</span>
-                            ) : (
-                              <span className="text-[#8b949e]">(sem código PES)</span>
-                            )}
                             {pessoaHub.nome ? (
-                              <>
-                                {" · "}
-                                <span className="text-gray-300">{pessoaHub.nome}</span>
-                              </>
-                            ) : null}
+                              <span className="text-gray-300">{pessoaHub.nome}</span>
+                            ) : (
+                              <span className="text-[#8b949e]">(sem nome cadastrado)</span>
+                            )}
                           </>
                         ) : (
                           <>
-                            <span className="text-[#6b7280]">Sem código PES neste lead</span>
+                            <span className="text-[#6b7280]">Sem pessoa vinculada a este lead</span>
                             {" · "}
-                            <span>entrada manual ou associe em hub_pessoas</span>
+                            <span>entrada manual — vincule um contato existente.</span>
                           </>
                         )}
                       </p>

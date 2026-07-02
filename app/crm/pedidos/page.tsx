@@ -84,8 +84,8 @@ function PedidosPageInner() {
 
   const obraOpts: EntitySelectOption[] = obras.map((o) => ({
     value: o.id,
-    label: o.titulo || o.codigo || "Obra sem título",
-    sub: [o.codigo, [o.cidade, o.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ") || undefined,
+    label: o.titulo || "Obra sem título",
+    sub: [o.cidade, o.estado].filter(Boolean).join("/") || undefined,
   }));
 
   async function criar() {
@@ -177,7 +177,7 @@ function PedidosPageInner() {
                 erro={obrasErro}
                 clearable
                 placeholder="Selecionar obra…"
-                searchPlaceholder="Buscar obra por nome ou código…"
+                searchPlaceholder="Buscar obra por nome…"
                 emptyLabel="Nenhuma obra cadastrada ainda."
               />
             </div>

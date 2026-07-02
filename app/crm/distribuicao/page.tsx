@@ -59,7 +59,7 @@ function descreverEvento(e: EventoRede): string {
     return `Lead distribuído para ${p.parceiro_nome ?? "fornecedor"}${p.score != null ? ` · aderência ${p.score}` : ""}`;
   }
   if (e.event_type === "entrega_gerada") {
-    return `Entrega ${p.codigo ?? ""} gerada · ${p.tipo ?? "obra"}${p.origem === "automatica" ? " (automática ao fechar)" : ""}`;
+    return `Entrega gerada · ${p.tipo ?? "obra"}${p.origem === "automatica" ? " (automática ao fechar)" : ""}`;
   }
   if (e.event_type === "gate_pendencia_bloqueio") {
     return `Bloqueado por pendência financeira: ${p.parceiro_nome ?? "fornecedor"} não recebeu o lead`;

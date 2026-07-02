@@ -975,7 +975,7 @@ export function CadastroWizard({ open, onClose, tipoInicial = "PF", onSaved }: P
 
             <WizardSection
               title="Comercial"
-              description="Lead no funil activo por defeito (código LED). Ideal para campanhas Meta, Google, etc."
+              description="Lead no funil activo por defeito. Ideal para campanhas Meta, Google, etc."
             >
               <CadastroComercialSecao
                 tipo={tipo}

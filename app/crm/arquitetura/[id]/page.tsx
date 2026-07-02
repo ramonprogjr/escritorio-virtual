@@ -270,7 +270,6 @@ export default function ProjetoFichaPage({ params }: { params: Promise<{ id: str
             <div className="min-w-0">
               <h1 className="truncate text-base font-bold text-[#e6edf3]">{projeto.titulo}</h1>
               <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs">
-                <span className="font-mono text-[#c9a24a]">{projeto.codigo ?? "—"}</span>
                 {projeto.tipologia ? (
                   <span className="rounded-full px-2 py-0.5 font-bold" style={{ background: "rgba(201,162,74,0.16)", color: "#e0b86a" }}>
                     {tipologiaLabel(projeto.tipologia)}

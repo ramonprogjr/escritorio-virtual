@@ -255,7 +255,6 @@ export function CadastroVinculosPessoaEmpresa({
                   style={{ color: "#c9a24a", fontWeight: 600, textDecoration: "none" }}
                   {...(variant === "sideover" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 >
-                  {item.codigo ? `${item.codigo} · ` : ""}
                   {item.titulo}
                 </Link>
                 {item.subtitulo ? (
@@ -385,7 +384,6 @@ export function CadastroVinculosPessoaEmpresa({
                       fontSize: 13,
                     }}
                   >
-                    {r.codigo ? `${r.codigo} · ` : ""}
                     {r.label}
                   </button>
                 </li>

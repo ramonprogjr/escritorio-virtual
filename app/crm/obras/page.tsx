@@ -176,9 +176,8 @@ function CardObra({
             {ROTULO_SAUDE[obra.saude]}
           </span>
         </div>
-        <p className="mt-1 font-mono text-[11px] text-[#8b949e]">
-          {obra.codigo || "—"}
-          {obra.cidade ? ` · ${[obra.cidade, obra.estado].filter(Boolean).join("/")}` : ""}
+        <p className="mt-1 text-[11px] text-[#8b949e]">
+          {obra.cidade ? [obra.cidade, obra.estado].filter(Boolean).join("/") : "—"}
         </p>
         <BarraAvanco valor={obra.avanco} />
         {marco ? (
@@ -563,8 +562,8 @@ function ObrasPageInner() {
         onClose={() => setNovaAberta(false)}
         negocioId={negocioId}
         onCreated={(obra, frentes) => {
-          const cod = obra.codigo_legivel || obra.codigo || "obra";
-          setToast(`Obra ${cod} criada${frentes ? ` · ${frentes} frentes` : ""}.`);
+          const nome = obra.titulo || "Obra";
+          setToast(`${nome} criada${frentes ? ` · ${frentes} frentes` : ""}.`);
           void carregar();
         }}
       />

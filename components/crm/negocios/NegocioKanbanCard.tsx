@@ -221,17 +221,6 @@ export function NegocioKanbanCard({
           </span>
         </div>
 
-        <p
-          style={{
-            margin: "0 0 8px",
-            fontSize: 11,
-            fontFamily: "ui-monospace, monospace",
-            color: "rgba(201, 162, 74, 0.92)",
-          }}
-        >
-          {negocio.codigo}
-        </p>
-
         <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 800, color: "#22c55e" }}>
           {moeda(negocio.valor_fechado ?? negocio.valor_estimado)}
         </p>

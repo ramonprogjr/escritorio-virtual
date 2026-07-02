@@ -240,7 +240,7 @@ function ArquiteturaInner() {
         }}
         negocioId={negocioOrigem}
         onCreated={(projeto, jaExistia) => {
-          toast.success(jaExistia ? `Abrindo ${projeto.codigo ?? "projeto"} existente` : `${projeto.codigo ?? "Projeto"} criado`);
+          toast.success(jaExistia ? `Abrindo ${projeto.titulo ?? "projeto"} existente` : `${projeto.titulo ?? "Projeto"} criado`);
           void carregarLista();
           router.push(`/crm/arquitetura/${projeto.id}`);
         }}
@@ -380,7 +380,7 @@ function ArquiteturaInner() {
             <input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar projeto, cliente ou código…"
+              placeholder="Buscar projeto ou cliente…"
               className="min-h-10 w-full min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] sm:w-56"
             />
             <button
