@@ -1,7 +1,88 @@
 {
-  "geradoEm": "2026-07-02T01:34:27.643Z",
+  "geradoEm": "2026-07-02T03:04:58.251Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "cc81d24d02e402a7ac9fb6bcbd4c2a894fae8b5b",
+      "hashCurto": "cc81d24",
+      "mensagem": "decisão de CEO sobre o laudo (33 telas) — verificação no código + triagem incorporar/cortar/depende",
+      "mensagemRaw": "docs: decisão de CEO sobre o laudo (33 telas) — verificação no código + triagem incorporar/cortar/depende",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T03:01:48.000Z",
+      "hora": "00:01",
+      "arquivos": [
+        "docs/DECISAO-CEO-LAUDO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "d41363ff732eda39d5a72198ca3dd6efdaaa9fdf",
+      "hashCurto": "d41363f",
+      "mensagem": "laudo de produto (33 telas) do dono + MAPA de necessidades sistêmicas da planilha",
+      "mensagemRaw": "docs(insumos): laudo de produto (33 telas) do dono + MAPA de necessidades sistêmicas da planilha",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T02:43:56.000Z",
+      "hora": "23:43",
+      "arquivos": [
+        "docs/MAPA-NECESSIDADES-SISTEMICAS.md",
+        "docs/insumos-do-dono/AUDITORIA-PRODUTO-TELA-A-TELA.md",
+        "docs/insumos-do-dono/LAUDO-DETALHADO-POR-TELA.md"
+      ],
+      "areas": {
+        "outros": 3
+      }
+    },
+    {
+      "hash": "6cbe1ebc12f4ad71fa2f3567e15f960ccc3596f2",
+      "hashCurto": "6cbe1eb",
+      "mensagem": "00-LEIA-PRIMEIRO vira o MAPA ÚNICO atualizado — auditorias em destaque + protocolo anti-perda",
+      "mensagemRaw": "docs: 00-LEIA-PRIMEIRO vira o MAPA ÚNICO atualizado — auditorias em destaque + protocolo anti-perda",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T02:25:40.000Z",
+      "hora": "23:25",
+      "arquivos": [
+        "docs/00-LEIA-PRIMEIRO-ESTADO.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "a9411dc4e3bf8d13b499b2c03db8714f19e6fa84",
+      "hashCurto": "a9411dc",
+      "mensagem": "search_path das funções APLICADO via MCP (35→2 WARN; 2 são pgvector)",
+      "mensagemRaw": "chore(seguranca): search_path das funções APLICADO via MCP (35→2 WARN; 2 são pgvector)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T01:43:25.000Z",
+      "hora": "22:43",
+      "arquivos": [
+        "docs/ROTEIRO-CHAVE-SUPABASE-RENDER.md",
+        "supabase/migrations/20260701235500_harden_function_search_path.sql"
+      ],
+      "areas": {
+        "outros": 1,
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "b1a1275dc269a931cd1c9cbb0caa4e6309f2f239",
+      "hashCurto": "b1a1275",
+      "mensagem": "formatter dos eventos (timeline) + fix(test): flake TZ do cockpit-financeiro",
+      "mensagemRaw": "feat(kpi): formatter dos eventos (timeline) + fix(test): flake TZ do cockpit-financeiro",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T01:35:36.000Z",
+      "hora": "22:35",
+      "arquivos": [
+        "lib/crm/cockpit-financeiro.test.ts",
+        "lib/crm/eventos-formato.test.ts",
+        "lib/crm/eventos-formato.ts"
+      ],
+      "areas": {
+        "lib/crm": 3
+      }
+    },
     {
       "hash": "05b4ef67c97d120ee3c22476c05f0ca395dc36ca",
       "hashCurto": "05b4ef6",
