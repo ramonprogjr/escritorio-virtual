@@ -32,5 +32,19 @@ No serviço web do Render → **Environment**:
 ## Se algo der errado
 - App começa a dar 401/erro de Supabase depois do redeploy → **reverter no Render** (voltar os 2 valores pras chaves legacy) e me chamar. A legacy continua válida até a Parte D.
 
+## Parte E — Quick-wins de segurança (aplicar JUNTO, opcional, baixo risco)
+Preparei no dia (advisors do Supabase = 0 ERROS; só WARN/INFO):
+1. **search_path das funções (35 WARN):** migração pronta em
+   `supabase/migrations/20260701235500_harden_function_search_path.sql` — pin
+   `pg_catalog, public, pg_temp`, revisada (não muda comportamento). Aplicar via
+   **MCP apply_migration** ou colar no SQL Editor. Reversível (`RESET search_path`).
+2. **Leaked Password Protection (1 WARN):** toggle no painel →
+   **Authentication → Policies/Providers → "Prevent use of leaked passwords"** = ON.
+   (É config de Auth, não SQL — só no painel; 1 clique.)
+
+> #3 "grande" (RLS `USING(true)`) fica pra um passe dedicado e testado ANTES do 2º
+> tenant — é **load-bearing** (realtime + writes diretos do office no Supabase), então
+> o fix é *escopar por tenant*, não remover. Baixa urgência (1 tenant hoje).
+
 ---
-*Pré-verificado 01/jul: o Supabase MCP conecta a este projeto (project-ref cdjlqsznerdhwqyunodl); Claude confirma a chave nova ao vivo antes da Parte D.*
+*Pré-verificado 01/jul: o Supabase MCP conecta a este projeto (project-ref cdjlqsznerdhwqyunodl); Claude confirma a chave nova ao vivo antes da Parte D. Advisors: 0 ERROR, 87 WARN, 59 INFO.*
