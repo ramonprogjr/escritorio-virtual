@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aggregateCockpit } from "./cockpit-aggregate";
+import { hojeISODate } from "./cockpit-classificar";
+
+/** Offset em dias sobre um YYYY-MM-DD (mesma base UTC-midnight que `diasEntre` usa). */
+function isoOffsetDias(baseISO: string, deltaDias: number): string {
+  return new Date(Date.parse(`${baseISO}T00:00:00Z`) + deltaDias * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+}
 
 /**
  * E6 — testa a §4 (Pagamentos) do cockpit E1 acendendo via lerPagamentosResumo:
@@ -66,10 +74,13 @@ describe("cockpit E1 §4 — financeiro (E6) degradável + agregado", () => {
   });
 
   it("tabela presente → temFinanceiro=true + baldes derivados + campo aditivo financeiro", async () => {
-    const hoje = new Date().toISOString().slice(0, 10);
-    const ontem = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-    const daqui3 = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
-    const daqui30 = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+    // TZ-robusto: ancora no MESMO "hoje" que a produção (hojeISODate = data LOCAL). Senão,
+    // à noite em GMT-3 (UTC já no dia seguinte), o "ontem" em UTC coincide com o "hoje" local
+    // e o teste de `atrasado` quebrava — flake só na máquina local, verde no CI (runner UTC).
+    const hoje = hojeISODate();
+    const ontem = isoOffsetDias(hoje, -1);
+    const daqui3 = isoOffsetDias(hoje, 3);
+    const daqui30 = isoOffsetDias(hoje, 30);
 
     const { supabase } = makeSupabase({
       obras: [OBRA],
