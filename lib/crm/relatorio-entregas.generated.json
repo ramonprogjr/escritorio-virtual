@@ -1,7 +1,28 @@
 {
-  "geradoEm": "2026-07-02T03:04:58.251Z",
+  "geradoEm": "2026-07-02T03:09:34.864Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "8ad24f63bd8918052c58bd3a89cd482c04df9d98",
+      "hashCurto": "8ad24f6",
+      "mensagem": "P0 do laudo — destrava Imóveis/Aprovações/Contatos + honestidade do KPI de IA",
+      "mensagemRaw": "fix(laudo): P0 do laudo — destrava Imóveis/Aprovações/Contatos + honestidade do KPI de IA",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T03:05:55.000Z",
+      "hora": "00:05",
+      "arquivos": [
+        "app/api/crm/contatos/route.ts",
+        "app/api/crm/imoveis/route.ts",
+        "app/api/hub/aprovacoes/route.ts",
+        "app/crm/page.tsx",
+        "docs/MODELO-OPERACIONAL-TENANT.md"
+      ],
+      "areas": {
+        "app/api": 3,
+        "app/crm": 1,
+        "outros": 1
+      }
+    },
     {
       "hash": "cc81d24d02e402a7ac9fb6bcbd4c2a894fae8b5b",
       "hashCurto": "cc81d24",

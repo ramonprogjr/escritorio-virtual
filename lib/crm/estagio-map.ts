@@ -40,7 +40,22 @@ export function buildLeadEstagioPatch(novoFunilOuLegado: string): LeadEstagioPat
   };
 }
 
-/** Agrupa lead no kanban pela coluna ativa. */
+/** Slugs das COLUNAS do kanban de leads (pipeline de VENDAS em hub_pipeline_estagios). */
+const COLUNAS_VENDAS = new Set([
+  "novo", "qualificando", "qualificado", "proposta",
+  "negociando", "fechamento", "ganho", "perdido",
+]);
+
+/**
+ * Agrupa o lead na COLUNA do kanban. As colunas vêm do pipeline de VENDAS; mas o `estagio` do lead
+ * pode estar no vocabulário do CICLO DE VIDA (encaminhado, aguardando_resposta, em_atendimento,
+ * convertido_negocio, spam_invalido) — que NÃO tem coluna e fazia o lead SUMIR do board (L2/L3 do laudo:
+ * 6 de 8 leads desapareciam). Aqui: se já é uma coluna de vendas, mantém; senão traduz ciclo-de-vida →
+ * coluna de vendas via funilToLegacy(legacyToFunil(...)). O resultado é SEMPRE uma coluna existente.
+ */
 export function estagioParaColunaKanban(estagio: string | null | undefined): string {
-  return legacyToFunil(estagio) as string;
+  const s = (estagio ?? "").trim();
+  if (!s) return "novo";
+  if (COLUNAS_VENDAS.has(s)) return s;
+  return funilToLegacy(legacyToFunil(s));
 }
