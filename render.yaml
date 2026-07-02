@@ -7,8 +7,7 @@
 #   NEXT_PUBLIC_SUPABASE_ANON_KEY — chave pública Supabase (baked no bundle de build)
 #   SUPABASE_SERVICE_ROLE_KEY     — chave server-side (bypassa RLS)
 #   NEXT_PUBLIC_APP_URL           — https://<seu-servico>.onrender.com (sem barra final; baked no bundle)
-#   INTERNAL_API_KEY              — auth de chamadas internas servidor→servidor (lib/internal-api-auth.ts)
-#   NEXT_PUBLIC_INTERNAL_API_KEY  — mesmo valor de INTERNAL_API_KEY, exposto ao client
+#   INTERNAL_API_KEY              — auth de chamadas internas servidor→servidor (lib/internal-api-auth.ts). NUNCA NEXT_PUBLIC_ (expõe ao browser).
 #   CRON_SECRET                   — Bearer token p/ /api/cron/dispatch-ciclos (lib/cron-auth.ts)
 #
 # IA — cadeia de fallback: Mistral (primário) → Anthropic → Groq:
@@ -65,10 +64,8 @@ services:
         sync: false
       - key: NEXT_PUBLIC_APP_URL
         sync: false
-      # --- Auth interno ---
+      # --- Auth interno (server-to-server; NUNCA NEXT_PUBLIC_ → não expor ao browser) ---
       - key: INTERNAL_API_KEY
-        sync: false
-      - key: NEXT_PUBLIC_INTERNAL_API_KEY
         sync: false
       # --- Cron ---
       - key: CRON_SECRET
