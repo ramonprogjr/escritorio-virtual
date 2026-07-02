@@ -33,12 +33,11 @@ No serviço web do Render → **Environment**:
 - App começa a dar 401/erro de Supabase depois do redeploy → **reverter no Render** (voltar os 2 valores pras chaves legacy) e me chamar. A legacy continua válida até a Parte D.
 
 ## Parte E — Quick-wins de segurança (aplicar JUNTO, opcional, baixo risco)
-Preparei no dia (advisors do Supabase = 0 ERROS; só WARN/INFO):
-1. **search_path das funções (35 WARN):** migração pronta em
-   `supabase/migrations/20260701235500_harden_function_search_path.sql` — pin
-   `pg_catalog, public, pg_temp`, revisada (não muda comportamento). Aplicar via
-   **MCP apply_migration** ou colar no SQL Editor. Reversível (`RESET search_path`).
-2. **Leaked Password Protection (1 WARN):** toggle no painel →
+Advisors do Supabase = 0 ERROS; só WARN/INFO.
+1. ✅ **search_path das funções — JÁ APLICADO** (01/jul via MCP): 35 WARN → 2 (as 2 são da
+   extensão pgvector, lang C — deixadas de propósito). Migração
+   `supabase/migrations/20260701235500_harden_function_search_path.sql`. **Nada a fazer.**
+2. **Leaked Password Protection (1 WARN) — FALTA (toggle seu):** no painel →
    **Authentication → Policies/Providers → "Prevent use of leaked passwords"** = ON.
    (É config de Auth, não SQL — só no painel; 1 clique.)
 

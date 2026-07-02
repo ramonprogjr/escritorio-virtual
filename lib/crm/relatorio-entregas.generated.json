@@ -1,7 +1,71 @@
 {
-  "geradoEm": "2026-07-01T23:46:25.410Z",
+  "geradoEm": "2026-07-02T01:34:27.643Z",
   "dias": 7,
   "commits": [
+    {
+      "hash": "05b4ef67c97d120ee3c22476c05f0ca395dc36ca",
+      "hashCurto": "05b4ef6",
+      "mensagem": "migração PREPARADA (não aplicada) — fixa search_path de 35 funções + roteiro quick-wins",
+      "mensagemRaw": "chore(seguranca): migração PREPARADA (não aplicada) — fixa search_path de 35 funções + roteiro quick-wins",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T01:25:03.000Z",
+      "hora": "22:25",
+      "arquivos": [
+        "docs/ROTEIRO-CHAVE-SUPABASE-RENDER.md",
+        "supabase/migrations/20260701235500_harden_function_search_path.sql"
+      ],
+      "areas": {
+        "outros": 1,
+        "supabase/migrations": 1
+      }
+    },
+    {
+      "hash": "9ac65045b643f6a7d15ad7a5305acd87495eb5f8",
+      "hashCurto": "9ac6504",
+      "mensagem": "roteiro à prova de erro pra rotacionar a service_role amanhã (chaves novas sb_secret_/sb_publishable_, sem downtime)",
+      "mensagemRaw": "docs: roteiro à prova de erro pra rotacionar a service_role amanhã (chaves novas sb_secret_/sb_publishable_, sem downtime)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T01:17:58.000Z",
+      "hora": "22:17",
+      "arquivos": [
+        "docs/ROTEIRO-CHAVE-SUPABASE-RENDER.md"
+      ],
+      "areas": {
+        "outros": 1
+      }
+    },
+    {
+      "hash": "befb3c7c23c0e197c48afa928c6805520131f1ee",
+      "hashCurto": "befb3c7",
+      "mensagem": "remove NEXT_PUBLIC_INTERNAL_API_KEY morto (render.yaml/.env.example) + roteiro de migração de chaves",
+      "mensagemRaw": "chore(seguranca): remove NEXT_PUBLIC_INTERNAL_API_KEY morto (render.yaml/.env.example) + roteiro de migração de chaves",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-02T00:06:29.000Z",
+      "hora": "21:06",
+      "arquivos": [
+        ".env.example",
+        "docs/ROTEIRO-MIGRACAO-CHAVES-SUPABASE.md",
+        "render.yaml"
+      ],
+      "areas": {
+        "outros": 3
+      }
+    },
+    {
+      "hash": "26761e39f3fd12dd5dd09a97b784fd3311ae7376",
+      "hashCurto": "26761e3",
+      "mensagem": "corrige sobreposição do título no cabeçalho do CRM (desktop)",
+      "mensagemRaw": "fix(ui): corrige sobreposição do título no cabeçalho do CRM (desktop)",
+      "autor": "wendelnice-dev",
+      "dataIso": "2026-07-01T23:47:36.000Z",
+      "hora": "20:47",
+      "arquivos": [
+        "components/crm/CrmPageHeader.tsx"
+      ],
+      "areas": {
+        "components/crm": 1
+      }
+    },
     {
       "hash": "a54447c74bb1d2b54131e7de103421ee7864266f",
       "hashCurto": "a54447c",
@@ -5885,54 +5949,6 @@
       "areas": {
         "components/crm": 5,
         "outros": 1
-      }
-    },
-    {
-      "hash": "022d8efd5735baa3418dde3c7440d781338964c7",
-      "hashCurto": "022d8ef",
-      "mensagem": "PENDENCIAS — registra analise-mestra encomendada (auditoria de telas + metricas->funcoes + CEO)",
-      "mensagemRaw": "docs: PENDENCIAS — registra analise-mestra encomendada (auditoria de telas + metricas->funcoes + CEO)",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-25T00:37:04.000Z",
-      "hora": "21:37",
-      "arquivos": [
-        "docs/PENDENCIAS.md"
-      ],
-      "areas": {
-        "outros": 1
-      }
-    },
-    {
-      "hash": "56763c881f8ec536329022c8c84a8c2b9ab217e6",
-      "hashCurto": "56763c8",
-      "mensagem": "blueprint Central de Performance (metricas/eventos/SLA) + INDICE unico de docs",
-      "mensagemRaw": "docs: blueprint Central de Performance (metricas/eventos/SLA) + INDICE unico de docs",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-25T00:22:17.000Z",
-      "hora": "21:22",
-      "arquivos": [
-        "docs/CENTRAL-PERFORMANCE-METRICAS.md",
-        "docs/INDICE.md",
-        "docs/PLANO-EXECUTIVO-BLOCOS.md"
-      ],
-      "areas": {
-        "outros": 3
-      }
-    },
-    {
-      "hash": "241dc6c340b47d486e72679421bd1c6ddf0da885",
-      "hashCurto": "241dc6c",
-      "mensagem": "backlog de features de produto (BACKLOG-FEATURES.md) + link no plano",
-      "mensagemRaw": "docs: backlog de features de produto (BACKLOG-FEATURES.md) + link no plano",
-      "autor": "wendelnice-dev",
-      "dataIso": "2026-06-24T23:51:46.000Z",
-      "hora": "20:51",
-      "arquivos": [
-        "docs/BACKLOG-FEATURES.md",
-        "docs/PLANO-EXECUTIVO-BLOCOS.md"
-      ],
-      "areas": {
-        "outros": 2
       }
     }
   ]
