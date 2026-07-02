@@ -292,6 +292,11 @@ ALTER TABLE public.hub_aprovacoes ADD CONSTRAINT hub_aprovacoes_tipo_check
                   'pagamento_obra_hub')); -- GATE 2 chave 2 (Hub)
 ALTER TABLE public.hub_aprovacoes
   ADD COLUMN IF NOT EXISTS obra_id UUID REFERENCES public.hub_obras(id) ON DELETE SET NULL;
+-- FIX 02/jul: hub_aprovacoes nasceu SEM tenant_id no schema real. O escrow (Gate 2 duplo) filtra
+-- as aprovações por tenant nas RPCs (rpc_liberar_escrow) → a coluna é obrigatória. Aditiva, nullable,
+-- sem backfill — MESMO padrão do E7 p/ hub_decision_logs. Escrow segue dormente até o fix #5.
+ALTER TABLE public.hub_aprovacoes
+  ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES public.hub_tenants(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_hub_aprovacoes_tenant_status
   ON public.hub_aprovacoes (tenant_id, status);
 CREATE INDEX IF NOT EXISTS idx_hub_aprovacoes_obra

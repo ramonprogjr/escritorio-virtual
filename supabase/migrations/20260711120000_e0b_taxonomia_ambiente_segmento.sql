@@ -78,9 +78,21 @@ CREATE TABLE IF NOT EXISTS public.hub_obra_taxonomia (
 CREATE INDEX IF NOT EXISTS idx_taxonomia_disc
   ON public.hub_obra_taxonomia (disciplina_slug, ativo, ordem);
 -- FTS portuguese (nome + sinônimos) — habilita a classificação da IA do Orçamento.
+-- array_to_string() é STABLE (não IMMUTABLE) → índice de expressão direto falha (42P17).
+-- Encapsula numa função IMMUTABLE (juntar um text[] com delimitador fixo é determinístico).
+CREATE OR REPLACE FUNCTION public.hub_obra_taxonomia_fts_doc(p_nome text, p_sinonimos text[])
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+SET search_path = ''
+AS $fts$
+  SELECT to_tsvector('portuguese',
+    COALESCE(p_nome, '') || ' ' || array_to_string(COALESCE(p_sinonimos, '{}'::text[]), ' '))
+$fts$;
 CREATE INDEX IF NOT EXISTS idx_taxonomia_fts
   ON public.hub_obra_taxonomia
-  USING GIN (to_tsvector('portuguese', nome || ' ' || array_to_string(sinonimos, ' ')));
+  USING GIN (public.hub_obra_taxonomia_fts_doc(nome, sinonimos));
 -- Busca por sinônimo exato (array contains).
 CREATE INDEX IF NOT EXISTS idx_taxonomia_sin
   ON public.hub_obra_taxonomia USING GIN (sinonimos);

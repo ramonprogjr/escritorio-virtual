@@ -149,6 +149,9 @@ CREATE INDEX IF NOT EXISTS idx_hub_obra_avanco_diario_tenant
 
 ALTER TABLE public.hub_obra_avanco_diario ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS hub_obra_avanco_diario_rls ON public.hub_obra_avanco_diario;
+-- FIX 02/jul: dropar os nomes REAIS antes de criar (idempotente — a tabela já existe de sessão anterior).
+DROP POLICY IF EXISTS hub_obra_avanco_diario_select ON public.hub_obra_avanco_diario;
+DROP POLICY IF EXISTS hub_obra_avanco_diario_insert ON public.hub_obra_avanco_diario;
 -- APPEND-ONLY na própria policy: FOR SELECT e FOR INSERT (sem UPDATE/DELETE). Mesmo um tenant
 -- legítimo NÃO altera/apaga um snapshot da sua obra — só insere outro. (espelha E7c e o escrow.)
 CREATE POLICY hub_obra_avanco_diario_select ON public.hub_obra_avanco_diario FOR SELECT TO authenticated
