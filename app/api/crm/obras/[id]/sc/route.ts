@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
-import { isMissingPgColumn } from "@/lib/tenant-default";
+import { assertObraDoTenant, ehTabelaAusente } from "@/lib/crm/obra-route-helpers";
 import {
   isTipoMaterialSc,
   isUrgenciaSc,
@@ -36,27 +36,6 @@ const SELECT_ITEM =
   "id, pedido_id, catalogo_id, descricao_snapshot, categoria, unidade, qtd_pedida, qtd_entregue, preco_unit_estimado, preco_unit_final, cotacoes_json, item_fora_catalogo, ordem";
 
 const AVISO_PENDENTE = "Compras & estoque ainda não ativos (migração E5 pendente — janela do dono).";
-
-export function ehTabelaAusente(error: { message?: string } | null): boolean {
-  if (!error) return false;
-  return isMissingPgColumn(error) || /relation .*does not exist/i.test(error.message ?? "");
-}
-
-/**
- * Confirma posse da obra (crmDb é service-role → RLS bypassada; checagem explícita é a proteção).
- * tenant_id NULL não pertence a ninguém → 404.
- */
-export async function assertObraDoTenant(obraId: string, tenantId: string): Promise<NextResponse | null> {
-  const { data } = await crmDb()
-    .from("hub_obras")
-    .select("id, tenant_id")
-    .eq("id", obraId)
-    .maybeSingle();
-  if (!data || data.tenant_id !== tenantId) {
-    return NextResponse.json({ error: "Obra não encontrada" }, { status: 404 });
-  }
-  return null;
-}
 
 /** GET = lista as SCs da obra (com itens), mais recente primeiro. ?abertas=1 filtra não-fechadas. */
 export async function GET(request: NextRequest, { params }: Params) {

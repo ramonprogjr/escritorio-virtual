@@ -15,7 +15,7 @@ import {
   sanitizarCotacoes,
   pontuarCotacoes,
 } from "@/lib/obras/estoque";
-import { assertObraDoTenant, ehTabelaAusente } from "../route";
+import { assertObraDoTenant, ehTabelaAusente } from "@/lib/crm/obra-route-helpers";
 
 type Params = { params: Promise<{ id: string; scid: string }> };
 
