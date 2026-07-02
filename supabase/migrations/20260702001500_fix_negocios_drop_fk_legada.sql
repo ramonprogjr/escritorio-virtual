@@ -1,0 +1,23 @@
+-- ============================================================================
+-- N1 do laudo — POST /api/crm/negocios → 500 ao criar negócio COM lead vinculado.
+--
+-- Causa-raiz (CONFIRMADA no DB via MCP): hub_negocios.lead_id tem DUAS foreign keys:
+--   - hub_negocios_lead_crm_fkey → hub_leads_crm(id) ON DELETE SET NULL   [CORRETA]
+--   - hub_negocios_lead_id_fkey  → hub_leads(id)                          [LEGADA/morta]
+-- Os leads vivem em hub_leads_crm e NÃO em hub_leads (tabela antiga). Logo todo negócio
+-- com lead selecionado viola a FK legada (SQLSTATE 23503) → a rota cai no 500 (os fallbacks
+-- só tratam 23502/23514, nunca 23503 de FK). É lixo de schema que deveria ter sido dropado
+-- quando hub_leads_crm virou a tabela real.
+--
+-- Fix: DROPAR a FK legada. A FK correta (→ hub_leads_crm) permanece e passa a ser a única.
+-- SEGURO: não altera dado nenhum, sem downtime, remove uma constraint que HOJE só causa erro.
+--
+-- ⚠️  APLICAR NA JANELA DO DONO (migração de prod). Idempotente (IF EXISTS).
+--    Depois de aplicar: criar 1 negócio com lead na UI deve devolver 201 (não mais 500).
+--
+-- Reversível (se algum dia hub_leads voltar a existir e for a fonte):
+--   alter table public.hub_negocios
+--     add constraint hub_negocios_lead_id_fkey foreign key (lead_id) references hub_leads(id);
+-- ============================================================================
+
+alter table public.hub_negocios drop constraint if exists hub_negocios_lead_id_fkey;
