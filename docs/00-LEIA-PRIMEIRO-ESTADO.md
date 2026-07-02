@@ -51,9 +51,9 @@ Estes são os documentos que valem AGORA — auditorias de direção + o modelo 
 4. **Este arquivo é a fonte única.** Índices antigos ficam como histórico, não como referência.
 
 ## 🔴 PENDÊNCIAS DO DONO (janela)
-1. **#2 chave Supabase + Render** (amanhã) — roteiro em `ROTEIRO-CHAVE-SUPABASE-RENDER.md` + toggle leaked-password.
-2. **Migrações** (janela, comigo verificando via MCP): RLS tenant-scope (load-bearing — realtime/office; antes do 2º tenant), série AEC (E0–E7) que liga a obra.
-3. **Escrow** (custódia fantasma + FOR UPDATE) · **`.env` fora do OneDrive** · ligar IA (Mistral) + testar.
+1. **🔗 ADIAR JUNTOS (decisão 02/jul): #5 escrow fix + #2 chaves Supabase.** O escrow (`rpc_liberar_escrow`: custódia fantasma `GREATEST` + falta `FOR UPDATE`) fica DORMENTE até corrigir; será feito na MESMA janela da rotação das chaves Supabase + Render + toggle leaked-password (`ROTEIRO-CHAVE-SUPABASE-RENDER.md`).
+2. ✅ **Migrações AEC (E0–E7/E0b/E4): COMPLETAS no ar (02/jul)** — 13/13 tabelas, RLS 14/14, advisor 0 ERROS (ver memória `aec-schema-completo-02jul`). Falta ainda: RLS tenant-scope load-bearing antes do 2º tenant. ⚠️ Aplicado via SQL Editor → NÃO está em `schema_migrations` (schema correto, histórico diverge).
+3. **`.env` fora do OneDrive** · ligar IA (Mistral) + testar.
 4. **RE-ENVIAR o estudo do Asana** (foi perdido — ver protocolo).
 
 ---
