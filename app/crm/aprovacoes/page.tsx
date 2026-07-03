@@ -8,6 +8,7 @@ import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { TIPOS_APROVACAO_DINHEIRO_SET } from "@/lib/crm/aprovacoes-tipos";
+import { mensagemDoEfeito, type EfeitoAprovacao } from "@/lib/ia/efeito-aprovacao";
 
 // ─── Brand palette — dark verde+dourado (padrão do CRM) ──────────────────────
 // F-A6: alinhado ao design-system travado em memória (dark #0a140f + tokens --obra-*).
@@ -220,8 +221,16 @@ function AprovacoesInner() {
       });
       const payload = await res.json().catch(() => ({}));
       if (res.ok) {
+        // Feedback FIEL: o texto deriva de payload.efeito (verdade da RPC), NUNCA de res.ok — o
+        // endpoint responde 200 mesmo em dupla_incompleta. A remoção otimista do card segue correta
+        // (cada chave é um registro/card distinto).
+        const efeito = (payload as { efeito?: EfeitoAprovacao }).efeito;
         setAprovacoes(prev => prev.filter(a => a.id !== id));
-        showToast(acao === "aprovar" ? "Aprovado com sucesso" : "Reprovado");
+        showToast(
+          acao === "aprovar"
+            ? mensagemDoEfeito(efeito, (v: number) => formatarValor(v) ?? `R$ ${v}`)
+            : "Reprovado"
+        );
       } else {
         showToast(typeof payload.error === "string" ? payload.error : `Erro ao ${acao === "aprovar" ? "aprovar" : "rejeitar"}`, "erro");
       }
