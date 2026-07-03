@@ -67,6 +67,7 @@ function ArquiteturaInner() {
   const [filaAberta, setFilaAberta] = useState(false);
   const [fila, setFila] = useState<FilaItem[]>([]);
   const [filaCarregando, setFilaCarregando] = useState(false);
+  const [soAtrasados, setSoAtrasados] = useState(false);
 
   const carregarPipelines = useCallback(async () => {
     try {
@@ -192,17 +193,32 @@ function ArquiteturaInner() {
     }
   }, []);
 
-  const projetosFiltrados = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    if (!q) return projetos;
-    return projetos.filter((p) =>
-      `${p.titulo} ${p.codigo ?? ""} ${p.cliente_nome ?? ""}`.toLowerCase().includes(q)
-    );
-  }, [projetos, busca]);
-
-  // KPIs
+  // KPIs — hoje0 antes do memo (o filtro "Atrasados" reusa o mesmo predicado).
   const hoje = new Date();
   const hoje0 = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+  // Fonte única de "atrasado": alimenta a contagem do KPI E o filtro do board.
+  const estaAtrasado = useCallback(
+    (p: Projeto): boolean => {
+      if (!p.proxima_entrega_em || p.estagio === "entregue" || p.estagio === "arquivado") return false;
+      const d = new Date(p.proxima_entrega_em);
+      return (
+        !Number.isNaN(d.getTime()) &&
+        new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() < hoje0
+      );
+    },
+    [hoje0]
+  );
+
+  const projetosFiltrados = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    let base = projetos;
+    if (soAtrasados) base = base.filter((p) => estaAtrasado(p));
+    if (!q) return base;
+    return base.filter((p) =>
+      `${p.titulo} ${p.codigo ?? ""} ${p.cliente_nome ?? ""}`.toLowerCase().includes(q)
+    );
+  }, [projetos, busca, soAtrasados, estaAtrasado]);
+
   const entregasHoje = projetos.filter((p) => {
     if (!p.proxima_entrega_em) return false;
     const d = new Date(p.proxima_entrega_em);
@@ -211,22 +227,27 @@ function ArquiteturaInner() {
   }).length;
   // A1: "Em aprovação" passa a contar o AGREGADO real (aguardando), não o estágio.
   const emAprovacao = projetos.filter((p) => p.aprovacao_status === "aguardando").length; // keystone
-  const atrasados = projetos.filter((p) => {
-    if (!p.proxima_entrega_em || p.estagio === "entregue" || p.estagio === "arquivado") return false;
-    const d = new Date(p.proxima_entrega_em);
-    return !Number.isNaN(d.getTime()) &&
-      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() < hoje0;
-  }).length;
+  const atrasados = projetos.filter((p) => estaAtrasado(p)).length;
   const entreguesMes = projetos.filter((p) => {
     if (p.estagio !== "entregue" || !p.criado_em) return false;
     const d = new Date(p.criado_em);
     return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
   }).length;
 
-  const kpis: { label: string; value: string; cor: string; onClick?: () => void; sufixo?: string }[] = [
+  const kpis: {
+    label: string; value: string; cor: string;
+    onClick?: () => void; sufixo?: string; hint?: string; ativo?: boolean;
+  }[] = [
     { label: "Entregas hoje", value: String(entregasHoje), cor: "#c9a24a" },
-    { label: "Em aprovação", value: String(emAprovacao), cor: "#d6a129", onClick: () => void abrirFila(), sufixo: "◷" },
-    { label: "Atrasados", value: String(atrasados), cor: atrasados > 0 ? "#f85149" : "#8b949e" },
+    { label: "Em aprovação", value: String(emAprovacao), cor: "#d6a129", onClick: () => void abrirFila(), sufixo: "◷", hint: "ver fila →" },
+    {
+      label: "Atrasados",
+      value: String(atrasados),
+      cor: atrasados > 0 ? "#f85149" : "#8b949e",
+      onClick: () => setSoAtrasados((v) => !v),
+      hint: soAtrasados ? "limpar filtro ✕" : "filtrar board →",
+      ativo: soAtrasados,
+    },
     { label: "Entregues/mês", value: String(entreguesMes), cor: "#22c55e" },
   ];
 
@@ -402,7 +423,7 @@ function ArquiteturaInner() {
             <>
               <p className="mb-0.5 flex items-center gap-1 text-xs text-[#8b949e]">
                 {m.label}
-                {clicavel ? <span className="text-[10px] text-[#c9a24a]">ver fila →</span> : null}
+                {clicavel ? <span className="text-[10px] text-[#c9a24a]">{m.hint ?? "ver →"}</span> : null}
               </p>
               <p className="text-base font-black sm:text-lg" style={{ color: m.cor }}>
                 {m.value}{m.sufixo && Number(m.value) > 0 ? <span className="ml-1 text-sm">{m.sufixo}</span> : null}
@@ -414,7 +435,10 @@ function ArquiteturaInner() {
               key={m.label}
               type="button"
               onClick={m.onClick}
-              className="bg-[#0f1d16] px-3 py-2.5 text-left transition-colors hover:bg-[#16271e] sm:px-5"
+              aria-pressed={m.ativo ? true : undefined}
+              className={`px-3 py-2.5 text-left transition-colors sm:px-5 ${
+                m.ativo ? "bg-[#16271e] ring-1 ring-inset ring-[#f8514966]" : "bg-[#0f1d16] hover:bg-[#16271e]"
+              }`}
             >
               {conteudo}
             </button>
