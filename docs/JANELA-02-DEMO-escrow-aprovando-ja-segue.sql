@@ -55,15 +55,16 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 4) Medição LIBERADA, apontando para as 2 chaves (a RPC libera o escrow só com AS DUAS aprovadas)
+-- valor_liquido é coluna GERADA (valor - valor_retencao) → NÃO se insere.
 INSERT INTO public.hub_obra_pagamentos
   (id, obra_id, tenant_id, orcamento_id, item_id, titulo, tipo, numero_medicao,
-   valor, valor_retencao, valor_liquido, data_vencimento, status,
+   valor, valor_retencao, data_vencimento, status,
    aprovacao_arq_id, aprovacao_hub_id, escrow_liberado, tipo_contrato, criado_por)
 VALUES
   ('de300003-0000-4000-8000-000000000003','a52b2c9a-9dc3-4aa7-bd3b-e5c0d4e7da8d','00000000-0000-4000-8000-000000000001',
    'de300002-0000-4000-8000-000000000002','de300001-0000-4000-8000-000000000001',
    'DEMO — Medição 1 (impermeabilização)','medicao',1,
-   15000,0,15000,CURRENT_DATE + 7,'liberado',
+   15000,0,CURRENT_DATE + 7,'liberado',
    'de300004-0000-4000-8000-000000000004','de300005-0000-4000-8000-000000000005',false,'administracao','seed_demo')
 ON CONFLICT (id) DO NOTHING;
 
@@ -77,10 +78,10 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 6) Medição BLOQUEADA vinculada (a aprovação do orçamento desbloqueia)
 INSERT INTO public.hub_obra_pagamentos
-  (id, obra_id, tenant_id, orcamento_id, titulo, tipo, valor, valor_retencao, valor_liquido, data_vencimento, status, tipo_contrato, criado_por)
+  (id, obra_id, tenant_id, orcamento_id, titulo, tipo, valor, valor_retencao, data_vencimento, status, tipo_contrato, criado_por)
 VALUES
   ('de300007-0000-4000-8000-000000000007','a52b2c9a-9dc3-4aa7-bd3b-e5c0d4e7da8d','00000000-0000-4000-8000-000000000001',
-   'de300006-0000-4000-8000-000000000006','DEMO — Medição Pintura (bloqueada)','medicao',8000,0,8000,CURRENT_DATE + 14,'bloqueado','administracao','seed_demo')
+   'de300006-0000-4000-8000-000000000006','DEMO — Medição Pintura (bloqueada)','medicao',8000,0,CURRENT_DATE + 14,'bloqueado','administracao','seed_demo')
 ON CONFLICT (id) DO NOTHING;
 
 -- 7) A aprovação do orçamento (Gate 1) — a cascata lê dados.orcamento_id
