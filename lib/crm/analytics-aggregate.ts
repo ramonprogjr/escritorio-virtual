@@ -261,7 +261,9 @@ export async function aggregateAnalytics(
         .from("hub_obras")
         .select("id", { count: "exact", head: true })
         .eq("tenant_id", tenantId)
-        .eq("status", "em_andamento")
+        // "Em andamento" = estados de EXECUÇÃO. O CHECK do schema NÃO tem 'em_andamento'
+        // (é legado→'ativa'); filtrar só por ele zerava o KPI mesmo com obra ativa (QA).
+        .in("status", ["ativa", "atencao", "critica", "mobilizacao", "em_andamento"])
     ),
     safeCount(
       supabase
