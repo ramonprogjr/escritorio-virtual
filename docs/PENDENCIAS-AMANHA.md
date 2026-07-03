@@ -33,6 +33,33 @@
 
 ---
 
+## 🔍 4. AUDITORIA QA DO SISTEMA (03/jul manhã) — relatório: docs/AUDITORIA-QA-SINTESE-CEO.md
+
+8 equipes de QA (por domínio) + E2E ao vivo (chrome-devtools, logado como Hub, dado Consulado). **Veredito: o sistema É genérico/persona-cego, e a causa é ARQUITETURAL** — os agregadores filtram só por tenant, nunca por papel → todos veem o mesmo funil comercial.
+
+**CEO fez sozinho (Wave 1 — código, gate verde, staging):** papel no Relacionados · tenant-NULL pedidos · funil zerado (legacyToFunil) · backtick relatórios · placeholder de código na busca. *(a validar)*
+
+**DECISÕES DE PRODUTO suas (os "grandes"):**
+- **Cockpit por persona (P0#1, fix-mãe):** proposta abaixo — aprovar o recorte pra eu subir a v1.
+- **Fazer o dinheiro fluir (P0#2):** negócio-raiz R$150k não gera recebível/medição/escrow — semear + modelar MEDIÇÃO (não existe). Precisa SQL/janela.
+- **Dupla-chave escrow (P0#3):** Chave 1 (Arq) e Chave 2 (Hub) são independentes hoje — modelar que UM pagamento exige AS DUAS.
+- **`/crm/tarefas`:** renomear "Próximas ações (leads)" ou construir o Gestor universal?
+- **Desambiguar fornecedores × parceiros × empresas-cadastro** (tripla sobreposição = fonte do "genérico") + `/crm/empresas` (escritórios) vs `[id]` (PJ).
+- **Portal do fornecedor real** (`/fornecedor` é stub "protótipo").
+
+### PROPOSTA — Cockpit por persona (validar antes da v1)
+`aggregateDashboard(tenantId, papel)` recebe o papel do user (`users.role`) e monta o recorte; mantém "O que precisa de você" no topo de toda persona (a melhor peça). Cada uma ganha 3-5 cards acionáveis:
+- **HUB** (owner): saúde do ecossistema (negócios-raiz+derivados, obras em risco, carteira/receita da rede, IA por tenant) + lente auditor.
+- **Engenharia** (operation): obras em andamento · **medições a aprovar→pagamento** · pedidos c/ valor · avanço · cronograma. *(hoje NÃO tem dashboard)*
+- **Arquiteto** (architect): fila projetos/briefings · aprovações · disparidade de orçamento · honorários · Chave 1 do escrow.
+- **Serviços/Prestador**: só leads/OS encaminhados a ele + home própria.
+- **Fornecedor**: cotações direcionadas + status propostas + pedidos a entregar.
+- **Cliente** (client): status da obra (avanço/medições) · o que aprovar · **escrow**. *(hoje NÃO existe visão de cliente)*
+
+Aditivo (o comercial atual vira o cockpit do papel commercial/HUB). **Aprovo e subo a v1 (HUB+engenharia+cliente primeiro), ou quer ajustar o recorte?**
+
+---
+
 ## 🟢 3. O QUE EU FIZ SOZINHO NA NOITE (já no ar / commitado)
 
 - **Maratona 3 code-safe** (commit e1a6849): 6 IDOR cross-tenant fechados + rate-limit em TODA rota de IA (anti-abuso) + saneamentos. Gate verde + revisão adversarial.
