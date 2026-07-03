@@ -41,7 +41,7 @@ const SERVICE_ROLE_RE =
  * em rotas de cron/ML que ainda não migraram para `cronRequestAuthorized`/`requireInternalApiKey`.
  */
 const GUARD_RE =
-  /requireCrmSessao|requireCrmComercial|requireCrmGestor|requireCrmOwner|requireCrmFinanceiro|requireCrmAdmin|getCallerContext|requireInternalApiKey|cronRequestAuthorized|resolveCallerAuthId|autenticarCopiloto|CRON_SECRET|INTERNAL_API_KEY/;
+  /requireCrmSessao|requireCrmComercial|requireCrmGestor|requireCrmAprovador|requireCrmOwner|requireCrmFinanceiro|requireCrmAdmin|getCallerContext|requireInternalApiKey|cronRequestAuthorized|resolveCallerAuthId|autenticarCopiloto|CRON_SECRET|INTERNAL_API_KEY/;
 
 /**
  * Allowlist de ARQUIVOS que usam service-role SEM os guards acima — cada um é público por

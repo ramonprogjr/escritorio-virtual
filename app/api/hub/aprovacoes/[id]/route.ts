@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { aprovar, rejeitar } from "@/lib/ia/aprovacoes";
-import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireCrmAprovador } from "@/lib/crm/crm-api-auth";
 
 export async function PATCH(
   request: NextRequest,
@@ -10,12 +10,11 @@ export async function PATCH(
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
 
-  // SEGURANÇA (F-B2/E6): gate de papel SERVER-SIDE — apenas gestor ou owner podem aprovar/rejeitar.
-  // getCallerContext (antigo) admitia qualquer atendente; requireCrmGestor fecha a escalada de privilégio
-  // sobre o gate do dinheiro (escrow). O guard client-side no layout não é suficiente: um atendente
-  // autenticado com a INTERNAL_API_KEY do front poderia chamar PATCH diretamente.
-  // tenant vem da SESSÃO (cookie httpOnly), nunca do body/header.
-  const g = await requireCrmGestor(request);
+  // SEGURANÇA (F-B2/E6 + Onda 1): gate de papel SERVER-SIDE. requireCrmAprovador admite gestor/
+  // owner (aprovações gerais) OU portador de capacidade de escrow (architect/operation → Chave
+  // Técnica) — SEM elevar o nível CRM desses papéis. Dentro de aprovar(): tipos não-escrow exigem
+  // gestor+, e a chave em si é fail-closed por capability + humano-distinto. tenant vem da SESSÃO.
+  const g = await requireCrmAprovador(request);
   if ("error" in g) return g.error;
   const tenantId = g.ctx.tenantId;
 
@@ -35,8 +34,12 @@ export async function PATCH(
   }
 
   if (status === "aprovado") {
-    // F-D2: passa o papel da sessão p/ o gate das 2 chaves do escrow (Hub=owner, Arq=gestor≠owner).
-    const resultado = await aprovar(id, observacao, tenantId, g.ctx.role);
+    // Onda 1b: passa papel + IDENTIDADE HUMANA (pessoa física + flag de cookie) p/ o gate
+    // das 2 chaves do escrow (capability + duas autoridades distintas + só humano assina).
+    const resultado = await aprovar(id, observacao, tenantId, g.ctx.role, {
+      userId: g.ctx.userId,
+      ehHumano: g.ctx.ehHumano,
+    });
     if (!resultado.sucesso) {
       return NextResponse.json({ error: resultado.erro ?? "Falha ao aprovar" }, { status: 400 });
     }
@@ -45,7 +48,7 @@ export async function PATCH(
     return NextResponse.json({ ok: true, efeito: resultado.efeito });
   }
 
-  const resultado = await rejeitar(id, motivo?.trim() || "Rejeitado pelo operador", tenantId);
+  const resultado = await rejeitar(id, motivo?.trim() || "Rejeitado pelo operador", tenantId, g.ctx.role);
   if (!resultado.sucesso) {
     return NextResponse.json({ error: resultado.erro ?? "Falha ao rejeitar" }, { status: 400 });
   }
