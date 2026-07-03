@@ -1,7 +1,15 @@
 /**
  * RBAC CRM — 5 níveis + mapeamento de papéis legados (PDF Pt.19).
  * Fonte única para menu, rotas e ações API.
+ *
+ * ONDA 1 (DESIGN-RBAC-MULTITENANT.md): `crmNivelFromRole` deixou de ter a tabela
+ * de papéis embutida — passou a DERIVAR de `lib/rbac/role-map.ts` (fonte única dos
+ * 13 papéis do enum). Assim os papéis do ecossistema em INGLÊS (commercial/operation/
+ * architect/…) param de cair em `null` (que gerava 403 no CRM inteiro — bug vivo da
+ * Ariane=commercial), SEM regressão para os papéis PT/legado.
  */
+
+import { crmNivelForRole } from "@/lib/rbac/role-map";
 
 export type CrmNivel = "owner" | "gestor" | "comercial" | "financeiro" | "atendente";
 
@@ -73,16 +81,16 @@ const PERMISSOES: Record<CrmPapelOperacional, string[]> = {
   leitura: ["crm:ler"],
 };
 
-/** Normaliza app_role (inclui legado) para nível CRM. */
+/**
+ * Normaliza app_role (13 canônicos em inglês + PT/legado) para nível CRM.
+ * DERIVA da fonte única `lib/rbac/role-map.ts` (Onda 1) — não duplica a tabela.
+ * Contrato preservado 1:1 p/ PT/legado: owner→owner, admin/gestor→gestor,
+ * comercial/vendedor→comercial, financeiro/finance→financeiro, atendente→atendente,
+ * parceiro/desconhecido→null. Novo: os papéis EN internos ganham nível (fim do 403);
+ * EXTERNOS (supplier/broker/real_estate/client) + ai_agent seguem null (invariante (b)).
+ */
 export function crmNivelFromRole(role: string | null | undefined): CrmNivel | null {
-  const r = (role ?? "").trim().toLowerCase();
-  if (r === "owner") return "owner";
-  if (r === "gestor" || r === "admin") return "gestor";
-  if (r === "comercial" || r === "vendedor") return "comercial";
-  if (r === "financeiro" || r === "finance") return "financeiro";
-  if (r === "atendente") return "atendente";
-  if (r === "parceiro") return null;
-  return null;
+  return crmNivelForRole(role);
 }
 
 export function crmPapelFromAppRole(role: string | null | undefined): CrmPapelOperacional {

@@ -9,6 +9,7 @@ import {
 } from "@/lib/crm/crm-permissoes";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import { CRM_ACCESS_COOKIE, fetchAuthUserFromAccessToken } from "@/lib/auth/crm-session";
+import { roleTemCapacidade } from "@/lib/rbac/role-map";
 import { NextResponse } from "next/server";
 
 /** Extrai o access token CRU do cookie de sessão httpOnly (sem decodificar/validar). */
@@ -66,6 +67,13 @@ export type CrmCallerContext = {
   role: string;
   status: string;
   tenantId: string;
+  /**
+   * true SOMENTE quando a identidade veio do cookie de sessão HUMANO (validado no
+   * Supabase). false no caminho server-to-server (INTERNAL_API_KEY + x-caller-auth-id).
+   * Onda 1b: só sessão humana pode segurar uma chave de escrow — a chave interna de API
+   * NUNCA pode (invariante (e)).
+   */
+  ehHumano: boolean;
 };
 
 export async function getCallerContext(
@@ -82,6 +90,9 @@ export async function getCallerContext(
   // (sem x-api-key) tomaria 401 em toda chamada.
   // Cookie de sessão VALIDADO na fonte (Supabase) — prioridade absoluta.
   const cookieAuthId = await resolveCallerAuthId(request);
+  // Onda 1b: distingue o HUMANO (cookie) do caminho interno (x-api-key) — só o humano
+  // segura chave de escrow. O caminho interno produz authId (x-caller-auth-id) mas ehHumano=false.
+  const ehHumano = !!cookieAuthId;
 
   // Sem cookie válido → caminho interno server-to-server. Exige INTERNAL_API_KEY CONFIGURADA
   // E x-api-key correta. Fail-closed: se a chave não está definida no ambiente, o header é
@@ -152,6 +163,7 @@ export async function getCallerContext(
       role: String(row.role ?? ""),
       status: String(row.status ?? "Ativo"),
       tenantId,
+      ehHumano,
     },
   };
 }
@@ -177,6 +189,27 @@ export async function requireCrmGestor(
     request,
     isCrmGestorRole,
     "Apenas owner ou gestor podem executar esta ação."
+  );
+}
+
+/**
+ * Pode ACESSAR a fila de aprovação: gestor/owner OU portador de uma CAPACIDADE de escrow
+ * (chave técnica = architect/operation; chave Hub = owner). Assim a Chave Técnica é assinável
+ * SEM elevar o nível CRM de engenharia/arquitetura (evita over-grant nas rotas de admin/
+ * financeiro). O gate de DINHEIRO em si continua por capability + humano-distinto em
+ * validarChaveEscrow; e aprovar() só deixa o portador-de-capacidade assinar as CHAVES
+ * (tipos não-escrow exigem gestor+). Onda 1 — aperto do over-grant apontado na verificação.
+ */
+export async function requireCrmAprovador(
+  request: Request
+): Promise<{ ctx: CrmCallerContext } | { error: NextResponse }> {
+  return requireCallerWith(
+    request,
+    (role) =>
+      isCrmGestorRole(role) ||
+      roleTemCapacidade(role, "escrow:chave_tecnica") ||
+      roleTemCapacidade(role, "escrow:chave_hub"),
+    "Sem permissão para aprovar."
   );
 }
 

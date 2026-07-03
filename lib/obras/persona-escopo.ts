@@ -34,9 +34,15 @@ import {
 export function personaDaSessao(role: string | null | undefined): PersonaEscopo {
   const r = (role ?? "").trim().toLowerCase();
 
-  // Prestador externo: role "parceiro" não tem nível CRM (crmNivelFromRole devolve null),
-  // mas é um papel explícito — trata ANTES do fallback para não cair no default por null.
-  if (r === "parceiro") return "prestador";
+  // Papéis EXTERNOS + TÉCNICOS: a faixa-dinheiro (custo/margem) NÃO aparece. Tratados ANTES
+  // do fallback por nível — o bridge do role-map dá 'comercial' a architect/operation, que
+  // cairia em 'executor' e VAZARIA custo/margem (furo que a verificação da Onda 1 pegou).
+  if (r === "parceiro" || r === "supplier" || r === "broker" || r === "real_estate") return "prestador";
+  if (r === "client" || r === "cliente" || r === "ai_agent") return "prestador";
+  // Arquiteto NÃO vê a faixa-dinheiro (regra explícita do design §3).
+  if (r === "architect" || r === "arquiteto") return "prestador";
+  // Engenharia = time de execução da obra (vê custo da SUA obra; não o painel-Hub completo).
+  if (r === "operation" || r === "operacao" || r === "engenharia") return "executor";
 
   const nivel = crmNivelFromRole(role);
   if (nivel === "owner" || nivel === "gestor") return "hub";

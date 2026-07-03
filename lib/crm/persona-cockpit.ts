@@ -15,6 +15,8 @@
  * Ver pendência R7: endurecer o default p/ um cockpit restrito quando o papel não é interno.
  */
 
+import { rbacPersonaForRole, type RbacPersona } from "@/lib/rbac/role-map";
+
 export type PersonaCockpitTipo =
   | "comercial"
   | "engenharia"
@@ -30,48 +32,35 @@ export type PersonaNaoComercial = Exclude<PersonaCockpitTipo, "comercial">;
  * com tolerância aos sinônimos pt/legado). HUB (owner/admin) cai em "comercial" por decisão do
  * dono: o dashboard atual JÁ é a saúde do ecossistema (rede/receita/encaminhamentos/obras).
  */
+/**
+ * Mapeia a persona RICA da fonte única (`role-map`, 9 valores) para o cockpit de UI
+ * (5 tipos que o cliente sabe renderizar hoje). Colapso ADITIVO:
+ *   • hub-auditor / comercial / financeiro → "comercial" (dashboard atual, preservado);
+ *   • engenharia → "engenharia"; arquiteto → "arquiteto"; cliente → "cliente";
+ *   • fornecedor → "fornecedor"; PARCEIRO → "fornecedor" (cockpit externo restrito —
+ *     CORRIGE o vazamento em que broker/real_estate caíam no dashboard COMPLETO do Hub);
+ *   • restrito → "comercial" por ora (Onda 1c endurece p/ tela neutra quando a UI
+ *     ganhar o cockpit "sem acesso configurado"; o role-map já classifica como restrito).
+ */
+const RBAC_PERSONA_TO_COCKPIT: Record<RbacPersona, PersonaCockpitTipo> = {
+  "hub-auditor": "comercial",
+  comercial: "comercial",
+  financeiro: "comercial",
+  engenharia: "engenharia",
+  arquiteto: "arquiteto",
+  fornecedor: "fornecedor",
+  parceiro: "fornecedor",
+  cliente: "cliente",
+  restrito: "comercial",
+};
+
+/**
+ * Deriva a persona de cockpit a partir do `role` da sessão, LENDO a fonte única
+ * (`lib/rbac/role-map.ts`) — elimina a tabela de papéis duplicada que existia aqui.
+ * Comercial (e todos os papéis internos do Hub) preservados no dashboard atual.
+ */
 export function personaCockpitFromRole(role: string | null | undefined): PersonaCockpitTipo {
-  const r = (role ?? "").trim().toLowerCase();
-  switch (r) {
-    case "operation":
-    case "operacao":
-    case "engenharia":
-      return "engenharia";
-    case "architect":
-    case "arquiteto":
-      return "arquiteto";
-    case "client":
-    case "cliente":
-      return "cliente";
-    case "supplier":
-    case "fornecedor":
-    case "parceiro":
-      return "fornecedor";
-    // HUB + comercial + papéis internos legados → dashboard comercial atual (preservado).
-    case "owner":
-    case "admin":
-    case "admin_hub":
-    case "gestor":
-    case "commercial":
-    case "comercial":
-    case "vendedor":
-    case "financeiro":
-    case "finance":
-    case "atendente":
-    // Mercado imobiliário = comercial-adjacente (veem o funil de vendas).
-    case "broker":
-    case "real_estate":
-    case "imobiliario":
-    case "corretor":
-      return "comercial";
-    default:
-      // Default seguro (fail-safe legado): o que já era servido hoje — não quebra.
-      // R7 (follow-up Wave 2b): papel desconhecido/mal-configurado deveria cair num
-      // cockpit RESTRITO/vazio (fail-closed), não no comercial completo. Hoje é
-      // aceitável porque getCallerContext já exige sessão válida + conta ATIVA no
-      // tenant, então o dado é sempre do próprio tenant (sem vazamento cross-tenant).
-      return "comercial";
-  }
+  return RBAC_PERSONA_TO_COCKPIT[rbacPersonaForRole(role)];
 }
 
 export type PersonaAcaoPrioridade = "alta" | "media" | "baixa";

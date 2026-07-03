@@ -4,7 +4,8 @@
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
-import { isCrmOwnerRole, isCrmGestorRole } from "@/lib/crm/crm-permissoes";
+import { roleTemCapacidade } from "@/lib/rbac/role-map";
+import { isCrmGestorRole } from "@/lib/crm/crm-permissoes";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 import type { EfeitoAprovacao } from "./efeito-aprovacao";
 import { derivarEstadoDupla } from "@/lib/obras/financeiro";
@@ -288,11 +289,118 @@ function montarCard(item: Record<string, unknown>): CardAprovacao {
 // este gate — sem o filtro, um tenant aprovaria a aprovação de outro (service_role bypassa RLS).
 // Fail-closed: sem tenant → recusa. O update reaplica `.eq("tenant_id")` (defesa em profundidade:
 // nunca confia só na leitura).
+/**
+ * Identidade do aprovador HUMANO — usada SÓ pelo gate de escrow (Onda 1b).
+ * `userId` = pessoa física (users.id), grava em `aprovado_por` p/ a checagem de
+ * autoridades distintas. `ehHumano` = veio de cookie de sessão humano (não da chave
+ * interna de API). Ambos vêm de `getCallerContext` na rota.
+ */
+export type AprovadorHumano = {
+  userId?: string | null;
+  ehHumano?: boolean;
+};
+
+/**
+ * GATE DAS DUAS CHAVES DO ESCROW (Onda 1b — DESIGN-RBAC-MULTITENANT.md §6, D5/D6/D7).
+ * Substitui o antigo check RANK-BASED por CAPABILITY explícita da fonte única, mantendo
+ * TODAS as invariantes de dinheiro:
+ *   (c) fail-closed — sem capacidade válida NÃO libera;
+ *   (d) NUNCA o mesmo humano nas 2 chaves — compara `aprovado_por` da chave IRMÃ do mesmo
+ *       pagamento (pessoa física distinta);
+ *   (e) SÓ cookie humano segura chave — o caminho INTERNAL_API_KEY / x-caller-auth-id
+ *       (ehHumano=false) e o ai_agent NUNCA liberam escrow;
+ *   (g) ai_agent nunca aprova dinheiro (não tem capability + não é humano — duplo bloqueio).
+ *
+ * Chaves:
+ *   • pagamento_obra_hub  → capacidade `escrow:chave_hub`      (owner = Chave Hub);
+ *   • pagamento_obra_arq  → capacidade `escrow:chave_tecnica`  (architect OU operation —
+ *                            a CHAVE TÉCNICA do responsável: arquiteto em projeto,
+ *                            engenharia em obra/prestadores — ressalva do dono 03/jul).
+ *
+ * TODO(ABAC de linha — Onda 1b completa / Onda 3): amarrar a chave_tecnica ao RESPONSÁVEL
+ * daquela linha, não só ao papel:
+ *   • architect → `hub_projetos.responsavel_id` do projeto do pagamento (coluna EXISTE);
+ *   • operation → `hub_obras.engenheiro_responsavel_id` — coluna NÃO EXISTE hoje (Onda 0),
+ *     precisa de migração aditiva. Por ora a chave_tecnica de obra é PAPEL (operation) +
+ *     humano-distinto + humano-only. NÃO inventar coluna inexistente.
+ */
+async function validarChaveEscrow(
+  db: ReturnType<typeof supabase>,
+  aprovacao: Record<string, unknown>,
+  tenant: string,
+  aprovadorRole: string | null | undefined,
+  aprovador: AprovadorHumano | null | undefined
+): Promise<{ ok: true } | { ok: false; erro: string }> {
+  // (e) só HUMANO com cookie de sessão — nunca a chave interna de API nem o ai_agent.
+  if (!aprovador?.ehHumano) {
+    return {
+      ok: false,
+      erro: "Apenas uma sessão humana pode autorizar uma chave do escrow (caminho de serviço bloqueado).",
+    };
+  }
+  const humano = (aprovador.userId ?? "").trim();
+  if (!humano) {
+    return {
+      ok: false,
+      erro: "Identidade humana ausente — a chave do escrow não pode ser assinada sem pessoa física.",
+    };
+  }
+
+  const tipo = aprovacao.tipo as string;
+  const ehChaveHub = tipo === "pagamento_obra_hub";
+  const capacidade = ehChaveHub ? "escrow:chave_hub" : "escrow:chave_tecnica";
+
+  // (c) fail-closed por CAPABILITY (não por rank).
+  if (!roleTemCapacidade(aprovadorRole, capacidade)) {
+    return {
+      ok: false,
+      erro: ehChaveHub
+        ? "A chave do Hub exige a capacidade escrow:chave_hub (owner)."
+        : "A chave técnica exige o responsável técnico (arquitetura ou engenharia) — capacidade escrow:chave_tecnica.",
+    };
+  }
+
+  // (d) DUAS autoridades HUMANAS distintas — a chave IRMÃ do MESMO pagamento não pode
+  // ter sido assinada pela MESMA pessoa física. Busca a irmã já aprovada e compara.
+  const dados = (aprovacao.dados as Record<string, unknown>) || {};
+  const pagamentoId = String(dados.pagamento_id ?? "").trim();
+  // Fail-closed (defesa em profundidade): uma chave de escrow SEM pagamento vinculado não pode
+  // ser assinada — a RPC de liberação exige o pagamento_id, e sem ele a checagem de "duas pessoas
+  // distintas" viraria no-op. Recusa em vez de assinar às cegas.
+  if (!pagamentoId) {
+    return { ok: false, erro: "Chave de escrow sem pagamento vinculado — não pode ser assinada." };
+  }
+  {
+    const tipoIrma = ehChaveHub ? "pagamento_obra_arq" : "pagamento_obra_hub";
+    const { data: irmas } = await db
+      .from("hub_aprovacoes")
+      .select("aprovado_por")
+      .eq("tenant_id", tenant)
+      .eq("tipo", tipoIrma)
+      .eq("status", "aprovado")
+      .eq("dados->>pagamento_id", pagamentoId)
+      .limit(1);
+    const irma =
+      Array.isArray(irmas) && irmas.length
+        ? (irmas[0] as { aprovado_por?: string | null })
+        : null;
+    if (irma && String(irma.aprovado_por ?? "").trim() === humano) {
+      return {
+        ok: false,
+        erro: "As duas chaves do escrow exigem pessoas distintas — você já assinou a chave irmã deste pagamento.",
+      };
+    }
+  }
+
+  return { ok: true };
+}
+
 export async function aprovar(
   aprovacaoId: string,
   observacao?: string,
   tenantId?: string | null,
-  aprovadorRole?: string | null
+  aprovadorRole?: string | null,
+  aprovador?: AprovadorHumano | null
 ): Promise<{ sucesso: boolean; erro?: string; efeito?: EfeitoAprovacao }> {
   const tenant = (tenantId ?? "").trim();
   if (!tenant) return { sucesso: false, erro: "Tenant ausente" };
@@ -308,25 +416,39 @@ export async function aprovar(
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
 
-  // F-D2 (decisão do dono): as 2 chaves do escrow exigem AUTORIDADES DISTINTAS.
-  // chave do HUB (pagamento_obra_hub = auditoria/plataforma) → nível OWNER.
-  // chave da ARQUITETURA (pagamento_obra_arq = execução) → nível GESTOR, NUNCA owner.
-  // Como cada usuário tem 1 nível, isso força que as 2 chaves venham de DUAS PESSOAS de
-  // papéis diferentes (duas autoridades reais), não dois cliques do mesmo gestor. Fail-closed:
-  // sem papel válido para o tipo, NÃO libera (e a cascata do escrow nem chega a rodar).
-  if (aprovacao.tipo === "pagamento_obra_hub" && !isCrmOwnerRole(aprovadorRole)) {
-    return { sucesso: false, erro: "A chave do Hub só pode ser autorizada por um owner." };
+  // Onda 1 (aperto do over-grant apontado na verificação): pela rota, architect/operation
+  // chegam por CAPACIDADE de escrow (requireCrmAprovador) sem serem gestor. Esse portador-de-
+  // capacidade SÓ pode assinar as CHAVES de escrow — nunca aprova cotação/orçamento/genérico.
+  // Precisão: só barra quem TEM capacidade de escrow E não é gestor (não afeta gestor+ nem
+  // chamadas internas/IA que passam role vazio, que têm a própria autenticação).
+  const ehChaveEscrow =
+    aprovacao.tipo === "pagamento_obra_hub" || aprovacao.tipo === "pagamento_obra_arq";
+  const soAssinaChave =
+    !isCrmGestorRole(aprovadorRole) &&
+    (roleTemCapacidade(aprovadorRole, "escrow:chave_tecnica") ||
+      roleTemCapacidade(aprovadorRole, "escrow:chave_hub"));
+  if (!ehChaveEscrow && soAssinaChave) {
+    return { sucesso: false, erro: "Sem permissão para aprovar este tipo de item." };
   }
-  if (
-    aprovacao.tipo === "pagamento_obra_arq" &&
-    (!isCrmGestorRole(aprovadorRole) || isCrmOwnerRole(aprovadorRole))
-  ) {
-    return {
-      sucesso: false,
-      erro:
-        "A chave da Arquitetura deve ser autorizada por um gestor (não o owner) — são duas autoridades distintas.",
-    };
+
+  // ── ESCROW (Onda 1b): gate por CAPABILITY (não mais por rank) ──────────────────
+  // A 2ª chave deixou de ser "nível gestor ≠ owner" (furo: qualquer papel que ganhasse
+  // rank owner/gestor reabria o cofre). Agora cada chave é uma CAPABILITY explícita da
+  // fonte única + DUAS autoridades HUMANAS distintas + só sessão humana. Fail-closed:
+  // sem capacidade válida NÃO libera (e a cascata do escrow nem chega a rodar).
+  if (aprovacao.tipo === "pagamento_obra_hub" || aprovacao.tipo === "pagamento_obra_arq") {
+    const gate = await validarChaveEscrow(
+      db,
+      aprovacao as Record<string, unknown>,
+      tenant,
+      aprovadorRole,
+      aprovador
+    );
+    if (!gate.ok) return { sucesso: false, erro: gate.erro };
   }
+
+  // Pessoa física que assina (p/ auditoria + checagem de autoridades distintas do escrow).
+  const aprovadoPor = (aprovador?.userId ?? "").trim() || "humano";
 
   // F-B3 IDEMPOTÊNCIA: condiciona o UPDATE a status='pendente' E verifica linhas afetadas.
   // Sem esta guarda, dois operadores (ou duplo-clique/retry) passam pelo SELECT acima, ambos
@@ -338,7 +460,9 @@ export async function aprovar(
     .from("hub_aprovacoes")
     .update({
       status: "aprovado",
-      aprovado_por: "humano",
+      // Onda 1b: grava a PESSOA FÍSICA (users.id) quando disponível — é o que a chave
+      // irmã do escrow compara p/ exigir DUAS autoridades distintas. Sem humano → "humano".
+      aprovado_por: aprovadoPor,
       aprovado_em: new Date().toISOString(),
       observacao,
     })
@@ -400,7 +524,8 @@ export async function aprovar(
 export async function rejeitar(
   aprovacaoId: string,
   motivo: string,
-  tenantId?: string | null
+  tenantId?: string | null,
+  aprovadorRole?: string | null
 ): Promise<{ sucesso: boolean; erro?: string }> {
   const tenant = (tenantId ?? "").trim();
   if (!tenant) return { sucesso: false, erro: "Tenant ausente" };
@@ -415,6 +540,19 @@ export async function rejeitar(
     .single();
 
   if (!aprovacao) return { sucesso: false, erro: "Aprovação não encontrada" };
+
+  // Onda 1 (simétrico ao guard de aprovar()): o portador de escrow-capability que NÃO é
+  // gestor (architect/operation, admitidos na rota por requireCrmAprovador) só decide as
+  // CHAVES de escrow — não pode REJEITAR cotação/orçamento/genérico (alçada comercial).
+  const ehChaveEscrow =
+    aprovacao.tipo === "pagamento_obra_hub" || aprovacao.tipo === "pagamento_obra_arq";
+  const soAssinaChave =
+    !isCrmGestorRole(aprovadorRole) &&
+    (roleTemCapacidade(aprovadorRole, "escrow:chave_tecnica") ||
+      roleTemCapacidade(aprovadorRole, "escrow:chave_hub"));
+  if (!ehChaveEscrow && soAssinaChave) {
+    return { sucesso: false, erro: "Sem permissão para decidir este tipo de item." };
+  }
 
   // F-B3 IDEMPOTÊNCIA (rejeitar): mesma guarda do aprovar — só age se ainda pendente.
   const { data: linhasRejeitadas, error: errRejeitar } = await db

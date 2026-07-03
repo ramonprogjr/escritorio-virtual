@@ -20,6 +20,9 @@ type InsertCall = { tabela: string; linha: Record<string, unknown> };
 const rpcCalls: RpcCall[] = [];
 const insertCalls: InsertCall[] = [];
 let aprovacaoRow: Record<string, unknown> | null = null;
+// Onda 1b: a chave IRMÃ do escrow já aprovada (mesmo pagamento). Quando set, o gate compara
+// `aprovado_por` p/ exigir DUAS PESSOAS distintas. null = ainda não há irmã aprovada.
+let chaveIrmaRow: { aprovado_por?: string | null } | null = null;
 // F-B3: quando true, o SELECT-single ACHA a linha (existe), mas o UPDATE condicionado a
 // status='pendente' retorna data=[] — i.e. a aprovação JÁ foi processada (2º clique / outro operador).
 // Desacopla o resultado do UPDATE do resultado da leitura para reproduzir a corrida exata.
@@ -58,6 +61,8 @@ function makeQuery(tabela: string) {
   };
   q.eq = () => q;
   q.single = () => Promise.resolve({ data: aprovacaoRow, error: null });
+  // Onda 1b: terminal do SELECT da chave irmã do escrow (validarChaveEscrow → .limit(1)).
+  q.limit = () => Promise.resolve({ data: chaveIrmaRow ? [chaveIrmaRow] : [], error: null });
   return q;
 }
 
@@ -91,15 +96,19 @@ vi.mock("@supabase/supabase-js", () => ({
 }));
 
 // Importado DEPOIS do mock (vi.mock é hoisted, mas mantemos a ordem explícita por clareza).
-import { aprovar } from "./aprovacoes";
+import { aprovar, rejeitar } from "./aprovacoes";
 
 const TENANT = "00000000-0000-4000-8000-000000000001";
 const OUTRO_TENANT = "11111111-1111-4111-8111-111111111111";
+// Onda 1b: aprovadores HUMANOS distintos (pessoa física via cookie de sessão).
+const HUMANO_HUB = { userId: "user-hub", ehHumano: true } as const; // Chave Hub (owner)
+const HUMANO_TEC = { userId: "user-tec", ehHumano: true } as const; // Chave Técnica (architect/operation)
 
 beforeEach(() => {
   rpcCalls.length = 0;
   insertCalls.length = 0;
   aprovacaoRow = null;
+  chaveIrmaRow = null;
   updateRetornaVazio = false;
   snapshotFuncaoAusente = false;
   snapshotErroReal = null;
@@ -124,7 +133,8 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-99", obra_id: "obra-7", papel: "arquitetura" },
     };
 
-    const r = await aprovar("apr-arq-1", undefined, TENANT, "gestor");
+    // Onda 1b: chave técnica = architect (ou operation) + humano com sessão.
+    const r = await aprovar("apr-arq-1", undefined, TENANT, "architect", HUMANO_TEC);
     expect(r.sucesso).toBe(true);
 
     const liberar = rpcCalls.filter((c) => c.nome === "rpc_liberar_escrow");
@@ -144,7 +154,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-99", obra_id: "obra-7", papel: "hub" },
     };
 
-    const r = await aprovar("apr-hub-1", undefined, TENANT, "owner");
+    const r = await aprovar("apr-hub-1", undefined, TENANT, "owner", HUMANO_HUB);
     expect(r.sucesso).toBe(true);
 
     const liberar = rpcCalls.filter((c) => c.nome === "rpc_liberar_escrow");
@@ -255,7 +265,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-12", obra_id: "obra-1" },
     };
 
-    await aprovar("apr-arq-2", undefined, OUTRO_TENANT, "gestor");
+    await aprovar("apr-arq-2", undefined, OUTRO_TENANT, "architect", HUMANO_TEC);
     const liberar = rpcCalls.find((c) => c.nome === "rpc_liberar_escrow");
     expect(liberar?.args.p_tenant_id).toBe(OUTRO_TENANT);
   });
@@ -303,7 +313,7 @@ describe("C1 — cascata do escrow dispara pelo caminho real (aprovar → execut
       dados: { pagamento_id: "pag-77", obra_id: "obra-7", papel: "arquitetura" },
     };
 
-    const r = await aprovar("apr-arq-idem", undefined, TENANT, "gestor");
+    const r = await aprovar("apr-arq-idem", undefined, TENANT, "architect", HUMANO_TEC);
     // Idempotente: o estado desejado já foi atingido → sucesso, mas SEM efeito colateral.
     expect(r.sucesso).toBe(true);
     // A trava exata do F-B3: a cascata de DINHEIRO não roda na 2ª passagem.
@@ -386,45 +396,141 @@ describe("AUT-1/SEC-8 — falha do snapshot de custo é logada para reconciliaç
   });
 });
 
-// ── F-D2 (decisão do dono): o escrow exige DUAS AUTORIDADES distintas (papéis).
-//    chave Hub → owner; chave Arquitetura → gestor (≠ owner). Fail-closed e ANTES da cascata. ──
-describe("F-D2 — escrow exige duas autoridades distintas (papéis)", () => {
-  it("chave HUB aprovada por gestor (não owner) → recusa e NENHUMA RPC (precisa de owner)", async () => {
+// ── Onda 1b (DESIGN-RBAC-MULTITENANT.md D5/D6/D7): as 2 chaves do escrow por CAPABILITY
+//    (não mais por rank) + duas autoridades HUMANAS distintas + só sessão humana. ──
+describe("Onda 1b — escrow por CAPABILITY (chave_hub / chave_tecnica), fail-closed", () => {
+  it("chave HUB por quem NÃO tem escrow:chave_hub (architect) → recusa e NENHUMA RPC", async () => {
     aprovacaoRow = {
-      id: "apr-hub-fd2",
+      id: "apr-hub-cap",
       tipo: "pagamento_obra_hub",
       agente_slug: "hub",
       descricao: "Aprovação do Hub",
       dados: { pagamento_id: "pag-1", obra_id: "obra-1" },
     };
-    const r = await aprovar("apr-hub-fd2", undefined, TENANT, "gestor");
+    // architect tem chave_tecnica, NÃO chave_hub → fail-closed.
+    const r = await aprovar("apr-hub-cap", undefined, TENANT, "architect", HUMANO_TEC);
     expect(r.sucesso).toBe(false);
     expect(rpcCalls).toHaveLength(0);
   });
 
-  it("chave ARQUITETURA aprovada pelo owner → recusa e NENHUMA RPC (precisa de gestor ≠ owner)", async () => {
+  it("chave TÉCNICA por owner (só tem chave_hub) → recusa e NENHUMA RPC", async () => {
     aprovacaoRow = {
-      id: "apr-arq-fd2",
+      id: "apr-arq-cap",
       tipo: "pagamento_obra_arq",
       agente_slug: "hub",
-      descricao: "Aprovação da arquitetura",
+      descricao: "Aprovação técnica",
       dados: { pagamento_id: "pag-2", obra_id: "obra-2" },
     };
-    const r = await aprovar("apr-arq-fd2", undefined, TENANT, "owner");
+    const r = await aprovar("apr-arq-cap", undefined, TENANT, "owner", HUMANO_HUB);
     expect(r.sucesso).toBe(false);
     expect(rpcCalls).toHaveLength(0);
+  });
+
+  it("RESSALVA DO DONO: chave TÉCNICA por operation (engenharia) → LIBERA (aprova prestadores)", async () => {
+    aprovacaoRow = {
+      id: "apr-arq-op",
+      tipo: "pagamento_obra_arq",
+      agente_slug: "hub",
+      descricao: "Pagamento de prestador (engenharia)",
+      dados: { pagamento_id: "pag-op", obra_id: "obra-op" },
+    };
+    const r = await aprovar("apr-arq-op", undefined, TENANT, "operation", HUMANO_TEC);
+    expect(r.sucesso).toBe(true);
+    expect(rpcCalls.some((c) => c.nome === "rpc_liberar_escrow")).toBe(true);
   });
 
   it("chave de dinheiro sem papel (fail-closed) → recusa e NENHUMA RPC", async () => {
     aprovacaoRow = {
-      id: "apr-arq-fd2-norole",
+      id: "apr-arq-norole",
       tipo: "pagamento_obra_arq",
       agente_slug: "hub",
-      descricao: "Aprovação da arquitetura",
+      descricao: "Aprovação técnica",
       dados: { pagamento_id: "pag-3", obra_id: "obra-3" },
     };
-    const r = await aprovar("apr-arq-fd2-norole", undefined, TENANT);
+    // Humano com sessão, mas SEM papel válido → capability falha (fail-closed).
+    const r = await aprovar("apr-arq-norole", undefined, TENANT, undefined, HUMANO_TEC);
     expect(r.sucesso).toBe(false);
     expect(rpcCalls).toHaveLength(0);
+  });
+
+  it("architect NÃO pode REJEITAR item não-escrow (cotação) — guard simétrico ao aprovar", async () => {
+    // A rota admite architect/operation por escrow-capability; o portador-de-capacidade que
+    // NÃO é gestor só DECIDE as chaves de escrow — nunca rejeita cotação/orçamento (over-grant
+    // que a verificação pegou no verbo rejeitar).
+    aprovacaoRow = {
+      id: "apr-cot-rej",
+      tipo: "cotacao_fornecedor",
+      agente_slug: "hub",
+      descricao: "Cotação de fornecedor",
+      dados: { pedido_id: "ped-1" },
+    };
+    const r = await rejeitar("apr-cot-rej", "fora de alçada", TENANT, "architect");
+    expect(r.sucesso).toBe(false);
+  });
+
+  it("caminho NÃO-humano (INTERNAL_API_KEY, ehHumano=false) → recusa mesmo com papel certo", async () => {
+    aprovacaoRow = {
+      id: "apr-arq-naohumano",
+      tipo: "pagamento_obra_arq",
+      agente_slug: "hub",
+      descricao: "Aprovação técnica",
+      dados: { pagamento_id: "pag-4", obra_id: "obra-4" },
+    };
+    // architect tem a capability, mas veio do caminho de serviço (não cookie humano) → bloqueado.
+    const r = await aprovar("apr-arq-naohumano", undefined, TENANT, "architect", {
+      userId: "user-tec",
+      ehHumano: false,
+    });
+    expect(r.sucesso).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
+  });
+
+  it("papel certo mas SEM identidade humana (userId ausente) → recusa (fail-closed)", async () => {
+    aprovacaoRow = {
+      id: "apr-arq-semid",
+      tipo: "pagamento_obra_arq",
+      agente_slug: "hub",
+      descricao: "Aprovação técnica",
+      dados: { pagamento_id: "pag-5", obra_id: "obra-5" },
+    };
+    const r = await aprovar("apr-arq-semid", undefined, TENANT, "architect", { ehHumano: true });
+    expect(r.sucesso).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
+  });
+});
+
+describe("Onda 1b — duas autoridades HUMANAS distintas (aprovado_por da chave irmã)", () => {
+  it("MESMA pessoa nas 2 chaves → recusa e NENHUMA RPC (mesmo com capability válida)", async () => {
+    // A chave IRMÃ (técnica) do MESMO pagamento já foi assinada por "user-x".
+    chaveIrmaRow = { aprovado_por: "user-x" };
+    aprovacaoRow = {
+      id: "apr-hub-dup",
+      tipo: "pagamento_obra_hub",
+      agente_slug: "hub",
+      descricao: "Aprovação do Hub",
+      dados: { pagamento_id: "pag-dup", obra_id: "obra-dup" },
+    };
+    // owner tem chave_hub, mas é a MESMA pessoa física "user-x" que assinou a técnica.
+    const r = await aprovar("apr-hub-dup", undefined, TENANT, "owner", {
+      userId: "user-x",
+      ehHumano: true,
+    });
+    expect(r.sucesso).toBe(false);
+    expect(rpcCalls).toHaveLength(0);
+  });
+
+  it("PESSOAS distintas nas 2 chaves → LIBERA (2ª chave move o dinheiro)", async () => {
+    // A chave técnica já foi assinada por "user-tec"; agora o Hub assina como "user-hub" (≠).
+    chaveIrmaRow = { aprovado_por: "user-tec" };
+    aprovacaoRow = {
+      id: "apr-hub-ok",
+      tipo: "pagamento_obra_hub",
+      agente_slug: "hub",
+      descricao: "Aprovação do Hub",
+      dados: { pagamento_id: "pag-ok", obra_id: "obra-ok" },
+    };
+    const r = await aprovar("apr-hub-ok", undefined, TENANT, "owner", HUMANO_HUB);
+    expect(r.sucesso).toBe(true);
+    expect(rpcCalls.some((c) => c.nome === "rpc_liberar_escrow")).toBe(true);
   });
 });
