@@ -171,20 +171,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Ciclo não encontrado" }, { status: 404 });
   }
 
-  const { data: rpcRaw, error: rpcErr } = await supabase.rpc("hub_delete_ciclo_cascade", {
-    p_ciclo_id: id,
-  });
+  // Princípio "só arquiva": antes a RPC hub_delete_ciclo_cascade fazia DELETE do ciclo + dos
+  // hub_ciclos_log (histórico de execução). Agora faz soft-archive (ativo=false): o ciclo E seus
+  // logs PERMANECEM no banco. A lista GET esconde inativos por padrão.
+  const { data: updated, error: updErr } = await supabase
+    .from("hub_ciclos_ia")
+    .update({ ativo: false })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
-  if (rpcErr) {
-    return NextResponse.json({ error: rpcErr.message }, { status: 500 });
-  }
-
-  const payload = rpcRaw as { ok?: boolean; error?: string } | null;
-  if (!payload?.ok) {
-    const msg = typeof payload?.error === "string" ? payload.error : "Falha ao excluir ciclo.";
-    const status = msg.includes("não encontrado") ? 404 : 500;
-    return NextResponse.json({ error: msg }, { status });
-  }
+  if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+  if (!updated) return NextResponse.json({ error: "Ciclo não encontrado" }, { status: 404 });
 
   return NextResponse.json({ ok: true });
 }

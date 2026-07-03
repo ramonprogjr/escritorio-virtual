@@ -27,6 +27,7 @@ import { dispararProcessamentoJobsWhatsapp } from "@/lib/whatsapp/trigger-job-pr
 import { runWhatsappWorkerTick } from "@/lib/workers/whatsapp-job-worker";
 import { supersedeJobsAntigosMesmoTelefone } from "@/lib/whatsapp/supersede-jobs-antigos";
 import { ativarAtendimentoHumanoPorMensagemDoCelular } from "@/lib/whatsapp/human-handoff-from-device";
+import { iaRateLimitExcedido } from "@/lib/ia/rate-limit-ia";
 
 let warnedMissingWebhookSecret = false;
 const WEBHOOK_DEDUPE_TTL_MS = 2 * 60 * 1000;
@@ -565,6 +566,18 @@ export async function POST(request: NextRequest) {
         message_id: messageId || null,
       });
       return trace.json({ status: "ignored", reason: "duplicate_message_id" }, 200, "duplicate_ignored");
+    }
+
+    // Teto anti-flood por REMETENTE, ANTES de qualquer processamento pesado / enfileirar job de IA
+    // (cada job aciona LLM pago no worker). Colocado APÓS o dedup para que retries legítimos do
+    // provedor (mesmo message_id, já descartados acima) não gastem o orçamento do remetente.
+    // Responde 200 "ignored" de propósito: um 4xx dispararia retry-storm no WhatsApp/provedor.
+    if (iaRateLimitExcedido(`wa-inbound:${telefone}`, 20)) {
+      log.warn("wa.webhook.rate_limited", {
+        telefone: trace.maskTelefone(telefone),
+        message_id: messageId || null,
+      });
+      return trace.json({ status: "ignored", reason: "rate_limited" }, 200, "rate_limited");
     }
 
     const intencao = identificarIntencao(mensagemFinal);

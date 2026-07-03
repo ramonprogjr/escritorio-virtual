@@ -97,9 +97,11 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: "id obrigatório." }, { status: 400 });
 
+  // Princípio "só arquiva": nunca hard-delete — desativa (ativo=false) e a ferramenta permanece
+  // no banco. A lista GET já esconde inativos por padrão (`if (!all) eq('ativo', true)`).
   const { data, error } = await supabase
     .from("hub_ferramentas_custom")
-    .delete()
+    .update({ ativo: false, atualizado_em: new Date().toISOString() })
     .eq("id", id)
     .eq("tenant_id", tenantId)
     .select("id");

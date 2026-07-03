@@ -6,6 +6,7 @@ import { mistralTranscreverAudioBuffer } from "@/lib/whatsapp/mistral-transcribe
 import { registrarConsumoIA } from "@/lib/ia/metering";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 /** Limite de upload de documento (base64) — alinhado aos uploads de playbook. */
 const MAX_DOC_BYTES = 8 * 1024 * 1024;
@@ -66,6 +67,10 @@ export async function POST(
   // E-B6: guard de gestor — endpoint debita Tijolos e chama IA (custo real).
   const g = await requireCrmGestor(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant — geração multi-fase + documento/áudio (LLM pago, mais caro).
+  const limite = requireIaRateLimit(`playbook-gerar-ia:${g.ctx.tenantId}`, 15);
+  if (limite) return limite;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);

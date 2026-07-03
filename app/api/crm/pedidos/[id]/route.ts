@@ -18,6 +18,19 @@ export async function PATCH(
   const { id } = await params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 
+  // Isolamento de tenant: sob service-role a RLS é bypassada. Pré-cheque por id → 404 se o
+  // pedido for de outro tenant (legado sem tenant_id = partilhado, mesmo critério das irmãs).
+  const { data: existente } = await crmDb()
+    .from("hub_pedidos_material")
+    .select("tenant_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existente) return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 });
+  const tid = (existente as { tenant_id: string | null }).tenant_id;
+  if (tid && tid !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const updates: Record<string, unknown> = { atualizado_em: new Date().toISOString() };
   if (body.descricao != null) updates.descricao = String(body.descricao).trim();

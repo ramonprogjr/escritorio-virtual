@@ -35,10 +35,12 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = db();
+  // Princípio "só arquiva": DELETE arquiva via ativo=false → a lista esconde regras inativas.
   const { data, error } = await supabase
     .from("hub_autonomia_matriz")
     .select("*")
     .eq("agente_slug", agente_slug)
+    .eq("ativo", true)
     .order("prioridade", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

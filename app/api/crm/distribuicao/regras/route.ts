@@ -15,10 +15,12 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
+  // Princípio "só arquiva": DELETE arquiva via ativo=false → a lista esconde regras inativas.
   const { data, error } = await crmDb()
     .from("hub_lead_routing_regras")
     .select(SELECT)
     .or(tenantScopeOrFilter(g.ctx.tenantId))
+    .eq("ativo", true)
     .order("prioridade", { ascending: true })
     .order("criado_em", { ascending: true });
 

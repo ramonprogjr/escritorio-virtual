@@ -115,7 +115,7 @@ export async function proxy(request: NextRequest) {
       {
         error: "API não autenticável neste pedido",
         detail:
-          "Sem sessão CRM e sem INTERNAL_API_KEY no servidor. Para chamadas sem cookie: defina INTERNAL_API_KEY e no cliente NEXT_PUBLIC_INTERNAL_API_KEY (mesmo valor). Para validar o cookie no middleware: NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY devem estar definidos.",
+          "Sem sessão CRM e sem INTERNAL_API_KEY no servidor. Para chamadas sem cookie (cron/worker): defina INTERNAL_API_KEY apenas no servidor e envie o header x-api-key com o mesmo valor — NUNCA exponha a chave ao cliente. Para validar o cookie no middleware: NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY devem estar definidos.",
       },
       { status: 401 }
     );

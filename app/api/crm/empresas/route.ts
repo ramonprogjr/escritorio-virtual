@@ -134,6 +134,11 @@ export async function GET(request: NextRequest) {
       query = query.or(tenantScopeOrFilter(tenant_id));
     }
 
+    // Princípio "só arquiva": empresas arquivadas (soft-delete via arquivado_em) somem da lista.
+    // Usa arquivado_em (não ativo) de propósito — ativo continua sendo o toggle vivo de
+    // ativar/desativar empresa; o DELETE arquiva via arquivado_em (ver excluirEmpresaCrm).
+    query = query.is("arquivado_em", null);
+
     if (ativo !== null) {
       query = query.eq("ativo", ativo);
     }

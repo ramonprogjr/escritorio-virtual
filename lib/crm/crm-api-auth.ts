@@ -26,9 +26,10 @@ function accessTokenFromCookie(request: Request): string | null {
 /**
  * Identidade do chamador = cookie de sessão VALIDADO no Supabase (`/auth/v1/user` confere
  * assinatura + expiração). ANTES o `sub` era só decodificado localmente (base64) confiando
- * que o middleware validava — mas o middleware (`proxy.ts`) está MORTO, então um cookie
- * FORJADO com `sub` arbitrário passava como se fosse aquele usuário (bypass de auth). Agora
- * validamos de fato na fonte.
+ * que o middleware validava — mas `proxy.ts` é o middleware do Next 16 (renomeação
+ * middleware->proxy), VIVO porém só faz auth GROSSA ("tem sessão?"); os guards por-rota são
+ * a autz real. Confiar no `sub` só-decodificado deixava um cookie FORJADO com `sub` arbitrário
+ * passar como se fosse aquele usuário (bypass de auth). Agora validamos de fato na fonte.
  *
  * O header `x-caller-auth-id` NÃO é mais fallback aqui — era um valor vindo do cliente,
  * forjável e sem gate. O caminho interno server-to-server (cron/worker) é tratado só em

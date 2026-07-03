@@ -4,6 +4,7 @@ import {
   sugerirParametrosFollowup,
 } from "@/lib/hub/sugerir-ciclo-ia";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 const ACOES = ["descricao", "followup"] as const;
 type Acao = (typeof ACOES)[number];
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
   // E-B8: guard de gestor — sugestão IA tem custo de inferência (LLM).
   const g = await requireCrmGestor(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago).
+  const limite = requireIaRateLimit(`ciclos-sugerir:${g.ctx.tenantId}`, 20);
+  if (limite) return limite;
 
   let body: Record<string, unknown>;
   try {

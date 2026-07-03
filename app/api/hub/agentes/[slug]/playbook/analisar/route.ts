@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadCurrentPlaybookMarkdown } from "@/lib/playbook/custom-playbook";
 import { analyzePlaybookWithMistral, buildLocalPlaybookAnalysisFallback } from "@/lib/playbook/mistral-analysis";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 function db() {
   return createClient(
@@ -31,6 +32,10 @@ export async function POST(
   // Chama Mistral (custo) e lê o playbook do agente — exige sessão CRM ativa.
   const g = await requireCrmSessao(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago).
+  const limite = requireIaRateLimit(`playbook-analisar:${g.ctx.tenantId}`, 20);
+  if (limite) return limite;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);
