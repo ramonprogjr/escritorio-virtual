@@ -40,7 +40,9 @@ export async function PATCH(
     if (!resultado.sucesso) {
       return NextResponse.json({ error: resultado.erro ?? "Falha ao aprovar" }, { status: 400 });
     }
-    return NextResponse.json({ ok: true });
+    // Contrato aditivo: o efeito FIEL da cascata (escrow liberado / aguardando 2ª chave / etc.)
+    // flui até a UI. O endpoint responde 200 mesmo em dupla_incompleta — o texto deriva de `efeito`.
+    return NextResponse.json({ ok: true, efeito: resultado.efeito });
   }
 
   const resultado = await rejeitar(id, motivo?.trim() || "Rejeitado pelo operador", tenantId);

@@ -6,6 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import { isCrmOwnerRole, isCrmGestorRole } from "@/lib/crm/crm-permissoes";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
+import type { EfeitoAprovacao } from "./efeito-aprovacao";
+import { derivarEstadoDupla } from "@/lib/obras/financeiro";
 
 function supabase() {
   // fail-closed: sem fallback para a anon key — client de service_role nunca deve
@@ -291,7 +293,7 @@ export async function aprovar(
   observacao?: string,
   tenantId?: string | null,
   aprovadorRole?: string | null
-): Promise<{ sucesso: boolean; erro?: string }> {
+): Promise<{ sucesso: boolean; erro?: string; efeito?: EfeitoAprovacao }> {
   const tenant = (tenantId ?? "").trim();
   if (!tenant) return { sucesso: false, erro: "Tenant ausente" };
 
@@ -351,7 +353,9 @@ export async function aprovar(
   // Retornamos sucesso=true (não é erro do chamador — o estado desejado já foi atingido),
   // mas NÃO disparamos a cascata do escrow novamente.
   if (!linhasAfetadas || linhasAfetadas.length === 0) {
-    return { sucesso: true }; // idempotente — já processada, sem cascata dupla
+    // idempotente — já processada, sem cascata dupla. NÃO chamamos RPC de dinheiro aqui
+    // (0 linhas afetadas => sem novo movimento); o efeito reflete apenas o estado já atingido.
+    return { sucesso: true, efeito: { kind: "ja_processada" } };
   }
 
   // Registra no log de decisões. SEGURANÇA (ESTRUTURA-UNIFICADA §7): grava `tenant_id` SEMPRE —
@@ -378,10 +382,17 @@ export async function aprovar(
     tenant_id: tenant,
   });
 
-  // Executa a ação aprovada (cascata do gate dourado — escopada ao tenant da sessão)
-  await executarAcaoAprovada(aprovacao, tenant);
+  // Executa a ação aprovada (cascata do gate dourado — escopada ao tenant da sessão).
+  // PÓS-COMMIT NÃO REGRIDE: o UPDATE de aprovação (acima) já foi commitado; uma falha/exceção na
+  // captura do efeito degrada para {kind:'indisponivel'} com sucesso:true — nunca vira erro 400/500.
+  let efeito: EfeitoAprovacao;
+  try {
+    efeito = await executarAcaoAprovada(aprovacao, tenant);
+  } catch {
+    efeito = { kind: "indisponivel" };
+  }
 
-  return { sucesso: true };
+  return { sucesso: true, efeito };
 }
 
 // ── REJEITAR ──────────────────────────────────────────────────
@@ -526,11 +537,16 @@ export async function criarAprovacao(dados: {
 async function executarAcaoAprovada(
   aprovacao: Record<string, unknown>,
   tenantId: string
-): Promise<void> {
+): Promise<EfeitoAprovacao> {
   const dados = aprovacao.dados as Record<string, unknown> || {};
   const tipo = aprovacao.tipo as string;
 
   console.log(`[APROVAÇÕES] Executando ação aprovada: ${tipo}`, dados);
+
+  // db.rpc() devolve `data` como any/unknown — este type-guard fecha a leitura do jsonb da RPC
+  // (a VERDADE do efeito vem de `data`, não de `error`: dupla_incompleta chega com error=null).
+  const isRecord = (x: unknown): x is Record<string, unknown> =>
+    typeof x === "object" && x !== null;
 
   if (tipo === "cotacao_fornecedor" && dados.pedido_id) {
     const db = supabase();
@@ -538,47 +554,98 @@ async function executarAcaoAprovada(
       .from("hub_cotacoes_pedidos")
       .update({ status: "aprovado", atualizado_em: new Date().toISOString() })
       .eq("id", dados.pedido_id as string);
+    // O efeito NÃO depende do resultado desse UPDATE não-verificado (fora de escopo).
+    return { kind: "cotacao_aprovada" };
   }
 
   // ── E6: cascata do gate dourado (espelha /api/aprovacoes/[id]) — só com tenant da sessão ──
   // GATE 1: orçamento da frente aprovado → libera (bloqueado→liberado) os pagamentos vinculados.
   if (tipo === "orcamento_frente") {
     const orcamentoId = dados.orcamento_id as string | undefined;
-    if (orcamentoId && tenantId) {
-      const db = supabase();
-      await db.rpc("rpc_aprovar_orcamento_frente", {
-        p_orcamento_id: orcamentoId,
-        p_aprovacao_id: aprovacao.id as string,
-        p_tenant_id: tenantId,
-      });
+    if (!(orcamentoId && tenantId)) return { kind: "indisponivel" };
 
-      // E7c (Fase 3a — decisão #1): DEPOIS de aprovar, COPIA o snapshot de custo da versão aprovada
-      // para o item-mãe (hub_obra_itens), via a rpc_snapshot_custo_frente de E7b. Função SEPARADA da
-      // de aprovação (não colide): a de E6 aprova+libera; esta só materializa o custo no item.
-      // TOLERÂNCIA: a função só existe após a migração E7b → se "function does not exist", ignora
-      // silenciosamente (a aprovação NÃO pode quebrar por causa do snapshot). tenant_id sempre.
-      const obraId = dados.obra_id as string | undefined;
-      const frenteId = (dados.frente_id as string | undefined) ?? null;
-      if (obraId) {
-        await snapshotCustoFrenteTolerante(db, obraId, frenteId, tenantId);
-      }
+    const db = supabase();
+    const { data, error } = await db.rpc("rpc_aprovar_orcamento_frente", {
+      p_orcamento_id: orcamentoId,
+      p_aprovacao_id: aprovacao.id as string,
+      p_tenant_id: tenantId,
+    });
+
+    // Traduz o jsonb REAL em efeito ANTES do snapshot (best-effort/void) — a verdade vem de `data`.
+    // indisponivel = RPC ausente/dormente (migração pendente); falhou = erro real (não fingir sucesso).
+    let efeito: EfeitoAprovacao;
+    if (isMissingPgFunction(error)) {
+      efeito = { kind: "indisponivel" };
+    } else if (error) {
+      console.warn("[APROVAÇÕES] rpc_aprovar_orcamento_frente erro:", error);
+      efeito = { kind: "falhou" }; // não vaza mensagem crua de DB p/ a UI
+    } else if (!isRecord(data)) {
+      efeito = { kind: "indisponivel" };
+    } else if (data.ok === true && data.idempotente === true) {
+      efeito = { kind: "orcamento_ja_aprovado" };
+    } else if (data.ok === true) {
+      efeito = { kind: "orcamento_aprovado", pagamentosLiberados: Number(data.pagamentos_liberados ?? 0) };
+    } else {
+      efeito = { kind: "falhou", motivo: typeof data.erro === "string" ? data.erro : undefined };
     }
+
+    // E7c (Fase 3a — decisão #1): DEPOIS de calcular o efeito, COPIA o snapshot de custo da versão
+    // aprovada para o item-mãe (hub_obra_itens), via a rpc_snapshot_custo_frente de E7b. Função
+    // SEPARADA da de aprovação: a de E6 aprova+libera; esta só materializa o custo no item.
+    // SNAPSHOT ISOLADO: best-effort/void — sua falha JAMAIS entra no efeito de orçamento.
+    const obraId = dados.obra_id as string | undefined;
+    const frenteId = (dados.frente_id as string | undefined) ?? null;
+    if (obraId) {
+      await snapshotCustoFrenteTolerante(db, obraId, frenteId, tenantId);
+    }
+
+    return efeito;
   }
 
   // GATE 2 (qualquer das 2 chaves aprovada): tenta liberar o escrow — a RPC só libera se AMBAS aprovadas
   // (fail-closed). Disparar nas duas chaves é seguro: a primeira não move o dinheiro, a segunda libera.
   if (tipo === "pagamento_obra_arq" || tipo === "pagamento_obra_hub") {
     const pagamentoId = dados.pagamento_id as string | undefined;
-    if (pagamentoId && tenantId) {
-      const db = supabase();
-      await db.rpc("rpc_liberar_escrow", {
-        p_pagamento_id: pagamentoId,
-        p_tenant_id: tenantId,
-      });
+    if (!(pagamentoId && tenantId)) return { kind: "indisponivel" };
+
+    const db = supabase();
+    const { data, error } = await db.rpc("rpc_liberar_escrow", {
+      p_pagamento_id: pagamentoId,
+      p_tenant_id: tenantId,
+    });
+
+    // FAIL-CLOSED das 2 chaves: discriminamos pelo JSONB `data` (NUNCA por `error` —
+    // dupla_incompleta chega com error=null e data.ok=false). Só afirmamos "liberado" com data.ok=true.
+    // indisponivel = RPC ausente/dormente; falhou = erro real (não fingir que seguiu).
+    if (isMissingPgFunction(error)) {
+      return { kind: "indisponivel" };
     }
+    if (error) {
+      console.warn("[APROVAÇÕES] rpc_liberar_escrow erro:", error);
+      return { kind: "falhou" }; // não vaza mensagem crua de DB p/ a UI
+    }
+    if (!isRecord(data)) {
+      return { kind: "indisponivel" };
+    }
+    if (data.ok === true && data.idempotente === true) {
+      return { kind: "escrow_ja_liberado" };
+    }
+    if (data.ok === true) {
+      return { kind: "escrow_liberado", valorLiberado: Number(data.valor_liberado ?? 0) };
+    }
+    if (data.ok === false && data.erro === "aprovacao_dupla_incompleta") {
+      return {
+        kind: "escrow_aguardando",
+        faltam: derivarEstadoDupla(
+          data.arq as string | undefined,
+          data.hub as string | undefined
+        ).faltam,
+      };
+    }
+    // Qualquer outro ok:false — falha real (não é 'aguardando' nem 'liberado'): honesto, não fingir.
+    return { kind: "falhou", motivo: typeof data.erro === "string" ? data.erro : undefined };
   }
 
-  // Aqui cada tipo de aprovação tem sua execução específica
-  // Por enquanto registra no log — integração com APIs externas
-  // (Meta Ads, WhatsApp Business, etc.) será adicionada por módulo
+  // Tipos sem cascata de dinheiro: registro honesto (integração com APIs externas por módulo depois).
+  return { kind: "registrado" };
 }
