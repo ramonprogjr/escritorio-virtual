@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { arquivarCargoCatalogo } from "@/lib/hub/arquivar-cargo-catalogo";
 
 function db() {
   return createClient(
@@ -9,9 +10,7 @@ function db() {
   );
 }
 
-type RpcRow = { ok?: boolean; error?: string; slug?: string };
-
-/** POST { slugs: string[] } — elimina cada slug via RPC (delete_authorized). */
+/** POST { slugs: string[] } — arquiva cada slug (soft-delete via ativo=false; "só arquiva"). */
 export async function POST(request: NextRequest) {
   // Exclusão em lote de cargos — destrutivo, exige gestor ou owner.
   const g = await requireCrmGestor(request);
@@ -39,18 +38,12 @@ export async function POST(request: NextRequest) {
   const deleted: string[] = [];
   const blocked: { slug: string; error: string }[] = [];
 
+  // "Só arquiva": cada slug vira ativo=false (soft), preservando o 409 quando há agentes usando
+  // o cargo. `deleted` mantém o nome do campo por compat com a UI (semântica agora = arquivados).
   for (const slug of slugs) {
-    const { data, error } = await supabase.rpc("hub_delete_cargo_catalogo", { p_slug: slug });
-    if (error) {
-      blocked.push({ slug, error: error.message });
-      continue;
-    }
-    const row = data as RpcRow | null;
-    if (row?.ok) {
-      deleted.push(String(row.slug ?? slug));
-      continue;
-    }
-    blocked.push({ slug, error: typeof row?.error === "string" ? row.error : "Falha ao eliminar." });
+    const r = await arquivarCargoCatalogo(supabase, slug);
+    if (r.ok) deleted.push(r.slug);
+    else blocked.push({ slug, error: r.error });
   }
 
   return NextResponse.json({

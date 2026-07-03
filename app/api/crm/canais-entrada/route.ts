@@ -13,10 +13,12 @@ export async function GET(request: NextRequest) {
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
   const tenantId = sessao.ctx.tenantId;
+  // Princípio "só arquiva": DELETE arquiva via ativo=false → a lista esconde canais inativos.
   const { data, error } = await crmDb()
     .from("hub_canais_entrada")
     .select(SELECT)
     .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    .eq("ativo", true)
     .order("criado_em", { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -7,6 +7,7 @@ import {
   modeloPadraoForHubInsert,
 } from "@/lib/ia/hub-model-defaults";
 import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { arquivarCargoCatalogo } from "@/lib/hub/arquivar-cargo-catalogo";
 
 function db() {
   return createClient(
@@ -402,9 +403,9 @@ export async function PATCH(request: NextRequest) {
   return NextResponse.json(data);
 }
 
-/** Query: ?slug= — elimina via RPC com SET LOCAL app.delete_authorized (trigger delete). */
+/** Query: ?slug= — arquiva o cargo (soft-delete via ativo=false; "só arquiva", nunca hard-delete). */
 export async function DELETE(request: NextRequest) {
-  // Exclusão de cargo do catálogo — destrutivo, exige gestor ou owner.
+  // Arquivamento de cargo do catálogo — administrativo, exige gestor ou owner.
   const g = await requireCrmGestor(request);
   if ("error" in g) return g.error;
 
@@ -414,21 +415,10 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Query slug é obrigatória." }, { status: 400 });
   }
 
-  const { data: rpcData, error: rpcErr } = await supabase.rpc("hub_delete_cargo_catalogo", { p_slug: slug });
+  // Antes: RPC hub_delete_cargo_catalogo (DELETE FROM). Agora: soft-archive preservando as
+  // guardas 404 (não existe) e 409 (agentes usando o cargo). Lista GET já esconde inativos.
+  const r = await arquivarCargoCatalogo(supabase, slug);
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
 
-  if (rpcErr) {
-    return NextResponse.json({ error: rpcErr.message }, { status: 500 });
-  }
-
-  const row = rpcData as { ok?: boolean; error?: string; slug?: string } | null;
-  if (!row?.ok) {
-    const msg = typeof row?.error === "string" ? row.error : "Falha ao eliminar.";
-    let st = 500;
-    if (msg.includes("Não é possível eliminar")) st = 409;
-    else if (msg.includes("Cargo não encontrado")) st = 404;
-    else if (msg.includes("inválido")) st = 400;
-    return NextResponse.json({ error: msg }, { status: st });
-  }
-
-  return NextResponse.json({ ok: true, slug: String(row.slug ?? slug) });
+  return NextResponse.json({ ok: true, slug: r.slug });
 }

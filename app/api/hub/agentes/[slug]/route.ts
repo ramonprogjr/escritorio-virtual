@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse, after } from "next/server";
 import { runPlaybookPipeline } from "@/lib/playbook/orchestrate";
-import { deleteAgenteHubCompleto } from "@/lib/hub/delete-agente-completo";
 import {
   serializarUsoFerramentasParaDb,
   syncHubAgenteParaMistral,
@@ -358,12 +357,34 @@ export async function DELETE(
     }
   }
 
-  const result = await deleteAgenteHubCompleto(supabase, slug);
+  // Princípio do dono (02/jul/2026): o Hub SÓ ARQUIVA — nunca hard-delete. Antes esta rota fazia
+  // purga em cascata (deleteAgenteHubCompleto: DELETE em ~25 tabelas satélite + a identidade).
+  // Agora faz soft-archive (arquivado_em + ativo=false), o mesmo caminho de POST .../arquivar:
+  // o agente e todo o seu histórico PERMANECEM no banco. A lista GET /api/hub/agentes já esconde
+  // arquivados por padrão (arquivado_em IS NULL + ativo=true; ?arquivados=somente para revê-los).
+  const { data: arquivado, error: arqErr } = await supabase
+    .from("hub_agente_identidade")
+    .update({
+      arquivado_em: new Date().toISOString(),
+      arquivado_motivo: "Arquivado via exclusão (rota DELETE).",
+      ativo: false,
+    })
+    .eq("agente_slug", slug)
+    .select("agente_slug")
+    .maybeSingle();
 
-  if (!result.ok) {
-    const msg = result.error;
-    const is404 = msg.includes("não encontrado") || /not found/i.test(msg);
-    return NextResponse.json({ error: msg }, { status: is404 ? 404 : 500 });
+  if (arqErr) {
+    const msg = arqErr.message ?? "";
+    if (msg.includes("arquivado_em") && msg.includes("does not exist")) {
+      return NextResponse.json(
+        { error: "Coluna arquivado_em ausente. Aplique 20260522200000_hub_agente_arquivado_em.sql." },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json({ error: arqErr.message }, { status: 500 });
+  }
+  if (!arquivado) {
+    return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true, agente_slug: slug });

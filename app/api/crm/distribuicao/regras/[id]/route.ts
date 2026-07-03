@@ -70,7 +70,9 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   const guard = await tenantGuard(id, g.ctx.tenantId);
   if ("notFound" in guard) return NextResponse.json({ error: "Regra não encontrada." }, { status: 404 });
 
-  const { error } = await crmDb().from("hub_lead_routing_regras").delete().eq("id", id);
+  // Princípio "só arquiva": nunca hard-delete — desativa (ativo=false) e a regra permanece
+  // no banco. A listagem (GET) esconde ativo=false, então a regra some da tela.
+  const { error } = await crmDb().from("hub_lead_routing_regras").update({ ativo: false }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

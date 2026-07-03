@@ -109,7 +109,12 @@ export async function DELETE(
   const { data: existing } = await supabase.from("hub_autonomia_matriz").select("id").eq("id", id).maybeSingle();
   if (!existing) return NextResponse.json({ error: "Regra não encontrada" }, { status: 404 });
 
-  const { error } = await supabase.from("hub_autonomia_matriz").delete().eq("id", id);
+  // Princípio "só arquiva": nunca hard-delete — desativa (ativo=false) e a regra de autonomia
+  // permanece no banco. A listagem (GET) esconde ativo=false, então a regra some da tela.
+  const { error } = await supabase
+    .from("hub_autonomia_matriz")
+    .update({ ativo: false, atualizado_em: new Date().toISOString() })
+    .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

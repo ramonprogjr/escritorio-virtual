@@ -152,6 +152,10 @@ async function listarPessoas(
       query = query.or(tenantScopeOrFilter(params.tenant_id));
     }
 
+    // Princípio "só arquiva": pessoas arquivadas (soft-delete via arquivado_em, usado pelo DELETE
+    // e pelo merge) somem da lista. Sem este filtro o "excluído" continuaria aparecendo.
+    query = query.is("arquivado_em", null);
+
     if (params.busca) {
       query = query.or(
         `nome.ilike.%${params.busca}%,email.ilike.%${params.busca}%,telefone.ilike.%${params.busca}%,codigo.ilike.%${params.busca}%,documento.ilike.%${params.busca}%`

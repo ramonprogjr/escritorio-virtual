@@ -10,26 +10,11 @@ export type RpcDeleteResult = {
   razao_social?: string | null;
 };
 
-function parseRpcRow(data: unknown): RpcDeleteResult {
-  if (!data || typeof data !== "object") {
-    return { ok: false, error: "Resposta inválida do servidor." };
-  }
-  const row = data as Record<string, unknown>;
-  return {
-    ok: row.ok === true,
-    error: typeof row.error === "string" ? row.error : undefined,
-    id: typeof row.id === "string" ? row.id : undefined,
-    codigo: row.codigo != null ? String(row.codigo) : null,
-    nome: row.nome != null ? String(row.nome) : null,
-    razao_social: row.razao_social != null ? String(row.razao_social) : null,
-  };
-}
-
 /**
- * Confina a exclusão ao tenant do caller (a RPC só recebe `p_id` e não filtra tenant; o
- * service-role bypassa RLS). Verifica posse ANTES de chamar a RPC: 404 se o registo for de
- * outro escritório. NULL / Obra10 padrão = legado partilhado (acessível por todos, como nas
- * listas via tenantScopeOrFilter). Omitir `tenantId` mantém o comportamento global legado.
+ * Confina a exclusão ao tenant do caller (o service-role bypassa RLS). Verifica posse ANTES
+ * de arquivar: 404 se o registo for de outro escritório. NULL / Obra10 padrão = legado
+ * partilhado (acessível por todos, como nas listas via tenantScopeOrFilter). Omitir
+ * `tenantId` mantém o comportamento global legado.
  */
 async function posseDoTenant(
   supabase: SupabaseClient,
@@ -74,18 +59,20 @@ async function posseDoTenant(
 
 function statusFromMessage(msg: string): number {
   if (msg.includes("não encontrad") || msg.includes("nao encontrad")) return 404;
-  if (msg.includes("vinculad") || msg.includes("Não é possível excluir")) return 409;
   if (msg.includes("inválid")) return 400;
-  if (
-    msg.includes("delete_authorized") ||
-    (msg.includes("function") && msg.includes("does not exist"))
-  ) {
-    return 503;
-  }
+  if (msg.includes("arquivado_em") && msg.includes("does not exist")) return 503;
   return 500;
 }
 
-/** Exclui contacto via RPC (SET LOCAL app.delete_authorized), confinado ao tenant do caller. */
+/**
+ * Princípio do dono (02/jul/2026): NENHUMA ação de usuário do multi-tenant faz hard-delete —
+ * o Hub SÓ ARQUIVA. Antes esta função chamava a RPC `hub_delete_pessoa_crm` (SECURITY DEFINER
+ * com `SET LOCAL app.delete_authorized` + `DELETE FROM`), que destruía a linha. Agora faz um
+ * soft-archive via `arquivado_em`: a pessoa PERMANECE no banco (auditoria/rastreio/merge) e os
+ * vínculos com leads/negócios são preservados. O guard de tenant (posseDoTenant) é mantido.
+ * A listagem (app/api/crm/pessoas/route.ts) esconde `arquivado_em IS NOT NULL`.
+ * Usada por: DELETE /api/crm/pessoas/[id] e POST /api/crm/cadastro/bulk-delete.
+ */
 export async function excluirPessoaCrm(
   supabase: SupabaseClient,
   pessoaId: string,
@@ -94,24 +81,43 @@ export async function excluirPessoaCrm(
   const posse = await posseDoTenant(supabase, "hub_pessoas", pessoaId, tenantId);
   if (!posse.ok) return { result: posse.result, httpStatus: posse.httpStatus };
 
-  const { data, error } = await supabase.rpc("hub_delete_pessoa_crm", { p_id: pessoaId });
+  const { data, error } = await supabase
+    .from("hub_pessoas")
+    .update({ arquivado_em: new Date().toISOString() })
+    .eq("id", pessoaId)
+    .select("id, codigo, nome")
+    .maybeSingle();
 
   if (error) {
-    const msg = error.message || "Falha ao excluir contacto.";
+    const msg = error.message || "Falha ao arquivar contacto.";
     return { result: { ok: false, error: msg }, httpStatus: statusFromMessage(msg) };
   }
-
-  const result = parseRpcRow(data);
-  if (!result.ok) {
+  if (!data) {
     return {
-      result,
-      httpStatus: statusFromMessage(result.error || "Falha ao excluir."),
+      result: { ok: false, error: "Registo não encontrado." },
+      httpStatus: 404,
     };
   }
-  return { result, httpStatus: 200 };
+  const row = data as { id?: string; codigo?: string | null; nome?: string | null };
+  return {
+    result: {
+      ok: true,
+      id: row.id ?? pessoaId,
+      codigo: row.codigo ?? null,
+      nome: row.nome ?? null,
+    },
+    httpStatus: 200,
+  };
 }
 
-/** Exclui empresa via RPC (SET LOCAL app.delete_authorized), confinado ao tenant do caller. */
+/**
+ * Soft-archive de empresa (mesmo princípio de excluirPessoaCrm). Antes: RPC
+ * `hub_delete_empresa_crm` (DELETE FROM). Agora: `arquivado_em = now()` — a empresa PERMANECE
+ * no banco. A listagem (app/api/crm/empresas/route.ts) esconde `arquivado_em IS NOT NULL`.
+ * NB: usa `arquivado_em` (não `ativo`) de propósito — `ativo` é um toggle vivo de ativar/
+ * desativar empresa, e reutilizá-lo colidiria com esse recurso.
+ * Usada por: DELETE /api/crm/empresas/[id] e POST /api/crm/cadastro/bulk-delete.
+ */
 export async function excluirEmpresaCrm(
   supabase: SupabaseClient,
   empresaId: string,
@@ -120,19 +126,31 @@ export async function excluirEmpresaCrm(
   const posse = await posseDoTenant(supabase, "hub_empresas", empresaId, tenantId);
   if (!posse.ok) return { result: posse.result, httpStatus: posse.httpStatus };
 
-  const { data, error } = await supabase.rpc("hub_delete_empresa_crm", { p_id: empresaId });
+  const { data, error } = await supabase
+    .from("hub_empresas")
+    .update({ arquivado_em: new Date().toISOString() })
+    .eq("id", empresaId)
+    .select("id, codigo, razao_social")
+    .maybeSingle();
 
   if (error) {
-    const msg = error.message || "Falha ao excluir empresa.";
+    const msg = error.message || "Falha ao arquivar empresa.";
     return { result: { ok: false, error: msg }, httpStatus: statusFromMessage(msg) };
   }
-
-  const result = parseRpcRow(data);
-  if (!result.ok) {
+  if (!data) {
     return {
-      result,
-      httpStatus: statusFromMessage(result.error || "Falha ao excluir."),
+      result: { ok: false, error: "Registo não encontrado." },
+      httpStatus: 404,
     };
   }
-  return { result, httpStatus: 200 };
+  const row = data as { id?: string; codigo?: string | null; razao_social?: string | null };
+  return {
+    result: {
+      ok: true,
+      id: row.id ?? empresaId,
+      codigo: row.codigo ?? null,
+      razao_social: row.razao_social ?? null,
+    },
+    httpStatus: 200,
+  };
 }

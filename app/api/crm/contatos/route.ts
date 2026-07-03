@@ -19,10 +19,12 @@ export async function GET(request: NextRequest) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
+  // Princípio "só arquiva": DELETE arquiva via ativo=false → a lista esconde inativos.
   let { data, error } = await crmDb()
     .from("hub_contatos_notificacao")
     .select(SELECT)
     .eq("tenant_id", g.ctx.tenantId)
+    .eq("ativo", true)
     .order("nome", { ascending: true });
 
   // CN1: tabela ainda sem coluna tenant_id (migração multi-tenant não aplicada) → 42703. Sem coluna
@@ -31,6 +33,7 @@ export async function GET(request: NextRequest) {
     ({ data, error } = await crmDb()
       .from("hub_contatos_notificacao")
       .select(SELECT)
+      .eq("ativo", true)
       .order("nome", { ascending: true }));
   }
 

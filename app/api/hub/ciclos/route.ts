@@ -44,8 +44,10 @@ export async function GET(request: NextRequest) {
     .order("agente_slug")
     .order("nome");
 
-  if (ativo === "true") query = query.eq("ativo", true);
+  // Princípio "só arquiva": o DELETE arquiva via ativo=false. Por padrão a lista esconde
+  // inativos/arquivados; ?ativo=false mostra só inativos; ?ativo=todos mostra todos.
   if (ativo === "false") query = query.eq("ativo", false);
+  else if (ativo !== "todos") query = query.eq("ativo", true);
   if (agenteSlug) query = query.eq("agente_slug", agenteSlug);
   if (tipo && isCicloTipo(tipo)) query = query.eq("tipo", tipo);
   if (q) query = query.or(`nome.ilike.%${q}%,descricao.ilike.%${q}%`);
@@ -55,8 +57,8 @@ export async function GET(request: NextRequest) {
     // Tolerância: se tenant_id não existir na tabela ainda (base antiga), cai sem filtro.
     if (/tenant_id/i.test(error.message)) {
       let fallbackQ = supabase.from("hub_ciclos_ia").select("*").order("agente_slug").order("nome");
-      if (ativo === "true") fallbackQ = fallbackQ.eq("ativo", true);
       if (ativo === "false") fallbackQ = fallbackQ.eq("ativo", false);
+      else if (ativo !== "todos") fallbackQ = fallbackQ.eq("ativo", true);
       if (agenteSlug) fallbackQ = fallbackQ.eq("agente_slug", agenteSlug);
       if (tipo && isCicloTipo(tipo)) fallbackQ = fallbackQ.eq("tipo", tipo);
       const { data: fd, error: fe } = await fallbackQ;
