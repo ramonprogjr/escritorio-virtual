@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   let query = crmDb()
     .from("hub_pedidos_material")
     .select(SELECT)
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    .eq("tenant_id", tenantId)
     .order("criado_em", { ascending: false })
     .limit(100);
 

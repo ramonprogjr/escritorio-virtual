@@ -12,6 +12,7 @@ import {
   moedaPipeline,
   taxaConversao,
 } from "@/lib/crm/pipeline-funil";
+import { estagioParaColunaKanban } from "@/lib/crm/estagio-map";
 
 type LeadRow = { estagio: string | null; valor_estimado: number | null };
 type NegRow = { etapa: string; valor_estimado: number | null; status: string };
@@ -30,7 +31,11 @@ function agregarLeads(rows: LeadRow[]) {
     valores[o.id] = 0;
   }
   for (const r of rows) {
-    const e = String(r.estagio || "novo");
+    // Normaliza o estágio CRU para a mesma COLUNA de vendas que o kanban de leads usa
+    // (estagioParaColunaKanban). Sem isso, leads com vocabulário de ciclo-de-vida
+    // (encaminhado/aguardando_resposta/convertido_negocio/...) caíam em chaves fora do
+    // FUNIL_LEADS e o funil da home mostrava ZERO em todas as etapas.
+    const e = estagioParaColunaKanban(r.estagio);
     counts[e] = (counts[e] ?? 0) + 1;
     valores[e] = (valores[e] ?? 0) + Number(r.valor_estimado ?? 0);
   }
