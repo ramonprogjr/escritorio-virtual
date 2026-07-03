@@ -4,6 +4,29 @@
 
 ---
 
+## ✅ ONDAS 1–4 no ar (03/jul manhã) — code-safe, gate verde, deployado (logins externos OFF)
+
+Executei a remediação da auditoria QA em ondas sequenciais (cada uma: gate `tsc 0 · vitest · build 0` + revisão + commit + deploy staging). **Tudo que NÃO depende de você já subiu.**
+
+- **Onda 1** (2cfd665): papel no Relacionados · tenant-NULL em pedidos · funil zerado (legacyToFunil) · backtick relatórios · placeholder de código na busca.
+- **Onda 2 — COCKPIT por persona (P0#1, o fix-mãe)** (1cbbea9 → deploy 18feee4): `/crm` deixa de ser persona-cego. HUB/comercial preservado VERBATIM; **engenharia, arquiteto, cliente e fornecedor** ganham recorte próprio (antes viam a MESMA tela comercial; engenharia e cliente não tinham dashboard). Estados-vazios HONESTOS. Segurança: route usa `getCallerContext` (papéis do ecossistema em inglês davam 403), toda query `.eq(tenant)` puro. Revisão adversarial: OK.
+- **Onda 3 — busca por NOME + escrow no dashboard + export CSV** (9022abb → deploy d11c6de):
+  - Busca do cabeçalho por NOME real (antes prometia "por nome" mas só resolvia código → 404). `?q=` aditivo, tenant `.eq` puro, anti-injeção. Revisão de segurança: OK.
+  - **Escrow voltou ao dashboard financeiro**: filtrava aprovações por tipos inexistentes (`pagamento`/`financeiro`) → lista sempre vazia. Corrigido p/ os tipos reais via fonte única `lib/crm/aprovacoes-tipos.ts` (fila e dashboard nunca mais divergem).
+  - Botão **Exportar CSV** em /crm/relatorios (endurecido contra CSV formula injection).
+- **Onda 4 — botões/estados mortos → funcionais** (4ea4854 → deploy 4fad7a5):
+  - Parceiro: botão "Abrir painel" linkava sem HMAC (erro 100%) → removido + copy honesto.
+  - Imóveis: status inline tinha `captacao`/`inativo` (fora do CHECK → erro 23514) e faltava `alugado`/`indisponivel`. Alinhado ao CHECK real (verificado via Supabase MCP).
+  - Arquitetura: KPI "Atrasados" era só display → agora é **filtro-toggle do board**.
+
+**Verificados e HONESTAMENTE descartados (não eram bug / já resolvidos):**
+- "pessoas/empresas Editar grava campo obsoleto" → **não se reproduz**: os dois saves enviam só campos atuais + recarregam; a rota PATCH aceita exatamente esses campos.
+- "4 telas ainda dão DELETE físico (contatos/canais/distribuição/cadastro)" → **REFUTADO**: os 4 já fazem "só arquiva" (`ativo=false`/`arquivado_em`) desde o commit 9881fdc; a QA rodou num snapshot antigo.
+
+**Novo achado enfileirado p/ a janela (segurança, não é delta destas ondas):** o ramo de busca por CÓDIGO (`?codigo=`) ainda usa `tenantScopeOrFilter` (over-share legado `is.null`); trocar por `.eq` puro **junto do backfill de tenant NULL** (mesmo pacote do RLS abaixo).
+
+---
+
 ## 🔴 1. RODAR SQL EM PROD (janela do dono — o classificador me barra, e está certo)
 
 **a) Pacote de segurança RLS (eu deixo escrito e verificado — você roda em ordem):**
