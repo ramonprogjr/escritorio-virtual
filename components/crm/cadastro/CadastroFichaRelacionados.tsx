@@ -4,9 +4,10 @@ import Link from "next/link";
 
 /**
  * Item de relacionamento exibido SOMENTE por nome (código NUNCA aparece — regra do dono:
- * códigos de IDENTIDADE são internos). Aceita `nome` OU `titulo` como rótulo e `sub` OU
- * `estagio` como legenda secundária, mantendo compat com os chamadores antigos que passavam
- * `{ id, titulo }` (negócios) e `{ id, nome, estagio }` (leads).
+ * códigos de IDENTIDADE são internos). Aceita `nome` OU `titulo` como rótulo e, como legenda
+ * secundária, `papel` (quem é quem: arquiteto, engenharia executora, representante…) OU
+ * `sub`/`estagio`. Mantém compat com os chamadores antigos que passavam `{ id, titulo }`
+ * (negócios) e `{ id, nome, estagio }` (leads).
  */
 type RelItem = {
   id: string;
@@ -14,9 +15,30 @@ type RelItem = {
   titulo?: string | null;
   sub?: string | null;
   estagio?: string | null;
+  // Papel do vínculo (relacionados de um negócio). Legível, NÃO é código de identidade.
+  papel?: string | null;
   // aceito na entrada por compat, mas DELIBERADAMENTE nunca renderizado.
   codigo?: string | null;
 };
+
+/**
+ * Rótulo LEGÍVEL do papel do vínculo. Casos especiais mapeados à mão (pedido do dono:
+ * cliente_representante → "representante", engenharia_executora → "engenharia executora");
+ * o resto degrada trocando "_" por espaço (arquiteto, prestador, fornecedor, cliente…).
+ * Isto NÃO expõe código de identidade — papel é a função da pessoa/empresa no negócio.
+ */
+const PAPEL_LABEL: Record<string, string> = {
+  cliente_representante: "representante",
+  engenharia_executora: "engenharia executora",
+  contato_principal: "contato principal",
+  lead_origem: "origem",
+};
+
+function labelPapel(papel?: string | null): string | null {
+  const p = (papel ?? "").trim().toLowerCase();
+  if (!p) return null;
+  return PAPEL_LABEL[p] ?? p.replace(/_/g, " ");
+}
 
 type Props = {
   pessoas?: RelItem[];
@@ -53,7 +75,10 @@ function Secao({
       <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#8b949e" }}>{titulo}</p>
       <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
         {itens.map((item) => {
-          const sub = subDe(item);
+          const papel = labelPapel(item.papel);
+          // Papel é a legenda primária (quem é quem no negócio). Estágio/sub só quando não há papel,
+          // p/ não poluir e p/ preservar o comportamento dos chamadores antigos (leads → estágio).
+          const sub = papel ? null : subDe(item);
           return (
             <li key={item.id} style={{ padding: "8px 0", borderBottom: "1px solid #1d3a2c" }}>
               <Link
@@ -63,6 +88,11 @@ function Secao({
               >
                 {nomeDe(item)}
               </Link>
+              {papel ? (
+                <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#8b949e" }}>
+                  — {papel}
+                </span>
+              ) : null}
               {sub ? (
                 <span style={{ marginLeft: 8, fontSize: 11, color: "#8b949e" }}>{sub}</span>
               ) : null}

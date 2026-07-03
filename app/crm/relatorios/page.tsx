@@ -139,7 +139,7 @@ export default function Relatorios() {
               ))}
             </div>
           )}
-          <p className="mt-2 text-xs text-[#6e7681]">Fonte: `/api/crm/metricas`</p>
+          <p className="mt-2 text-xs text-[#6e7681]">Fonte: /api/crm/metricas</p>
         </div>
 
         <div className="rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-4">

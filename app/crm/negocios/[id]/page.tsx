@@ -103,7 +103,8 @@ type TimelineItem = {
 
 type PessoaMini = { id: string; nome: string; codigo?: string | null };
 
-type NamedRef = { id: string; nome: string };
+// `papel` só vem preenchido em pessoas/empresas (relacionados do negócio); demais grupos ignoram.
+type NamedRef = { id: string; nome: string; papel?: string | null };
 type Relacionados = {
   pessoas: NamedRef[];
   empresas: NamedRef[];

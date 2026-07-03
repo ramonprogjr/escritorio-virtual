@@ -4,7 +4,9 @@ import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 
 type Params = { params: Promise<{ id: string }> };
-type NamedRef = { id: string; nome: string };
+// `papel` é opcional: só pessoas/empresas participantes (via hub_negocio_vinculos) o carregam.
+// Leads/obras/projetos/linhagem reusam o mesmo tipo sem papel — segue TUDO por nome (regra do dono).
+type NamedRef = { id: string; nome: string; papel?: string };
 
 const uniqStr = (arr: Array<string | null | undefined>): string[] =>
   [...new Set(arr.filter((v): v is string => !!v).map(String))];
@@ -68,16 +70,36 @@ export async function GET(request: NextRequest, { params }: Params) {
   // 2. Vínculos N:N (pessoas/empresas participantes). Degrada p/ vazio se a tabela sumir.
   const vincPessoaIds: string[] = [];
   const vincEmpresaIds: string[] = [];
+  // Papel do vínculo (arquiteto/engenharia_executora/prestador/fornecedor/cliente/…), chaveado
+  // por entidade_id. É o "quem é quem" do relacionado — retornado p/ a UI rotular ao lado do nome.
+  const papelPorEntidade = new Map<string, string>();
   {
-    const { data: vinc, error: vErr } = await supabase
+    // `papel` é coluna core de hub_negocio_vinculos; o SELECT é defensivo: se um banco antigo não
+    // a tiver, degrada p/ o SELECT sem papel — nunca perde os vínculos por causa disso.
+    const comPapel = await supabase
       .from("hub_negocio_vinculos")
-      .select("entidade_tipo, entidade_id")
+      .select("entidade_tipo, entidade_id, papel")
       .eq("negocio_id", id)
       .limit(200);
+    const semPapel =
+      comPapel.error && isMissingPgColumn(comPapel.error, "papel")
+        ? await supabase
+            .from("hub_negocio_vinculos")
+            .select("entidade_tipo, entidade_id")
+            .eq("negocio_id", id)
+            .limit(200)
+        : null;
+    const vErr = semPapel ? semPapel.error : comPapel.error;
+    const vinc = (semPapel ? semPapel.data : comPapel.data) as
+      | Array<{ entidade_tipo: unknown; entidade_id: unknown; papel?: unknown }>
+      | null;
     if (!vErr) {
       for (const row of vinc ?? []) {
         const eid = row.entidade_id ? String(row.entidade_id) : "";
         if (!eid) continue;
+        const papel = row.papel ? String(row.papel) : "";
+        // 1ª ocorrência vence (o índice único já garante 1 vínculo por entidade neste negócio).
+        if (papel && !papelPorEntidade.has(eid)) papelPorEntidade.set(eid, papel);
         if (String(row.entidade_tipo) === "pessoa") vincPessoaIds.push(eid);
         else if (String(row.entidade_tipo) === "empresa") vincEmpresaIds.push(eid);
       }
@@ -107,14 +129,21 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   const pessoas: NamedRef[] = pessoasRes.error
     ? []
-    : (pessoasRes.data ?? []).map((p) => ({ id: String(p.id), nome: String(p.nome ?? "—") }));
+    : (pessoasRes.data ?? []).map((p) => {
+        const pid = String(p.id);
+        const papel = papelPorEntidade.get(pid);
+        const base: NamedRef = { id: pid, nome: String(p.nome ?? "—") };
+        return papel ? { ...base, papel } : base;
+      });
 
   const empresas: NamedRef[] = empresasRes.error
     ? []
-    : (empresasRes.data ?? []).map((e) => ({
-        id: String(e.id),
-        nome: String(e.razao_social || e.nome_fantasia || "—"),
-      }));
+    : (empresasRes.data ?? []).map((e) => {
+        const eid = String(e.id);
+        const papel = papelPorEntidade.get(eid);
+        const base: NamedRef = { id: eid, nome: String(e.razao_social || e.nome_fantasia || "—") };
+        return papel ? { ...base, papel } : base;
+      });
 
   const leads: NamedRef[] =
     !leadRes.error && leadRes.data
