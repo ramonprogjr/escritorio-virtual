@@ -30,6 +30,7 @@ Uma **fonte única server-side** (`lib/rbac/role-map.ts`), keyed pelos **13 valo
 
 - **RBAC-first para o QUE pode + ABAC de linha OBRIGATÓRIO para personas externas.** Papel sem checagem de linha é IDOR-por-papel: `client` por `cliente_pessoa_id`, `supplier` por `fornecedor_id`, `architect` por projeto vinculado, parceiro por `parceiro_id`.
 - **As DUAS chaves do escrow são a MESMA coisa:** capability explícita `role + vínculo de linha + identidade humana distinta`, **nunca** deduzida de rank. (Corrige o furo em que qualquer papel que ganhe nível `owner`/`gestor` reabre o cofre.)
+- **⭐ RESSALVA DO DONO (03/jul) — ESCROW É UNIVERSAL:** o fluxo escrow vale para **TODOS os pagamentos** (não só arquitetura). A **Engenharia (`operation`) também aprova pagamentos** — em especial os **prestadores de serviço** da obra. Por isso a segunda chave NÃO é `escrow:chave_arquitetura` e sim **`escrow:chave_tecnica`**, do **responsável técnico daquele pagamento**: **arquiteto** (`architect`) em projetos, **engenharia** (`operation`) em obra/prestadores. A outra chave é sempre a do **Hub**; nunca o mesmo humano nas duas.
 - **Multi-tenant híbrido por FASE:** hoje TODOS são papel dentro do tenant Hub (modelo B); tenant próprio (modelo A) só para quem **licencia** a plataforma, e só **depois** da janela do dono endurecer RLS+backfill. O **cliente é sempre GUEST**, nunca membro de tenant.
 - **Isolamento vem SÓ da sessão** (cookie httpOnly), jamais de header do browser. Como `crmDb()` é service-role e **bypassa RLS**, a barreira **primária** é o filtro `.eq('tenant_id', ctx.tenantId)` puro no código; RLS é camada 2.
 
@@ -44,7 +45,7 @@ Uma **fonte única server-side** (`lib/rbac/role-map.ts`), keyed pelos **13 valo
 | **`nivel`** | O que a pessoa pode **commitar** / autoridade | `owner` > `gestor`/aprovar > `operar` > `ler` · **escada linear só para papéis internos do Hub.** Papéis externos têm conjunto próprio, `null` na escada. |
 | **`persona`** | Qual **cockpit / JOB** de UI | `hub-auditor` · `comercial` · `financeiro` · `engenharia` · `arquiteto` · `fornecedor` · `parceiro` · `cliente` · `restrito` (fail-closed) |
 | **`escopo_tenant`** | Onde a pessoa enxerga | `hub` · `guest` · `proprio-ao-licenciar` (futuro) · `plataforma` (cross-tenant, só staff Hub) |
-| **`capacidades[]`** | Ações discretas + chaves | lista fechada; inclui `escrow:chave_hub` e `escrow:chave_arquitetura`, atribuídas por **papel + vínculo de linha**, jamais por rank |
+| **`capacidades[]`** | Ações discretas + chaves | lista fechada; inclui `escrow:chave_hub` e **`escrow:chave_tecnica`** (arquiteto em projetos **OU** engenharia em obra/prestadores — ressalva do dono), atribuídas por **papel + vínculo de linha (responsável)**, jamais por rank |
 
 **Regras duras da fonte única:**
 
