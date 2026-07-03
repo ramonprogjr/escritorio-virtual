@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
+import { TIPOS_APROVACAO_DINHEIRO_SET } from "@/lib/crm/aprovacoes-tipos";
 
 // ─── Brand palette — dark verde+dourado (padrão do CRM) ──────────────────────
 // F-A6: alinhado ao design-system travado em memória (dark #0a140f + tokens --obra-*).
@@ -37,12 +38,9 @@ const C = {
 //   • ícone/cor distintos (não o fallback genérico 📌)
 //   • badge "Gate de pagamento"
 //   • modal de confirmação obrigatório (F-A3)
-const TIPOS_DINHEIRO = new Set([
-  "orcamento_frente",
-  "pagamento_obra_arq",
-  "pagamento_obra_hub",
-  "cotacao_fornecedor",
-]);
+// FONTE ÚNICA (lib/crm/aprovacoes-tipos) — o mesmo Set que o painel financeiro usa,
+// pra fila e dashboard nunca mais divergirem (QA: dashboard filtrava tipos inexistentes).
+const TIPOS_DINHEIRO = TIPOS_APROVACAO_DINHEIRO_SET;
 
 // F-A2: rótulos humanos para os tipos E6
 const TIPO_LABEL_DINHEIRO: Record<string, string> = {

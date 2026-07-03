@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import type { RastreioCadeia } from "@/lib/crm/resolver-rastreio-codigo";
+import type { RastreioBuscaResultado } from "@/lib/crm/rastreio-busca";
 import { CrmRastreioCadeia } from "@/components/crm/CrmRastreioCadeia";
 
 export function CrmRastreioBusca() {
@@ -12,33 +13,56 @@ export function CrmRastreioBusca() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [cadeia, setCadeia] = useState<RastreioCadeia | null>(null);
+  const [resultados, setResultados] = useState<RastreioBuscaResultado[] | null>(null);
+
+  function fechar() {
+    setErro("");
+    setCadeia(null);
+    setResultados(null);
+  }
 
   async function buscar(e?: React.FormEvent) {
     e?.preventDefault();
-    const codigo = q.trim();
-    if (!codigo) return;
+    const termo = q.trim();
+    if (!termo) return;
     setLoading(true);
-    setErro("");
-    setCadeia(null);
+    fechar();
     try {
-      const res = await fetch(`/api/crm/rastreio?codigo=${encodeURIComponent(codigo)}`, {
+      // Busca por NOME (o usuário chama tudo pelo nome). Se for um código, o backend
+      // resolve a cadeia mesmo assim e devolve `data`.
+      const res = await fetch(`/api/crm/rastreio?q=${encodeURIComponent(termo)}`, {
         credentials: "include",
       });
       const json = (await res.json().catch(() => ({}))) as {
         data?: RastreioCadeia;
+        resultados?: RastreioBuscaResultado[];
         error?: string;
       };
       if (!res.ok) {
-        setErro(json.error || "Código não encontrado.");
+        setErro(json.error || "Nada encontrado.");
         return;
       }
-      if (json.data) setCadeia(json.data);
+      if (json.data) {
+        setCadeia(json.data);
+      } else if (json.resultados && json.resultados.length > 0) {
+        setResultados(json.resultados);
+      } else {
+        setErro("Nenhum resultado para essa busca.");
+      }
     } catch {
       setErro("Erro de rede.");
     } finally {
       setLoading(false);
     }
   }
+
+  function abrir(href: string) {
+    fechar();
+    setQ("");
+    router.push(href);
+  }
+
+  const aberto = Boolean(erro || cadeia || resultados);
 
   return (
     <div style={{ position: "relative", minWidth: 200, maxWidth: 320 }}>
@@ -50,8 +74,9 @@ export function CrmRastreioBusca() {
           />
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value.toUpperCase())}
+            onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar por nome, empresa…"
+            aria-label="Buscar por nome ou empresa"
             style={{
               width: "100%",
               padding: "7px 10px 7px 30px",
@@ -65,7 +90,7 @@ export function CrmRastreioBusca() {
           />
         </div>
       </form>
-      {(erro || cadeia) && (
+      {aberto && (
         <div
           style={{
             position: "absolute",
@@ -83,31 +108,64 @@ export function CrmRastreioBusca() {
           }}
         >
           {erro ? <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{erro}</p> : null}
+
           {cadeia ? (
             <>
               <CrmRastreioCadeia cadeia={cadeia} compact />
               <button
                 type="button"
-                onClick={() => router.push(cadeia.principal.href)}
-                style={{
-                  marginTop: 10,
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: "#c9a24a",
-                  color: "#003b26",
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
+                onClick={() => abrir(cadeia.principal.href)}
+                style={botaoOuro}
               >
                 Abrir registo
               </button>
             </>
           ) : null}
+
+          {resultados ? (
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 2 }}>
+              {resultados.map((r) => (
+                <li key={`${r.tipo}-${r.id}`}>
+                  <button
+                    type="button"
+                    onClick={() => abrir(r.href)}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      border: "1px solid transparent",
+                      background: "transparent",
+                      color: "#e6edf3",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(ev) => (ev.currentTarget.style.background = "#0f1d16")}
+                    onMouseLeave={(ev) => (ev.currentTarget.style.background = "transparent")}
+                  >
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 600 }}>{r.titulo}</span>
+                    <span style={{ display: "block", fontSize: 11, color: "#8b949e" }}>{r.sub}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {loading ? <p style={{ margin: "6px 0 0", fontSize: 11, color: "#8b949e" }}>Buscando…</p> : null}
         </div>
       )}
     </div>
   );
 }
+
+const botaoOuro: React.CSSProperties = {
+  marginTop: 10,
+  width: "100%",
+  padding: "8px 12px",
+  borderRadius: 8,
+  border: "none",
+  background: "#c9a24a",
+  color: "#003b26",
+  fontWeight: 700,
+  fontSize: 12,
+  cursor: "pointer",
+};
