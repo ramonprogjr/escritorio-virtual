@@ -4,7 +4,11 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmFinanceiro, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 function csvEscape(v: unknown): string {
-  const s = v == null ? "" : String(v);
+  let s = v == null ? "" : String(v);
+  // Anti CSV formula injection (OWASP): célula iniciada por = + - @ (ou TAB/CR) é
+  // interpretada como fórmula por Excel/Sheets. Um dado do usuário (ex. nome de lead
+  // "=HYPERLINK(...)") não pode virar fórmula ao abrir o CSV → prefixa aspa simples.
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return `"${s.replace(/"/g, '""')}"`;
 }
 

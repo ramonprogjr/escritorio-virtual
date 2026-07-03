@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { POSTGREST_LEAD_TERMINAIS } from "@/lib/crm/estagio-filters";
 import { safeCount } from "@/lib/crm/metricas-safe";
 import { tenantScopeOrFilter } from "@/lib/tenant-default";
+import { TIPOS_APROVACAO_DINHEIRO } from "@/lib/crm/aprovacoes-tipos";
 
 export type FinanceKpis = {
   aPagarAberto: number;
@@ -127,7 +128,9 @@ export async function aggregateFinanceDashboard(
         .from("hub_aprovacoes")
         .select("id, descricao, tipo, valor_envolvido, criado_em")
         .eq("status", "pendente")
-        .in("tipo", ["pagamento", "financeiro"])
+        // Tipos REAIS do gate do dinheiro (fonte única) — antes filtrava por
+        // ['pagamento','financeiro'], que não existem, e a lista vinha sempre vazia.
+        .in("tipo", [...TIPOS_APROVACAO_DINHEIRO])
         .or(tenantScopeOrFilter(tenantId))
         .order("criado_em", { ascending: false })
         .limit(5),

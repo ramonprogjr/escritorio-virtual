@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
-import { RefreshCw } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { useMetricas } from "@/hooks/useMetricas";
 import {
@@ -38,6 +38,7 @@ export default function Relatorios() {
   const [dataset, setDataset] = useState<RelatorioJson | null>(null);
   const [tabelaLoading, setTabelaLoading] = useState(true);
   const [tabelaErro, setTabelaErro] = useState<string | null>(null);
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     async function carregarComplementos() {
@@ -113,6 +114,36 @@ export default function Relatorios() {
     void carregarTabela();
   }, [carregarTabela]);
 
+  // Exporta a entidade ativa em CSV (mesmo endpoint, format=csv). Download via blob p/
+  // enviar os headers internos + cookie de sessão (um <a href> cru não os carrega).
+  const baixarCsv = useCallback(async () => {
+    setExportando(true);
+    setTabelaErro(null);
+    try {
+      const res = await fetch(
+        `/api/crm/relatorios/export?entidade=${encodeURIComponent(entidadeAtiva)}&format=csv`,
+        { credentials: "include", headers: internalApiHeaders() }
+      );
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error ?? `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-${entidadeAtiva}-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setTabelaErro(e instanceof Error ? e.message : "Erro ao exportar CSV");
+    } finally {
+      setExportando(false);
+    }
+  }, [entidadeAtiva]);
+
   const entidadeLabel =
     RELATORIO_ENTIDADES_UI.find((e) => e.id === entidadeAtiva)?.label ?? entidadeAtiva;
 
@@ -157,15 +188,27 @@ export default function Relatorios() {
                 <p className="mt-1 text-[11px] font-medium text-[#e3b341]">{dataset.aviso}</p>
               ) : null}
             </div>
-            <button
-              type="button"
-              onClick={() => void carregarTabela()}
-              disabled={tabelaLoading}
-              className="flex items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:bg-[#1d3a2c] disabled:opacity-50"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${tabelaLoading ? "animate-spin" : ""}`} />
-              Atualizar
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void baixarCsv()}
+                disabled={exportando || tabelaLoading || !dataset || dataset.rows.length === 0}
+                title="Exportar a aba atual em CSV"
+                className="flex min-h-11 items-center gap-1.5 rounded-lg border border-[#c9a24a66] bg-[#c9a24a14] px-3 py-2 text-xs font-bold text-[#e3b341] hover:bg-[#c9a24a22] disabled:opacity-40"
+              >
+                <Download className={`h-3.5 w-3.5 ${exportando ? "animate-pulse" : ""}`} />
+                {exportando ? "Exportando…" : "Exportar CSV"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void carregarTabela()}
+                disabled={tabelaLoading}
+                className="flex min-h-11 items-center gap-1.5 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#e6edf3] hover:bg-[#1d3a2c] disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${tabelaLoading ? "animate-spin" : ""}`} />
+                Atualizar
+              </button>
+            </div>
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
