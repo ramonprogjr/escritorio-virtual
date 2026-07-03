@@ -30,14 +30,29 @@ const EDITAVEIS = [
   "comissao_pct",
 ] as const;
 
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
   const configErr = crmConfigError();
   if (configErr) return NextResponse.json({ error: configErr }, { status: 503 });
 
+  // Gestor-only + isolamento de tenant — espelha o PATCH. Este GET expõe cnpj/cpf/email/
+  // telefone/comissao_pct (PII + caminho do dinheiro): sem guard, qualquer um lia o dossiê
+  // completo de um fornecedor de QUALQUER tenant. Sob service-role a RLS é bypassada.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
   const { id } = await params;
-  const { data, error } = await crmDb().from("hub_fornecedores").select(FULL).eq("id", id).maybeSingle();
+  const { data, error } = await crmDb()
+    .from("hub_fornecedores")
+    .select(`${FULL}, tenant_id`)
+    .eq("id", id)
+    .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Fornecedor não encontrado" }, { status: 404 });
+  // Fornecedor de outro tenant é 404 (legado sem tenant_id = partilhado, mesmo critério das irmãs).
+  const tid = (data as { tenant_id?: string | null }).tenant_id;
+  if (tid && tid !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Fornecedor não encontrado" }, { status: 404 });
+  }
   return NextResponse.json({ data });
 }
 

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzePlaybookWithMistral, buildLocalPlaybookAnalysisFallback } from "@/lib/playbook/mistral-analysis";
 import { normalizePlaybookText } from "@/lib/playbook/custom-playbook";
+import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
+import { registrarConsumoIA } from "@/lib/ia/metering";
 
 const MAX_CHARS = 40_000;
 
@@ -9,6 +12,14 @@ const MAX_CHARS = 40_000;
  * Body: { content: string, filename?: string }
  */
 export async function POST(request: NextRequest) {
+  // Aceita até 40k chars e chama a Mistral (custo real) — exige gestor/owner (wizard interno).
+  // Antes: SEM auth, SEM teto, SEM metering.
+  const g = await requireCrmGestor(request);
+  if ("error" in g) return g.error;
+
+  const limite = requireIaRateLimit(`playbook-analisar-conteudo:${g.ctx.tenantId}`, 20);
+  if (limite) return limite;
+
   let body: { content?: unknown; filename?: unknown } = {};
   try {
     body = (await request.json()) as typeof body;
@@ -40,6 +51,17 @@ export async function POST(request: NextRequest) {
       aviso: analysis.error,
     });
   }
+
+  // Metering (Tijolos) — best-effort. `analyzePlaybookWithMistral` não expõe usage de tokens,
+  // então estimamos (~4 chars/token, mesmo heurístico do fallback de mistral-chat). Modo sombra.
+  void registrarConsumoIA({
+    tenantId: g.ctx.tenantId,
+    usuarioId: g.ctx.userId,
+    origem: "playbook_analisar_conteudo",
+    modelo: analysis.model,
+    tokensEntrada: Math.ceil(markdown.length / 4),
+    tokensSaida: Math.ceil(JSON.stringify(analysis.analise).length / 4),
+  });
 
   return NextResponse.json({
     sucesso: true,

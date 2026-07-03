@@ -4,7 +4,6 @@ import { prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { garantirPessoaParaLead } from "@/lib/crm/garantir-pessoa-lead";
 import {
   DEFAULT_OBRA10_TENANT_ID,
-  defaultTenantId,
   isMissingPgColumn,
   tenantScopeOrFilter,
 } from "@/lib/tenant-default";
@@ -40,12 +39,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Guard + tenant de sessão: esta rota grava via service-role (bypassa RLS). Sem guard,
+  // qualquer um criava lead (com pessoa/código) no tenant padrão. Agora exige sessão CRM e
+  // o lead nasce no tenant do chamador (g.ctx.tenantId), não mais no defaultTenantId() global.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
   const body = await request.json() as Record<string, unknown>;
   if (!body.nome) return NextResponse.json({ error: "nome required" }, { status: 400 });
 
   const supabase = db();
   if (!supabase) return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
-  const tenantId = defaultTenantId();
+  const tenantId = g.ctx.tenantId;
 
   // CÓDIGO ÚNICO (AUT-2): todo lead garante UMA hub_pessoas (dedup por CPF e/ou
   // telefone — não duplica; vincula pessoa_id ao lead). Antes esta rota legada

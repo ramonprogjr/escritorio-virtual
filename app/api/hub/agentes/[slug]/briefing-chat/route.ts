@@ -15,6 +15,7 @@ import {
 } from "@/lib/playbook/briefing-flow-simulator";
 import { extrairESalvarMemoriasAgente, formatarBlocoMemoriasAgente, listarMemoriasAgente } from "@/lib/ia/memoria-agente";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 /** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
 function agenteForaDoTenant(
@@ -187,6 +188,10 @@ export async function POST(
   // Guard de sessão — chama IA (custo) e grava mensagens/memórias do agente.
   const g = await requireCrmSessao(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago — chat de briefing/simulação).
+  const limite = requireIaRateLimit(`briefing-chat:${g.ctx.tenantId}`, 30);
+  if (limite) return limite;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);

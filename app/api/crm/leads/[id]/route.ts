@@ -89,6 +89,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 });
   if (!atual) return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  // Isolamento de tenant (espelha o GET irmão): PATCH em lead de outro tenant é 404. `atual`
+  // já traz tenant_id, mas antes o update prosseguia sem comparar — sob service-role a RLS é
+  // bypassada, então qualquer sessão editava/movia lead de qualquer tenant. Este é o guard.
+  if (atual.tenant_id && atual.tenant_id !== g.ctx.tenantId) {
+    return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
+  }
 
   const novoEstagioRaw =
     typeof body.estagio_funil === "string"

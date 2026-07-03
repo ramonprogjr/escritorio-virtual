@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateAndNormalizeCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
 import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 
 type CicloTipo = "continuo" | "programado" | "gatilho";
 
@@ -30,7 +31,10 @@ export async function GET(request: NextRequest) {
   const ativo = searchParams.get("ativo");
   const agenteSlug = searchParams.get("agente_slug");
   const tipo = searchParams.get("tipo");
-  const q = searchParams.get("q");
+  // Sanitiza o termo livre antes de interpolar no `.or(...ilike...)` — sem isso, um `q`
+  // malicioso injeta condições PostgREST (ex.: `,tenant_id.eq.<outro>`) e escapa do filtro
+  // de tenant. Mesmo tratamento das 6 rotas de busca (pessoas/negocios/imoveis/empresas/...).
+  const q = sanitizarBuscaPostgrest(searchParams.get("q") || "");
 
   // Tenant SEMPRE da sessão — nunca do header (forjável).
   let query = supabase

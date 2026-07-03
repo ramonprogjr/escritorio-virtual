@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mistralChatCompletion } from "@/lib/ia/mistral-chat";
+import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
+import { registrarConsumoIA } from "@/lib/ia/metering";
 
 type ChatRole = "user" | "assistant";
 
@@ -113,6 +116,14 @@ function fallbackReply(question: string, draft: DraftPayload): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Chama a Mistral (custo real) — exige sessão CRM ativa. Antes: SEM auth, SEM teto, SEM metering.
+  const g = await requireCrmSessao(request);
+  if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago).
+  const limite = requireIaRateLimit(`negocio-copilot:${g.ctx.tenantId}`, 20);
+  if (limite) return limite;
+
   let body: { messages?: CopilotMessage[]; draft?: DraftPayload };
   try {
     body = await request.json();
@@ -161,6 +172,15 @@ export async function POST(request: NextRequest) {
   });
 
   if (ai.ok) {
+    // Metering (Tijolos) — best-effort, tokens reais vindos da completion. Nunca bloqueia a resposta.
+    void registrarConsumoIA({
+      tenantId: g.ctx.tenantId,
+      usuarioId: g.ctx.userId,
+      origem: "negocio_copilot",
+      modelo: ai.model,
+      tokensEntrada: ai.inputTokens,
+      tokensSaida: ai.outputTokens,
+    });
     return NextResponse.json({ reply: ai.text, provider: "mistral", model: ai.model });
   }
 

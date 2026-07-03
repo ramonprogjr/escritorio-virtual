@@ -6,6 +6,7 @@ import {
   type MercadoContextRow,
 } from "@/lib/hub/sugerir-cargo-catalogo";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 function db() {
   return createClient(
@@ -22,6 +23,10 @@ export async function POST(request: NextRequest) {
   // Chama Mistral (custo) para sugerir campos de cargo — exige gestor ou owner.
   const g = await requireCrmGestor(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago).
+  const limite = requireIaRateLimit(`cargos-sugerir:${g.ctx.tenantId}`, 20);
+  if (limite) return limite;
 
   let body: Record<string, unknown>;
   try {

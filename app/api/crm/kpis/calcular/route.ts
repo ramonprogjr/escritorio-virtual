@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     supabase
       .from("hub_fila_mensagens")
       .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
       .eq("direcao", "entrada")
       .eq("status", "pendente"),
   ]);

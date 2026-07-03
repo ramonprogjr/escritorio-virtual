@@ -6,6 +6,7 @@ import {
 } from "@/lib/playbook/calibracao-chat";
 import { loadCurrentPlaybookMarkdown } from "@/lib/playbook/custom-playbook";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 function db() {
   return createClient(
@@ -52,6 +53,10 @@ export async function POST(
   // Chama IA (custo) para calibrar o playbook do agente — exige sessão CRM ativa.
   const g = await requireCrmSessao(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago — chat de calibração).
+  const limite = requireIaRateLimit(`calibracao-chat:${g.ctx.tenantId}`, 30);
+  if (limite) return limite;
 
   const { slug: raw } = await params;
   const slug = decodeURIComponent(raw);

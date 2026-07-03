@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { groqTranscreverAudioBuffer } from "@/lib/ia/groq-transcribe-audio";
 import { mistralTranscreverAudioBuffer } from "@/lib/whatsapp/mistral-transcribe-audio";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 /**
  * POST (multipart) { audio } — fallback de transcrição quando o navegador não tem Web Speech API.
@@ -10,6 +11,12 @@ import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 export async function POST(request: NextRequest) {
   const auth = await autenticarCopiloto();
   if (!auth.ok) return NextResponse.json({ error: auth.erro }, { status: auth.status });
+
+  // Transcrição (Voxtral/Groq) é cara e aceita até 25 MB — teto MENOR por usuário.
+  // Keyed por userId (não por tenant): hoje single-tenant, então tenant seria um teto global
+  // que um único usuário poderia esgotar; por-usuário é o cap justo por chamador.
+  const limite = requireIaRateLimit(`copiloto-transcrever:${auth.userId}`, 10);
+  if (limite) return limite;
 
   let form: FormData;
   try {

@@ -6,6 +6,7 @@ import {
   gerarConhecimentoSecaoComIa,
 } from "@/lib/hub/sugerir-conhecimento-secao";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
+import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 
 function isSecao(v: unknown): v is SecaoConhecimentoId {
   return typeof v === "string" && (SECOES_CONHECIMENTO_IDS as readonly string[]).includes(v);
@@ -33,6 +34,10 @@ export async function POST(request: NextRequest) {
   // Chama IA (custo) para sugerir conteúdo de conhecimento — exige gestor ou owner (wizard interno).
   const g = await requireCrmGestor(request);
   if ("error" in g) return g.error;
+
+  // Teto anti-abuso por tenant (LLM pago).
+  const limite = requireIaRateLimit(`sugerir-conhecimento:${g.ctx.tenantId}`, 20);
+  if (limite) return limite;
 
   let body: Record<string, unknown>;
   try {
