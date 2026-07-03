@@ -50,20 +50,30 @@ const STATUS_COR: Record<string, { bg: string; color: string; border: string }> 
   reservado: { bg: "#f59e0b22", color: "#fbbf24", border: "#f59e0b55" },
   vendido: { bg: "#2f9e8f22", color: "#2f9e8f", border: "#2f9e8f55" },
   alugado: { bg: "#b58a6322", color: "#c9a98a", border: "#b58a6355" },
+  indisponivel: { bg: "#8b949e22", color: "#8b949e", border: "#8b949e55" },
+  arquivado: { bg: "#6e768122", color: "#6e7681", border: "#6e768155" },
+  // legado de exibição (não editável): tolera valores antigos sem render cru
   inativo: { bg: "#8b949e22", color: "#8b949e", border: "#8b949e55" },
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  captacao: "Captação",
   disponivel: "Disponível",
   reservado: "Reservado",
   vendido: "Vendido",
   alugado: "Alugado",
+  indisponivel: "Indisponível",
+  arquivado: "Arquivado",
+  captacao: "Captação",
   inativo: "Inativo",
 };
 
-/** Status editáveis inline — restritos ao CHECK do schema (hub_imoveis). */
-const STATUS_EDITAVEIS = ["captacao", "disponivel", "reservado", "vendido", "inativo"];
+/**
+ * Status editáveis inline — SOMENTE os valores válidos no CHECK do schema (hub_imoveis:
+ * disponivel|reservado|vendido|alugado|indisponivel|arquivado). Antes tinha 'captacao' e
+ * 'inativo' (fora do CHECK → erro 23514 ao gravar) e faltava 'alugado'/'indisponivel'.
+ * 'arquivado' fica fora do inline (é a ação de arquivar, não um toggle de status).
+ */
+const STATUS_EDITAVEIS = ["disponivel", "reservado", "vendido", "alugado", "indisponivel"];
 
 function statusStyle(status: string | null) {
   return STATUS_COR[status || ""] ?? { bg: "#8b949e22", color: "#8b949e", border: "#8b949e55" };
