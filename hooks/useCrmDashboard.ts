@@ -97,8 +97,12 @@ export function useCrmDashboard(): CrmDashboardState {
     }
 
     try {
+      // Fallback anon serve SÓ o cockpit comercial (sem sessão → sem persona). aggregateDashboard
+      // sem persona devolve o payload comercial (persona: "comercial"); narrow p/ o tipo comercial.
       const body = await aggregateDashboard(supabase, tenantIdCliente(), since);
-      setState((prev) => aplicarPayload(prev, body));
+      if (!("persona" in body) || body.persona === "comercial") {
+        setState((prev) => aplicarPayload(prev, body));
+      }
       return;
     } catch {
       /* fallback client falhou também */

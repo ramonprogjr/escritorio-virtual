@@ -3,6 +3,8 @@ import { legacyToFunil } from "@/lib/crm/estagio-map";
 import { ESTAGIOS_LEAD_TERMINAIS, metricasLeadsFromRows } from "@/lib/crm/estagio-filters";
 import { safeCount } from "@/lib/crm/metricas-safe";
 import { tenantScopeOrFilter } from "@/lib/tenant-default";
+import type { PersonaCockpitPayload, PersonaCockpitTipo } from "@/lib/crm/persona-cockpit";
+import { buildPersonaCockpit, type BuildPersonaOpts } from "@/lib/crm/persona-cockpit-aggregate";
 
 export type CrmMetricas = {
   leadsHoje: number;
@@ -49,6 +51,15 @@ export type DashboardPayload = CrmMetricas & {
   ciclos: CicloStatus[];
   operacao: OperacaoResumo;
 };
+
+/** Payload comercial marcado com a persona (discriminante do lado do cliente). */
+export type CockpitComercial = DashboardPayload & { persona: "comercial" };
+
+/**
+ * Resposta persona-aware de aggregateDashboard: comercial (dashboard atual, preservado) OU o
+ * cockpit de uma persona não-comercial. Discriminada pelo campo `persona`.
+ */
+export type CockpitResposta = CockpitComercial | PersonaCockpitPayload;
 
 function inicioDiaUtcISO(): string {
   return new Date(
@@ -157,11 +168,25 @@ export async function fetchCrmMetricas(
   };
 }
 
+/**
+ * Agrega o cockpit do /crm, agora PERSONA-AWARE (ADITIVO).
+ *
+ * `persona` default = "comercial" → comportamento HISTÓRICO intacto (retorna o DashboardPayload
+ * atual, só marcado com `persona: "comercial"`). Personas não-comerciais (engenharia/arquiteto/
+ * cliente/fornecedor) delegam ao buildPersonaCockpit. O papel vem SEMPRE da sessão (route →
+ * getCallerContext), nunca do cliente; `opts.userId` só serve p/ escopar a obra do cliente.
+ */
 export async function aggregateDashboard(
   supabase: SupabaseClient,
   tenantId: string,
-  since?: string
-): Promise<DashboardPayload> {
+  since?: string,
+  persona: PersonaCockpitTipo = "comercial",
+  opts?: BuildPersonaOpts
+): Promise<CockpitResposta> {
+  if (persona !== "comercial") {
+    return buildPersonaCockpit(supabase, tenantId, persona, opts);
+  }
+
   const metricas = await fetchCrmMetricas(supabase, tenantId, since);
 
   const [alts, leads, cics, neg, obras, pedidos] = await Promise.all([
@@ -235,5 +260,6 @@ export async function aggregateDashboard(
       obrasEmAndamento: obras,
       pedidosAbertos: pedidos,
     },
+    persona: "comercial",
   };
 }
