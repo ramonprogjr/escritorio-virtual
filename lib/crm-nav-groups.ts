@@ -26,12 +26,14 @@ import {
   Plug,
   Bell,
   UserCog,
+  KeyRound,
 } from "lucide-react";
 import {
   crmPodeVerRota,
   isCrmGestorRole,
   type CrmNivel,
 } from "@/lib/crm/crm-permissoes";
+import { rbacPersonaForRole, type RbacPersona } from "@/lib/rbac/role-map";
 
 export type { CrmNivel };
 
@@ -200,18 +202,77 @@ export function isCrmAdminRole(role: string): boolean {
 }
 
 /**
+ * Item sintético "Chaves a assinar" (Onda 2) — só para personas TÉCNICAS (arquiteto/
+ * engenharia). Aponta para a fila /crm/aprovacoes, que se AUTO-FILTRA por capability no
+ * servidor (só tipos de escrow). NÃO reusa o item "Aprovações" (minRole gestor, exclusivo do
+ * Hub): a persona técnica vê uma entrada dedicada, não o item comercial genérico.
+ */
+const CHAVES_NAV_ITEM: CrmNavItem = {
+  href: "/crm/aprovacoes",
+  label: "Chaves a assinar",
+  icon: KeyRound,
+};
+
+type PersonaNavAllow = {
+  /** Por grupo: "*" (todos os itens) ou allowlist de hrefs. Grupo ausente = escondido. */
+  grupos: Record<string, "*" | readonly string[]>;
+  /** Acrescenta "Chaves a assinar" (no grupo Visão) para o portador de chave de escrow. */
+  chaves: boolean;
+};
+
+/**
+ * Allowlist de NAV por PERSONA (Onda 2, item 3). Personas INTERNAS (hub-auditor/comercial/
+ * financeiro) NÃO entram aqui (undefined = no-op): mantêm o filtro por NÍVEL atual, byte-a-byte
+ * igual — ZERO regressão (invariante c). Personas TÉCNICAS/EXTERNAS recebem só o que usam:
+ *   • arquiteto → Visão + Operações(só Arquitetura) + Chaves a assinar;
+ *   • engenharia → Visão + Operações(Engenharia+Pedidos) + Chaves a assinar;
+ *   • fornecedor/parceiro/cliente/restrito → nada de /crm (fail-closed explícito — o nível null
+ *     já zerava o menu; aqui deixamos a intenção EXPLÍCITA).
+ * Esconder no cliente é UX; o corte de dados é server-side (GET filtra por capability).
+ */
+const PERSONA_NAV_ALLOW: Partial<Record<RbacPersona, PersonaNavAllow>> = {
+  arquiteto: { grupos: { visao: "*", operacoes: ["/crm/arquitetura"] }, chaves: true },
+  engenharia: { grupos: { visao: "*", operacoes: ["/crm/obras", "/crm/pedidos"] }, chaves: true },
+  fornecedor: { grupos: {}, chaves: false },
+  parceiro: { grupos: {}, chaves: false },
+  cliente: { grupos: {}, chaves: false },
+  restrito: { grupos: {}, chaves: false },
+};
+
+/**
  * Filtra grupos/itens pelo MESMO predicado do guard de rota (`crmPodeVerRota`),
  * para o menu mostrar exatamente o que o papel pode aceder — sem drift menu↔rota.
  * Honra automaticamente as rotas de papel-exato (ex.: Financeiro fora de `comercial`).
  * `minRole`/`adminOnly` ficam como documentação do intent por item.
+ *
+ * Onda 2: para personas técnicas/externas (arquiteto/engenharia/fornecedor/parceiro/cliente/
+ * restrito) aplica uma allowlist PERSONA-aware POR CIMA do filtro de nível — assim o arquiteto/
+ * engenharia deixa de ver os grupos Comercial/Operações(integral)/Fornecedores (vazamento do E2E)
+ * e ganha só o seu módulo + "Chaves a assinar". Personas internas seguem 100% pelo nível.
  */
 export function filterCrmNavGroupsForRole(groups: CrmNavGroup[], role: string): CrmNavGroup[] {
-  return groups
+  const base = groups
     .map(g => ({
       ...g,
       items: g.items.filter(item => crmPodeVerRota(role, item.href)),
     }))
     .filter(g => g.items.length > 0);
+
+  const allow = PERSONA_NAV_ALLOW[rbacPersonaForRole(role)];
+  if (!allow) return base; // personas internas: filtro por nível, sem alteração
+
+  const restrito: CrmNavGroup[] = [];
+  for (const g of base) {
+    const regra = allow.grupos[g.id];
+    let items: CrmNavItem[];
+    if (regra === "*") items = g.items;
+    else if (Array.isArray(regra)) items = g.items.filter(i => regra.includes(i.href));
+    else items = [];
+    // "Chaves a assinar" entra no grupo Visão (casa da persona técnica).
+    if (g.id === "visao" && allow.chaves) items = [...items, CHAVES_NAV_ITEM];
+    if (items.length > 0) restrito.push({ ...g, items });
+  }
+  return restrito;
 }
 
 export function findCrmNavGroupIdForPath(groups: CrmNavGroup[], pathname: string): string {

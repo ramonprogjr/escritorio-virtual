@@ -17,6 +17,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aggregateCockpit } from "@/lib/crm/cockpit-aggregate";
 import { safeCount } from "@/lib/crm/metricas-safe";
+import { TIPOS_ESCROW_CHAVE_TECNICA } from "@/lib/crm/aprovacoes-tipos";
 import {
   PERSONA_CABECALHO,
   type PersonaAcao,
@@ -29,6 +30,40 @@ export type BuildPersonaOpts = {
   /** users.id da sessão (não auth_id) — usado p/ resolver a pessoa do cliente. */
   userId?: string | null;
 };
+
+/**
+ * Chaves de escrow AGUARDANDO a assinatura desta persona técnica (arquiteto/engenharia).
+ * Conta hub_aprovacoes pendentes nos tipos de chave técnica, escopado por tenant. safeCount
+ * degrada p/ 0 quando a tabela/coluna ainda não existe (nunca quebra o cockpit). O portador
+ * assina de fato pela fila (validarChaveEscrow inalterado) — aqui é só o contador da ação.
+ */
+async function contarChavesEscrowPendentes(
+  supabase: SupabaseClient,
+  tenantId: string
+): Promise<number> {
+  return safeCount(
+    supabase
+      .from("hub_aprovacoes")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("status", "pendente")
+      .in("tipo", TIPOS_ESCROW_CHAVE_TECNICA)
+  );
+}
+
+/** Ação "Chaves a assinar" p/ o topo do cockpit — só quando há chave pendente (count>0). */
+function acaoChavesEscrow(chaves: number): PersonaAcao {
+  return {
+    id: "chaves-escrow",
+    label: `${chaves} chave${chaves === 1 ? "" : "s"} de pagamento aguardando sua assinatura`,
+    valor: chaves,
+    href: "/crm/aprovacoes",
+    cta: "Assinar",
+    cor: "#c9a24a",
+    prioridade: "alta",
+    icone: "key",
+  };
+}
 
 /** Média simples dos avanços definidos (ignora null = sem cronograma). null se nenhum. */
 function avancoMedioCarteira(carteira: { avanco: number | null }[]): number | null {
@@ -72,11 +107,15 @@ async function buildEngenharia(
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId)
   );
+  // Chave técnica do escrow (engenharia aprova prestadores → escrow:chave_tecnica).
+  const chaves = await contarChavesEscrowPendentes(supabase, tenantId);
 
   const ocorrN = c.hoje.bloqueios.filter((b) => b.tipo === "ocorrencia_critica").length;
   const pedidosN = c.hoje.bloqueios.filter((b) => b.tipo === "pedido_pendente").length;
 
   const acoes: PersonaAcao[] = [];
+  // Dinheiro em custódia primeiro — a assinatura da chave destrava pagamento (prioridade máxima).
+  if (chaves > 0) acoes.push(acaoChavesEscrow(chaves));
   if (c.contadores.atrasados > 0) {
     acoes.push({
       id: "atrasados",
@@ -184,7 +223,7 @@ async function buildArquiteto(
 
   // Fila "em aprovação" (entregáveis enviados) + total de projetos. safeCount degrada p/ 0
   // quando as colunas tipo/aprovacao_status ainda não existem (pré-A0).
-  const [fila, projetos] = await Promise.all([
+  const [fila, projetos, chaves] = await Promise.all([
     safeCount(
       supabase
         .from("hub_projetos_fases")
@@ -199,9 +238,13 @@ async function buildArquiteto(
         .select("id", { count: "exact", head: true })
         .eq("tenant_id", tenantId)
     ),
+    // Chave técnica do escrow (arquiteto aprova entregáveis → escrow:chave_tecnica).
+    contarChavesEscrowPendentes(supabase, tenantId),
   ]);
 
   const acoes: PersonaAcao[] = [];
+  // Dinheiro em custódia primeiro — a assinatura da chave destrava pagamento (prioridade máxima).
+  if (chaves > 0) acoes.push(acaoChavesEscrow(chaves));
   if (fila > 0) {
     acoes.push({
       id: "fila",

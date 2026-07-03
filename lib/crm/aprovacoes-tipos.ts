@@ -22,3 +22,19 @@ export type TipoAprovacaoDinheiro = (typeof TIPOS_APROVACAO_DINHEIRO)[number];
 export const TIPOS_APROVACAO_DINHEIRO_SET: ReadonlySet<string> = new Set(
   TIPOS_APROVACAO_DINHEIRO
 );
+
+/**
+ * SUBCONJUNTO ESTREITO das CHAVES DE ESCROW (Onda 2) — os únicos tipos que o portador
+ * de `escrow:chave_*` que NÃO é gestor (architect/operation) pode ver e assinar.
+ *
+ * NÃO reusar TIPOS_APROVACAO_DINHEIRO aqui: aquele Set inclui `orcamento_frente` e
+ * `cotacao_fornecedor`, que são alçada COMERCIAL — o dono pediu explicitamente que NÃO
+ * apareçam ao arquiteto/engenharia. Esta lista espelha 1:1 o predicado `ehChaveEscrow`
+ * de aprovar()/rejeitar() em lib/ia/aprovacoes.ts (fila de leitura = gate de escrita).
+ */
+export const TIPOS_ESCROW_CHAVE_TECNICA = [
+  "pagamento_obra_arq",
+  "pagamento_obra_hub",
+] as const;
+
+export type TipoEscrowChaveTecnica = (typeof TIPOS_ESCROW_CHAVE_TECNICA)[number];
