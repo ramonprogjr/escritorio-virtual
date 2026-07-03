@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   FileCheck2,
   Info,
+  KeyRound,
   Package,
   Sparkles,
   type LucideIcon,
@@ -31,6 +32,7 @@ const ICONES: Record<string, LucideIcon> = {
   package: Package,
   "calendar-clock": CalendarClock,
   "file-check": FileCheck2,
+  key: KeyRound,
 };
 
 type Estado =

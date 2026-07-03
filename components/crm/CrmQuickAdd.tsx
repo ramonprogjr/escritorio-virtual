@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Users, Briefcase, User, Building2, type LucideIcon } from "lucide-react";
 import { crmPodeVerRota } from "@/lib/crm/crm-permissoes";
+import { rbacPersonaForRole, type RbacPersona } from "@/lib/rbac/role-map";
 
 /**
  * QuickAdd (FAB) — botão flutuante "+" com criação rápida (Onda U2, Click-and-Go).
@@ -34,7 +35,18 @@ export function CrmQuickAdd({ role }: { role: string }) {
   const [modalAberto, setModalAberto] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const actions = ACTIONS.filter((a) => crmPodeVerRota(role, a.rota));
+  // Gate por PERSONA (Onda 2): as ações rápidas são COMERCIAIS (lead/negócio/pessoa/empresa).
+  // Só as personas internas as veem; personas técnicas/externas (arquiteto/engenharia/fornecedor/
+  // cliente) não criam leads — o FAB some p/ elas (não passam pelo filtro de grupo do nav).
+  // Personas internas seguem 100% pelo mesmo guard de rota do menu (comportamento preservado).
+  const PERSONAS_INTERNAS: ReadonlySet<RbacPersona> = new Set([
+    "hub-auditor",
+    "comercial",
+    "financeiro",
+  ]);
+  const actions = PERSONAS_INTERNAS.has(rbacPersonaForRole(role))
+    ? ACTIONS.filter((a) => crmPodeVerRota(role, a.rota))
+    : [];
 
   // Esconde o FAB quando há um sideover/modal aberto, para não sobrepor o botão de
   // ação (Criar/Guardar) do painel — evita o clique cair no FAB.

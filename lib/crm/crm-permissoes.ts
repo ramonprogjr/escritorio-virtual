@@ -9,7 +9,7 @@
  * Ariane=commercial), SEM regressão para os papéis PT/legado.
  */
 
-import { crmNivelForRole } from "@/lib/rbac/role-map";
+import { crmNivelForRole, roleTemCapacidade } from "@/lib/rbac/role-map";
 
 export type CrmNivel = "owner" | "gestor" | "comercial" | "financeiro" | "atendente";
 
@@ -223,7 +223,27 @@ function rotaRolesExatas(pathname: string): CrmNivel[] | null {
   return null;
 }
 
+/**
+ * Prefixos abertos por CAPABILITY de escrow (não por nível). CIRÚRGICO: SÓ a fila de
+ * aprovação. O portador da chave técnica/Hub (architect/operation) alcança a TELA para
+ * assinar sua chave sem que precisemos elevar o nível CRM dele (evita over-grant nas ~40
+ * rotas de admin/financeiro do gestor — invariante d). A fila se AUTO-FILTRA por capability
+ * no servidor (GET /api/hub/aprovacoes → só tipos de escrow); aqui é só o guard de rota-página.
+ */
+function rotaAbertaPorEscrowCap(role: string | null | undefined, pathname: string): boolean {
+  const path = pathname.split("?")[0] ?? pathname;
+  const naFila = path === "/crm/aprovacoes" || path.startsWith("/crm/aprovacoes/");
+  if (!naFila) return false;
+  return (
+    roleTemCapacidade(role, "escrow:chave_tecnica") ||
+    roleTemCapacidade(role, "escrow:chave_hub")
+  );
+}
+
 export function crmPodeVerRota(role: string | null | undefined, pathname: string): boolean {
+  // Exceção por capability (só /crm/aprovacoes): admite o portador de chave de escrow ANTES
+  // do gate de nível — architect/operation (nível comercial) chegam à fila p/ assinar a chave.
+  if (rotaAbertaPorEscrowCap(role, pathname)) return true;
   const nivel = crmNivelFromRole(role);
   if (!nivel) return false;
   const exatas = rotaRolesExatas(pathname);

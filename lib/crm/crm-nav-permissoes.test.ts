@@ -77,3 +77,101 @@ describe('P0: "Progresso sistema" fora do menu do produto', () => {
     }
   });
 });
+
+// ── ONDA 2 — personas técnicas (architect/operation) ──────────────────────────
+describe("Onda 2: acesso à fila de aprovações por CAPABILITY (não por nível)", () => {
+  it("architect e operation PODEM ver /crm/aprovacoes (chave técnica de escrow)", () => {
+    expect(crmPodeVerRota("architect", "/crm/aprovacoes")).toBe(true);
+    expect(crmPodeVerRota("operation", "/crm/aprovacoes")).toBe(true);
+  });
+
+  it("gestor/owner mantêm acesso à fila (veem tudo)", () => {
+    expect(crmPodeVerRota("gestor", "/crm/aprovacoes")).toBe(true);
+    expect(crmPodeVerRota("owner", "/crm/aprovacoes")).toBe(true);
+  });
+
+  it("SEM over-grant: comercial/financeiro/atendente continuam sem a fila", () => {
+    expect(crmPodeVerRota("comercial", "/crm/aprovacoes")).toBe(false);
+    expect(crmPodeVerRota("financeiro", "/crm/aprovacoes")).toBe(false);
+    expect(crmPodeVerRota("atendente", "/crm/aprovacoes")).toBe(false);
+  });
+
+  it("a capability NÃO abre outras rotas (exceção cirúrgica só p/ /crm/aprovacoes)", () => {
+    // architect tem escrow:chave_tecnica mas nível comercial → nada de admin/financeiro.
+    expect(crmPodeVerRota("architect", "/crm/financeiro")).toBe(false);
+    expect(crmPodeVerRota("architect", "/crm/empresas")).toBe(false);
+    expect(crmPodeVerRota("architect", "/crm/distribuicao")).toBe(false);
+  });
+});
+
+describe("Onda 2: nav persona-aware esconde grupos fora da persona", () => {
+  it("architect NÃO vê grupos Comercial nem Fornecedores", () => {
+    const h = hrefs("architect");
+    for (const leak of [
+      "/crm/leads",
+      "/crm/negocios",
+      "/crm/cadastro",
+      "/crm/atendimento",
+      "/crm/parceiros",
+      "/crm/fornecedores",
+      "/crm/especialistas",
+    ]) {
+      expect(h).not.toContain(leak);
+    }
+  });
+
+  it("architect vê SÓ Arquitetura em Operações (não Engenharia/Imóveis/Pedidos)", () => {
+    const h = hrefs("architect");
+    expect(h).toContain("/crm/arquitetura");
+    expect(h).not.toContain("/crm/obras");
+    expect(h).not.toContain("/crm/imoveis");
+    expect(h).not.toContain("/crm/pedidos");
+  });
+
+  it("operation vê Engenharia + Pedidos (não Arquitetura/Imóveis)", () => {
+    const h = hrefs("operation");
+    expect(h).toContain("/crm/obras");
+    expect(h).toContain("/crm/pedidos");
+    expect(h).not.toContain("/crm/arquitetura");
+    expect(h).not.toContain("/crm/imoveis");
+  });
+
+  it("architect e operation veem Dashboard + 'Chaves a assinar' (fila filtrada)", () => {
+    for (const r of ["architect", "operation"]) {
+      const h = hrefs(r);
+      expect(h).toContain("/crm");
+      expect(h).toContain("/crm/aprovacoes");
+    }
+  });
+
+  it("architect/operation NÃO recebem grupos de gestor+ (marketing/ia/admin)", () => {
+    for (const r of ["architect", "operation"]) {
+      const h = hrefs(r);
+      for (const g of ["/crm/trafego", "/crm/agentes", "/crm/configuracoes", "/crm/usuarios"]) {
+        expect(h).not.toContain(g);
+      }
+    }
+  });
+});
+
+describe("Onda 2 REGRESSÃO: menu dos papéis internos intocado", () => {
+  it("comercial mantém seu menu e NÃO ganha 'Chaves a assinar'", () => {
+    const h = hrefs("comercial");
+    expect(h).toContain("/crm/negocios");
+    expect(h).toContain("/crm/parceiros");
+    expect(h).toContain("/crm/arquitetura");
+    expect(h).toContain("/crm/obras");
+    // /crm/aprovacoes é minRole gestor → comercial nunca vê (nem via capability).
+    expect(h).not.toContain("/crm/aprovacoes");
+  });
+
+  it("gestor e owner mantêm o item 'Aprovações' (grupo Comercial)", () => {
+    expect(hrefs("gestor")).toContain("/crm/aprovacoes");
+    expect(hrefs("owner")).toContain("/crm/aprovacoes");
+  });
+
+  it("financeiro e atendente inalterados (sem persona-restrição nova)", () => {
+    expect(hrefs("financeiro")).toContain("/crm/financeiro");
+    expect(hrefs("atendente")).toContain("/crm/atendimento");
+  });
+});
