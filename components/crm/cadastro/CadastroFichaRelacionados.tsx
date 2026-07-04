@@ -43,6 +43,7 @@ function labelPapel(papel?: string | null): string | null {
 type Props = {
   pessoas?: RelItem[];
   empresas?: RelItem[];
+  parceiros?: RelItem[];
   leads?: RelItem[];
   negocios?: RelItem[];
   obras?: RelItem[];
@@ -107,6 +108,7 @@ function Secao({
 export function CadastroFichaRelacionados({
   pessoas = [],
   empresas = [],
+  parceiros = [],
   leads = [],
   negocios = [],
   obras = [],
@@ -116,10 +118,11 @@ export function CadastroFichaRelacionados({
   const linkProps =
     variant === "sideover" ? { target: "_blank" as const, rel: "noopener noreferrer" } : {};
 
-  // Ordem canônica: Pessoas · Empresas · Leads · Negócios · Obras · Projetos.
+  // Ordem canônica: Pessoas · Empresas · Parceiros · Leads · Negócios · Obras · Projetos.
   const grupos: Array<{ titulo: string; itens: RelItem[]; hrefFn: (id: string) => string }> = [
     { titulo: "PESSOAS", itens: pessoas, hrefFn: (id) => `/crm/pessoas/${id}` },
     { titulo: "EMPRESAS", itens: empresas, hrefFn: (id) => `/crm/empresas/${id}` },
+    { titulo: "PARCEIROS", itens: parceiros, hrefFn: (id) => `/crm/parceiros/${id}` },
     { titulo: "LEADS", itens: leads, hrefFn: (id) => `/crm/leads/${id}` },
     { titulo: "NEGÓCIOS", itens: negocios, hrefFn: (id) => `/crm/negocios/${id}` },
     { titulo: "OBRAS", itens: obras, hrefFn: (id) => `/crm/obras/${id}` },
