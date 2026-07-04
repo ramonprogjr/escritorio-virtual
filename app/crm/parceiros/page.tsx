@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { BadgeCheck, ClipboardList, UserPlus } from "lucide-react";
+import { BadgeCheck, ClipboardList, Link2, Plus, UserPlus } from "lucide-react";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
 import { EmptyState } from "@/components/crm/EmptyState";
 import { CadastroFiltrosBar } from "@/components/crm/cadastro/CadastroFiltrosBar";
 import { CadastroListaTable } from "@/components/crm/cadastro/CadastroListaTable";
 import { ParceiroLinkWizard } from "@/components/crm/parceiros/ParceiroLinkWizard";
+import { ParceiroFormManual } from "@/components/crm/parceiros/ParceiroFormManual";
 import { useCrmParceirosList, type ParceiroListaRow } from "@/hooks/useCrmListQueries";
+import { useQueryClient } from "@tanstack/react-query";
+import { crmQueryKeys } from "@/lib/crm/crm-query-keys";
 import { useCrmHeaderSlotConfig } from "@/hooks/useCrmHeaderSlotConfig";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
@@ -42,6 +45,8 @@ export default function ParceirosPage() {
   const [filtroEstagio, setFiltroEstagio] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const qc = useQueryClient();
 
   const parceirosQuery = useCrmParceirosList();
   const parceiros: ParceiroListaRow[] = parceirosQuery.data ?? [];
@@ -103,22 +108,50 @@ export default function ParceirosPage() {
 
   const headerActions = useMemo(
     () => (
-      <button
-        type="button"
-        onClick={() => setWizardOpen(true)}
-        style={{
-          background: "#003b26",
-          color: "#c9a24a",
-          border: "none",
-          borderRadius: 8,
-          padding: "10px 20px",
-          fontSize: 13,
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
-        + Convidar
-      </button>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => setFormOpen((v) => !v)}
+          title="Cadastrar manualmente um parceiro que você já conhece"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "#c9a24a",
+            color: "#003b26",
+            border: "none",
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <Plus size={15} strokeWidth={2.5} />
+          <span className="hidden sm:inline">Novo parceiro</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setWizardOpen(true)}
+          title="Gerar o link de inscrição da rede"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "transparent",
+            color: "#c9a24a",
+            border: "1px solid #1d3a2c",
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          <Link2 size={15} strokeWidth={2.5} />
+          <span className="hidden sm:inline">Convidar (link)</span>
+        </button>
+      </div>
     ),
     []
   );
@@ -156,7 +189,7 @@ export default function ParceirosPage() {
   }
 
   const emptyMessages: Record<AbaId, string> = {
-    captacao: "Nenhum parceiro em captação. Use «+ Convidar» para gerar um link de inscrição.",
+    captacao: "Nenhum parceiro em captação. Use «Novo parceiro» para cadastrar quem você já conhece, ou «Convidar (link)» para gerar o link de inscrição.",
     homologacao: "Nenhum parceiro em homologação no momento.",
     homologados: "Nenhum parceiro homologado ainda.",
   };
@@ -200,6 +233,15 @@ export default function ParceirosPage() {
           gap: 12,
         }}
       >
+        <ParceiroFormManual
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
+          onCreated={() => {
+            setFormOpen(false);
+            setAba("captacao");
+            void qc.invalidateQueries({ queryKey: crmQueryKeys.parceiros() });
+          }}
+        />
         <CadastroFiltrosBar
           busca={busca}
           onBuscaChange={setBusca}

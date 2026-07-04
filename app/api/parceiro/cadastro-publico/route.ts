@@ -99,12 +99,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (dupTel) {
+      // 409 genérico: rota pública não-autenticada não revela id/código internos.
       return NextResponse.json(
-        {
-          erro: "Telefone já cadastrado na rede.",
-          codigo: dupTel.codigo,
-          parceiro_id: dupTel.id,
-        },
+        { erro: "Telefone já cadastrado na rede." },
         { status: 409 }
       );
     }
@@ -119,7 +116,7 @@ export async function POST(request: NextRequest) {
       });
       if (dup) {
         return NextResponse.json(
-          { erro: "CPF já cadastrado.", codigo: dup.codigo, parceiro_id: dup.id },
+          { erro: "CPF já cadastrado." },
           { status: 409 }
         );
       }
@@ -131,7 +128,7 @@ export async function POST(request: NextRequest) {
       });
       if (dup) {
         return NextResponse.json(
-          { erro: "CNPJ já cadastrado.", codigo: dup.codigo, parceiro_id: dup.id },
+          { erro: "CNPJ já cadastrado." },
           { status: 409 }
         );
       }
@@ -178,8 +175,8 @@ export async function POST(request: NextRequest) {
 
     const warnings = [captacaoWarn, logWarn].filter(Boolean);
 
+    // Sucesso público: devolve só o código de rastreio (a UI exibe). Sem UUID interno.
     return NextResponse.json({
-      parceiro_id: parceiro.id,
       codigo: parceiro.codigo ?? codigo,
       status: "criado",
       warning: warnings.length ? warnings.join(" | ") : null,
