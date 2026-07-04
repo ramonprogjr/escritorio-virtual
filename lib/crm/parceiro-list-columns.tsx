@@ -46,13 +46,8 @@ function localParceiro(p: ParceiroListaRow): string {
 
 export function colunasParceiroLista(): CadastroListaColumn<ParceiroListaRow>[] {
   return [
-    {
-      id: "codigo",
-      label: "Código",
-      minWidth: 128,
-      mono: true,
-      render: (p) => cell(p.codigo, true),
-    },
+    // Código PAR- é IDENTIDADE interna (regra: some da lista — o usuário chama pelo NOME,
+    // igual ao Especialista). Continua rastreável na busca e visível no detalhe/admin.
     {
       id: "status",
       label: "Status",

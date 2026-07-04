@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       .or(tenantScopeOrFilter(tenantId))
       .maybeSingle();
     if (dup)
-      return NextResponse.json({ error: `Já existe um especialista com este CPF (${dup.nome}).` }, { status: 409 });
+      return NextResponse.json({ error: "Já existe um especialista com este CPF na rede." }, { status: 409 });
   }
 
   // Código ATÔMICO (rpc crm_proximo_codigo, contador por entidade/ano) — sem corrida
