@@ -70,6 +70,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   // 2. Vínculos N:N (pessoas/empresas participantes). Degrada p/ vazio se a tabela sumir.
   const vincPessoaIds: string[] = [];
   const vincEmpresaIds: string[] = [];
+  const vincParceiroIds: string[] = [];
   // Papel do vínculo (arquiteto/engenharia_executora/prestador/fornecedor/cliente/…), chaveado
   // por entidade_id. É o "quem é quem" do relacionado — retornado p/ a UI rotular ao lado do nome.
   const papelPorEntidade = new Map<string, string>();
@@ -102,15 +103,17 @@ export async function GET(request: NextRequest, { params }: Params) {
         if (papel && !papelPorEntidade.has(eid)) papelPorEntidade.set(eid, papel);
         if (String(row.entidade_tipo) === "pessoa") vincPessoaIds.push(eid);
         else if (String(row.entidade_tipo) === "empresa") vincEmpresaIds.push(eid);
+        else if (String(row.entidade_tipo) === "parceiro") vincParceiroIds.push(eid);
       }
     }
   }
 
   const pessoaIds = uniqStr([neg.pessoa_id, ...vincPessoaIds]);
   const empresaIds = uniqStr([neg.empresa_id, ...vincEmpresaIds]);
+  const parceiroIds = uniqStr(vincParceiroIds);
 
   // 3. Busca nomes em lote + entregas (obras/projetos) + lead de origem.
-  const [pessoasRes, empresasRes, leadRes, obrasRes, projetosRes] = await Promise.all([
+  const [pessoasRes, empresasRes, parceirosRes, leadRes, obrasRes, projetosRes] = await Promise.all([
     pessoaIds.length
       ? supabase.from("hub_pessoas").select("id, nome").in("id", pessoaIds).or(scope)
       : Promise.resolve({ data: [] as Array<{ id: string; nome: string | null }>, error: null }),
@@ -120,6 +123,9 @@ export async function GET(request: NextRequest, { params }: Params) {
           data: [] as Array<{ id: string; razao_social: string | null; nome_fantasia: string | null }>,
           error: null,
         }),
+    parceiroIds.length
+      ? supabase.from("hub_parceiros").select("id, nome").in("id", parceiroIds).or(scope)
+      : Promise.resolve({ data: [] as Array<{ id: string; nome: string | null }>, error: null }),
     neg.lead_id
       ? supabase.from("hub_leads_crm").select("id, nome").eq("id", neg.lead_id).or(scope).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
@@ -142,6 +148,17 @@ export async function GET(request: NextRequest, { params }: Params) {
         const eid = String(e.id);
         const papel = papelPorEntidade.get(eid);
         const base: NamedRef = { id: eid, nome: String(e.razao_social || e.nome_fantasia || "—") };
+        return papel ? { ...base, papel } : base;
+      });
+
+  // Parceiro/indicador vinculado ao negócio (rede) — antes sumia do Relacionados (só
+  // pessoa/empresa eram materializadas). Segue por NOME + papel, igual aos demais.
+  const parceiros: NamedRef[] = parceirosRes.error
+    ? []
+    : (parceirosRes.data ?? []).map((p) => {
+        const pid = String(p.id);
+        const papel = papelPorEntidade.get(pid);
+        const base: NamedRef = { id: pid, nome: String(p.nome ?? "—") };
         return papel ? { ...base, papel } : base;
       });
 
@@ -203,6 +220,6 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 
   return NextResponse.json({
-    data: { pessoas, empresas, leads, obras, projetos, linhagem },
+    data: { pessoas, empresas, parceiros, leads, obras, projetos, linhagem },
   });
 }

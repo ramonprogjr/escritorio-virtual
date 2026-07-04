@@ -1,7 +1,7 @@
 # 🌳 CONTROLE-MESTRE — Obra10+ / Escritório Virtual
 > **A raiz da árvore. Fonte única de verdade.** Se algo não está aqui (ou apontado daqui), está em risco de se perder. Atualizado a cada onda.
 >
-> **Última atualização:** 03/jul/2026 (noite) · **Progresso macro estimado: ~55%**
+> **Última atualização:** 04/jul/2026 (madrugada) · **Progresso macro estimado: ~56%** · última entrega: **Cadastro do Parceiro Fase 1** (`601b7eb`→`4081ec2`) — ver `docs/00-RELATORIO-MADRUGADA-04JUL.md`
 
 ---
 
@@ -56,7 +56,7 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 | **1** | RBAC role-map (13 papéis) + fecha 403 + escrow por capability | ✅ **E2E vivo: escrow liberado R$15k** | 63620f2→835c603 |
 | **2** | Fila de aprovações **filtrada por persona** + nav persona-aware | ✅ (falta E2E vivo pós-deploy) | 4c7ddad→191cb7a |
 | **A** | 🏛️ Mesa: **Tela do Arquiteto** (financeiro + Visão Geral macro/micro + Analytics TV tempo real) | 🏗️ rodando | → `docs/DESIGN-TELA-ARQUITETO.md` |
-| **B** | Cadastro do **Parceiro** (manual — FALTA — + link simples como MDO) | 📋 fila | mesa a fazer |
+| **B** | Cadastro do **Parceiro** — Fase 1 (form manual + rastreio "quem cadastrou" + endurecimentos de segurança) | ✅ no ar (staging) | `601b7eb`→`4081ec2` · Fase 2 (link HMAC) = backlog |
 | **C** | **Configurações** no menu (self-service: empresa cadastra funcionários + permissões = RBAC operável) | 📋 fila | mesa a fazer |
 | **3** | RBAC Onda 3 (ABAC fino por rota; endurecer o `comercial` de architect/operation) | 📋 fila | do design |
 | **D** | **Sistema de LOGS** unificado (erros + ações) — §7 | 📋 fila | mesa a fazer |
@@ -85,11 +85,12 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 - R7: default de papel desconhecido → fail-closed (hoje "comercial")
 - Amarrar escrow:chave_tecnica ao RESPONSÁVEL da linha (após JANELA-03)
 - Cron dos KPIs (alimenta analytics — anti parede-de-zeros)
+- **Parceiro Fase 2:** link de convite com "quem convidou" via **HMAC** (não forjável; `?por` cru rejeitado — precedente H-SEC-3) + coluna `cadastrado_por` em `hub_parceiros` (janela) + testes de integração da rota + alinhar dedup do especialista ao `.eq` puro (hoje `.or(is.null)`)
 
 ---
 
 ## 5. ÍNDICE DE DOCUMENTOS (mapa dos 142 — os que importam)
-- **Estado/entrada:** `00-LEIA-PRIMEIRO-ESTADO.md` · `INDICE.md` · **este** `CONTROLE-MESTRE.md`
+- **Estado/entrada:** `00-LEIA-PRIMEIRO-ESTADO.md` · `INDICE.md` · **este** `CONTROLE-MESTRE.md` · `00-RETOMADA-CHAT-NOVO.md` · **`00-RELATORIO-MADRUGADA-04JUL.md`** · **`MAPA-CONEXOES-CADASTROS.md`** ⭐ (rastreabilidade: como os cadastros se ligam + gaps)
 - **Visão/escopo:** `01_documento_mestre.md` · `ANALISE-MESTRA-ESCOPO.md` · `ESCOPO-MVP-V1-V2.md` · insumos-do-dono/`VISAO-DEFINITIVA-*`, `SPEC-RASTREABILIDADE-*`
 - **Design por módulo:** `A0..A2-DESIGN.md` (arquitetura) · `E0..E7-DESIGN.md` (engenharia/obra) · `ESTRUTURA-UNIFICADA-*` · `EAP-REFINADA-*`
 - **RBAC/atual:** `DESIGN-RBAC-MULTITENANT.md` ⭐ · (em breve) `DESIGN-TELA-ARQUITETO.md`

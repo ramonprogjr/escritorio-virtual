@@ -11,8 +11,8 @@
  * PURA e sem dependências de servidor → pode ser importada no cliente (app/crm/page.tsx decide
  * qual componente montar) e no servidor (route deriva a persona da SESSÃO, autoridade final).
  *
- * DEFAULT SEGURO: role desconhecido → "comercial" (o que já era servido hoje — não quebra).
- * Ver pendência R7: endurecer o default p/ um cockpit restrito quando o papel não é interno.
+ * DEFAULT FAIL-CLOSED (R7): role desconhecido/typo → cockpit externo RESTRITO, NUNCA o
+ * dashboard comercial completo do Hub. A tela neutra "sem acesso configurado" fica p/ a Onda 1c.
  */
 
 import { rbacPersonaForRole, type RbacPersona } from "@/lib/rbac/role-map";
@@ -39,8 +39,9 @@ export type PersonaNaoComercial = Exclude<PersonaCockpitTipo, "comercial">;
  *   • engenharia → "engenharia"; arquiteto → "arquiteto"; cliente → "cliente";
  *   • fornecedor → "fornecedor"; PARCEIRO → "fornecedor" (cockpit externo restrito —
  *     CORRIGE o vazamento em que broker/real_estate caíam no dashboard COMPLETO do Hub);
- *   • restrito → "comercial" por ora (Onda 1c endurece p/ tela neutra quando a UI
- *     ganhar o cockpit "sem acesso configurado"; o role-map já classifica como restrito).
+ *   • restrito → "fornecedor" (R7 FAIL-CLOSED): papel desconhecido/typo NÃO cai mais no
+ *     dashboard comercial completo — vai ao cockpit externo restrito (vazio p/ quem não tem
+ *     obra/cotação). Onda 1c troca por uma tela neutra "sem acesso configurado".
  */
 const RBAC_PERSONA_TO_COCKPIT: Record<RbacPersona, PersonaCockpitTipo> = {
   "hub-auditor": "comercial",
@@ -51,7 +52,7 @@ const RBAC_PERSONA_TO_COCKPIT: Record<RbacPersona, PersonaCockpitTipo> = {
   fornecedor: "fornecedor",
   parceiro: "fornecedor",
   cliente: "cliente",
-  restrito: "comercial",
+  restrito: "fornecedor",
 };
 
 /**

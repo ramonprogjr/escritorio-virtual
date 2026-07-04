@@ -108,6 +108,7 @@ type NamedRef = { id: string; nome: string; papel?: string | null };
 type Relacionados = {
   pessoas: NamedRef[];
   empresas: NamedRef[];
+  parceiros?: NamedRef[];
   leads: NamedRef[];
   obras: NamedRef[];
   projetos: NamedRef[];
@@ -552,6 +553,7 @@ export default function NegocioDetalhePage() {
           <CadastroFichaRelacionados
             pessoas={relacionados.pessoas}
             empresas={relacionados.empresas}
+            parceiros={relacionados.parceiros ?? []}
             leads={relacionados.leads}
             obras={relacionados.obras}
             projetos={relacionados.projetos}
