@@ -111,3 +111,41 @@ describe("controle de rota por nível", () => {
     expect(crmRotaInicial("gestor")).toBe("/crm");
   });
 });
+
+// ── Cobertura dos casos que faltavam (destravamento 05/jul): o 403 real era com os
+// papeis EN INTERNOS, e as duas regras ORTOGONAIS (financeiro exato + escrow). ──
+
+describe("crmNivelFromRole — papeis EN INTERNOS ganham nivel (fix REAL do 403)", () => {
+  it("commercial/operation/architect/financial NAO caem mais em null", () => {
+    expect(crmNivelFromRole("commercial")).toBe("comercial");
+    expect(crmNivelFromRole("operation")).toBe("comercial");
+    expect(crmNivelFromRole("architect")).toBe("comercial");
+    expect(crmNivelFromRole("financial")).toBe("financeiro");
+  });
+  it("EN externos + ai_agent seguem null (invariante fail-closed)", () => {
+    for (const r of ["supplier", "broker", "real_estate", "client", "ai_agent"]) {
+      expect(crmNivelFromRole(r)).toBeNull();
+    }
+  });
+});
+
+describe("crmPodeVerRota — /crm/financeiro por CONJUNTO EXATO (nao rank)", () => {
+  it("financeiro/gestor/owner entram; comercial (rank acima) NAO", () => {
+    expect(crmPodeVerRota("financial", "/crm/financeiro")).toBe(true);
+    expect(crmPodeVerRota("gestor", "/crm/financeiro")).toBe(true);
+    expect(crmPodeVerRota("owner", "/crm/financeiro")).toBe(true);
+    // comercial supera financeiro no rank, mas financeiro e funcao ortogonal:
+    expect(crmPodeVerRota("commercial", "/crm/financeiro")).toBe(false);
+  });
+});
+
+describe("crmPodeVerRota — escrow em /crm/aprovacoes (capability, NAO nivel)", () => {
+  it("architect/operation (nivel comercial) alcancam a fila p/ assinar a chave tecnica", () => {
+    expect(crmPodeVerRota("architect", "/crm/aprovacoes")).toBe(true);
+    expect(crmPodeVerRota("operation", "/crm/aprovacoes")).toBe(true);
+  });
+  it("comercial SEM chave de escrow NAO entra; gestor entra por nivel", () => {
+    expect(crmPodeVerRota("commercial", "/crm/aprovacoes")).toBe(false);
+    expect(crmPodeVerRota("gestor", "/crm/aprovacoes")).toBe(true);
+  });
+});
