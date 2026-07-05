@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, Shield, type LucideIcon } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
-import { getInitials } from "@/lib/data/office-map";
+import { getInitials } from "@/lib/getInitials";
 
 /** Um único `onAuthStateChange` + um `getUser` inicial para todos os footers (sidebar + drawer) — evita locks GoTrue duplicados. */
 type AuthProfileListener = (user: User | null) => void;
