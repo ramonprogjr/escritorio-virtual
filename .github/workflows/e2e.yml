@@ -1,0 +1,36 @@
+name: E2E
+# Rede E2E do destravamento — protege a extração do app/crm/layout.tsx (52 telas).
+# Sobe um Supabase LOCAL no runner (auth real, SEM backdoor) e visita as telas.
+# Escopado aos arquivos do E2E p/ não rodar em todo commit; também dispara à mão.
+on:
+  workflow_dispatch:
+  push:
+    branches: [wendel/dev]
+    paths:
+      - ".github/workflows/e2e.yml"
+      - "supabase/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+
+jobs:
+  # Estágio A — prova que as 99 migrations aplicam num DB ZERADO (risco do repo↔live drift).
+  db:
+    name: Supabase local + migrations (fresh DB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: "2.109.0"
+
+      - name: supabase start (aplica migrations + seed num DB zerado)
+        run: supabase start
+
+      - name: migrations aplicadas (lista)
+        run: supabase migration list --local
+
+      - name: status (portas + chaves locais)
+        if: always()
+        run: supabase status || true
