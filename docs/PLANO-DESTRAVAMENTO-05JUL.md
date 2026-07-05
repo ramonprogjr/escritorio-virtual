@@ -114,3 +114,23 @@ Começar **hoje pela Fase 0** — risco zero, remove ~11% do peso morto e limpa 
 - **1.2 (smoke E2E) e 1.3 (render tests) — DEFERIDOS de propósito.** Exigem decisão de infra melhor tomada com o dono: 1.2 precisa de harness de login no CI (usuário/DB de teste); 1.3 precisa de happy-dom/jsdom + testing-library + estratégia de mock dos providers. Rushed com o dono fora = teste piscando / CI vermelho.
 
 **PRÓXIMO (com o dono):** decidir o harness → fechar 1.2/1.3 → só então Fase 2 (destravar acoplamento) sobre a rede pronta. NÃO pulei pra Fase 2 de propósito — seria repetir o erro de refatorar sem rede.
+
+### Continuação (05/jul, tarde) — Fase 1.3 + Fase 2 (parcial), tudo gated + pushed
+> Dono: "vamos seguir" / "siga para a fase 2" / "sem parar". Executei autônomo, **gate verde + push (origin+backup) a cada passo. Nada deployado p/ prod.**
+
+**Fase 1.3 — REDE (fundação + expansão):**
+- `f2332b0` infra render (happy-dom + testing-library) + render test do `CrmCheckbox` + lógica pura do header (`crm-universal-header-visibility`, `crm-header-defaults`).
+- `abc11bd` guard de rota RBAC (`crmPodeVerRota`: fix do 403 EN + financeiro-exato + exceção escrow) — expandiu `crm-permissoes.test`.
+- `a63ecce` menu-por-papel RBAC (`filterCrmNavGroupsForRole`, persona-aware). **Trio RBAC coberto** (role-map + guard + menu). **799 testes.**
+
+**Fase 2 — DESTRAVAR (as etapas SEGURAS, protegidas pelo gate tsc/build):**
+- `0013765` **2.1** unifica **66 clientes Supabase** → `crmDb` aliased (**−613 linhas**; 16 fail-closed PULADOS de propósito — têm guarda `return null`/`throw` que o `crmDb` não tem).
+- `0923a88` **2.2** `tenantScopeExact` (opção segura p/ tabela privada) + aviso no `tenantScopeOrFilter` + teste da distinção.
+
+**🔒 SEGURADO p/ fazer COM o dono (não faço no escuro):**
+- **2.3 extrair `app/crm/layout.tsx`** — quebra as 52 telas se errar, e `tsc`/`build` NÃO pega quebra de *render*. Precisa E2E logado (decisão de auth) OU seus olhos no app ao vivo.
+- **2.4 RBAC ponto único** — mexe em autorização; por último.
+- **Faixa B tenant-null** (trocar as call-sites `tenantScopeOrFilter`→`tenantScopeExact`) = janela do dono (dado em prod).
+- **16 clientes fail-closed** (2.1b) — unificar preservando o fail-closed = mudança de fluxo por arquivo, delicada; follow-up cuidadoso.
+
+**PRÓXIMO UNBLOCK:** decidir o harness de **E2E (auth)** → rede de tela → aí a **2.3** vira a 1ª entrega cirúrgica sobre a base já limpa.
