@@ -70,6 +70,7 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 - `docs/JANELA-02-DEMO-escrow-*.sql` ✅ RODADO (demo liberou R$15k)
 - `docs/JANELA-03-eng-responsavel-obra.sql` 📋 pronto (coluna eng responsável)
 - **Pacote RLS + backfill tenant-NULL** (endurecer USING(true), `.eq` puro, backfill 1 pessoa) — a preparar
+- **Onda tenant-null Faixa B** (`buscar-pessoa-documento` — oráculo de CPF/CNPJ): backfill 1 linha NULL em `hub_pessoas` → `.eq` puro → reescrever teste que institucionaliza o leak → `UNIQUE(tenant_id, documento)` → guardas nos consumidores. Ver `docs/AUDITORIA-TENANT-NULL-LEAK-05JUL.md`
 - **Rotação da service_role key + reescopo INTERNAL_API_KEY** (D9 do RBAC) — pré-multi-tenant
 - **Escrow #5** (GREATEST/FOR UPDATE) + `.env` fora do OneDrive
 ### 4.2 🧊 Decisões de produto (do dono)
@@ -85,7 +86,9 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 - R7: default de papel desconhecido → fail-closed (hoje "comercial")
 - Amarrar escrow:chave_tecnica ao RESPONSÁVEL da linha (após JANELA-03)
 - Cron dos KPIs (alimenta analytics — anti parede-de-zeros)
-- ~~**Parceiro Fase 2:** link de convite "quem convidou" via **HMAC**~~ ✅ **FEITO** (`28822e2`, E2E verde: 401 gate · sig válido credita · forjado recusa; grava em `hub_parceiros_log.dados`). Coluna `cadastrado_por` **DISPENSADA** — a coluna `dados` já existe em prod e persiste a atribuição sem migração. **Resta:** deploy p/ `feature/escritorio-visual` + alinhar dedup do **especialista** ao `.eq` puro (hoje `.or(is.null)`)
+- ~~**Parceiro Fase 2:** link de convite "quem convidou" via **HMAC**~~ ✅ **FEITO** (`28822e2`, E2E verde: 401 gate · sig válido credita · forjado recusa; grava em `hub_parceiros_log.dados`). Coluna `cadastrado_por` **DISPENSADA** — a coluna `dados` já existe em prod e persiste a atribuição sem migração.
+- ~~alinhar dedup do **especialista** ao `.eq` puro~~ ✅ **FEITO** (`a2b2566`) + **onda tenant-null Faixa A** (`02f6471`): `.eq` puro em fornecedores/alertas/canais/auditor. Auditoria adversarial (23 agentes) mapeou 5 leaks + 6 intencionais preservados — `docs/AUDITORIA-TENANT-NULL-LEAK-05JUL.md`. **Faixa B** → §4.1 (janela).
+- **Resta:** deploy p/ `feature/escritorio-visual` (Fase 2 + Faixa A) — comando pronto, aguarda push do dono
 
 ---
 
