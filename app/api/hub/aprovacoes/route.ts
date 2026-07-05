@@ -1,17 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmAprovador } from "@/lib/crm/crm-api-auth";
 import { isCrmGestorRole } from "@/lib/crm/crm-permissoes";
 import { roleTemCapacidade } from "@/lib/rbac/role-map";
 import { TIPOS_ESCROW_CHAVE_TECNICA } from "@/lib/crm/aprovacoes-tipos";
 import { isMissingPgColumn } from "@/lib/tenant-default";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 export async function GET(request: NextRequest) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {

@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { sugerirEncaminhamentoAutomatico } from "@/lib/crm/sugerir-encaminhamento-auto";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 export async function POST(request: NextRequest) {
   const g = await requireCrmComercial(request);

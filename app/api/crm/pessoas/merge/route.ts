@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db, crmConfigError as configError } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import { normalizarIdUuid } from "@/lib/crm/uuid-crm";
@@ -7,23 +7,6 @@ import {
   actorFromRequestHeaders,
   registrarAuditoriaCrm,
 } from "@/lib/crm/registrar-auditoria-crm";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-function configError(): string | null {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
-    return "NEXT_PUBLIC_SUPABASE_URL nao esta definida no servidor.";
-  }
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
-    return "SUPABASE_SERVICE_ROLE_KEY nao esta definida no servidor.";
-  }
-  return null;
-}
 
 /** Mapeia mensagens da RPC para status HTTP. */
 function statusFromRpcMessage(msg: string): number {

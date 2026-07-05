@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   extrairPaircodeDePayloadUazapi,
@@ -69,13 +69,6 @@ function jsonErroUazapi(out: {
     ...(out.uazapi_connection_status ? { uazapi_connection_status: out.uazapi_connection_status } : {}),
     ...(out.uazapi_auth_failed ? { uazapi_auth_failed: true } : {}),
   };
-}
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 }
 
 export async function POST(

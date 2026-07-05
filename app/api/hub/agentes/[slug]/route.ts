@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse, after } from "next/server";
 import { runPlaybookPipeline } from "@/lib/playbook/orchestrate";
 import {
@@ -48,13 +48,6 @@ function isSetorIaColumnMissing(message?: string): boolean {
     m.includes("does not exist") ||
     m.includes("schema cache") ||
     m.includes("could not find")
-  );
-}
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 

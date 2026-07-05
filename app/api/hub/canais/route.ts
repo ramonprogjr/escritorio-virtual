@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizarAgenteHubParaCliente } from "@/lib/hub/sanitize-agente-hub-public";
 import { selectHubAgenteWithColumnFallback } from "@/lib/hub/hub-agente-column-compat";
@@ -7,13 +7,6 @@ import { tenantScopeOrFilter, isMissingPgColumn } from "@/lib/tenant-default";
 
 const CANAIS_SELECT =
   "agente_slug, nome, ativo, arquivado_em, uazapi_instance_id, uazapi_instance_name, uazapi_connection_status, uazapi_instance_token, modo_operacao, uazapi_snapshot_at";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /** Lista canais WhatsApp — só leitura do banco, sem chamadas WhatsApp. */
 export async function GET(request: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import {
   modeloAltoValorForHubInsert,
   modeloCriticoForHubInsert,
@@ -7,13 +7,6 @@ import {
 } from "@/lib/ia/hub-model-defaults";
 import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { sanitizarAgenteHubParaCliente } from "@/lib/hub/sanitize-agente-hub-public";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /** Leitura (mapa do escritório): sessão CRM ativa basta (Batch 5). */
 export async function GET(request: NextRequest) {

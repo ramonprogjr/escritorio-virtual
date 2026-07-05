@@ -1,16 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { uploadCustomPlaybookForAgent } from "@/lib/playbook/custom-playbook";
 import { parsePlaybookFlowFromMarkdown } from "@/lib/playbook/flow-parse";
 import { validatePlaybookFlowDefinition } from "@/lib/playbook/flow-validate";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
 function agenteForaDoTenant(

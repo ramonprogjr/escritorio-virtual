@@ -1,16 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { gerarCodigoSequencial, HUB_PREFIXO_CODIGO } from "@/lib/crm/codigos-rastreio";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 export async function GET(request: NextRequest) {
   const g = await requireCrmSessao(request);

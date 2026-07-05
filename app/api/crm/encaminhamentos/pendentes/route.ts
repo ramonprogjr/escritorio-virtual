@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import type { CandidatoParceiro } from "@/lib/crm/distribuir-lead";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 function parseCriterio(raw: string | null | undefined): {
   parceiro_id?: string;

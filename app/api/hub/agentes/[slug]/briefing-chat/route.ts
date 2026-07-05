@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   executarBriefingReply,
@@ -24,13 +24,6 @@ function agenteForaDoTenant(
 ): boolean {
   if (!row) return false;
   return row.tenant_id != null && String(row.tenant_id) !== tenantId;
-}
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 }
 
 const MODELO_FALLBACK = "mistral";

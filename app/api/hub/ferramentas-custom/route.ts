@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import {
   catalogoBuiltinPorId,
@@ -11,13 +10,7 @@ import {
   smartProviderValido,
 } from "@/lib/hub/ferramentas-custom-db";
 import { requireCrmOwner, requireCrmSessao } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 export async function GET(request: NextRequest) {
   // E-B9 (GET): guard de sessão — listar ferramentas não é operação destrutiva.
