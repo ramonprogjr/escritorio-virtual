@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
   let query = crmDb()
     .from("hub_fornecedores")
     .select(SELECT, { count: "exact" })
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    // Escopo ESTRITO ao tenant — `.eq` puro (nunca `.or(...is.null)`, que sob service_role
+    // casaria linhas orfas/legadas de OUTRO tenant = over-share cross-tenant).
+    .eq("tenant_id", tenantId)
     .order("criado_em", { ascending: false })
     .limit(100);
 

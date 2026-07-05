@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { gerarCodigoSequencial } from "@/lib/crm/codigos-rastreio";
-import { tenantScopeOrFilter } from "@/lib/tenant-default";
 
 /** Rede — Especialistas / mão de obra (sem login; cadastro interno). Formato Membros. */
 const SELECT =
@@ -21,7 +20,9 @@ export async function GET(request: NextRequest) {
   let query = crmDb()
     .from("hub_especialistas")
     .select(SELECT, { count: "exact" })
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    // Escopo ESTRITO ao tenant da sessão — `.eq` PURO (nunca `.or(...is.null)`, que sob
+    // service_role casaria linhas órfãs/legadas de OUTRO tenant = over-share cross-tenant).
+    .eq("tenant_id", tenantId)
     .order("criado_em", { ascending: false })
     .limit(100);
 
@@ -48,15 +49,16 @@ export async function POST(request: NextRequest) {
 
   const tenantId = g.ctx.tenantId;
 
-  // Dedup de CPF POR TENANT (null-safe p/ legado). Não vaza o nome de especialista de
-  // outra empresa: a verificação fica restrita ao escopo do caller.
+  // Dedup de CPF ESTRITO ao tenant da sessão — `.eq("tenant_id")` PURO (nunca `.or(is.null)`,
+  // que sob service_role casaria linhas órfãs/legadas de OUTRO tenant = vazamento/oráculo do
+  // nome de especialista de outra empresa). A verificação fica restrita ao escopo do caller.
   const cpf = String(body.cpf || "").replace(/\D/g, "") || null;
   if (cpf) {
     const { data: dup } = await crmDb()
       .from("hub_especialistas")
       .select("id, nome")
       .eq("cpf", cpf)
-      .or(tenantScopeOrFilter(tenantId))
+      .eq("tenant_id", tenantId)
       .maybeSingle();
     if (dup)
       return NextResponse.json({ error: "Já existe um especialista com este CPF na rede." }, { status: 409 });

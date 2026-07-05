@@ -8,6 +8,7 @@ import {
 } from "@/lib/crm/parceiro-compat";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import { checkPortalVerifyRateLimit } from "@/lib/portal-rate-limit";
+import { conviteParceiroValido } from "@/lib/crm/parceiro-convite";
 
 function clientIp(request: NextRequest): string {
   return (
@@ -166,11 +167,20 @@ export async function POST(request: NextRequest) {
       canal: "formulario_web",
     });
 
+    // "Quem convidou" (Fase 2) só é creditado se o HMAC do link confere — anti-forja /
+    // fraude de comissão (H-SEC-3). Sem sig válido, NÃO confia no ?por cru: não-verificado.
+    const convPor = String(body.convidado_por || "").trim();
+    const convSig = String(body.convidado_sig || "").trim();
+    const conviteVerificado = !!convPor && !!convSig && conviteParceiroValido(convPor, convSig);
+
     const logWarn = await insertParceiroLogCompat(supabase, {
       parceiro_id: parceiro.id,
       evento: "cadastro_link_publico",
       descricao: `Cadastro via link da rede — ${codigo} (${tipo_pessoa}, ${perfil}, ${mercado || "—"})`,
       feito_por: "parceiro",
+      dados: conviteVerificado
+        ? { convidado_por_user: convPor, convite_verificado: true }
+        : { convite_verificado: false },
     });
 
     const warnings = [captacaoWarn, logWarn].filter(Boolean);

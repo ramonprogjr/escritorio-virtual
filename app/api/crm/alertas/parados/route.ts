@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await crmDb()
     .from("hub_leads_crm")
     .select(SELECT)
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    // `.eq` puro (nunca `.or(...is.null)`): sob service_role o is.null vazaria PII de lead de OUTRO tenant.
+    .eq("tenant_id", tenantId)
     .not("estagio", "in", ETAPAS_TERMINAIS)
     .is("proxima_acao", null)
     .order("atualizado_em", { ascending: true, nullsFirst: true })
