@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await crmDb()
     .from("hub_canais_entrada")
     .select(SELECT)
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
+    // `.eq` puro (nunca `.or(...is.null)`): sob service_role o is.null vazaria canais de OUTRO tenant.
+    .eq("tenant_id", tenantId)
     .eq("ativo", true)
     .order("criado_em", { ascending: true });
 

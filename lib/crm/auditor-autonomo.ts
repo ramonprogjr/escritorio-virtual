@@ -35,7 +35,8 @@ export async function rodarAuditorRede(
     .select("event_type, fornecedor_id, payload, ts")
     .order("ts", { ascending: false })
     .limit(3000);
-  if (tenantId) q = q.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+  // `.eq` puro (nunca `.or(...is.null)`): agrega hub_eventos por tenant sem over-share cross-tenant.
+  if (tenantId) q = q.eq("tenant_id", tenantId);
   const { data } = await q;
   const eventos = (data ?? []) as EventoRow[];
 
@@ -68,10 +69,13 @@ export async function rodarAuditorRede(
   const statusById = new Map<string, string>();
   const nomeById = new Map<string, string | null>();
   if (ids.length) {
-    const { data: ps } = await supabase
+    // Resolve nome/status SÓ de parceiros do mesmo tenant (não cruza parceiro de outro tenant).
+    let pq = supabase
       .from("hub_parceiros")
       .select("id, nome, status_financeiro")
       .in("id", ids);
+    if (tenantId) pq = pq.eq("tenant_id", tenantId);
+    const { data: ps } = await pq;
     for (const p of ps ?? []) {
       statusById.set(p.id as string, (p.status_financeiro as string) ?? "em_dia");
       nomeById.set(p.id as string, (p.nome as string) ?? null);
