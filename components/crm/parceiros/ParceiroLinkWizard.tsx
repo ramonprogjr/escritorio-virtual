@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Copy, ExternalLink, Link2, X } from "lucide-react";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 import {
   PARCEIRO_LINK_TOKEN_REDE,
   urlCadastroParceiroPublico,
@@ -26,8 +27,27 @@ export function ParceiroLinkWizard({ open, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setLink(urlCadastroParceiroPublico());
     setCopiado(false);
+    // Busca a atribuição ASSINADA (quem convidou = userId da sessão + HMAC) e monta o link
+    // ?por=&sig=. Se falhar, degrada p/ o link da rede sem atribuição (nunca bloqueia o convite).
+    let cancelado = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/crm/parceiros/convite", { headers: internalApiHeaders() });
+        const json = (await res.json().catch(() => ({}))) as { por?: string; sig?: string };
+        if (cancelado) return;
+        setLink(
+          res.ok && json.por && json.sig
+            ? urlCadastroParceiroPublico({ por: json.por, sig: json.sig })
+            : urlCadastroParceiroPublico()
+        );
+      } catch {
+        if (!cancelado) setLink(urlCadastroParceiroPublico());
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
   }, [open]);
 
   useEffect(() => {

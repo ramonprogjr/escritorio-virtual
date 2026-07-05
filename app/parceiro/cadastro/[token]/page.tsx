@@ -35,6 +35,14 @@ export default function CadastroParceiro() {
   const [salvando, setSalvando] = useState(false);
   const [erroForm, setErroForm] = useState("");
 
+  // Atribuição "quem convidou" vinda do link (?por=&sig=), lida do client (sem useSearchParams
+  // p/ não exigir Suspense). A rota pública valida o HMAC; aqui só repassa o par por+sig.
+  const [convidado, setConvidado] = useState<{ por: string; sig: string }>({ por: "", sig: "" });
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    setConvidado({ por: sp.get("por") || "", sig: sp.get("sig") || "" });
+  }, []);
+
   const [tipoPessoa, setTipoPessoa] = useState<TipoPessoa>("PF");
   const [perfil, setPerfil] = useState<PerfilParceiro>("corretor_imobiliario");
   const [codigoGerado, setCodigoGerado] = useState("");
@@ -136,6 +144,8 @@ export default function CadastroParceiro() {
         cidade: form.cidade,
         estado: form.estado,
         especialidade,
+        convidado_por: convidado.por || undefined,
+        convidado_sig: convidado.sig || undefined,
       }),
     });
 
