@@ -2,15 +2,11 @@ name: E2E
 # Rede E2E do destravamento — protege a extração do app/crm/layout.tsx (52 telas).
 # Sobe um Supabase LOCAL no runner (auth real, SEM backdoor) e visita as telas.
 # Escopado aos arquivos do E2E p/ não rodar em todo commit; também dispara à mão.
+# WIP — bloqueado pelo achado: o repo nao reconstroi o banco do zero (schema-base
+# criado fora das migrations). So dispara a mao ate existir a baseline migration
+# (schema reproduzivel) — ver memoria schema-nao-reproduzivel-migrations-fora-de-ordem.
 on:
-  workflow_dispatch:
-  push:
-    branches: [wendel/dev]
-    paths:
-      - ".github/workflows/e2e.yml"
-      - "supabase/**"
-      - "e2e/**"
-      - "playwright.config.ts"
+  workflow_dispatch: {}
 
 jobs:
   # Estágio A — prova que as 99 migrations aplicam num DB ZERADO (risco do repo↔live drift).
