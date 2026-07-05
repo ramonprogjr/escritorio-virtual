@@ -56,7 +56,7 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 | **1** | RBAC role-map (13 papéis) + fecha 403 + escrow por capability | ✅ **E2E vivo: escrow liberado R$15k** | 63620f2→835c603 |
 | **2** | Fila de aprovações **filtrada por persona** + nav persona-aware | ✅ (falta E2E vivo pós-deploy) | 4c7ddad→191cb7a |
 | **A** | 🏛️ Mesa: **Tela do Arquiteto** (financeiro + Visão Geral macro/micro + Analytics TV tempo real) | 🏗️ rodando | → `docs/DESIGN-TELA-ARQUITETO.md` |
-| **B** | Cadastro do **Parceiro** — Fase 1 (form manual + rastreio "quem cadastrou" + endurecimentos de segurança) | ✅ no ar (staging) | `601b7eb`→`4081ec2` · Fase 2 (link HMAC) = backlog |
+| **B** | Cadastro do **Parceiro** — Fase 1 (form manual) ✅ + **Fase 2 (link HMAC "quem convidou")** ✅ | ✅ Fase 1 no ar (staging); **Fase 2 código em `wendel/dev` `28822e2`, E2E verde, aguarda deploy** | `601b7eb`→`4081ec2` · Fase 2 `28822e2` |
 | **C** | **Configurações** no menu (self-service: empresa cadastra funcionários + permissões = RBAC operável) | 📋 fila | mesa a fazer |
 | **3** | RBAC Onda 3 (ABAC fino por rota; endurecer o `comercial` de architect/operation) | 📋 fila | do design |
 | **D** | **Sistema de LOGS** unificado (erros + ações) — §7 | 📋 fila | mesa a fazer |
@@ -85,7 +85,7 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 - R7: default de papel desconhecido → fail-closed (hoje "comercial")
 - Amarrar escrow:chave_tecnica ao RESPONSÁVEL da linha (após JANELA-03)
 - Cron dos KPIs (alimenta analytics — anti parede-de-zeros)
-- **Parceiro Fase 2:** link de convite com "quem convidou" via **HMAC** (não forjável; `?por` cru rejeitado — precedente H-SEC-3) + coluna `cadastrado_por` em `hub_parceiros` (janela) + testes de integração da rota + alinhar dedup do especialista ao `.eq` puro (hoje `.or(is.null)`)
+- ~~**Parceiro Fase 2:** link de convite "quem convidou" via **HMAC**~~ ✅ **FEITO** (`28822e2`, E2E verde: 401 gate · sig válido credita · forjado recusa; grava em `hub_parceiros_log.dados`). Coluna `cadastrado_por` **DISPENSADA** — a coluna `dados` já existe em prod e persiste a atribuição sem migração. **Resta:** deploy p/ `feature/escritorio-visual` + alinhar dedup do **especialista** ao `.eq` puro (hoje `.or(is.null)`)
 
 ---
 
