@@ -53,12 +53,32 @@ export async function GET(request: NextRequest, { params }: Params) {
     supabase.from("hub_propostas").select("*").eq("negocio_id", id).order("criado_em", { ascending: false }),
   ]);
 
+  // A1: etapas reais do pipeline deste negócio — a régua da ficha usa os slugs VÁLIDOS
+  // (os fixos davam 400 nos pipelines de mercado). Sem pipeline → array vazio (a ficha
+  // cai na lista legada).
+  const pipelineId = (negocio as { pipeline_id?: string | null }).pipeline_id ?? null;
+  let estagios: Array<{ slug: string; label: string; tipo_fecho: string | null }> = [];
+  if (pipelineId) {
+    const { data: est } = await supabase
+      .from("hub_pipeline_estagios")
+      .select("slug, label, tipo_fecho")
+      .eq("pipeline_id", pipelineId)
+      .eq("ativo", true)
+      .order("ordem", { ascending: true });
+    estagios = (est ?? []).map((e) => ({
+      slug: String(e.slug),
+      label: String(e.label ?? e.slug),
+      tipo_fecho: e.tipo_fecho != null ? String(e.tipo_fecho) : null,
+    }));
+  }
+
   return NextResponse.json({
     data: negocio,
     lead: lead ?? null,
     pessoa: pessoa ?? null,
     timeline: atividades ?? [],
     propostas: propostas ?? [],
+    estagios,
   });
 }
 
