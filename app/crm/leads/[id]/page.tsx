@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
-import { estagioParaColunaKanban } from "@/lib/crm/estagio-map";
+import { estagioParaColunaKanban, legacyToFunil } from "@/lib/crm/estagio-map";
 import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
@@ -448,8 +448,14 @@ export default function LeadFichaPage() {
     );
   }
 
-  const estagio = estagioParaColunaKanban(lead.estagio as string);
-  const corEstagio = ESTAGIO_COR[estagio] || "#888";
+  const estagio = estagioParaColunaKanban(lead.estagio as string); // coluna do kanban (agrupamento)
+  // Vocabulário do FUNIL visível (barra + badge): o dono só lê as 8 etapas do ciclo de vida.
+  // A barra e o badge falam ESTE vocabulário, não o slug cru de coluna de vendas (que fazia o
+  // chip não acender e a cor cair no fallback). Ver docs/AUDITORIA-CICLO-LEAD-v1.md.
+  const estagioFunil = legacyToFunil(lead.estagio as string);
+  const etapaFunil = FUNIL_LEAD_ETAPAS.find((e) => e.slug === estagioFunil);
+  const estagioLabel = etapaFunil?.label ?? estagio;
+  const corEstagio = etapaFunil?.cor || ESTAGIO_COR[estagio] || "#888";
   const meta = (lead.metadata as Record<string, unknown>) || {};
   const mercadoMeta =
     (meta.mercado as string) || (meta.primeira_mensagem != null ? "ver metadata" : null);
@@ -560,7 +566,7 @@ export default function LeadFichaPage() {
                   border: `1px solid ${corEstagio}44`,
                 }}
               >
-                {estagio}
+                {estagioLabel}
               </span>
             </div>
             <p className="mt-0.5 truncate text-xs" style={{ color: "#7d8a99" }}>
@@ -575,7 +581,7 @@ export default function LeadFichaPage() {
             leadId={id}
             leadNome={lead.nome as string}
             onDone={() => void carregar()}
-            onQualificar={() => moverEstagio("qualificado")}
+            onQualificar={() => moverEstagio("qualificando")}
           />
           <button
             type="button"
@@ -647,10 +653,10 @@ export default function LeadFichaPage() {
               else void moverEstagio(e.slug);
             }}
             className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors md:text-xs ${
-              estagio === e.slug ? "font-semibold" : "text-gray-500 hover:bg-white/[0.05] hover:text-gray-300"
+              estagioFunil === e.slug ? "font-semibold" : "text-gray-500 hover:bg-white/[0.05] hover:text-gray-300"
             }`}
             style={
-              estagio === e.slug
+              estagioFunil === e.slug
                 ? {
                     backgroundColor: `${e.cor}22`,
                     color: e.cor,
@@ -915,7 +921,7 @@ export default function LeadFichaPage() {
                         border: `1px solid ${corEstagio}44`,
                       }}
                     >
-                      {estagio}
+                      {estagioLabel}
                     </span>
                   </div>
 
