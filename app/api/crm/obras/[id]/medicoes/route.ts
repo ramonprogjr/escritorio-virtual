@@ -22,6 +22,7 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn } from "@/lib/tenant-default";
 import { derivarPctAvanco, clampPct } from "@/lib/obras/medicao";
+import { urlAssinadaMidia } from "@/lib/obras/storage-obra-midia";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -155,8 +156,19 @@ export async function GET(request: NextRequest, { params }: Params) {
     next_cursor = Buffer.from(raw).toString("base64url");
   }
 
+  // Evidência em bucket PRIVADO: troca o PATH gravado pela URL ASSINADA (expira ~1h) para exibição.
+  // Rows antigas (nenhuma, pois a foto nunca persistiu antes) ou já-URL são preservadas.
+  const dataAssinada = await Promise.all(
+    pageRows.map(async (row) => {
+      const r = row as Record<string, unknown>;
+      const fotoPath = typeof r.foto_url === "string" ? r.foto_url : "";
+      if (!fotoPath || /^https?:\/\//i.test(fotoPath)) return r;
+      return { ...r, foto_url: await urlAssinadaMidia("foto", fotoPath) };
+    })
+  );
+
   return NextResponse.json({
-    data: pageRows,
+    data: dataAssinada,
     next_cursor,
     has_more,
     migracao_pendente: false,
