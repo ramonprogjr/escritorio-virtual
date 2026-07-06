@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { crmFeatureFlags } from "@/lib/crm/feature-flags";
 import { listarCandidatosParceiro, type CandidatoParceiro } from "@/lib/crm/distribuir-lead";
 import { defaultTenantId } from "@/lib/tenant-default";
+import { legacyToFunil } from "@/lib/crm/estagio-map";
 
 export type SugestaoEncaminhamentoResult =
   | {
@@ -44,8 +45,12 @@ export async function sugerirEncaminhamentoAutomatico(
     return { ok: false, error: leadErr?.message || "Lead não encontrado." };
   }
 
-  const estagio = String(lead.estagio ?? "").toLowerCase();
-  if (estagio !== "qualificado") {
+  // Gate no VOCABULÁRIO DO FUNIL visível (o que o write-path realmente grava). O legado gravava
+  // "qualificado", mas a ficha normaliza tudo por legacyToFunil e "qualificado" colapsa em
+  // "qualificando" — comparar contra o literal deixava o gate INALCANÇÁVEL pela tela (loop do
+  // "Direcionar"). legacyToFunil aceita tanto o slug do funil quanto o legado, então ambos passam.
+  const estagio = legacyToFunil(String(lead.estagio ?? ""));
+  if (estagio !== "qualificando") {
     return { ok: false, error: "Lead não está qualificado." };
   }
 
