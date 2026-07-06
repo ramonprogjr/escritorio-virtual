@@ -9,6 +9,7 @@ import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
 import { LeadPropostasPanel } from "@/components/crm/LeadPropostasPanel";
+import { VincularPessoaLead } from "@/components/crm/VincularPessoaLead";
 import { DistribuirLeadPanel } from "@/components/crm/DistribuirLeadPanel";
 import {
   emailExibicao,
@@ -889,6 +890,7 @@ export default function LeadFichaPage() {
                           </>
                         )}
                       </p>
+                      {!pessoaHub ? <VincularPessoaLead leadId={id} /> : null}
                       <p className="mt-2 text-xs leading-relaxed text-[#8b949e]">
                         <span className="text-gray-300">{(lead.telefone as string) || "—"}</span>
                         {" · "}
