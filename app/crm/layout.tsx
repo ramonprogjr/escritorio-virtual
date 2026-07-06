@@ -84,11 +84,15 @@ function getNestedGroupMenu(groupId: string, groupLabel: string, items: CrmNavIt
   };
 }
 
-export default function CrmLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Casca visual do CRM (sidebar, header, providers, palette). Recebe o PAPEL por prop
+ * — NÃO resolve sessão nem faz guard. Separada de `CrmLayout` (o bootstrap de sessão)
+ * para que um bug de render/CSS aqui não derrube a lógica de auth, e vice-versa.
+ * Como o papel entra por prop, esta casca é render-testável (Fase 2.3 do destravamento).
+ */
+export function CrmShell({ userRole, children }: { userRole: string; children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [userRole, setUserRole] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ [CRM_NAV_GROUPS[0].id]: true });
   const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({ administracao: true });
   const [collapsedFlyoutId, setCollapsedFlyoutId] = useState<string | null>(null);
@@ -99,32 +103,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     () => filterCrmNavGroupsForRole(CRM_NAV_GROUPS, userRole),
     [userRole]
   );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadRole(u: User) {
-      const row = await supabase.from("users").select("role").eq("auth_id", u.id).maybeSingle();
-      if (!cancelled) setUserRole(row.data?.role != null ? String(row.data.role) : "");
-    }
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user;
-      if (u) void loadRole(u);
-      else setUserRole("");
-    });
-
-    void supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) void loadRole(user);
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     setCollapsedFlyoutId(null);
@@ -175,13 +153,6 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     syncOpenDrawer();
   }, [syncOpenDrawer]);
-
-  useEffect(() => {
-    if (!userRole || !pathname?.startsWith("/crm")) return;
-    if (!crmPodeVerRota(userRole, pathname)) {
-      router.replace(crmRotaInicial(userRole));
-    }
-  }, [userRole, pathname, router]);
 
   function toggleSidebar() {
     setCollapsedFlyoutId(null);
@@ -654,4 +625,51 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     </CrmTenantProvider>
     </CrmQueryProvider>
   );
+}
+
+/**
+ * Bootstrap de sessão do CRM: resolve o PAPEL do usuário (Supabase) e aplica o guard
+ * de rota. NÃO renderiza chrome — delega toda a casca visual para `CrmShell`. Assim a
+ * lógica de auth/guard fica isolada do render (um erro visual não derruba a sessão).
+ */
+export default function CrmLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [userRole, setUserRole] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRole(u: User) {
+      const row = await supabase.from("users").select("role").eq("auth_id", u.id).maybeSingle();
+      if (!cancelled) setUserRole(row.data?.role != null ? String(row.data.role) : "");
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user;
+      if (u) void loadRole(u);
+      else setUserRole("");
+    });
+
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) void loadRole(user);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Guard de rota: papel fora do permitido para a rota → volta à rota inicial do papel.
+  useEffect(() => {
+    if (!userRole || !pathname?.startsWith("/crm")) return;
+    if (!crmPodeVerRota(userRole, pathname)) {
+      router.replace(crmRotaInicial(userRole));
+    }
+  }, [userRole, pathname, router]);
+
+  return <CrmShell userRole={userRole}>{children}</CrmShell>;
 }
