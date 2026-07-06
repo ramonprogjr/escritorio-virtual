@@ -9,6 +9,7 @@ import { ObraComprasEstoqueSecao } from "@/components/crm/obras/ObraComprasEstoq
 import { ObraFinanceiroSecao } from "@/components/crm/obras/ObraFinanceiroSecao";
 import { ObraCronogramaSecao } from "@/components/crm/obras/ObraCronogramaSecao";
 import { SecaoHistoricoMedicoes } from "@/components/crm/obras/SecaoHistoricoMedicoes";
+import { ObraDiarioForm } from "@/components/crm/obras/ObraDiarioForm";
 
 type ObraPainel = {
   id: string;
@@ -151,13 +152,21 @@ export default function ObraPainelPage() {
             </section>
             <section className="rounded-[10px] border border-[#1d3a2c] bg-[#0f1d16] p-4">
               <h2 className="mb-3 text-sm font-semibold">Diário de obra</h2>
+              <ObraDiarioForm obraId={id} />
               {diario.length === 0 ? (
-                <p className="text-xs text-[#8aa99a]">Sem registros.</p>
+                <p className="text-xs text-[#8aa99a]">Sem registros ainda — registre o primeiro dia.</p>
               ) : (
                 diario.map((d) => (
-                  <p key={String(d.id)} className="my-1.5 text-xs">
-                    {String(d.resumo).slice(0, 80)}
-                  </p>
+                  <div
+                    key={String(d.id)}
+                    className="my-1.5 border-t border-[#16271e] pt-1.5 text-xs first:border-t-0 first:pt-0"
+                  >
+                    <p className="whitespace-pre-wrap text-[#e6edf3]">{String(d.resumo)}</p>
+                    <p className="mt-0.5 text-[10px] text-[#8aa99a]">
+                      {d.clima ? `${String(d.clima)} · ` : ""}
+                      {d.criado_em ? new Date(String(d.criado_em)).toLocaleString("pt-BR") : ""}
+                    </p>
+                  </div>
                 ))
               )}
             </section>
