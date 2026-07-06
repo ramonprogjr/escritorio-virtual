@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { MoreVertical, RotateCcw, Ban, Undo2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { toast } from "@/components/crm/toast";
 import {
@@ -29,6 +30,9 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
   const router = useRouter();
   const final = STATUS_FINAL[tipo];
   const [processando, setProcessando] = useState<string | null>(null);
+  // Menu ⋮ por linha: correção persistente da baixa (o toast "Desfazer" some; isto fica).
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
+  const baixaLabel = tipo === "pagar" ? "pagamento" : "recebimento";
 
   async function patchStatus(id: string, status: string): Promise<boolean> {
     try {
@@ -50,6 +54,27 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
       toast.info("Baixa desfeita.");
     } else {
       toast.error("Não foi possível desfazer.");
+    }
+  }
+
+  // Correção de status via menu ⋮. Fecha o menu, aplica, atualiza e oferece Desfazer
+  // (volta ao status anterior) — nada é irreversível, alinhado ao "nada se apaga".
+  async function corrigirStatus(id: string, novo: string, statusAnterior: string, sucesso: string) {
+    setMenuAberto(null);
+    setProcessando(id);
+    try {
+      const ok = await patchStatus(id, novo);
+      if (!ok) {
+        toast.error("Não foi possível atualizar o lançamento.");
+        return;
+      }
+      onAtualizado();
+      toast.withAction("success", sucesso, {
+        label: "Desfazer",
+        run: () => void corrigirStatus(id, statusAnterior, novo, "Ação desfeita."),
+      });
+    } finally {
+      setProcessando(null);
     }
   }
 
@@ -137,6 +162,68 @@ export function FinanceiroContasList({ tipo, contas, onAtualizado, linkDashboard
                     </span>
                   )}
                 </div>
+              </div>
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  aria-label="Opções do lançamento"
+                  aria-haspopup="menu"
+                  aria-expanded={menuAberto === c.id}
+                  disabled={processando === c.id}
+                  onClick={() => setMenuAberto(menuAberto === c.id ? null : c.id)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[#8b949e] hover:bg-[#16271e] hover:text-[#e6edf3] disabled:opacity-50"
+                >
+                  <MoreVertical className="h-5 w-5" aria-hidden />
+                </button>
+                {menuAberto === c.id && (
+                  <>
+                    <button
+                      type="button"
+                      aria-hidden
+                      tabIndex={-1}
+                      onClick={() => setMenuAberto(null)}
+                      className="fixed inset-0 z-20 cursor-default"
+                    />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-10 z-30 w-56 overflow-hidden rounded-xl border border-[#1d3a2c] bg-[#16271e] p-1 shadow-2xl"
+                    >
+                      {c.status === final.status && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => void corrigirStatus(c.id, "pendente", c.status, `Baixa de ${baixaLabel} desfeita.`)}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-semibold text-[#e6edf3] hover:bg-[#1d3a2c]"
+                        >
+                          <Undo2 className="h-4 w-4 text-[#c9a24a]" aria-hidden />
+                          Desfazer {baixaLabel} (voltar a pendente)
+                        </button>
+                      )}
+                      {c.status === "cancelado" && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => void corrigirStatus(c.id, "pendente", c.status, "Lançamento reaberto.")}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-semibold text-[#e6edf3] hover:bg-[#1d3a2c]"
+                        >
+                          <RotateCcw className="h-4 w-4 text-[#c9a24a]" aria-hidden />
+                          Reabrir (voltar a pendente)
+                        </button>
+                      )}
+                      {c.status !== "cancelado" && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => void corrigirStatus(c.id, "cancelado", c.status, "Lançamento cancelado.")}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-semibold text-[#f0aba8] hover:bg-[#1d3a2c]"
+                        >
+                          <Ban className="h-4 w-4" aria-hidden />
+                          Cancelar lançamento
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             {c.status === "pendente" && (
