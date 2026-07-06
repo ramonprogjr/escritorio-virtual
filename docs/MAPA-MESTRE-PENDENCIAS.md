@@ -6,6 +6,9 @@
 ## Resumo
 Entrada: ~749 pendencias brutas extraidas de 207 docs (muitos historicos, com repeticao massiva entre docs-mestre, backlogs e handoffs). Apos deduplicar e remover o que foi entregue no ciclo 06/jul, sobram ~119 pendencias unicas abertas: 24 dependem de VOCE (dono: janela/credencial/deploy/acesso), 34 sao EU (codigo que o assistente faz), 37 sao DECISAO de produto e 24 sao features grandes de roadmap. 22 itens que os docs ainda listavam ja foram fechados neste ciclo. Regra usada: modulo grande = roadmap; bug/tela/guard pontual = EU; migracao/credencial/acesso = VOCE; escolha de negocio = DECISAO. Onde um doc historico so narrava algo ja concluido, nada foi extraido.
 
+## 📌 ACHADOS DA REVISÃO AO VIVO DO DONO (06/jul) — corrigir
+1. **[EU] Contas a pagar/receber — marcar "Pago"/"Recebido" NÃO tem como CORRIGIR se errou.** Precisa de um menu **hambúrguer (⋮) por linha** com opções de edição: editar valor/data, **desmarcar** pago, **estornar**. Alinhado com "nada se perde" (corrigir = desfazer/estorno, nunca apagar) e "confirmar/desfazer nas ações de impacto". Telas `/crm/financeiro/pagar` e `/crm/financeiro/receber`. *(reforça o item 32 da lista EU; achado na revisão ao vivo do staging.)*
+
 ## ✅ JA RESOLVIDO neste ciclo (sair da cabeca) (22)
 
 1. Bug do dinheiro A1: venda de mercado ganha agora gera obra/recebivel/KPI (fix por tipo_fecho)

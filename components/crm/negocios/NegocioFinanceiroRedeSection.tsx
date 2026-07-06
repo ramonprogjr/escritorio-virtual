@@ -52,6 +52,7 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
   // Estado do painel "Fechar comissao"
   const [valorFechado, setValorFechado] = useState<string>("");
   const [fatias, setFatias] = useState<Record<string, string>>({}); // participanteId -> R$
+  const [valorReceber, setValorReceber] = useState<string>("");
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -120,6 +121,26 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
     }
   }, [salvando, dados, valorFechado, somaFatias, pote, fatias, negocioId, carregar]);
 
+  const receber = useCallback(async () => {
+    if (salvando) return;
+    const v = Number(valorReceber);
+    if (!Number.isFinite(v) || v <= 0) { setErro("Informe o valor recebido."); return; }
+    setSalvando(true); setErro(null); setOkMsg(null);
+    try {
+      const res = await fetch(`/api/crm/negocios/${encodeURIComponent(negocioId)}/financeiro-rede`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ acao: "receber", valor: v }),
+      });
+      const json = (await res.json()) as { ok?: boolean; erro?: string; error?: string; total_pago?: number };
+      if (!res.ok || json.ok === false) { setErro(json.error || json.erro || "Não foi possível registrar o recebimento."); return; }
+      setOkMsg(`Recebimento registrado (${brl(json.total_pago)} pago pelo cliente). As comissões viraram liberáveis na proporção.`);
+      setValorReceber("");
+      await carregar();
+    } catch { setErro("Falha de rede ao registrar o recebimento."); }
+    finally { setSalvando(false); }
+  }, [salvando, valorReceber, negocioId, carregar]);
+
   if (carregando) {
     return <div style={{ height: 80, borderRadius: 12, background: BG_CARD, border: `1px solid ${BORDA}` }} aria-busy />;
   }
@@ -172,6 +193,16 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
               Cada fatia vira <b style={{ color: TXT }}>a receber</b> na proporção do que o cliente pagar, e o pagamento exige as <b style={{ color: TXT }}>2 chaves</b> (o parceiro dá o OK, o Hub libera).
             </p>
           ) : null}
+
+          {/* Registrar recebimento do cliente — cash-basis: torna as comissões exigíveis pro-rata */}
+          <div style={{ ...linhaSplit, flexWrap: "wrap", rowGap: 8, marginTop: 4 }}>
+            <span style={{ color: TXT_DIM, fontSize: 12, flex: 1, minWidth: 130 }}>Cliente pagou:</span>
+            <input inputMode="decimal" value={valorReceber} onChange={(e) => setValorReceber(e.target.value.replace(",", "."))}
+              placeholder="R$ recebido" style={{ ...campo, width: 120, textAlign: "right" }} aria-label="Valor recebido do cliente" />
+            <button type="button" onClick={receber} disabled={salvando || !(Number(valorReceber) > 0)}
+              style={{ ...botao, minHeight: 40, padding: "0 14px", opacity: salvando || !(Number(valorReceber) > 0) ? 0.6 : 1 }}>Registrar</button>
+          </div>
+          {erro ? <p style={{ margin: 0, fontSize: 12, color: "#f0aba8", display: "flex", gap: 4 }}><AlertTriangle size={13} aria-hidden /> {erro}</p> : null}
         </div>
       ) : participantes.length === 0 ? (
         <p style={{ fontSize: 13, color: TXT_DIM, margin: 0 }}>
