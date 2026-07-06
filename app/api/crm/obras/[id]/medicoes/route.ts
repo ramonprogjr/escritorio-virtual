@@ -356,7 +356,23 @@ export async function POST(request: NextRequest, { params }: Params) {
         { status: 200 }
       );
     }
-    return NextResponse.json({ error: errMedicao.message }, { status: 500 });
+    // CONSISTÊNCIA append-only (erro REAL de insert, não migração pendente): o passo 3 já avançou o
+    // item, mas a trilha (passo 4) falhou → não deixar avanço SEM registro. Reverte o pct para o
+    // anterior com guarda OTIMISTA (.eq pct_avanco = pctResultante) — só desfaz a NOSSA alteração; se
+    // outra medição concorrente já mudou o item, o revert é no-op (não clobbera). Atomicidade real
+    // exige RPC transacional (janela do dono — E7c). Best-effort: log server-side, sem vazar SQL.
+    console.error("[medicoes] insert falhou, revertendo avanço:", errMedicao.message);
+    await supabase
+      .from("hub_obra_itens")
+      .update({ pct_avanco: pctAtual, atualizado_em: new Date().toISOString() })
+      .eq("id", itemId)
+      .eq("obra_id", obraId)
+      .eq("tenant_id", tenantId)
+      .eq("pct_avanco", pctResultante);
+    return NextResponse.json(
+      { error: "Não foi possível registrar a medição — o avanço foi revertido. Tente novamente." },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json(
