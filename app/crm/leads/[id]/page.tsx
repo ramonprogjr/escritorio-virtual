@@ -11,6 +11,9 @@ import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
 import { LeadPropostasPanel } from "@/components/crm/LeadPropostasPanel";
 import { VincularPessoaLead } from "@/components/crm/VincularPessoaLead";
 import { DistribuirLeadPanel } from "@/components/crm/DistribuirLeadPanel";
+import { useCrmTenant } from "@/components/crm/CrmTenantContext";
+import { isCrmGestorRole } from "@/lib/crm/crm-permissoes";
+import { toast } from "@/components/crm/toast";
 import {
   emailExibicao,
   type PessoaMini,
@@ -18,15 +21,15 @@ import {
   type UltimaFilaMini,
 } from "@/lib/crm/enrich-lead-crm";
 import {
-  ArrowLeft,
   Brain,
   Briefcase,
-  Check,
   ChevronLeft,
   ClipboardList,
   FileText,
+  History,
   IdCard,
   MessageSquare,
+  Pencil,
   Sparkles,
   User,
   X,
@@ -202,6 +205,8 @@ export default function LeadFichaPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+  const { role } = useCrmTenant();
+  const ehGestor = isCrmGestorRole(role);
 
   const [lead, setLead] = useState<Record<string, unknown> | null>(null);
   const [pessoaHub, setPessoaHub] = useState<PessoaMini | null>(null);
@@ -209,6 +214,7 @@ export default function LeadFichaPage() {
   const [atividades, setAtividades] = useState<Record<string, unknown>[]>([]);
   const [memorias, setMemorias] = useState<Record<string, unknown>[]>([]);
   const [aba, setAba] = useState<"atividades" | "memorias" | "propostas" | "dados">("atividades");
+  const [mostrarSistema, setMostrarSistema] = useState(false);
   const [memoriasErro, setMemoriasErro] = useState<string | null>(null);
   const [perdaAberta, setPerdaAberta] = useState(false);
   const [motivoPerda, setMotivoPerda] = useState("");
@@ -431,6 +437,22 @@ export default function LeadFichaPage() {
     return true;
   }
 
+  // Edição inline de um campo do lead (aba Dados) — reusa o PATCH allowlist já pronto.
+  async function salvarCampo(field: string, valor: string): Promise<boolean> {
+    const payload: Record<string, unknown> =
+      field === "valor_estimado"
+        ? { valor_estimado: valor.trim() === "" ? 0 : Number(valor.replace(",", ".")) || 0 }
+        : { [field]: valor.trim() };
+    const res = await patchLeadCrm(id, payload);
+    if (!res.ok) {
+      toast.error(res.error || "Não foi possível salvar.");
+      return false;
+    }
+    await carregar();
+    toast.success("Campo atualizado.");
+    return true;
+  }
+
   async function confirmarPerda() {
     if (!motivoPerda) return;
     setPerdaAberta(false);
@@ -456,6 +478,18 @@ export default function LeadFichaPage() {
   const etapaFunil = FUNIL_LEAD_ETAPAS.find((e) => e.slug === estagioFunil);
   const estagioLabel = etapaFunil?.label ?? estagio;
   const corEstagio = etapaFunil?.cor || ESTAGIO_COR[estagio] || "#888";
+
+  // Corte comentários × logs de sistema (auditoria do lead): comentário (nota) e evento de IA ficam
+  // sempre visíveis (transparência — "o sistema mostra o que fez sozinho"); logs operacionais
+  // (status_change/proposta/conversão) só para gestor, atrás de um toggle. AUDITORIA-CICLO-LEAD-v1.md.
+  const naturezaAtividade = (at: Record<string, unknown>): "nota" | "ia" | "log" => {
+    if ((at.tipo as string) === "nota") return "nota";
+    if ((at.feito_por_tipo as string) === "ia") return "ia";
+    return "log";
+  };
+  const conversa = atividades.filter((a) => naturezaAtividade(a) !== "log");
+  const logsSistema = atividades.filter((a) => naturezaAtividade(a) === "log");
+  const atividadesVisiveis = ehGestor && mostrarSistema ? atividades : conversa;
   const meta = (lead.metadata as Record<string, unknown>) || {};
   const mercadoMeta =
     (meta.mercado as string) || (meta.primeira_mensagem != null ? "ver metadata" : null);
@@ -471,12 +505,15 @@ export default function LeadFichaPage() {
       ? meta.parceiro_papel
       : "parceiro";
 
-  const camposDados: { label: string; value: string }[] = [
+  const camposDados: { label: string; value: string; field?: string; editType?: "text" | "number" | "email"; rawValue?: string }[] = [
     { label: "Score", value: `${lead.score ?? 0}/100` },
-    { label: "Origem", value: (lead.origem as string) || "—" },
+    { label: "Origem", value: (lead.origem as string) || "—", field: "origem", editType: "text", rawValue: (lead.origem as string) || "" },
     {
       label: "E-mail",
       value: emailExibicao(lead.email as string | null | undefined, pessoaHub ?? undefined),
+      field: "email",
+      editType: "email",
+      rawValue: (lead.email as string) || "",
     },
     { label: "Campanha", value: (lead.campanha as string) || "—" },
     { label: "Mercado (metadata)", value: mercadoMeta || "—" },
@@ -486,8 +523,8 @@ export default function LeadFichaPage() {
       value:
         [pessoaHub?.cidade, pessoaHub?.estado].filter(Boolean).join(" / ") || "—",
     },
-    { label: "Agente", value: (lead.agente_responsavel as string) || "—" },
-    { label: "Responsável", value: (lead.humano_responsavel as string) || "IA" },
+    { label: "Agente", value: (lead.agente_responsavel as string) || "—", field: "agente_responsavel", editType: "text", rawValue: (lead.agente_responsavel as string) || "" },
+    { label: "Responsável", value: (lead.humano_responsavel as string) || "IA", field: "humano_responsavel", editType: "text", rawValue: (lead.humano_responsavel as string) || "" },
     {
       label: "Última mensagem",
       value: ultimaMensagemExibicao(
@@ -521,13 +558,16 @@ export default function LeadFichaPage() {
             : `${Math.round(horas / 24)}d após entrada`;
       })(),
     },
-    { label: "Próxima ação", value: (lead.proxima_acao as string) || "—" },
+    { label: "Próxima ação", value: (lead.proxima_acao as string) || "—", field: "proxima_acao", editType: "text", rawValue: (lead.proxima_acao as string) || "" },
     {
       label: "Valor",
       value:
         (lead.valor_estimado as number) > 0
           ? `R$ ${((lead.valor_estimado as number) / 1000).toFixed(0)}k`
           : "—",
+      field: "valor_estimado",
+      editType: "number",
+      rawValue: lead.valor_estimado ? String(lead.valor_estimado) : "",
     },
     {
       label: "Criado em",
@@ -590,7 +630,7 @@ export default function LeadFichaPage() {
             style={{ borderColor: BORDER_SUBTLE, color: "#c9a24a", background: "#003b2622" }}
           >
             <Briefcase className="h-4 w-4" strokeWidth={2} />
-            Criar negócio
+            Converter em negócio
           </button>
           <button
             type="button"
@@ -676,7 +716,7 @@ export default function LeadFichaPage() {
           onChange={(tabId) => setAba(tabId as typeof aba)}
           equalColumns
           tabs={[
-            { id: "atividades", label: `Atividades (${atividades.length})`, icon: ClipboardList },
+            { id: "atividades", label: `Conversa (${conversa.length})`, icon: MessageSquare },
             { id: "memorias", label: `Memórias IA (${chipsMemoria.length})`, icon: Brain },
             { id: "propostas", label: "Propostas", icon: FileText },
             { id: "dados", label: "Dados", icon: IdCard },
@@ -723,9 +763,22 @@ export default function LeadFichaPage() {
                   {salvandoNota ? "…" : "Adicionar"}
                 </button>
               </div>
-              {atividades.length === 0 ? (
+              {ehGestor && logsSistema.length > 0 ? (
+                <div className="mx-auto mb-4 flex max-w-2xl justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setMostrarSistema((v) => !v)}
+                    className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors hover:text-gray-200"
+                    style={{ borderColor: BORDER_SUBTLE, color: "#8b949e", backgroundColor: "rgba(15,22,32,0.6)" }}
+                  >
+                    <History className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                    {mostrarSistema ? "Ocultar histórico do sistema" : `Histórico do sistema (${logsSistema.length})`}
+                  </button>
+                </div>
+              ) : null}
+              {atividadesVisiveis.length === 0 ? (
                 <p className="pt-12 text-center text-xs" style={{ color: "#5c6570" }}>
-                  Nenhuma atividade registada
+                  Nenhuma conversa registrada ainda — use o campo acima.
                 </p>
               ) : (
                 <div className="relative mx-auto max-w-2xl">
@@ -735,8 +788,10 @@ export default function LeadFichaPage() {
                     aria-hidden
                   />
                   <ul className="relative flex flex-col gap-0">
-                    {atividades.map((at, idx) => {
-                      const isIa = (at.feito_por_tipo as string) === "ia";
+                    {atividadesVisiveis.map((at, idx) => {
+                      const natureza = naturezaAtividade(at);
+                      const isIa = natureza === "ia";
+                      const isLog = natureza === "log";
                       const dataAbs = formatarDataHora(at.criado_em as string);
                       return (
                         <li key={at.id as string} className="relative flex gap-4 pb-8 pl-10 md:gap-5 md:pl-11">
@@ -750,6 +805,8 @@ export default function LeadFichaPage() {
                           >
                             {isIa ? (
                               <Sparkles className="h-4 w-4 text-[#d6b976]" strokeWidth={2} />
+                            ) : isLog ? (
+                              <History className="h-4 w-4 text-gray-500" strokeWidth={2} />
                             ) : (
                               <User className="h-4 w-4 text-gray-400" strokeWidth={2} />
                             )}
@@ -762,8 +819,19 @@ export default function LeadFichaPage() {
                             }}
                           >
                             <div className="flex flex-wrap items-baseline justify-between gap-2">
-                              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8b949e]">
-                                {String(at.tipo || "evento").replace(/_/g, " ")}
+                              <span className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8b949e]">
+                                  {String(at.tipo || "evento").replace(/_/g, " ")}
+                                </span>
+                                {isLog ? (
+                                  <span className="rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide" style={{ color: "#6b7480", backgroundColor: "rgba(107,116,128,0.14)" }}>
+                                    sistema
+                                  </span>
+                                ) : isIa ? (
+                                  <span className="rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide" style={{ color: "#c9a24a", backgroundColor: "rgba(201,162,74,0.14)" }}>
+                                    IA
+                                  </span>
+                                ) : null}
                               </span>
                               <time
                                 className="text-[10px] tabular-nums text-[#5c6570]"
@@ -948,93 +1016,137 @@ export default function LeadFichaPage() {
                   ) : null}
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-4 lg:gap-y-3">
-                    {camposDados.map((f) => (
-                      <div
-                        key={f.label}
-                        className="rounded-lg border px-3 py-2.5 transition-colors hover:bg-white/[0.02]"
-                        style={{
-                          borderColor: BORDER_SUBTLE,
-                          backgroundColor: CARD_INNER,
-                        }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">
-                          {f.label}
-                        </p>
-                        <p className="mt-1 break-words text-sm font-medium leading-snug text-gray-100">
-                          {f.value}
-                        </p>
-                      </div>
-                    ))}
+                    {camposDados.map((f) =>
+                      f.field ? (
+                        <CampoDadoEditavel
+                          key={f.label}
+                          label={f.label}
+                          value={f.value}
+                          rawValue={f.rawValue ?? ""}
+                          editType={f.editType ?? "text"}
+                          borderColor={BORDER_SUBTLE}
+                          cardBg={CARD_INNER}
+                          onSave={(v) => salvarCampo(f.field as string, v)}
+                        />
+                      ) : (
+                        <div
+                          key={f.label}
+                          className="rounded-lg border px-3 py-2.5 transition-colors hover:bg-white/[0.02]"
+                          style={{
+                            borderColor: BORDER_SUBTLE,
+                            backgroundColor: CARD_INNER,
+                          }}
+                        >
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">
+                            {f.label}
+                          </p>
+                          <p className="mt-1 break-words text-sm font-medium leading-snug text-gray-100">
+                            {f.value}
+                          </p>
+                        </div>
+                      )
+                    )}
                   </div>
                 </article>
               </div>
 
-              <footer
-                className="flex-shrink-0 border-t px-4 py-3 md:px-6"
-                style={{ borderColor: BORDER_SUBTLE, backgroundColor: BG_PANEL }}
-              >
-                <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#6b7280] sm:mr-auto sm:self-center">
-                    Ações
-                  </p>
-                  <div
-                    className="flex w-full overflow-hidden rounded-lg border sm:w-auto sm:min-w-0"
-                    style={{ borderColor: BORDER_SUBTLE }}
-                    role="group"
-                    aria-label="Ações do lead"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/crm/atendimento?lead=${id}`)}
-                      className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 border-r px-3 text-xs font-semibold text-white transition-opacity hover:opacity-95 sm:flex-initial sm:px-4"
-                      style={{
-                        borderColor: BORDER_SUBTLE,
-                        background: "linear-gradient(180deg, #c45c26 0%, #9a471d 100%)",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1)",
-                      }}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                      <span className="truncate">Central de atendimento</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void criarNegocio()}
-                      className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 border-r px-2 text-xs font-medium text-gray-200 transition-colors hover:bg-white/[0.06] sm:flex-initial sm:px-3"
-                      style={{
-                        borderColor: BORDER_SUBTLE,
-                        backgroundColor: "rgba(5, 8, 14, 0.65)",
-                      }}
-                    >
-                      <Check className="h-3.5 w-3.5 shrink-0 text-emerald-400" strokeWidth={2} />
-                      Negócio
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setMotivoPerda(""); setPerdaAberta(true); }}
-                      className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 border-r px-2 text-xs font-medium text-gray-200 transition-colors hover:bg-white/[0.06] sm:flex-initial sm:px-3"
-                      style={{
-                        borderColor: BORDER_SUBTLE,
-                        backgroundColor: "rgba(5, 8, 14, 0.65)",
-                      }}
-                    >
-                      <X className="h-3.5 w-3.5 shrink-0 text-red-400" strokeWidth={2} />
-                      Perdido
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => router.back()}
-                      className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-medium text-gray-400 transition-colors hover:bg-white/[0.05] hover:text-gray-200 sm:flex-initial sm:px-3"
-                      style={{ backgroundColor: "rgba(5, 8, 14, 0.65)" }}
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                      Voltar
-                    </button>
-                  </div>
-                </div>
-              </footer>
+              {/* Rodapé de ações removido: era duplicata do header (Central, Converter) + barra
+                  (Perdido) e formava um par ✓verde/✗vermelho que imitava ganho/perdido de venda
+                  sobre um LEAD. Ações agora vivem em UM lugar. AUDITORIA-CICLO-LEAD-v1.md. */}
             </div>
           )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Campo editável inline da aba Dados — reusa o PATCH allowlist do lead (sem rota nova).
+ * Click-and-Go: clica no valor → vira input → Enter/blur salva, Esc cancela. Vazio mostra
+ * "adicionar +" em vez de "—" (mata a percepção de dado inútil). AUDITORIA-CICLO-LEAD-v1.md.
+ */
+function CampoDadoEditavel({
+  label,
+  value,
+  rawValue,
+  editType,
+  borderColor,
+  cardBg,
+  onSave,
+}: {
+  label: string;
+  value: string;
+  rawValue: string;
+  editType: "text" | "number" | "email";
+  borderColor: string;
+  cardBg: string;
+  onSave: (valor: string) => Promise<boolean>;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [draft, setDraft] = useState(rawValue);
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (!editando) setDraft(rawValue);
+  }, [rawValue, editando]);
+
+  async function commit() {
+    if (salvando) return;
+    if (draft.trim() === rawValue.trim()) {
+      setEditando(false);
+      return;
+    }
+    setSalvando(true);
+    const ok = await onSave(draft);
+    setSalvando(false);
+    if (ok) setEditando(false);
+  }
+
+  const vazio = value === "—" || value.trim() === "";
+
+  return (
+    <div
+      className="group rounded-lg border px-3 py-2.5 transition-colors hover:bg-white/[0.02]"
+      style={{ borderColor, backgroundColor: cardBg }}
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">{label}</p>
+      {editando ? (
+        <input
+          autoFocus
+          type={editType === "number" ? "number" : editType === "email" ? "email" : "text"}
+          inputMode={editType === "number" ? "decimal" : undefined}
+          value={draft}
+          disabled={salvando}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => void commit()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void commit();
+            if (e.key === "Escape") {
+              setDraft(rawValue);
+              setEditando(false);
+            }
+          }}
+          className="mt-1 w-full rounded border bg-transparent px-1.5 py-1 text-sm text-gray-100 outline-none focus:border-[#c9a24a]"
+          style={{ borderColor }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditando(true)}
+          className="mt-1 flex w-full items-start justify-between gap-1.5 text-left"
+        >
+          <span
+            className={`break-words text-sm font-medium leading-snug ${vazio ? "text-[#6b7280]" : "text-gray-100"}`}
+          >
+            {vazio ? "adicionar +" : value}
+          </span>
+          <Pencil
+            className="mt-0.5 h-3 w-3 shrink-0 text-[#6b7280] opacity-0 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+            aria-hidden
+          />
+        </button>
+      )}
     </div>
   );
 }
