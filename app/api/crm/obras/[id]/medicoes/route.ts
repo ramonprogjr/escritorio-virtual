@@ -156,11 +156,42 @@ export async function GET(request: NextRequest, { params }: Params) {
     next_cursor = Buffer.from(raw).toString("base64url");
   }
 
+  // AUTOR POR NOME (não código): criado_por/responsavel_id são UUIDs → o histórico mostrava o
+  // código cru. Resolve o nome real em `users` (batch, uma query por página) e preenche
+  // responsavel_nome quando vazio. Papéis ("humano"/etc.) não são UUID → passam sem lookup.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const idsAutor = new Set<string>();
+  for (const row of pageRows) {
+    const r = row as Record<string, unknown>;
+    for (const campo of ["criado_por", "responsavel_id"] as const) {
+      const v = typeof r[campo] === "string" ? (r[campo] as string) : "";
+      if (UUID_RE.test(v)) idsAutor.add(v);
+    }
+  }
+  const nomePorUser = new Map<string, string>();
+  if (idsAutor.size > 0) {
+    // ids já vêm de medições deste tenant → seguros. Tolerante: sem a tabela/coluna, cai no fallback.
+    const { data: usuarios } = await crmDb()
+      .from("users")
+      .select("id, name, email")
+      .in("id", [...idsAutor]);
+    for (const u of usuarios ?? []) {
+      const nome = (typeof u.name === "string" && u.name.trim()) || (typeof u.email === "string" && u.email.trim());
+      if (nome) nomePorUser.set(String(u.id), nome as string);
+    }
+  }
+
   // Evidência em bucket PRIVADO: troca o PATH gravado pela URL ASSINADA (expira ~1h) para exibição.
   // Rows antigas (nenhuma, pois a foto nunca persistiu antes) ou já-URL são preservadas.
   const dataAssinada = await Promise.all(
     pageRows.map(async (row) => {
       const r = { ...(row as Record<string, unknown>) };
+      // Autor: quando não há responsavel_nome, mostra o NOME resolvido (não o UUID).
+      if (!r.responsavel_nome) {
+        const byCriador = typeof r.criado_por === "string" ? nomePorUser.get(r.criado_por) : undefined;
+        const byResp = typeof r.responsavel_id === "string" ? nomePorUser.get(r.responsavel_id) : undefined;
+        if (byCriador || byResp) r.responsavel_nome = byCriador ?? byResp;
+      }
       const fotoPath = typeof r.foto_url === "string" ? r.foto_url : "";
       if (fotoPath && !/^https?:\/\//i.test(fotoPath)) {
         r.foto_url = await urlAssinadaMidia("foto", fotoPath);
