@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextResponse } from "next/server";
 import { syncTodosAgentesHubParaMistral } from "@/lib/mistral/sync-hub-agent";
 import { HUB_MODELO_SENTINEL } from "@/lib/ia/hub-model-defaults";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 function isClaudeOrLegacy(modelo: unknown): boolean {
   const t = String(modelo ?? "").trim().toLowerCase();

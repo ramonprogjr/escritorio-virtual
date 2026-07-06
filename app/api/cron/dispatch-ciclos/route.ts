@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { cronRequestAuthorized } from "@/lib/cron-auth";
 import {
   type HubCicloIaDispatchRow,
   inferDispatchFromCicloRow,
   isProgramadoCicloDue,
 } from "@/lib/ciclos-dispatch";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 const MAX_RUN_PER_TICK = 25;
 

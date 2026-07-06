@@ -11,6 +11,7 @@ import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
+import { NegocioPropostasSection, type NegocioProposta } from "@/components/crm/NegocioPropostasSection";
 
 type NegocioDetalhe = {
   id: string;
@@ -102,6 +103,7 @@ type TimelineItem = {
 };
 
 type PessoaMini = { id: string; nome: string; codigo?: string | null };
+type EtapaPipeline = { slug: string; label: string; tipo_fecho: string | null };
 
 // `papel` só vem preenchido em pessoas/empresas (relacionados do negócio); demais grupos ignoram.
 type NamedRef = { id: string; nome: string; papel?: string | null };
@@ -153,6 +155,8 @@ export default function NegocioDetalhePage() {
   const [recebivelGerado, setRecebivelGerado] = useState(false);
   const [confirmandoArquivar, setConfirmandoArquivar] = useState(false);
   const [arquivando, setArquivando] = useState(false);
+  const [propostas, setPropostas] = useState<NegocioProposta[]>([]);
+  const [estagios, setEstagios] = useState<EtapaPipeline[]>([]);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -166,6 +170,8 @@ export default function NegocioDetalhePage() {
         timeline?: TimelineItem[];
         lead?: { nome: string } | null;
         pessoa?: PessoaMini | null;
+        propostas?: NegocioProposta[];
+        estagios?: EtapaPipeline[];
         error?: string;
       };
       if (!res.ok) {
@@ -188,6 +194,8 @@ export default function NegocioDetalhePage() {
       setTimeline(json.timeline ?? []);
       setLeadNome(json.lead?.nome ?? null);
       setPessoaVinc(json.pessoa ?? null);
+      setPropostas(json.propostas ?? []);
+      setEstagios(json.estagios ?? []);
     } catch {
       setErro("Erro de rede.");
     } finally {
@@ -383,7 +391,9 @@ export default function NegocioDetalhePage() {
   }
 
   async function mudarEtapa(novaEtapa: string) {
-    const perdido = novaEtapa === "perdido" || novaEtapa === "fechado_perdido";
+    const stage = estagios.find((e) => e.slug === novaEtapa);
+    const perdido =
+      stage?.tipo_fecho === "perdido" || novaEtapa === "perdido" || novaEtapa === "fechado_perdido";
     if (perdido && !negocio?.motivo_perda) {
       setMotivoPendente(novaEtapa);
       return;
@@ -628,6 +638,8 @@ export default function NegocioDetalhePage() {
         <Link href={`/crm/obras?negocio_id=${negocio.id}`} style={{ color: "#8b949e" }}>Obras</Link>
       </div>
 
+      <NegocioPropostasSection propostas={propostas} />
+
       {(negocio.status === "fechado_ganho" || negocio.etapa === "ganho") &&
         (() => {
           const entrega = resolverEntrega(negocio.prefixo_mercado);
@@ -795,23 +807,29 @@ export default function NegocioDetalhePage() {
       </div>
 
       <div style={{ marginTop: 24, display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {["novo", "qualificando", "qualificado", "proposta", "negociando", "fechamento", "ganho", "perdido"].map((e) => (
+        {(estagios.length > 0
+          ? estagios
+          : ["novo", "qualificando", "qualificado", "proposta", "negociando", "fechamento", "ganho", "perdido"].map(
+              (s) => ({ slug: s, label: s, tipo_fecho: null as string | null })
+            )
+        ).map((e) => (
           <button
-            key={e}
+            key={e.slug}
             type="button"
-            onClick={() => mudarEtapa(e)}
-            disabled={negocio.etapa === e}
+            onClick={() => mudarEtapa(e.slug)}
+            disabled={negocio.etapa === e.slug}
             style={{
               padding: "8px 14px",
               borderRadius: 8,
               border: "1px solid #1d3a2c",
-              background: negocio.etapa === e ? "#003b26" : "#0f1d16",
-              color: negocio.etapa === e ? "#c9a24a" : "#e6edf3",
+              background: negocio.etapa === e.slug ? "#003b26" : "#0f1d16",
+              color: negocio.etapa === e.slug ? "#c9a24a" : "#e6edf3",
               cursor: "pointer",
               fontSize: 12,
+              textTransform: "capitalize",
             }}
           >
-            {e}
+            {e.label}
           </button>
         ))}
       </div>

@@ -236,7 +236,7 @@ export const PROGRESSO_BLOCOS: ProgressoBloco[] = [
       item({ id: "inf-whatsapp", pdfRef: "—", titulo: "WhatsApp UAZAPI + webhook", status: "parcial", fase: "F0", prioridade: "P1", oQueTemos: "Rotas + agentes", oQueFalta: "CRON_SECRET, UAZAPI no Render", rota: "/crm/canais" }),
       item({ id: "inf-analytics", pdfRef: "—", titulo: "Analytics funil PDF", status: "ok", fase: "F0", prioridade: "P1", oQueTemos: "FUNIL_LEAD_ETAPAS + funil por mercado", oQueFalta: "Validar pós-migration prod", rota: "/crm/analytics" }),
       item({ id: "inf-relatorio-diario", pdfRef: "Plano interno", titulo: "Relatório diário PDF (Progresso + operação)", status: "ok", fase: "F0", prioridade: "P1", oQueTemos: "PDF narrativo por áreas (Implementado/Corrigido) + estado sistema + anexo Git", oQueFalta: "Fase 2: envio WhatsApp automático à Nice", rota: "/crm/progresso-sistema", codigo: "lib/crm/relatorio-git-entregas.ts" }),
-      item({ id: "inf-legado-office", pdfRef: "—", titulo: "Canvas /office (legado)", status: "legado", fase: "F0", prioridade: "P2", oQueTemos: "Simulação visual mantida", oQueFalta: "Não remover sem plano", rota: "/office" }),
+      item({ id: "inf-legado-office", pdfRef: "—", titulo: "Canvas /office (removido)", status: "legado", fase: "F0", prioridade: "P2", oQueTemos: "Cluster removido 05/jul (Fase 0 destravamento); /office segue como redirect → /crm", oQueFalta: "—", rota: "/office" }),
     ],
   },
 ];

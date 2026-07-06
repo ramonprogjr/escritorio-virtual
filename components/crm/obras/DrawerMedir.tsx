@@ -15,7 +15,7 @@
  */
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Ruler, Camera, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { Ruler, Camera, AlertTriangle, CheckCircle2, X, Video } from "lucide-react";
 import { CadastroPremiumSideover } from "@/components/crm/cadastro/CadastroPremiumSideover";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { derivarPctAvanco, clampPct } from "@/lib/obras/medicao";
@@ -48,25 +48,25 @@ type Props = {
 export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
   const [qtdRealizada, setQtdRealizada] = useState<string>("");
   const [pctManual, setPctManual] = useState<string>("");
-  const [fotoUrl, setFotoUrl] = useState<string>("");
+  /** Arquivo da foto selecionado — sobe no submit para o bucket PRIVADO 'medicoes'. */
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
   /** URL de preview local (createObjectURL) — revogado no cleanup/limpeza. */
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [fotoNome, setFotoNome] = useState<string>("");
+  /** Vídeo opcional da evidência — sobe no submit para o bucket PRIVADO 'obra-videos'. */
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoNome, setVideoNome] = useState<string>("");
   const [observacao, setObservacao] = useState<string>("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
 
   const temPlanejada = useMemo(() => {
     const q = Number(item?.quantidade);
     return Number.isFinite(q) && q > 0;
   }, [item?.quantidade]);
-
-  // HONESTIDADE (B3 / E2E DOMÍNIO C): há foto SELECIONADA mas SEM destino de armazenamento
-  // (fotoUrl vazio = não há bucket/upload). A foto NÃO entra no registro — não fingir que entra.
-  // Mostra aviso no campo e o anexa à mensagem de sucesso. (Criar o bucket é decisão do dono.)
-  const fotoNaoPersiste = fotoPreview != null && fotoUrl.trim() === "";
 
   // Preview do pct resultante AO VIVO (espelha a regra do servidor — derivarPctAvanco).
   const pctPreview = useMemo(() => {
@@ -80,7 +80,9 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
   const limpar = useCallback(() => {
     setQtdRealizada("");
     setPctManual("");
-    setFotoUrl("");
+    setFotoFile(null);
+    setVideoFile(null);
+    setVideoNome("");
     // Revogar a URL de preview para liberar memória.
     setFotoPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev);
@@ -119,7 +121,40 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
         const pm = Number(pctManual);
         if (Number.isFinite(pm)) body.pct_avanco_resultante = clampPct(pm);
       }
-      if (fotoUrl.trim()) body.foto_url = fotoUrl.trim();
+      // Foto da evidência: sobe ao bucket PRIVADO ('medicoes') ANTES de registrar; a medição
+      // guarda o PATH (a exibição usa URL assinada). A evidência importa — se o upload falhar,
+      // aborta e deixa o usuário reenviar (nada é gravado pela metade).
+      if (fotoFile) {
+        const fd = new FormData();
+        fd.append("file", fotoFile);
+        fd.append("tipo", "foto");
+        const up = await fetch(
+          `/api/crm/obras/${encodeURIComponent(obraId)}/medicoes/upload`,
+          { method: "POST", headers: internalApiHeaders(), body: fd }
+        );
+        const upJson = (await up.json().catch(() => ({}))) as { path?: string; error?: string };
+        if (!up.ok || !upJson.path) {
+          setErro(upJson.error || "Não foi possível enviar a foto. Tente novamente.");
+          return;
+        }
+        body.foto_url = upJson.path;
+      }
+      // Vídeo opcional da evidência: mesmo fluxo, bucket privado 'obra-videos'.
+      if (videoFile) {
+        const fd = new FormData();
+        fd.append("file", videoFile);
+        fd.append("tipo", "video");
+        const up = await fetch(
+          `/api/crm/obras/${encodeURIComponent(obraId)}/medicoes/upload`,
+          { method: "POST", headers: internalApiHeaders(), body: fd }
+        );
+        const upJson = (await up.json().catch(() => ({}))) as { path?: string; error?: string };
+        if (!up.ok || !upJson.path) {
+          setErro(upJson.error || "Não foi possível enviar o vídeo. Tente novamente.");
+          return;
+        }
+        body.video_url = upJson.path;
+      }
       if (observacao.trim()) body.observacao = observacao.trim();
 
       const res = await fetch(`/api/crm/obras/${encodeURIComponent(obraId)}/medicoes`, {
@@ -142,18 +177,16 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
       if (json.migracao_pendente) {
         setOkMsg(json.aviso || "Avanço salvo. O registro formal entra após a migração E7c.");
       } else {
-        // HONESTIDADE (B3): se havia foto selecionada mas o armazenamento não está configurado,
-        // a foto NÃO foi salva no registro — dizer isso em vez de fingir que a evidência entrou.
-        const avisoFoto = fotoNaoPersiste
-          ? " A FOTO não foi salva (armazenamento de evidências ainda não configurado)."
-          : "";
-        setOkMsg(`Medição registrada. Avanço do item: ${json.pct_avanco_resultante ?? pctPreview}%.${avisoFoto}`);
+        const comAnexo = body.foto_url || body.video_url ? " Evidência anexada." : "";
+        setOkMsg(`Medição registrada. Avanço do item: ${json.pct_avanco_resultante ?? pctPreview}%.${comAnexo}`);
       }
       // Anti-duplicação: zera os campos da entrada (o pct/foto/obs desta medição) — sem reabrir o
       // botão para um 2º registro idêntico. O okMsg permanece visível até o usuário fechar ou medir de novo.
       setQtdRealizada("");
       setPctManual("");
-      setFotoUrl("");
+      setFotoFile(null);
+      setVideoFile(null);
+      setVideoNome("");
       setObservacao("");
       onMedido();
     } catch {
@@ -161,7 +194,7 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
     } finally {
       setSalvando(false);
     }
-  }, [item, salvando, okMsg, qtdRealizada, pctManual, temPlanejada, fotoUrl, fotoNaoPersiste, observacao, obraId, onMedido, pctPreview]);
+  }, [item, salvando, okMsg, qtdRealizada, pctManual, temPlanejada, fotoFile, videoFile, observacao, obraId, onMedido, pctPreview]);
 
   if (!open || !item) return null;
 
@@ -280,15 +313,11 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
 
         {/* Evidência: foto da medição — input file nativo com câmera no mobile */}
         {/*
-          AUT-6: substituído type="url" por type="file" accept="image/*" capture="environment".
-          No mobile abre a câmera traseira diretamente; no desktop abre o seletor de arquivo.
-          Preview local via createObjectURL (sem upload) — foto_url é enviada como string vazia
-          quando não há bucket configurado.
-          DÍVIDA TÉCNICA: sem bucket Supabase Storage configurado, foto_url NÃO é persistida
-          no POST (apenas o avanço é salvo). O servidor já avisa honestamente quando isso ocorre.
-          Quando o dono configurar o bucket "medicoes", substituir o bloco `salvar()` para fazer
-          o upload antes do POST e passar a URL pública como foto_url.
-          Ver: docs/DIVIDAS-TECNICAS.md § AUT-6 / bucket medicoes.
+          AUT-6 RESOLVIDO (06/jul): input type="file" accept="image/*" capture="environment"
+          (mobile abre a câmera traseira; desktop, o seletor). Preview local via createObjectURL;
+          no submit, o arquivo sobe ao bucket PRIVADO 'medicoes' (POST /medicoes/upload) e o PATH
+          vai em foto_url — a exibição usa URL ASSINADA (GET /medicoes). Se o upload falhar, o
+          salvar() aborta e pede reenvio (nada é gravado pela metade).
         */}
         <div className="flex flex-col gap-1.5">
           <span
@@ -313,7 +342,7 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
                 onClick={() => {
                   URL.revokeObjectURL(fotoPreview);
                   setFotoPreview(null);
-                  setFotoUrl("");
+                  setFotoFile(null);
                   setFotoNome("");
                   if (fileInputRef.current) fileInputRef.current.value = "";
                   if (okMsg) setOkMsg(null);
@@ -394,28 +423,97 @@ export function DrawerMedir({ open, obraId, item, onClose, onMedido }: Props) {
                 return URL.createObjectURL(file);
               });
               setFotoNome(file.name);
-              // Por ora fotoUrl fica vazio (sem bucket configurado).
-              // Quando o bucket existir: fazer upload aqui e setar a URL pública.
-              setFotoUrl("");
+              // Guarda o arquivo; o upload ao bucket privado acontece no submit (salvar).
+              setFotoFile(file);
               if (okMsg) setOkMsg(null);
             }}
           />
 
-          {/* HONESTIDADE (B3): a foto não será salva enquanto o armazenamento não existir — avisa,
-              em vez de deixar o preview sugerir que a evidência ficou registrada. */}
-          {fotoNaoPersiste ? (
-            <p
-              className="flex items-start gap-1 text-[11px]"
-              style={{ color: "#e3b341" }}
-              role="status"
+        </div>
+
+        {/* Vídeo opcional da evidência — bucket privado 'obra-videos', mesmo fluxo da foto */}
+        <div className="flex flex-col gap-1.5">
+          <span
+            className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide"
+            style={{ color: TXT_DIM }}
+          >
+            <Video className="h-3.5 w-3.5" aria-hidden /> Vídeo (opcional)
+          </span>
+
+          {videoNome ? (
+            <div
+              className="flex items-center justify-between gap-2"
+              style={{
+                borderRadius: 8,
+                border: `1px solid ${BORDA}`,
+                background: BG_DEEP,
+                padding: "8px 10px",
+              }}
             >
-              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" aria-hidden />
-              <span>
-                Esta foto fica só neste aparelho — o armazenamento de evidências ainda não está
-                configurado, então ela <strong>não será salva</strong> no registro da medição.
+              <span
+                style={{
+                  fontSize: 12,
+                  color: TXT_DIM,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {videoNome}
               </span>
-            </p>
+              <button
+                type="button"
+                aria-label="Remover vídeo selecionado"
+                onClick={() => {
+                  setVideoFile(null);
+                  setVideoNome("");
+                  if (videoInputRef.current) videoInputRef.current.value = "";
+                  if (okMsg) setOkMsg(null);
+                }}
+                style={{ background: "none", border: "none", color: TXT_DIM, cursor: "pointer", padding: 2 }}
+              >
+                <X size={16} aria-hidden />
+              </button>
+            </div>
           ) : null}
+
+          <label
+            htmlFor="drawer-medir-video"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              minHeight: 44,
+              borderRadius: 8,
+              border: `1px dashed ${videoNome ? BORDA : "rgba(201,162,74,0.4)"}`,
+              background: BG_DEEP,
+              color: videoNome ? TXT_DIM : DOURADO,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "border-color 150ms ease, color 150ms ease",
+            }}
+          >
+            <Video size={15} aria-hidden />
+            {videoNome ? "Trocar vídeo" : "Gravar ou escolher vídeo"}
+          </label>
+          <input
+            ref={videoInputRef}
+            id="drawer-medir-video"
+            type="file"
+            accept="video/*"
+            capture="environment"
+            aria-label="Selecionar vídeo da evidência"
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              if (!file) return;
+              setVideoFile(file);
+              setVideoNome(file.name);
+              if (okMsg) setOkMsg(null);
+            }}
+          />
         </div>
 
         {/* Observação */}

@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import {
   catalogoBuiltinPorId,
@@ -7,13 +6,7 @@ import {
 } from "@/lib/hub/agente-ferramentas-registry";
 import { smartProviderValido } from "@/lib/hub/ferramentas-custom-db";
 import { requireCrmOwner } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   // E-B9 (PATCH): editar ferramenta custom exige owner — espelha restrição da UI.

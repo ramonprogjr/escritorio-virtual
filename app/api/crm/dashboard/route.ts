@@ -1,15 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { aggregateDashboard } from "@/lib/crm/dashboard-aggregate";
 import { getCallerContext } from "@/lib/crm/crm-api-auth";
 import { personaCockpitFromRole } from "@/lib/crm/persona-cockpit";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 export async function GET(request: NextRequest) {
   // Persona-aware: usamos getCallerContext (não requireCrmSessao) porque os papéis do ECOSSISTEMA

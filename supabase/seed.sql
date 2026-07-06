@@ -1,0 +1,3 @@
+-- Seed local (usado por `supabase start` / `supabase db reset`).
+-- Estágio A do E2E: vazio de propósito — só valida que as migrations aplicam.
+-- Estágio B adiciona aqui o usuário de teste (auth.users + public.users) para o login E2E.

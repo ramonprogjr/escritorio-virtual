@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse, after } from "next/server";
 import { runPlaybookPipeline } from "@/lib/playbook/orchestrate";
 import { defaultTenantId } from "@/lib/tenant-default";
@@ -161,13 +162,6 @@ async function provisionHubCicloPadrao(
         : undefined;
 
   return { aviso };
-}
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 }
 
 function isInstrucaoModoColumnMissing(message?: string): boolean {

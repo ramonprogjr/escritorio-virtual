@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
@@ -18,13 +18,6 @@ const ALLOWED_MIME_TYPES = new Set<string>([
   "image/jpeg",
   "application/octet-stream",
 ]);
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 async function carregarAgente(
   supabase: ReturnType<typeof db>,

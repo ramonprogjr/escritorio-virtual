@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import type { HubFollowupConfigLite } from "@/lib/hub-ciclos-configuracoes";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 /** Leitura interna reutilizada por GET e PATCH (após auth já validado). */
 async function fetchRows(): Promise<NextResponse> {

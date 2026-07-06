@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { slugifyCargoSlug } from "@/lib/hub/cargo-slug";
 import {
@@ -8,13 +8,6 @@ import {
 } from "@/lib/ia/hub-model-defaults";
 import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { arquivarCargoCatalogo } from "@/lib/hub/arquivar-cargo-catalogo";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 function asTrimmedOrNull(v: unknown): string | null {
   const s = String(v ?? "").trim();

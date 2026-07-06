@@ -1,7 +1,9 @@
-# Gate de qualidade/segurança: type-check + testes (inclui guard-coverage,
+# Gate de qualidade/segurança: type-check + testes + build (inclui guard-coverage,
 # que impede rota /api nova nascer com service-role sem guard — proxy.ts
 # não roda como middleware real, então este é o gate que resta).
-# Self-contained: sem secrets (tsc e vitest não tocam serviços externos).
+# Self-contained: sem secrets. tsc e vitest não tocam serviços externos; o
+# next build roda com placeholders (browser client tem fallback p/ env ausente;
+# crmDb server só instancia em request-time) — validado sem .env.local.
 name: CI
 
 on:
@@ -33,3 +35,13 @@ jobs:
 
       - name: Testes (vitest)
         run: npx vitest run
+
+      - name: Build (next build)
+        run: npx next build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          # Placeholders NÃO-secretos: o build não contacta o Supabase (browser
+          # client cai no fallback; crmDb é request-time). Só evitam throw de env.
+          NEXT_PUBLIC_SUPABASE_URL: "https://ci-build-placeholder.invalid"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.ci-build"
+          SUPABASE_SERVICE_ROLE_KEY: "ci-build-placeholder-service-role"

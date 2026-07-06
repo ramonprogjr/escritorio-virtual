@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { gerarPlaybookViaIa } from "@/lib/playbook/gerar-fluxo-ia";
 import { extrairTextoDocumentoRag } from "@/lib/hub/rag";
@@ -40,13 +40,6 @@ function textoDoDocumento(
     typeof doc.nomeArquivo === "string" ? doc.nomeArquivo : "documento",
     typeof doc.mimeType === "string" ? doc.mimeType : null,
     buf.buffer
-  );
-}
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 

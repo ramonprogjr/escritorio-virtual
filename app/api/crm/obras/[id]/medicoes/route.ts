@@ -22,6 +22,7 @@ import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn } from "@/lib/tenant-default";
 import { derivarPctAvanco, clampPct } from "@/lib/obras/medicao";
+import { urlAssinadaMidia } from "@/lib/obras/storage-obra-midia";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -32,7 +33,7 @@ const AVISO_ITENS_PENDENTE =
 
 /** Colunas devolvidas de uma medição (auditoria). */
 const SELECT_MEDICAO =
-  "id, obra_id, item_id, data, quantidade_realizada, pct_avanco_resultante, foto_url, observacao, responsavel_id, responsavel_nome, criado_por, criado_em";
+  "id, obra_id, item_id, data, quantidade_realizada, pct_avanco_resultante, foto_url, video_url, observacao, responsavel_id, responsavel_nome, criado_por, criado_em";
 
 function ehTabelaAusente(error: { message?: string } | null): boolean {
   if (!error) return false;
@@ -155,8 +156,56 @@ export async function GET(request: NextRequest, { params }: Params) {
     next_cursor = Buffer.from(raw).toString("base64url");
   }
 
+  // AUTOR POR NOME (não código): criado_por/responsavel_id são UUIDs → o histórico mostrava o
+  // código cru. Resolve o nome real em `users` (batch, uma query por página) e preenche
+  // responsavel_nome quando vazio. Papéis ("humano"/etc.) não são UUID → passam sem lookup.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const idsAutor = new Set<string>();
+  for (const row of pageRows) {
+    const r = row as Record<string, unknown>;
+    for (const campo of ["criado_por", "responsavel_id"] as const) {
+      const v = typeof r[campo] === "string" ? (r[campo] as string) : "";
+      if (UUID_RE.test(v)) idsAutor.add(v);
+    }
+  }
+  const nomePorUser = new Map<string, string>();
+  if (idsAutor.size > 0) {
+    // ids já vêm de medições deste tenant → seguros. Tolerante: sem a tabela/coluna, cai no fallback.
+    const { data: usuarios } = await crmDb()
+      .from("users")
+      .select("id, name, email")
+      .in("id", [...idsAutor]);
+    for (const u of usuarios ?? []) {
+      const nome = (typeof u.name === "string" && u.name.trim()) || (typeof u.email === "string" && u.email.trim());
+      if (nome) nomePorUser.set(String(u.id), nome as string);
+    }
+  }
+
+  // Evidência em bucket PRIVADO: troca o PATH gravado pela URL ASSINADA (expira ~1h) para exibição.
+  // Rows antigas (nenhuma, pois a foto nunca persistiu antes) ou já-URL são preservadas.
+  const dataAssinada = await Promise.all(
+    pageRows.map(async (row) => {
+      const r = { ...(row as Record<string, unknown>) };
+      // Autor: quando não há responsavel_nome, mostra o NOME resolvido (não o UUID).
+      if (!r.responsavel_nome) {
+        const byCriador = typeof r.criado_por === "string" ? nomePorUser.get(r.criado_por) : undefined;
+        const byResp = typeof r.responsavel_id === "string" ? nomePorUser.get(r.responsavel_id) : undefined;
+        if (byCriador || byResp) r.responsavel_nome = byCriador ?? byResp;
+      }
+      const fotoPath = typeof r.foto_url === "string" ? r.foto_url : "";
+      if (fotoPath && !/^https?:\/\//i.test(fotoPath)) {
+        r.foto_url = await urlAssinadaMidia("foto", fotoPath);
+      }
+      const videoPath = typeof r.video_url === "string" ? r.video_url : "";
+      if (videoPath && !/^https?:\/\//i.test(videoPath)) {
+        r.video_url = await urlAssinadaMidia("video", videoPath);
+      }
+      return r;
+    })
+  );
+
   return NextResponse.json({
-    data: pageRows,
+    data: dataAssinada,
     next_cursor,
     has_more,
     migracao_pendente: false,
@@ -224,6 +273,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         ? body.pct_avanco
         : null;
   const fotoUrl = typeof body.foto_url === "string" ? body.foto_url.trim() || null : null;
+  const videoUrl = typeof body.video_url === "string" ? body.video_url.trim() || null : null;
   const observacao = typeof body.observacao === "string" ? body.observacao.trim() || null : null;
   const responsavelNome =
     typeof body.responsavel_nome === "string" ? body.responsavel_nome.trim() || null : null;
@@ -266,6 +316,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     quantidade_realizada: quantidadeRealizada,
     pct_avanco_resultante: pctResultante,
     foto_url: fotoUrl,
+    video_url: videoUrl,
     observacao,
     responsavel_nome: responsavelNome,
     // AUDITORIA (Fase 3a — nada-se-perde): registra QUEM mediu (usuário real), não só o papel.
@@ -288,9 +339,9 @@ export async function POST(request: NextRequest, { params }: Params) {
       // HONESTIDADE (Fase 3a): sem a tabela, foto_url/observacao foram DESCARTADOS. Não mentir que
       // "tudo foi salvo" — avisar EXPLICITAMENTE que só o avanço entrou e a evidência ainda NÃO ficou
       // registrada (até aplicar a migração E7c). Só alertamos sobre a perda quando houve o que perder.
-      const evidenciaDescartada = Boolean(fotoUrl || observacao);
+      const evidenciaDescartada = Boolean(fotoUrl || videoUrl || observacao);
       const aviso = evidenciaDescartada
-        ? "Só o AVANÇO do item foi salvo. A foto e/ou observação NÃO foram registradas " +
+        ? "Só o AVANÇO do item foi salvo. A foto/vídeo e/ou observação NÃO foram registradas " +
           "(medição formal pendente da migração E7c — janela do dono). Reenvie a evidência após a migração."
         : AVISO_PENDENTE;
       return NextResponse.json(
@@ -305,7 +356,23 @@ export async function POST(request: NextRequest, { params }: Params) {
         { status: 200 }
       );
     }
-    return NextResponse.json({ error: errMedicao.message }, { status: 500 });
+    // CONSISTÊNCIA append-only (erro REAL de insert, não migração pendente): o passo 3 já avançou o
+    // item, mas a trilha (passo 4) falhou → não deixar avanço SEM registro. Reverte o pct para o
+    // anterior com guarda OTIMISTA (.eq pct_avanco = pctResultante) — só desfaz a NOSSA alteração; se
+    // outra medição concorrente já mudou o item, o revert é no-op (não clobbera). Atomicidade real
+    // exige RPC transacional (janela do dono — E7c). Best-effort: log server-side, sem vazar SQL.
+    console.error("[medicoes] insert falhou, revertendo avanço:", errMedicao.message);
+    await supabase
+      .from("hub_obra_itens")
+      .update({ pct_avanco: pctAtual, atualizado_em: new Date().toISOString() })
+      .eq("id", itemId)
+      .eq("obra_id", obraId)
+      .eq("tenant_id", tenantId)
+      .eq("pct_avanco", pctResultante);
+    return NextResponse.json(
+      { error: "Não foi possível registrar a medição — o avanço foi revertido. Tente novamente." },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json(

@@ -73,7 +73,38 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const [{ data: leads }, { data: negocios }] = await Promise.all([
+  // Negócios do lado N:N: a pessoa como PARTICIPANTE (via hub_negocio_vinculos), não só como
+  // pessoa_id principal. Antes só o direto aparecia → uma pessoa vinculada como participante
+  // (arquiteto/cliente/…) não via o negócio na própria ficha (rastreabilidade reversa lossy).
+  // Best-effort: degrada p/ vazio se a tabela de vínculos não existir.
+  const vincRes = await supabase
+    .from("hub_negocio_vinculos")
+    .select("negocio_id")
+    .eq("entidade_tipo", "pessoa")
+    .eq("entidade_id", id)
+    .limit(50);
+  const vincNegocioIds = vincRes.error
+    ? []
+    : [
+        ...new Set(
+          (vincRes.data ?? [])
+            .map((v) => (v as { negocio_id?: unknown }).negocio_id)
+            .filter((x): x is string => !!x)
+            .map(String)
+        ),
+      ];
+
+  type NegocioRow = {
+    id: string;
+    codigo: string | null;
+    titulo: string | null;
+    etapa: string | null;
+    status: string | null;
+    criado_em: string | null;
+  };
+  const NEGOCIO_COLS = "id, codigo, titulo, etapa, status, criado_em";
+
+  const [{ data: leads }, diretosRes, vincNegRes] = await Promise.all([
     supabase
       .from("hub_leads_crm")
       .select("id, nome, estagio, estagio_funil, criado_em")
@@ -83,14 +114,29 @@ export async function GET(request: NextRequest, { params }: Params) {
       .limit(20),
     supabase
       .from("hub_negocios")
-      .select("id, codigo, titulo, etapa, status, criado_em")
+      .select(NEGOCIO_COLS)
       .eq("pessoa_id", id)
       .or(scope)
       .order("criado_em", { ascending: false })
       .limit(20),
+    vincNegocioIds.length
+      ? supabase.from("hub_negocios").select(NEGOCIO_COLS).in("id", vincNegocioIds).or(scope).limit(20)
+      : Promise.resolve({ data: [] as NegocioRow[], error: null }),
   ]);
 
-  const negocioIds = (negocios ?? []).map((n) => String(n.id));
+  // Merge direto + vinculado (N:N), dedup por id, ordena por criado_em desc, limita 20.
+  const negociosMap = new Map<string, NegocioRow>();
+  for (const n of [
+    ...(((diretosRes.data as NegocioRow[] | null) ?? [])),
+    ...(vincNegRes.error ? [] : ((vincNegRes.data as NegocioRow[] | null) ?? [])),
+  ]) {
+    negociosMap.set(String(n.id), n);
+  }
+  const negocios = [...negociosMap.values()]
+    .sort((a, b) => String(b.criado_em ?? "").localeCompare(String(a.criado_em ?? "")))
+    .slice(0, 20);
+
+  const negocioIds = negocios.map((n) => String(n.id));
   const { obras, projetos } = await carregarEntregasDosNegocios(supabase, negocioIds, tenantId);
 
   return NextResponse.json({

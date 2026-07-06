@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   CONHECIMENTO_TITULO_INSERT,
@@ -18,13 +18,6 @@ import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
  *
  * Service-role, valida que o agente existe e pertence ao tenant, aditivo.
  */
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /** Retorna true se a linha pertence a outro tenant (service-role bypassa RLS). */
 function agenteForaDoTenant(

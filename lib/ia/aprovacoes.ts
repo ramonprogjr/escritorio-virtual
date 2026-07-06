@@ -579,7 +579,8 @@ export async function rejeitar(
     await db
       .from("hub_cotacoes_pedidos")
       .update({ status: "rejeitado", atualizado_em: new Date().toISOString() })
-      .eq("id", dados.pedido_id as string);
+      .eq("id", dados.pedido_id as string)
+      .eq("tenant_id", tenant); // defesa em profundidade: pedido_id vem do jsonb da aprovação
   }
 
   // Log de decisão com tenant_id SEMPRE (mesma regra do aprovar — nada de log de dinheiro órfão).
@@ -691,7 +692,8 @@ async function executarAcaoAprovada(
     await db
       .from("hub_cotacoes_pedidos")
       .update({ status: "aprovado", atualizado_em: new Date().toISOString() })
-      .eq("id", dados.pedido_id as string);
+      .eq("id", dados.pedido_id as string)
+      .eq("tenant_id", tenantId); // defesa em profundidade: pedido_id vem do jsonb da aprovação
     // O efeito NÃO depende do resultado desse UPDATE não-verificado (fora de escopo).
     return { kind: "cotacao_aprovada" };
   }

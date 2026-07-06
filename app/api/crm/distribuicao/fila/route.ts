@@ -1,25 +1,9 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 import { listarCandidatosParceiro, type CandidatoParceiro } from "@/lib/crm/distribuir-lead";
 import { tenantScopeOrFilter } from "@/lib/tenant-default";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-function supabaseConfigError(): string | null {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
-    return "NEXT_PUBLIC_SUPABASE_URL nao esta definida no servidor.";
-  }
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
-    return "SUPABASE_SERVICE_ROLE_KEY nao esta definida no servidor.";
-  }
-  return null;
-}
+import { crmDb as db, crmConfigError as supabaseConfigError } from "@/lib/crm/supabase-server";
 
 /** Mesmo critério de mercado usado em sugerir-encaminhamento-auto (lê metadata do lead). */
 function mercadoDoLead(metadata: unknown): string {

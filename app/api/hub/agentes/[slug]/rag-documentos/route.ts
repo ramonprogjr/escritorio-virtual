@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   extrairTextoDocumentoRag,
@@ -11,13 +11,6 @@ import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import { DEFAULT_OBRA10_TENANT_ID } from "@/lib/tenant-default";
 
 const MAX_RAG_DOCUMENTOS_POR_AGENTE = 3;
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /**
  * Carrega o agente E confina ao tenant do caller: 404 se o agente pertencer a outro

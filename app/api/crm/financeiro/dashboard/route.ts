@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { aggregateFinanceDashboard } from "@/lib/crm/finance-dashboard-aggregate";
 import { requireCrmFinanceiro } from "@/lib/crm/crm-api-auth";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { crmDb as db } from "@/lib/crm/supabase-server";
 
 export async function GET(request: NextRequest) {
   const auth = await requireCrmFinanceiro(request);

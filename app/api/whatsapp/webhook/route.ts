@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { identificarMercado, identificarIntencao } from "@/lib/ia/agentes-config";
 import { whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
@@ -98,15 +98,6 @@ export function webhookAutenticado(request: NextRequest, rawBody: string, secret
   if (fromQuery && timingSafeStringEqual(fromQuery, secret)) return true;
 
   return false;
-}
-
-function db() {
-  // SEM fallback p/ ANON: com anon + RLS os INSERTs falham em silêncio (webhook
-  // responde 200 e nada é gravado = perda de lead). Falhar cedo, igual às outras rotas.
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 }
 
 async function encontrarOuCriarPessoa(telefone: string, nome: string, origem: string) {

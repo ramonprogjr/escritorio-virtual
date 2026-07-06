@@ -1,16 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { validateAndNormalizeCicloConfiguracoes } from "@/lib/hub-ciclos-configuracoes";
 import { requireCrmGestor, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 
 type CicloTipo = "continuo" | "programado" | "gatilho";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 function isCicloTipo(v: unknown): v is CicloTipo {
   return v === "continuo" || v === "programado" || v === "gatilho";

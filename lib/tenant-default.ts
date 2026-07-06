@@ -45,6 +45,23 @@ export function isMissingPgColumn(err: unknown, column?: string): boolean {
 }
 
 /**
+ * Escopo EXATO de tenant para tabelas PRIVADAS (o caso NORMAL). ✅ opção segura.
+ * Use como: `query.eq("tenant_id", tenantScopeExact(tid))`.
+ *
+ * Resolve o tenant (trim + default Obra10) e NADA mais — NÃO inclui registos
+ * `tenant_id NULL`, então não vaza dados entre tenants. Prefira SEMPRE esta a
+ * `tenantScopeOrFilter` quando a tabela for privada.
+ */
+export function tenantScopeExact(tenantId: string): string {
+  return tenantId?.trim() || DEFAULT_OBRA10_TENANT_ID;
+}
+
+/**
+ * ⚠️ CUIDADO — SÓ para MASTER-DATA GLOBAL (catálogos/pipelines/config partilhados
+ * entre tenants, onde `tenant_id NULL` = "vale para todos"). Em tabela PRIVADA
+ * isto VAZA dados entre tenants: o NULL legado aparece para todos. Nesse caso use
+ * `tenantScopeExact` + `.eq("tenant_id", ...)`. Ver docs/AUDITORIA-TENANT-NULL-LEAK-05JUL.md.
+ *
  * Filtro PostgREST: tenant actual + registos legados (tenant_id NULL ou Obra10 padrão).
  * Parceiros antigos foram gravados sem tenant antes da migração multi-tenant.
  */

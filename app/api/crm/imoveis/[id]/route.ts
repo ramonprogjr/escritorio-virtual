@@ -1,17 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 import { DEFAULT_OBRA10_TENANT_ID, isMissingPgColumn } from "@/lib/tenant-default";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /**
  * Confina o acesso ao tenant do caller. Busca o imóvel por id (service-role bypassa RLS)

@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { gerarCodigoPessoa } from "@/lib/crm/pessoa-cadastro";
 import {
@@ -10,23 +10,7 @@ import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { sanitizarBuscaPostgrest } from "@/lib/crm/sanitizar-busca-postgrest";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-function supabaseConfigError(): string | null {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
-    return "NEXT_PUBLIC_SUPABASE_URL nao esta definida no servidor.";
-  }
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
-    return "SUPABASE_SERVICE_ROLE_KEY nao esta definida no servidor.";
-  }
-  return null;
-}
+import { crmDb as db, crmConfigError as supabaseConfigError } from "@/lib/crm/supabase-server";
 
 const LEAD_INSERT_SELECT =
   "id, codigo, nome, telefone, email, origem, estagio, score, valor_estimado, pessoa_id, criado_em, atualizado_em";

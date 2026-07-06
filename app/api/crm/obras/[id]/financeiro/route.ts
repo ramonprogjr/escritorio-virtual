@@ -196,8 +196,21 @@ export async function GET(request: NextRequest, { params }: Params) {
     movimentos = movs ?? [];
   }
 
+  // ── Previsto = soma do valor_contrato dos itens de escopo da obra (E2). ANTES ficava R$ 0
+  //    (montarResumo nunca somava o previsto). Tolerante: se hub_obra_itens não existir (E2
+  //    pendente) ou nenhum item tiver valor_contrato, previsto = 0 (honesto, sem quebrar). ──
+  const { data: itensObra } = await supabase
+    .from("hub_obra_itens")
+    .select("valor_contrato")
+    .eq("obra_id", obraId)
+    .eq("tenant_id", tenantId);
+  const previsto = (itensObra ?? []).reduce((acc, it) => {
+    const v = Number((it as Record<string, unknown>).valor_contrato ?? 0);
+    return acc + (Number.isFinite(v) ? v : 0);
+  }, 0);
+
   // ── Resumo (cabeçalho). previsto = soma valor_contrato dos itens-pai (E2). ──
-  const resumo = montarResumo(orcamentos ?? [], pagamentosOut, contaEscrow, hojeISO);
+  const resumo = montarResumo(orcamentos ?? [], pagamentosOut, contaEscrow, previsto, hojeISO);
 
   return NextResponse.json({
     migracao_pendente: false,
@@ -225,9 +238,11 @@ function montarResumo(
   orcamentos: Array<Record<string, unknown>>,
   pagamentos: PagamentoOut[],
   conta: { saldo_custodia?: number | null; saldo_liberado?: number | null } | null,
+  previstoItens: number,
   _hojeISO: string
 ): ResumoFinanceiro {
   const r = resumoFinanceiroVazio();
+  r.previsto = Number.isFinite(previstoItens) ? previstoItens : 0;
   for (const o of orcamentos) {
     const v = Number(o.valor_total ?? 0);
     if (String(o.status) !== "cancelado") r.orcado += Number.isFinite(v) ? v : 0;

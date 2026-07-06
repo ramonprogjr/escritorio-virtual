@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { crmDb as db } from "@/lib/crm/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 
@@ -18,13 +18,6 @@ import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
  * ambiente (ex.: CRON_SECRET=<string aleatória segura>). Não use o literal
  * "obra10plus_cron_2026" — rotacione para um valor que só o ambiente conhece.
  */
-
-function db() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /** Mapeia agente_slug para o segmento do runner (espelha slugParaApiCiclos do client). */
 function slugParaRunner(agenteSlug: string): string {

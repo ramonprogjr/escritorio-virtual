@@ -88,7 +88,15 @@ Plataforma **IA-first, multi-tenant, API-first**: o **Hub** distribui e audita; 
 - Cron dos KPIs (alimenta analytics — anti parede-de-zeros)
 - ~~**Parceiro Fase 2:** link de convite "quem convidou" via **HMAC**~~ ✅ **FEITO** (`28822e2`, E2E verde: 401 gate · sig válido credita · forjado recusa; grava em `hub_parceiros_log.dados`). Coluna `cadastrado_por` **DISPENSADA** — a coluna `dados` já existe em prod e persiste a atribuição sem migração.
 - ~~alinhar dedup do **especialista** ao `.eq` puro~~ ✅ **FEITO** (`a2b2566`) + **onda tenant-null Faixa A** (`02f6471`): `.eq` puro em fornecedores/alertas/canais/auditor. Auditoria adversarial (23 agentes) mapeou 5 leaks + 6 intencionais preservados — `docs/AUDITORIA-TENANT-NULL-LEAK-05JUL.md`. **Faixa B** → §4.1 (janela).
-- **Resta:** deploy p/ `feature/escritorio-visual` (Fase 2 + Faixa A) — comando pronto, aguarda push do dono
+- ~~**Resta:** deploy p/ `feature/escritorio-visual` (Fase 2 + Faixa A)~~ ✅ **FEITO** (deploy `64eef81`, 05/jul manhã — Render servindo)
+
+### 4.5 🅿️ PRÓXIMA ETAPA — ondas PRONTAS p/ construir (PARADAS enquanto rodamos a auditoria de DESTRAVAMENTO — 05/jul)
+> **Virada 05/jul:** o dono redirecionou o foco p/ **DESTRAVAR o sistema** antes de construir onda nova — o problema-raiz é o **acoplamento** ("mexe num botão, quebra outra tela"). Meta: organizar tudo e passar a trabalhar **cirúrgico** (mexer num item = mexer só nele). Ver memória `diretriz-trabalho-cirurgico-destravar-sistema` + **PLANO completo em `docs/PLANO-DESTRAVAMENTO-05JUL.md`** (mesa de 4 frentes 05/jul). **Fase 0 ✅ · 1.1 ✅ · 1.3 rede ✅ · 2.1 ✅ (66 clientes, −613 L) · 2.2 ✅ (tenant)** executadas em `wendel/dev` (`98b50b1`→`a63ecce`, 11 commits, gate verde, **NÃO deployado** — Render espera o dono). 🔒 SEGURADO p/ o dono: **2.3 (extrair layout — quebra 52 telas)** · **2.4 (RBAC)** · **E2E** (decisão de auth) · Faixa B (janela). Log completo em `docs/PLANO-DESTRAVAMENTO-05JUL.md` §7. **Quando o destravamento fechar, retomar destas frentes (parqueadas, nada se perde):**
+> - 🧊 **Janela do dono (SQL prod — não toco sozinho; preparo o pacote e rodamos juntos):** Faixa B tenant-null · pacote RLS+backfill · escrow #5 (GREATEST) · rotação service_role · JANELA-03. Detalhe em §4.1.
+> - 📋 **Onda A — Tela do Arquiteto** (financeiro + Visão Geral macro/micro + Analytics TV): maior gap de módulo (Arquitetura 60%, financeiro FALTA) + ataca a "parede de zeros" (Analytics 35%). **← recomendação do CEO p/ retomar primeiro.**
+> - 📋 **Onda C — Configurações** (self-service: empresa cadastra funcionários + permissões = RBAC operável pelo usuário, não só por mim no banco).
+> - 📋 **Onda 3 — RBAC ABAC fino** (endurecer `comercial` de rotas architect/operation — segurança).
+> - 📋 **Onda D — Sistema de LOGS** unificado (ações + erros) — §7.
 
 ---
 
