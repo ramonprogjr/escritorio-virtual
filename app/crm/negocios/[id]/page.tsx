@@ -11,6 +11,7 @@ import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
+import { NegocioPropostasSection, type NegocioProposta } from "@/components/crm/NegocioPropostasSection";
 
 type NegocioDetalhe = {
   id: string;
@@ -153,6 +154,7 @@ export default function NegocioDetalhePage() {
   const [recebivelGerado, setRecebivelGerado] = useState(false);
   const [confirmandoArquivar, setConfirmandoArquivar] = useState(false);
   const [arquivando, setArquivando] = useState(false);
+  const [propostas, setPropostas] = useState<NegocioProposta[]>([]);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -166,6 +168,7 @@ export default function NegocioDetalhePage() {
         timeline?: TimelineItem[];
         lead?: { nome: string } | null;
         pessoa?: PessoaMini | null;
+        propostas?: NegocioProposta[];
         error?: string;
       };
       if (!res.ok) {
@@ -188,6 +191,7 @@ export default function NegocioDetalhePage() {
       setTimeline(json.timeline ?? []);
       setLeadNome(json.lead?.nome ?? null);
       setPessoaVinc(json.pessoa ?? null);
+      setPropostas(json.propostas ?? []);
     } catch {
       setErro("Erro de rede.");
     } finally {
@@ -627,6 +631,8 @@ export default function NegocioDetalhePage() {
         <Link href={`/crm/arquitetura?negocio_id=${negocio.id}`} style={{ color: "#c9a24a", fontWeight: 700 }}>Arquitetura</Link>
         <Link href={`/crm/obras?negocio_id=${negocio.id}`} style={{ color: "#8b949e" }}>Obras</Link>
       </div>
+
+      <NegocioPropostasSection propostas={propostas} />
 
       {(negocio.status === "fechado_ganho" || negocio.etapa === "ganho") &&
         (() => {
