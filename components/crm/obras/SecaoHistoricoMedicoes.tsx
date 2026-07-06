@@ -33,6 +33,7 @@ type MedicaoItem = {
   quantidade_realizada: number | null;
   pct_avanco_resultante: number | null;
   foto_url: string | null;
+  video_url: string | null;
   observacao: string | null;
   responsavel_id: string | null;
   responsavel_nome: string | null;
@@ -153,6 +154,23 @@ function CardMedicao({ m, unidade }: { m: MedicaoItem; unidade?: string | null }
           <span style={{ marginLeft: 6, fontSize: 11, color: TXT_DIM2 }}>Sem foto</span>
         </div>
       )}
+
+      {/* Vídeo da evidência (bucket privado, URL assinada) */}
+      {m.video_url ? (
+        <video
+          src={m.video_url}
+          controls
+          preload="metadata"
+          aria-label="Vídeo da evidência desta medição"
+          style={{
+            width: "100%",
+            aspectRatio: "16/9",
+            display: "block",
+            background: "#000",
+            borderTop: `1px solid ${BORDA}`,
+          }}
+        />
+      ) : null}
 
       <div style={{ padding: "12px 14px" }}>
         {/* Cabeçalho: data + autor */}

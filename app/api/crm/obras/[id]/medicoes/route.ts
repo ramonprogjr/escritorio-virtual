@@ -33,7 +33,7 @@ const AVISO_ITENS_PENDENTE =
 
 /** Colunas devolvidas de uma medição (auditoria). */
 const SELECT_MEDICAO =
-  "id, obra_id, item_id, data, quantidade_realizada, pct_avanco_resultante, foto_url, observacao, responsavel_id, responsavel_nome, criado_por, criado_em";
+  "id, obra_id, item_id, data, quantidade_realizada, pct_avanco_resultante, foto_url, video_url, observacao, responsavel_id, responsavel_nome, criado_por, criado_em";
 
 function ehTabelaAusente(error: { message?: string } | null): boolean {
   if (!error) return false;
@@ -160,10 +160,16 @@ export async function GET(request: NextRequest, { params }: Params) {
   // Rows antigas (nenhuma, pois a foto nunca persistiu antes) ou já-URL são preservadas.
   const dataAssinada = await Promise.all(
     pageRows.map(async (row) => {
-      const r = row as Record<string, unknown>;
+      const r = { ...(row as Record<string, unknown>) };
       const fotoPath = typeof r.foto_url === "string" ? r.foto_url : "";
-      if (!fotoPath || /^https?:\/\//i.test(fotoPath)) return r;
-      return { ...r, foto_url: await urlAssinadaMidia("foto", fotoPath) };
+      if (fotoPath && !/^https?:\/\//i.test(fotoPath)) {
+        r.foto_url = await urlAssinadaMidia("foto", fotoPath);
+      }
+      const videoPath = typeof r.video_url === "string" ? r.video_url : "";
+      if (videoPath && !/^https?:\/\//i.test(videoPath)) {
+        r.video_url = await urlAssinadaMidia("video", videoPath);
+      }
+      return r;
     })
   );
 
@@ -236,6 +242,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         ? body.pct_avanco
         : null;
   const fotoUrl = typeof body.foto_url === "string" ? body.foto_url.trim() || null : null;
+  const videoUrl = typeof body.video_url === "string" ? body.video_url.trim() || null : null;
   const observacao = typeof body.observacao === "string" ? body.observacao.trim() || null : null;
   const responsavelNome =
     typeof body.responsavel_nome === "string" ? body.responsavel_nome.trim() || null : null;
@@ -278,6 +285,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     quantidade_realizada: quantidadeRealizada,
     pct_avanco_resultante: pctResultante,
     foto_url: fotoUrl,
+    video_url: videoUrl,
     observacao,
     responsavel_nome: responsavelNome,
     // AUDITORIA (Fase 3a — nada-se-perde): registra QUEM mediu (usuário real), não só o papel.
@@ -300,9 +308,9 @@ export async function POST(request: NextRequest, { params }: Params) {
       // HONESTIDADE (Fase 3a): sem a tabela, foto_url/observacao foram DESCARTADOS. Não mentir que
       // "tudo foi salvo" — avisar EXPLICITAMENTE que só o avanço entrou e a evidência ainda NÃO ficou
       // registrada (até aplicar a migração E7c). Só alertamos sobre a perda quando houve o que perder.
-      const evidenciaDescartada = Boolean(fotoUrl || observacao);
+      const evidenciaDescartada = Boolean(fotoUrl || videoUrl || observacao);
       const aviso = evidenciaDescartada
-        ? "Só o AVANÇO do item foi salvo. A foto e/ou observação NÃO foram registradas " +
+        ? "Só o AVANÇO do item foi salvo. A foto/vídeo e/ou observação NÃO foram registradas " +
           "(medição formal pendente da migração E7c — janela do dono). Reenvie a evidência após a migração."
         : AVISO_PENDENTE;
       return NextResponse.json(
