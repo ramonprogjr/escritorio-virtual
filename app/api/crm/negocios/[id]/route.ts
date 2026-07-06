@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { validarMudancaNegocio } from "@/lib/crm/negocio-rules";
+import { tipoFechoDaEtapa, statusDoFecho, eventTypeDoFecho } from "@/lib/crm/negocio-fecho";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmComercial, requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { isMissingPgColumn, tenantScopeOrFilter } from "@/lib/tenant-default";
@@ -102,10 +103,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
   }
 
+  // A1: além de validar a etapa contra o pipeline, captura o tipo_fecho da etapa-alvo
+  // (aberto/ganho/perdido) — é ele, não o slug literal "ganho", que decide status + KPI
+  // nos pipelines de MERCADO (fechado_ganho/obra_criada/projeto_obra_criado/…).
+  let tipoFechoAlvo: string | null = null;
   if (body.etapa && atual.pipeline_id) {
     const { data: estagios } = await supabase
       .from("hub_pipeline_estagios")
-      .select("slug")
+      .select("slug, tipo_fecho")
       .eq("pipeline_id", atual.pipeline_id)
       .eq("ativo", true);
 
@@ -113,11 +118,22 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (slugs.size > 0 && !slugs.has(String(body.etapa))) {
       return NextResponse.json({ error: "Etapa inválida para o pipeline deste negócio." }, { status: 400 });
     }
+    const alvo = (estagios ?? []).find((e) => String(e.slug) === String(body.etapa));
+    tipoFechoAlvo = alvo?.tipo_fecho != null ? String(alvo.tipo_fecho) : null;
   }
+
+  // A1: deriva ganho/perdido pelo tipo_fecho (fallback: slug legado). Quando o caller move
+  // para uma etapa de fecho SEM enviar `status` (o kanban só manda {etapa}), o status
+  // canônico é derivado — sem isso, "ganho" de mercado ficava com status "aberto" e NÃO
+  // abria "gerar entrega" nem contava nos KPIs de dinheiro.
+  const fecho = body.etapa !== undefined ? tipoFechoDaEtapa(String(body.etapa), tipoFechoAlvo) : null;
+  const statusDerivado = fecho && body.status === undefined ? statusDoFecho(fecho) : null;
+  const statusFinal =
+    body.status !== undefined ? String(body.status) : (statusDerivado ?? String(atual.status ?? ""));
 
   const merged = {
     etapa: (body.etapa !== undefined ? String(body.etapa) : atual.etapa) as string,
-    status: (body.status !== undefined ? String(body.status) : atual.status) as string,
+    status: statusFinal,
     motivo_perda:
       body.motivo_perda !== undefined
         ? (body.motivo_perda as string | null)
@@ -159,6 +175,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   for (const key of allowed) {
     if (key in body) patch[key] = body[key];
   }
+  // A1: grava o status derivado do fecho quando o caller (ex.: kanban) só mandou {etapa}.
+  if (statusDerivado) patch.status = statusDerivado;
 
   const etapaAnterior = String(atual.etapa ?? "");
 
@@ -220,13 +238,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     // Keystone F4 (hub_eventos): evento de FUNIL para KPIs/dashboards. Best-effort — nunca
     // bloqueia o PATCH. ganho/perdido são as métricas de dinheiro; demais → etapa_mudou.
     const etapaNova = String(data.etapa);
+    const fechoNovo = tipoFechoDaEtapa(etapaNova, tipoFechoAlvo);
     await registrarEvento(supabase, {
-      event_type:
-        etapaNova === "ganho"
-          ? "negocio_ganho"
-          : etapaNova === "perdido"
-            ? "negocio_perdido"
-            : "negocio_etapa_mudou",
+      event_type: eventTypeDoFecho(fechoNovo),
       entity_type: "negocio",
       entity_id: id,
       negocio_id: id,
@@ -235,7 +249,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       payload: {
         etapa_anterior: etapaAnterior || null,
         etapa_nova: etapaNova,
-        ...(etapaNova === "perdido" && merged.motivo_perda
+        ...(fechoNovo === "perdido" && merged.motivo_perda
           ? { motivo: String(merged.motivo_perda) }
           : {}),
       },
