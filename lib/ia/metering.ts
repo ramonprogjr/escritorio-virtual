@@ -116,7 +116,24 @@ export async function registrarConsumoIA(
       ref_id: p.refId ?? null,
     });
     return { creditos, custoBrl: brl };
-  } catch {
+  } catch (e) {
+    // SEC-8: NÃO falhar calado — sem isto o custo da IA sumia do radar financeiro. Loga com
+    // contexto suficiente para RECONCILIAÇÃO manual (tenant + origem + modelo + tokens → dá p/
+    // recalcular e re-inserir). Segue best-effort: retorna null e NÃO quebra o fluxo de IA.
+    // (Atomicidade dos 2 inserts consumo+débito = RPC transacional — janela do dono.)
+    console.error(
+      "[METERING] registrarConsumoIA FALHOU — custo IA NÃO registrado (reconciliar):",
+      JSON.stringify({
+        tenant_id: p.tenantId,
+        origem: p.origem,
+        modelo: p.modelo,
+        tokens_entrada: p.tokensEntrada,
+        tokens_saida: p.tokensSaida,
+        ref_tipo: p.refTipo ?? null,
+        ref_id: p.refId ?? null,
+      }),
+      e instanceof Error ? e.message : e,
+    );
     return null;
   }
 }

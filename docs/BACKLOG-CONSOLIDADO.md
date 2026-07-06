@@ -14,8 +14,28 @@ Eixo principal aqui = **quem destrava** (você, eu, ou uma decisão), porque é 
 
 ---
 
+## 📌 LOG DE EXECUÇÃO — fila 🛠️EU (autônomo, 06/jul) · VERIFICÁVEL POR COMMIT
+> Registro anti-esquecimento (o dono pediu: *"anote pra não alucinar nem deixar pendência pra trás; guarde num local que possa verificar"*). Cada item tem o hash — confira com `git show <hash>`. Ponto de retorno seguro: tag `ponto-retorno-06jul` (`1526250`).
+
+**Deploy do lote (staging/Ramon):** `d5f4667` em `origin` + `backup` (branch `feature/escritorio-visual`, árvore idêntica ao dev). O SEC-8 (`570557d`) veio DEPOIS do deploy → entra no próximo deploy.
+
+| Item da fila 🛠️EU | Estado | Commit |
+|---|---|---|
+| SEC-1 (vazamento nas Aprovações) | ✅ auditado (7 superfícies + refutação adversarial) → **já estava fechado**; endurecidos 2 UPDATEs de cotação | `669c5e0` |
+| "Previsto" sempre R$ 0 | ✅ soma `valor_contrato` dos itens (E2) | `9c0a55a` |
+| Autor da medição por NOME (não UUID) | ✅ resolve em `users(name/email)` no GET | `adc7b5e` |
+| Consistência: reverte avanço se a trilha (insert) falha | ✅ guarda otimista, zero regressão | `6d67ac7` |
+| SEC-8 (custo da IA falhava calado) | ✅ loga com contexto p/ reconciliação | `570557d` |
+
+**⏸️ DEFERIDO — NÃO ESQUECER (pendência viva, não sumiu):**
+- **SEC-7 — a IA gravar auditoria SISTÊMICA de tudo que escreve** (tabela `hub_acoes_ia`). Por que não fiz agora: é lacuna **sistêmica** — o executor `lib/hub/executar-ferramenta-ia.ts` já grava em ALGUNS pontos (ex.: linha 281) mas não em todos; e `docs/DIVIDAS-TECNICAS.md §E3` manda **"resolver JUNTO da Central de Aprovações"** (o formato do registro depende do que a Central vai consumir no loop de aprendizado). Fazer agora arriscaria **formato errado + logs duplicados** no coração da IA. **Retomar como MESA DEDICADA.** Ponto de injeção já mapeado: executor central `executar-ferramenta-ia.ts:593` + mapa `HUB_FERRAMENTA_ACESSO` em `agente-ferramentas-registry.ts:1172`.
+
+**▶️ PRÓXIMO na fila:** nº4 — **dedup de cadastro** (lead duplicado por telefone, AUT-2).
+
+---
+
 ## ✅ JÁ RESOLVIDO neste ciclo (05–06/jul) — pra você ver o avanço
-Estes SAÍRAM da lista. Estão no código (`wendel/dev`, gate verde), **ainda não deployados** (esperando sua revisão).
+Estes SAÍRAM da lista. Estão no código (`wendel/dev`, gate verde) e **já subiram ao staging** no deploy `d5f4667` (você/CEO revisa ao vivo).
 
 | # | O que era | Estado |
 |---|-----------|--------|
