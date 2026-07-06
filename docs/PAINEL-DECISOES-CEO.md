@@ -10,7 +10,7 @@
 - **NF = anexar** o PDF/XML já emitido (não emitir na SEFAZ) — fase 1. ✅
 - **Markup de IA = 10x** por enquanto (parametrizável). ✅
 
-## 🎯 ALTA ALAVANCA — decidir agora destrava muita coisa (recomendação do CEO)
+## 🎯 ALTA ALAVANCA — ✅ TODAS APROVADAS pelo dono (06/jul) — viram diretriz de construção
 1. **Fornecedor × parceiro × empresa** (item 1): **recomendo UMA tabela de fornecedor com PAPÉIS** (rede × executor); PF sai de Fornecedores → Especialistas; `/crm/empresas` separa "escritório (tenant)" de "empresa PJ (cadastro)". Destrava CRM/cadastros.
 2. **Distribuição de lead** (item 4): **recomendo começar EXCLUSIVO** (1 fornecedor por vez, com SLA + redistribuição se não responder) — mais simples e justo; "2-3 competindo" é fase 2.
 3. **Honorário do arquiteto** (item 12): **por PROJETO (pré-obra)** — é a receita nº1 dele, não pode depender de virar obra. Tenant do arquiteto = **membro do Hub** no início (tenant próprio é fase multi-tenant).
