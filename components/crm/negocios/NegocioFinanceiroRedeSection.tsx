@@ -10,7 +10,8 @@
  * Estetica de BANCO (nunca joguinho): R$ com centavos, status com proximo passo. Tokens Obra10+ dark.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { HandCoins, CheckCircle2, AlertTriangle, Lock } from "lucide-react";
+import Link from "next/link";
+import { HandCoins, CheckCircle2, AlertTriangle, Lock, ArrowRight } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 const DOURADO = "#c9a24a";
@@ -154,6 +155,9 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
   if (!dados) return null;
 
   const { negocio, participantes, comissoes, titulos } = dados;
+  // "O que nasceu" (design #10): recebíveis da rede = fatias que viram a receber (meus + dos parceiros).
+  const recebiveis = titulos.filter((t) => t.direcao === "receber");
+  const totalRecebiveis = recebiveis.reduce((s, t) => s + (Number(t.valor_total) || 0), 0);
 
   return (
     <section aria-labelledby="fin-rede-titulo" style={{ marginTop: 24 }}>
@@ -176,6 +180,24 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
       ) : negocio.apurado ? (
         // ── APURADO: split congelado + titulos ──
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* Confirmação pós-ganho (design #10): "o que nasceu", com link — mata o pânico do silêncio. */}
+          {recebiveis.length > 0 ? (
+            <div style={bannerNasceu}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: VERDE }}>
+                  <CheckCircle2 size={14} aria-hidden /> Nasceu com o ganho
+                </div>
+                <div style={{ marginTop: 4, fontSize: 13, color: TXT }}>
+                  <strong>{recebiveis.length}</strong> {recebiveis.length === 1 ? "recebível" : "recebíveis"} da rede ·{" "}
+                  <strong style={{ color: DOURADO, fontVariantNumeric: "tabular-nums" }}>{brl(totalRecebiveis)}</strong>
+                  <span style={{ color: TXT_DIM }}> — seus e dos parceiros, cada um com sua regra travada.</span>
+                </div>
+              </div>
+              <Link href="/crm/financeiro/rede" style={linkExtrato}>
+                Ver no Meu Dinheiro <ArrowRight size={13} aria-hidden />
+              </Link>
+            </div>
+          ) : null}
           {comissoes.map((c) => (
             <div key={c.id} style={linhaSplit}>
               <span style={{ color: TXT, fontSize: 13 }}>
@@ -253,6 +275,8 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
 }
 
 const cabecalho: React.CSSProperties = { display: "flex", alignItems: "center", gap: 8, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid ${BORDA}` };
+const bannerNasceu: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, padding: "10px 14px", borderRadius: 10, border: `1px solid ${DOURADO}44`, background: "rgba(52,211,153,0.06)" };
+const linkExtrato: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700, color: DOURADO, textDecoration: "none", whiteSpace: "nowrap" };
 const linhaSplit: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 12px", background: BG_CARD, border: `1px solid ${BORDA}`, borderRadius: 8 };
 const rotulo: React.CSSProperties = { fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: TXT_DIM };
 const campo: React.CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${BORDA}`, background: BG_DEEP, color: TXT, padding: "0 12px", fontSize: 14 };
