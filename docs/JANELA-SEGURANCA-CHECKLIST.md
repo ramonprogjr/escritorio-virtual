@@ -52,3 +52,41 @@ No painel do Render → o web service → Environment:
 5. **G** (higiene) — se sobrar tempo.
 
 **Depois de cada mudança de banco:** eu rodo o advisor de novo pra confirmar que fechou e que nada novo apareceu. Ponto de retorno seguro em `1526250` + backups nos 2 GitHubs.
+
+---
+
+## 📎 APÊNDICE — SQL PRONTO (revisado, com os nomes exatos do advisor)
+> Extraído do advisor real (nada inventado). Usar na janela, passo a passo, rodando o advisor depois de cada bloco.
+
+### Passo A — já está na migração `20260820120000_janela_rls_faixaB_tabelas_mortas_PREPARADA.sql`. Aplicar essa (fecha as 16 mortas).
+
+### Passo B — 4 tabelas de briefing/config *(só DEPOIS de confirmar que nenhuma tela escreve direto — o app escreve via service_role, então devem ser dispensáveis):*
+```sql
+DROP POLICY IF EXISTS hub_agente_conhecimento_auth_insert ON public.hub_agente_conhecimento;
+DROP POLICY IF EXISTS hub_agente_conhecimento_auth_update ON public.hub_agente_conhecimento;
+DROP POLICY IF EXISTS hub_autonomia_matriz_auth_insert    ON public.hub_autonomia_matriz;
+DROP POLICY IF EXISTS hub_autonomia_matriz_auth_update    ON public.hub_autonomia_matriz;
+DROP POLICY IF EXISTS hub_crm_briefing_msg_auth_insert    ON public.hub_crm_agente_briefing_mensagem;
+DROP POLICY IF EXISTS hub_crm_briefing_msg_auth_update    ON public.hub_crm_agente_briefing_mensagem;
+DROP POLICY IF EXISTS hub_crm_briefing_sessao_auth_insert ON public.hub_crm_agente_briefing_sessao;
+DROP POLICY IF EXISTS hub_crm_briefing_sessao_auth_update ON public.hub_crm_agente_briefing_sessao;
+```
+
+### Passo C — funções anon-executáveis: revogar SÓ as SEGURAS; **NÃO tocar nas helpers de RLS**
+✅ **SEGURO** (RPCs só-servidor + triggers — o app as chama via service_role, que não depende do grant):
+```sql
+REVOKE EXECUTE ON FUNCTION public.crm_negocios_pipeline_totais(uuid, text, text, text, uuid, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.crm_proximo_codigo(text, text, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.hub_msg_jobs_claim_batch(text, integer) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.hub_msg_jobs_try_lock_conversation(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.hub_msg_jobs_unlock_conversation(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.handle_new_auth_user() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.hub_audit_trigger() FROM anon, public;
+```
+⛔ **NÃO REVOGAR** sem antes analisar as policies do módulo **membros** — são helpers usadas DENTRO das policies de RLS; revogar pode **quebrar o acesso legítimo** do authenticated/anon:
+`current_app_role()`, `current_app_user_id()`, `current_user_tenant_id()`, `is_hub_admin()`, `hub_is_service_role()`.
+
+### Passo D — buckets (restringir a LISTAGEM, mantendo abrir-por-URL — testar após):
+Policies a revisar em `storage.objects`: `capas_pub_sel` (bucket `capas`), `maodeobra_pub_sel` (`maodeobra` — **prioridade**, documentos pessoais), `playbook_media_select_public` (`playbook-media`). O `.list()` no código é só server-side (`playbook-media`), então restringir a listagem pública não quebra o app — mas é nuance de storage, valido ao vivo.
+
+**Verdicto:** só o Passo A é 100% seguro auto-aplicável (migração pronta). B/C/D têm SQL pronto mas pedem 1 verificação minha antes de cada `DROP/REVOKE`. Fazemos juntos, rápido.
