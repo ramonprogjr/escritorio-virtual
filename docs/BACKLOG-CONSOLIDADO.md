@@ -30,7 +30,20 @@ Eixo principal aqui = **quem destrava** (você, eu, ou uma decisão), porque é 
 **⏸️ DEFERIDO — NÃO ESQUECER (pendência viva, não sumiu):**
 - **SEC-7 — a IA gravar auditoria SISTÊMICA de tudo que escreve** (tabela `hub_acoes_ia`). Por que não fiz agora: é lacuna **sistêmica** — o executor `lib/hub/executar-ferramenta-ia.ts` já grava em ALGUNS pontos (ex.: linha 281) mas não em todos; e `docs/DIVIDAS-TECNICAS.md §E3` manda **"resolver JUNTO da Central de Aprovações"** (o formato do registro depende do que a Central vai consumir no loop de aprendizado). Fazer agora arriscaria **formato errado + logs duplicados** no coração da IA. **Retomar como MESA DEDICADA.** Ponto de injeção já mapeado: executor central `executar-ferramenta-ia.ts:593` + mapa `HUB_FERRAMENTA_ACESSO` em `agente-ferramentas-registry.ts:1172`.
 
-**▶️ PRÓXIMO na fila:** nº4 — **dedup de cadastro** (lead duplicado por telefone, AUT-2).
+**🔎 TRIAGEM da fila [CODE] restante (mesa de 6 lentes, 06/jul) — a fila [CODE] está essencialmente ZERADA.** Verificado contra o código ATUAL (não os docs velhos):
+
+| Item | Veredito | Evidência |
+|---|---|---|
+| AUT-2 dedup de lead por telefone | ✅ FECHADO | 3 intakes linkam pessoa: CRM `vincularPessoaPorTelefone` (leads route:213), legado `garantirPessoaParaLead`, WhatsApp webhook |
+| AUT-12 estoque saída×devolução | ✅ FECHADO | `abrirMov(item, tipo)` já abre no tipo certo (ObraComprasEstoqueSecao:694) |
+| AUT-14 erros do login em PT | ✅ FECHADO | `traduzirErroAuth` (login/page.tsx:35-55) |
+| AUT-11 picker participantes → combobox | ✅ FECHADO | `ParticipantePicker` com busca (ressalva menor: busca limit=100) |
+| AUT-8 EAP "ambiente primeiro" | ✅ FECHADO | não reproduzível — ambiente vive na ArvoreEscopo, não no wizard |
+| AUT-5 azul fora do CRM | ✅ FECHADO | 0 azul; tudo verde+dourado (resíduo cosmético: hex em vez de tokens `--obra-*`) |
+| AUT-16 rotas mortas /comando /agentes | ✅ FECHADO | deletadas; só sobra ref stale em doc/artefato gerado |
+| AUT-7 índice `idx_taxonomia_tenant` redundante | 🔑 JANELA | código PRONTO (DROP em `20260819120000`), só aplicar na janela do dono |
+
+**Conclusão da fila 🛠️EU:** nada mais acionável por mim agora — só o **SEC-7 (mesa dedicada)**. O restante do backlog é **🔑 SUA janela** (migrações/RLS/secrets) + **🧭 SUAS decisões** + **🚀 roadmap**. O que eu podia fazer sozinho, com segurança, **está feito e no staging.**
 
 ---
 
