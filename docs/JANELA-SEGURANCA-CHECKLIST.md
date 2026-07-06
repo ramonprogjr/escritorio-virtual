@@ -1,5 +1,15 @@
 # 🔑 JANELA DE PRODUÇÃO — CHECKLIST (fazer JUNTO com o dono)
-> Preparado pelo CEO em 06/jul enquanto o dono almoça. **Nada aqui foi aplicado ainda.** Baseado no advisor REAL do Supabase (158 avisos, **ZERO ERRO** — só WARN/INFO) + verificação de uso no código. Ordem: do mais seguro/valioso ao mais nuance.
+> Preparado pelo CEO em 06/jul. Baseado no advisor REAL do Supabase (158 avisos, **ZERO ERRO** — só WARN/INFO) + verificação de uso no código.
+
+## ✅ STATUS DA EXECUÇÃO (06/jul, via MCP com o dono)
+- **A** (16 tabelas mortas) — ✅ **APLICADO** (verificado 0 policies · 0 grants · RLS on).
+- **B** (4 briefing write-policies) — ✅ **APLICADO** (0 escrita aberta).
+- **C** (7 funções server-only/trigger) — ✅ **APLICADO** (anon revogado; 5 helpers RLS NÃO tocadas).
+- **G** (índice redundante AUT-7) — ✅ **APLICADO** (DROP INDEX).
+- Versionado em `supabase/migrations/20260706160000_janela_seguranca_faixaB_APLICADA.sql`.
+- **D** (buckets) — ⏸️ deferido (módulo membros — verificar consumidor antes).
+- **E** (toggle HaveIBeenPwned) — 🖱️ **dono** no painel Auth.
+- **F** (secrets Render) — ⏸️ **dev** (dono sem acesso ao Render).
 
 ## Contexto que muda o tom
 A segurança do sistema está **em boa forma**. Os 92 avisos "rls_enabled_no_policy" são o **design fail-closed proposital** (RLS ligado, sem policy = só o sistema/service_role acessa) — **não são bug, não mexer.** O que sobra é uma lista curta.
