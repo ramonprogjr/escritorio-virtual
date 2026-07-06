@@ -4,6 +4,7 @@ import {
   LineChart,
   ClipboardList,
   Wallet,
+  HandCoins,
   Users,
   Briefcase,
   User,
@@ -130,6 +131,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     label: "Financeiro",
     sectionIcon: Wallet,
     items: [
+      { href: "/crm/financeiro/rede", label: "Meu Dinheiro (rede)", icon: HandCoins, minRole: "financeiro" },
       { href: "/crm/financeiro/receber", label: "Contas a receber", icon: LineChart, minRole: "financeiro" },
       { href: "/crm/financeiro/pagar", label: "Contas a pagar", icon: ClipboardList, minRole: "financeiro" },
       { href: "/crm/financeiro", label: "Visão financeira", icon: Wallet, minRole: "financeiro" },
