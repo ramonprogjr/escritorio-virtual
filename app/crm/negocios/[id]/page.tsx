@@ -12,6 +12,7 @@ import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { NegocioPropostasSection, type NegocioProposta } from "@/components/crm/NegocioPropostasSection";
+import { NegocioFinanceiroRedeSection } from "@/components/crm/negocios/NegocioFinanceiroRedeSection";
 
 type NegocioDetalhe = {
   id: string;
@@ -639,6 +640,8 @@ export default function NegocioDetalhePage() {
       </div>
 
       <NegocioPropostasSection propostas={propostas} />
+
+      <NegocioFinanceiroRedeSection negocioId={id} />
 
       {(negocio.status === "fechado_ganho" || negocio.etapa === "ganho") &&
         (() => {
