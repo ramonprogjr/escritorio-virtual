@@ -6,6 +6,7 @@ import {
   Wallet,
   HandCoins,
   Users,
+  UserPlus,
   Briefcase,
   User,
   Building2,
@@ -87,6 +88,7 @@ export const CRM_NAV_GROUPS: CrmNavGroup[] = [
     sectionIcon: Briefcase,
     items: [
       { href: "/crm/leads", label: "Leads", icon: Users, minRole: "atendente" },
+      { href: "/crm/indicacoes", label: "Indicações", icon: UserPlus, minRole: "atendente" },
       { href: "/crm/distribuicao", label: "Distribuição de leads", icon: Route, minRole: "gestor" },
       { href: "/crm/negocios", label: "Negócios", icon: Briefcase, minRole: "comercial" },
       { href: "/crm/cadastro", label: "Cadastros", icon: User, minRole: "comercial" },

@@ -191,6 +191,7 @@ const ROTA_MIN_NIVEL: { prefix: string; min: CrmNivel }[] = [
   { prefix: "/crm/atendimento", min: "atendente" },
   { prefix: "/crm/canais", min: "atendente" },
   { prefix: "/crm/leads", min: "atendente" },
+  { prefix: "/crm/indicacoes", min: "atendente" },
   { prefix: "/crm/relatorios", min: "financeiro" },
   { prefix: "/crm/analytics", min: "financeiro" },
   { prefix: "/crm", min: "financeiro" },
