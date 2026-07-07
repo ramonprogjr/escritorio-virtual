@@ -89,7 +89,7 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
   const apurar = useCallback(async () => {
     if (salvando || !dados) return;
     const vf = Number(valorFechado);
-    if (!Number.isFinite(vf) || vf <= 0) { setErro("Informe o valor fechado."); return; }
+    if (!Number.isFinite(vf) || vf <= 0) { setErro("Defina o valor fechado antes de apurar a comissão."); return; }
     if (somaFatias > pote + 0.005) { setErro("As fatias somam mais que o pote de comissão."); return; }
     setSalvando(true); setErro(null); setOkMsg(null);
     try {
@@ -233,6 +233,17 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
       ) : (
         // ── NAO APURADO: painel "Fechar comissao" (confirmar o split) ──
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* FIN-03: ganho SEM valor_fechado deixa o pote em R$ 0 — a comissão sumiria em silêncio.
+              Avisa alto e trava o "Fechar comissão" até preencher (guard também no endpoint). */}
+          {!(Number(negocio.valor_fechado) > 0) ? (
+            <div role="alert" style={caixaAviso(DOURADO, "rgba(201,162,74,0.08)")}>
+              <AlertTriangle size={14} color={DOURADO} aria-hidden />
+              <span>
+                <b style={{ color: TXT }}>Defina o valor fechado antes de apurar a comissão.</b> Sem ele o pote fica
+                R$ 0 e a comissão some em silêncio — informe o valor abaixo.
+              </span>
+            </div>
+          ) : null}
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={rotulo}>Valor fechado do negócio</span>
             <input inputMode="decimal" value={valorFechado} onChange={(e) => setValorFechado(e.target.value.replace(",", "."))}
@@ -260,8 +271,8 @@ export function NegocioFinanceiroRedeSection({ negocioId }: { negocioId: string 
           {erro ? <p style={{ margin: 0, fontSize: 12, color: "#f0aba8", display: "flex", gap: 4 }}><AlertTriangle size={13} aria-hidden /> {erro}</p> : null}
           {okMsg ? <p style={{ margin: 0, fontSize: 12, color: VERDE, display: "flex", gap: 4 }}><CheckCircle2 size={13} aria-hidden /> {okMsg}</p> : null}
 
-          <button type="button" onClick={apurar} disabled={salvando || residualHub < 0}
-            style={{ ...botao, opacity: salvando || residualHub < 0 ? 0.6 : 1 }}>
+          <button type="button" onClick={apurar} disabled={salvando || residualHub < 0 || !(Number(valorFechado) > 0)}
+            style={{ ...botao, opacity: salvando || residualHub < 0 || !(Number(valorFechado) > 0) ? 0.6 : 1 }}>
             {salvando ? "Fechando…" : "Fechar comissão (congela o split)"}
           </button>
           <p style={{ margin: 0, fontSize: 11, color: TXT_DIM }}>
