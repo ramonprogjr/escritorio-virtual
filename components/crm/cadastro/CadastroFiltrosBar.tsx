@@ -56,6 +56,7 @@ export function CadastroFiltrosBar({
   trailing,
 }: Props) {
   const [mobileFiltrosAbertos, setMobileFiltrosAbertos] = useState(false);
+  const [desktopFiltrosAbertos, setDesktopFiltrosAbertos] = useState(false);
 
   // O seletor de "Lista" (Contatos/Empresas) é a troca de aba principal — fica
   // SEMPRE visível. Os demais são filtros que podem colapsar no mobile.
@@ -138,7 +139,7 @@ export function CadastroFiltrosBar({
         </div>
       )}
 
-      {/* ── DESKTOP (sm+): barra inline original (sem regressão) ── */}
+      {/* ── DESKTOP (sm+): busca + Lista SEMPRE; os demais filtros colapsam atrás de "Filtros" ── */}
       <div className="hidden flex-wrap items-center gap-2 sm:flex">
         <input
           value={busca}
@@ -147,18 +148,52 @@ export function CadastroFiltrosBar({
           className={inputCls}
           aria-label="Buscar"
         />
-        {selects.map((s) => (
-          <SelectField key={s.id} s={s} />
-        ))}
-        <button
-          type="button"
-          onClick={onLimpar}
-          className="min-h-10 shrink-0 rounded-lg border border-[#1d3a2c] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#484f58] hover:text-white"
-        >
-          Limpar filtros
-        </button>
-        {trailing}
+        {listaSelect && <SelectField s={listaSelect} />}
+        {filtroSelects.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setDesktopFiltrosAbertos((v) => !v)}
+            aria-expanded={desktopFiltrosAbertos}
+            className={`flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-colors ${
+              desktopFiltrosAbertos || filtrosAtivos > 0
+                ? "border-[#c9a24a]/60 bg-[#c9a24a]/12 text-[#c9a24a]"
+                : "border-[#1d3a2c] text-[#8b949e] hover:text-[#e6edf3]"
+            }`}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filtros
+            {filtrosAtivos > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c9a24a] px-1 text-[10px] font-black text-[#003b26]">
+                {filtrosAtivos}
+              </span>
+            )}
+          </button>
+        )}
+        {temAlgumFiltro && (
+          <button
+            type="button"
+            onClick={onLimpar}
+            className="min-h-10 shrink-0 rounded-lg border border-[#1d3a2c] px-3 py-2 text-xs font-semibold text-[#8b949e] transition-colors hover:border-[#484f58] hover:text-white"
+          >
+            <X className="mr-1 inline h-3.5 w-3.5" /> Limpar
+          </button>
+        )}
+        {trailing && <div className="ml-auto">{trailing}</div>}
       </div>
+
+      {/* Painel colapsável de filtros (desktop) */}
+      {desktopFiltrosAbertos && filtroSelects.length > 0 && (
+        <div className="hidden grid-cols-2 gap-3 rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3 sm:grid lg:grid-cols-3 xl:grid-cols-4">
+          {filtroSelects.map((s) => (
+            <div key={s.id} className="flex min-w-0 flex-col gap-1">
+              <label className="text-[10px] font-bold uppercase tracking-wide text-[#8b949e]">
+                {s.label}
+              </label>
+              <SelectField s={s} fullWidth />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* trailing no mobile (ações extras), se houver */}
       {trailing && <div className="sm:hidden">{trailing}</div>}
