@@ -23,6 +23,12 @@ acima da rede) desenhada. IA/Mistral desligada ~60 dias. Motor de comissões con
 (tabelas vazias). Escrow/AEC file-only. **Sprint 07/jul shipado:** Leads rebuild · Funil do Hub · O que travou ·
 Dashboard andares · Cadastros (filtros + Ver).
 
+**✅ Fase 0 — código desbloqueado SHIPADO (07/jul):** os 4 WIs code-only da Sprint 1 estão em produção (gate
+tsc+vitest+build verde a cada um): **MET-01** (`6a67b2e`, markup <1 → 400) · **IA-02** (`89a9fae`, `ml.ts`
+roteia pelo wrapper com fallback — não quebra sem Anthropic) · **EST-03** (`5471526`, CHECK de `hub_atividades`
+blindado + teste dos 6 mercados; 829 testes) · **FIN-03** (`ff6a24e`, aviso proativo de `valor_fechado` NULL no
+ganho + botão travado). **Resta na Fase 0:** RAS-01/02/03 — só na **janela do dono**.
+
 **Decisões travadas 07/jul:** ✅ clawback = **cobrar sempre** + mitigações (hold + estorno + régua) · ✅ **fechar
 a linhagem** (`negocio_pai_id`/`raiz_id`) antes de dado de rede.
 
@@ -102,8 +108,9 @@ Prioridade: **P0** = irreversível/bloqueia dinheiro · **P1** = MVP/receita · 
 
 ## Sprints (do CADERNO §15)
 
-**Sprint 1 — Fase 0 (estancar o irreversível):** RAS-01 · RAS-02 · MET-01 · IA-02 · FIN-03 · RAS-03 · EST-03.
-*Pronto:* nenhum negócio novo sem raiz; markup <1 rejeitado; `/api/ml/*` não quebra; ganho sem valor avisa.
+**Sprint 1 — Fase 0 (estancar o irreversível):** ✅ MET-01 · ✅ IA-02 · ✅ FIN-03 · ✅ EST-03 (code-only, no ar) ·
+⬜ RAS-01 · ⬜ RAS-02 · ⬜ RAS-03 (janela do dono).
+*Pronto:* nenhum negócio novo sem raiz; markup <1 rejeitado ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
 
 **Sprint 2 — Fase 1 (IA):** IA-01 (assim que Mistral + billing forem liberados pelo dono).
 *Pronto:* lead WhatsApp → qualificado por IA → confirmado em 1 toque.

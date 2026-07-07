@@ -47,11 +47,12 @@ Legenda: ✅ feito · 🔄 em curso · ⏳ próximo · 🔒 depende do dono
 | Dashboard em **andares de decisão** (ação primeiro) | `6c83f12` |
 | Cadastros — **filtros colapsáveis no desktop** + **"Ver" redundante removido** | `dd6b1da` · `7109304` |
 | Doc-mãe completo + Análise CEO + decisões (clawback/linhagem) | `21daff6` · `8724ded` |
+| **Fase 0 código (Sprint 1):** MET-01 markup≥1 · IA-02 ml.ts fallback · EST-03 CHECK+teste 6 mercados · FIN-03 aviso valor_fechado | `6a67b2e` · `89a9fae` · `5471526` · `ff6a24e` |
 
-### 🔄 FASE 0 — Des-fragmentar (EU-code, desbloqueado)
-- 🔄 **Ligar o motor de comissões nas telas** do negócio (apurar/receber/split) — *mesa de spec seguro rodando*
-- ⏳ Unificar os 2 vocabulários de estágio · centralizar o `crmDb` · UI clawback/hold
-- **Critério de pronto:** dinheiro tem uma fonte só na tela; vocabulário único no código.
+### 🔄 FASE 0 — Estancar o irreversível (EU-code + janela do dono)
+- ✅ **Código desbloqueado no ar:** MET-01 (markup≥1) · IA-02 (`ml.ts` roteia com fallback, não quebra sem Anthropic) · EST-03 (CHECK `hub_atividades` blindado + teste dos 6 mercados) · FIN-03 (aviso `valor_fechado` NULL no ganho).
+- 🔒 **Falta a janela do dono:** RAS-01 (linhagem `negocio_pai_id`/`raiz_id` ⚠️irreversível) · RAS-02 (UNIQUE código + auto-código) · RAS-03 (`hub_eventos.ator_id`).
+- **Critério de pronto:** nenhum negócio novo nasce sem raiz; markup <1 rejeitado ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
 
 ### 🔒 FASE 1 — Linhagem (JANELA do dono) — *o único irreversível*
 - Migração aditiva `negocio_pai_id`/`negocio_raiz_id` + backfill + wiring em `derivar-negocio`.
