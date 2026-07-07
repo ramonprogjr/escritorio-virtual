@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, ClipboardList, UserPlus } from "lucide-react";
 import { CrmOQuePrecisaDeVoce } from "@/components/crm/CrmOQuePrecisaDeVoce";
 import { CrmEquipeResumo } from "@/components/crm/CrmEquipeResumo";
-import { CrmOperacaoResumo } from "@/components/crm/CrmOperacaoResumo";
+import { CrmOperacaoExcecao } from "@/components/crm/CrmOperacaoExcecao";
 import { CrmFunilDoHub } from "@/components/crm/CrmFunilDoHub";
 import { CrmUltimosLeads } from "@/components/crm/CrmUltimosLeads";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
@@ -127,7 +127,7 @@ export function CrmComercialDashboard() {
 
         <div className="grid gap-6 xl:grid-cols-2">
           <CrmUltimosLeads leads={dash.leadsRecentes} loading={dash.loading} />
-          <CrmOperacaoResumo operacao={dash.operacao} loading={dash.loading} />
+          <CrmOperacaoExcecao />
         </div>
 
         {/* "Visão comercial" (6 cards de vaidade + Pipeline R$ duplicado) REMOVIDA — auditoria da
