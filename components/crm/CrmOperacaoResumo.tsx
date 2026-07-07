@@ -11,7 +11,7 @@ export function CrmOperacaoResumo({
   loading: boolean;
 }) {
   return (
-    <section className="h-full rounded-2xl border border-[#2b3544] bg-[#121926] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+    <section className="h-full rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
       <CrmSectionTitle>Operação · lead → negócio → obra</CrmSectionTitle>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-1">
         <CrmMetricCard

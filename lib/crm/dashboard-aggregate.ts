@@ -34,6 +34,17 @@ export type LeadRecente = {
   atualizado_em: string | null;
 };
 
+/**
+ * Registros de teste/auditoria não aparecem na home (achado #5 da auditoria da dashboard:
+ * "dado de TESTE na tela mais nobre de produção"). Heurística conservadora por nome — não
+ * apaga nada no banco, só oculta da vitrine. Ver docs/AUDITORIA-DASHBOARD-CEO.md.
+ */
+export function ehRegistroDeTeste(nome?: string | null): boolean {
+  if (!nome) return false;
+  const n = nome.trim().toUpperCase();
+  return n.startsWith("TESTE") || n.startsWith("[TESTE") || n.includes("AUDITORIA");
+}
+
 export type CicloStatus = {
   agente_slug: string;
   ultimo_status: string | null;
@@ -240,6 +251,8 @@ export async function aggregateDashboard(
       .limit(5);
     leadsRecentes = (fallback.data ?? []) as LeadRecente[];
   }
+  // Vitrine limpa: registros de teste/auditoria não entram na home (auditoria dashboard #5).
+  leadsRecentes = leadsRecentes.filter((l) => !ehRegistroDeTeste(l.nome));
 
   const alertas: AlertaResumo[] = !alts.error && alts.data
     ? alts.data.map((a) => ({

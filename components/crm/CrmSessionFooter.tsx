@@ -204,7 +204,7 @@ export function CrmSessionFooter({
           type="button"
           title="Sair da conta"
           aria-label="Sair da conta"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#2b3544] bg-transparent text-[#8b949e] transition-colors hover:border-[#f8514966] hover:bg-[#f8514914] hover:text-[#f85149]"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#1d3a2c] bg-transparent text-[#8b949e] transition-colors hover:border-[#f8514966] hover:bg-[#f8514914] hover:text-[#f85149]"
           onClick={() => void signOutAndRedirect(router, onNavigate)}
         >
           <LogOut size={15} strokeWidth={2} aria-hidden />
@@ -230,7 +230,7 @@ export function CrmSessionFooter({
     <div
       className={`mt-auto flex flex-shrink-0 ${isDrawer ? "px-2 pb-2" : "w-full px-2 pb-2"}`}
     >
-      <div className="w-full rounded-2xl border border-[#2b3544] bg-[#121926] p-2.5">
+      <div className="w-full rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-2.5">
         <div className="flex items-center gap-2.5">
           <Avatar initials={initials} email={email} size={40} />
 
