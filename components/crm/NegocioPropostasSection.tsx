@@ -1,10 +1,12 @@
 "use client";
 
+import { propostaStatusCor, propostaStatusLabel } from "@/lib/crm/proposta-status";
+
 /**
  * Propostas ligadas ao NEGÓCIO (read-only). Já vêm no GET de /api/crm/negocios/[id]
  * (hub_propostas por negocio_id) — antes a ficha do negócio as DESCARTAVA (só o lead
  * mostrava proposta). Aqui é a visão consolidada na espinha. Criar proposta segue na
- * ficha do lead de origem (LeadPropostasPanel).
+ * ficha do lead de origem (LeadPropostasPanel). Cor/rótulo do módulo compartilhado.
  */
 export type NegocioProposta = {
   id: string;
@@ -12,15 +14,6 @@ export type NegocioProposta = {
   valor: number;
   status: string;
   criado_em: string;
-};
-
-const STATUS_COR: Record<string, string> = {
-  rascunho: "#8b949e",
-  enviada: "#c9a24a",
-  aceita: "#34d399",
-  aprovada: "#34d399",
-  recusada: "#f87171",
-  cancelada: "#f87171",
 };
 
 export function NegocioPropostasSection({ propostas }: { propostas: NegocioProposta[] }) {
@@ -61,8 +54,8 @@ export function NegocioPropostasSection({ propostas }: { propostas: NegocioPropo
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
                 <span style={{ color: "#c9a24a", fontWeight: 700 }}>R$ {Number(p.valor).toLocaleString("pt-BR")}</span>
-                <span style={{ fontSize: 11, color: STATUS_COR[(p.status || "").toLowerCase()] ?? "#8b949e", textTransform: "capitalize" }}>
-                  {p.status || "—"}
+                <span style={{ fontSize: 11, color: propostaStatusCor(p.status) }}>
+                  {propostaStatusLabel(p.status)}
                 </span>
               </span>
             </li>
