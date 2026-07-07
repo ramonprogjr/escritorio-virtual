@@ -25,7 +25,9 @@ disfarçado**. Fase atual: **des-fragmentar a fundação** antes de avançar em 
 | **04** | **[04-ROADMAP-E-PLANO.md](04-ROADMAP-E-PLANO.md)** | Roadmap: fases + backlog de WIs + sprints | O quando / ordem |
 
 **Referência profunda (salva para análise eventual — NÃO seguida no dia a dia):**
-[MODELO-…-COMPLETO](MODELO-DE-NEGOCIO-E-FLUXOS-COMPLETO.md) (doc-mãe, 8k linhas) · [CADERNO-ENGENHARIA](CADERNO-ENGENHARIA-AUDITORIA.md) (backlog técnico WI detalhado, base do 04) · [ANALISE-CEO](ANALISE-CEO-E-PLANO-DE-UNIFICACAO.md) · Auditorias CEO ([Dashboard](AUDITORIA-DASHBOARD-CEO.md)·[Pipeline](AUDITORIA-PIPELINE-LEADS-CEO.md)·[Ciclo Lead](AUDITORIA-CICLO-LEAD-v1.md)·[Cadastros](AUDITORIA-CADASTROS-UIUX-PROMAX.md)) · Memória do CEO (`.claude/.../memory/`).
+[PLANO-DE-NEGOCIO](PLANO-DE-NEGOCIO.md) (mercado SP + beachhead + matriz de receita + unit economics — base do 01) · [CADERNO-ENGENHARIA](CADERNO-ENGENHARIA-AUDITORIA.md) (backlog técnico WI detalhado — base do 04) · [MODELO-…-COMPLETO](MODELO-DE-NEGOCIO-E-FLUXOS-COMPLETO.md) (doc-mãe, 8k linhas) · [ANALISE-CEO](ANALISE-CEO-E-PLANO-DE-UNIFICACAO.md) · Auditorias CEO ([Dashboard](AUDITORIA-DASHBOARD-CEO.md)·[Pipeline](AUDITORIA-PIPELINE-LEADS-CEO.md)·[Ciclo Lead](AUDITORIA-CICLO-LEAD-v1.md)·[Cadastros](AUDITORIA-CADASTROS-UIUX-PROMAX.md)) · Memória do CEO (`.claude/.../memory/`).
+
+> **Estratégia de entrada (do Plano de Negócio):** beachhead = **Reforma & Arquitetura de alto padrão na Zona Oeste/Sul de SP**, escrow como wedge de confiança, **você é o tenant zero**. **Meta: MVP (Fases 0–3) em ~1 trimestre; depois ligar a receita.**
 
 > **Os outros 110+ docs em `docs/` = HISTÓRICO / arquivo.** Nada se perde — mas não é a fonte atual.
 > Quando um doc antigo conflitar com os 5 acima, **os 5 ganham.** Os 5 são atualizados a cada marco.

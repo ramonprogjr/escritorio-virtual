@@ -26,6 +26,29 @@ Dashboard andares · Cadastros (filtros + Ver).
 **Decisões travadas 07/jul:** ✅ clawback = **cobrar sempre** + mitigações (hold + estorno + régua) · ✅ **fechar
 a linhagem** (`negocio_pai_id`/`raiz_id`) antes de dado de rede.
 
+**Meta de calendário (do [Plano de Negócio](PLANO-DE-NEGOCIO.md)):** **Fases 0–3 (o MVP que tira da planilha) em UM
+TRIMESTRE; Fase 4 (ligar a receita) logo em seguida.** Régua de decisão: *"isto me aproxima de cobrar?"*.
+
+---
+
+## Por que cada gap importa — Falhas → Possibilidades (do Plano de Negócio §8)
+
+A ordem de construção **é** a ordem de monetização: cada gap técnico, ao fechar, DESTRAVA uma oportunidade de receita.
+
+| Gap (WI) | O que destrava (o negócio) | Prio |
+|---|---|---|
+| **Linhagem não escrita** (RAS-01) | medir o cross-sell → provar o **LTV multi-vertical (~R$38,7k/cliente)** → a métrica que vende a rede a investidor | **P0** |
+| **Receita não ligada, R$0** (FIN-01, MET-01/03/05) | ligar T1/T2/T3 → sair do zero, provar o circuito de cobrança | **P0** |
+| Especialista é ilha (RAS-05) | cadastro+histórico de MDO → produto standalone (mercado com 82% de escassez) | P1 |
+| Analytics sem UTM/eventos (EVT-01) | CAC por bairro/mercado → marketing cirúrgico em SP | P1 |
+| Sem CUB proprietário (C5) | benchmark custo/m² por bairro → **dado vendável que ninguém tem** (crown jewel) | P2 |
+| Portal 0% (POR-01) | prova social → CAC de indicação despenca no alto padrão | P1 |
+| Single-tenant frágil (TEN-*, RBAC-*) | endurecer → 2º tenant → a rede e a Altitude 1 nascem | P0(rede) |
+
+> **Beachhead (do Plano §10):** o alvo de entrada é **Reforma & Arquitetura de médio-alto padrão na Zona Oeste/Sul de
+> SP** (escrow = wedge de confiança; **você é o tenant zero**). Isso prioriza, dentro de cada fase, o que serve a obra de
+> alto padrão. A **Obra é o nó de maior conexão** (alimenta 6 das 9 torneiras) → ancorar tudo nela.
+
 ---
 
 ## Backlog Mestre de Work Items (do CADERNO §14)
