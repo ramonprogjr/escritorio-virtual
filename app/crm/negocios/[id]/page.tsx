@@ -8,7 +8,7 @@ import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFic
 import { CrmConfirmDialog } from "@/components/crm/CrmConfirmDialog";
 import { FinanceiroNovoLancamentoModal } from "@/components/crm/FinanceiroNovoLancamentoModal";
 import { toast } from "@/components/crm/toast";
-import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
+import { labelMercadoPrefixo, labelEtapaNegocio } from "@/lib/crm/negocio-cadastro";
 import { resolverEntrega } from "@/lib/crm/derivar-negocio";
 import { MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { NegocioPropostasSection, type NegocioProposta } from "@/components/crm/NegocioPropostasSection";
@@ -745,7 +745,7 @@ export default function NegocioDetalhePage() {
         </div>
         <div>
           <p style={{ fontSize: 11, color: "#8b949e" }}>ETAPA</p>
-          <p style={{ textTransform: "capitalize" }}>{negocio.etapa}</p>
+          <p>{labelEtapaNegocio(negocio.etapa)}</p>
         </div>
         <div>
           <p style={{ fontSize: 11, color: "#8b949e" }}>STATUS</p>
