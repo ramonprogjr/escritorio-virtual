@@ -129,6 +129,7 @@ export default function NegocioDetalhePage() {
   const [negocio, setNegocio] = useState<NegocioDetalhe | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [leadNome, setLeadNome] = useState<string | null>(null);
+  const [leadId, setLeadId] = useState<string | null>(null);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [editando, setEditando] = useState(false);
@@ -169,7 +170,7 @@ export default function NegocioDetalhePage() {
       const json = (await res.json()) as {
         data?: NegocioDetalhe;
         timeline?: TimelineItem[];
-        lead?: { nome: string } | null;
+        lead?: { id: string; nome: string } | null;
         pessoa?: PessoaMini | null;
         propostas?: NegocioProposta[];
         estagios?: EtapaPipeline[];
@@ -194,6 +195,7 @@ export default function NegocioDetalhePage() {
       }
       setTimeline(json.timeline ?? []);
       setLeadNome(json.lead?.nome ?? null);
+      setLeadId(json.lead?.id ?? null);
       setPessoaVinc(json.pessoa ?? null);
       setPropostas(json.propostas ?? []);
       setEstagios(json.estagios ?? []);
@@ -753,10 +755,10 @@ export default function NegocioDetalhePage() {
         </div>
       </div>
 
-      {leadNome && negocio.lead_id && (
+      {leadNome && leadId && (
         <p style={{ marginTop: 16 }}>
-          Lead:{" "}
-          <Link href={`/crm/leads/${negocio.lead_id}`} style={{ color: "#c9a24a" }}>
+          Lead de origem:{" "}
+          <Link href={`/crm/leads/${leadId}`} style={{ color: "#c9a24a" }}>
             {leadNome}
           </Link>
         </p>
