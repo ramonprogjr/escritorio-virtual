@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { estagioParaColunaKanban, legacyToFunil } from "@/lib/crm/estagio-map";
+import { avaliarQualificacao } from "@/lib/crm/lead-rules";
 import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
 import { FUNIL_LEAD_ETAPAS, MOTIVOS_PERDA, MOTIVOS_PERDA_LABEL } from "@/lib/crm/pipelines";
 import { CrmStickyTabs } from "@/components/crm/CrmStickyTabs";
@@ -409,6 +410,18 @@ export default function LeadFichaPage() {
   const chipsMemoria = useMemo(() => memorias.flatMap(chipsFromMemoriaRow), [memorias]);
 
   async function criarNegocio() {
+    // Fronteira (decisão do dono): converter EXIGE prontidão (interesse + valor). Não é wall hard —
+    // avisa e deixa seguir com ciência (os campos são editáveis na aba Dados). AUDITORIA-CICLO-LEAD-v1.md.
+    const p = avaliarQualificacao({
+      interesse_principal: lead?.interesse_principal as string | null,
+      valor_estimado: lead?.valor_estimado as number | null,
+    });
+    if (!p.pronto) {
+      const ok = window.confirm(
+        `Este lead ainda não está pronto para virar negócio (${p.motivo}). Você pode preencher interesse e valor na aba Dados. Converter mesmo assim?`
+      );
+      if (!ok) return;
+    }
     const res = await fetch(`/api/crm/leads/${id}/converter-negocio`, {
       method: "POST",
       credentials: "include",
@@ -490,6 +503,13 @@ export default function LeadFichaPage() {
   const conversa = atividades.filter((a) => naturezaAtividade(a) !== "log");
   const logsSistema = atividades.filter((a) => naturezaAtividade(a) === "log");
   const atividadesVisiveis = ehGestor && mostrarSistema ? atividades : conversa;
+
+  // Prontidão (sinal derivado, não etapa): pronto = interesse + valor (decisão do dono). A IA já
+  // sugere sozinha na origem; aqui a ficha MOSTRA o estado + gateia converter/direcionar.
+  const prontidao = avaliarQualificacao({
+    interesse_principal: lead.interesse_principal as string | null,
+    valor_estimado: lead.valor_estimado as number | null,
+  });
   const meta = (lead.metadata as Record<string, unknown>) || {};
   const mercadoMeta =
     (meta.mercado as string) || (meta.primeira_mensagem != null ? "ver metadata" : null);
@@ -608,6 +628,23 @@ export default function LeadFichaPage() {
               >
                 {estagioLabel}
               </span>
+              {prontidao.pronto ? (
+                <span
+                  className="rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                  style={{ backgroundColor: "rgba(52,211,153,0.12)", color: "#34d399", border: "1px solid rgba(52,211,153,0.35)" }}
+                  title={prontidao.motivo}
+                >
+                  ✓ Pronto para direcionar
+                </span>
+              ) : (
+                <span
+                  className="rounded-md px-2 py-0.5 text-[11px] font-medium"
+                  style={{ backgroundColor: "rgba(139,148,158,0.10)", color: "#8b949e", border: "1px solid rgba(139,148,158,0.25)" }}
+                  title={prontidao.motivo}
+                >
+                  Falta {prontidao.faltam.join(" e ")}
+                </span>
+              )}
             </div>
             <p className="mt-0.5 truncate text-xs" style={{ color: "#7d8a99" }}>
               {lead.telefone as string} · {lead.origem as string}

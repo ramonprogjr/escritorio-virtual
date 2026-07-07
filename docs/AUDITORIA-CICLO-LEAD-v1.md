@@ -74,7 +74,16 @@ amigável, não o slug cru) e o `onQualificar` grava "qualificando" honestamente
   - Desduplicar as 2 fichas (refactor estrutural — por último).
   - Negócios: labels/kanban/modo Caixa + linhagem redundante lead↔negócio.
 
-## Decisões que são do dono (travam P1/P2)
+## Decisões do dono — RESPONDIDAS (06/jul)
+
+- **Auto-avanço na ficha:** a IA **move sozinha e avisa** (não só sugere). → auto-promove ao bater o
+  limiar + registra evento de IA visível (nada de silêncio). *Falta o dono cravar o limiar (nº).*
+- **Fronteira:** **ambos** (Converter em negócio E Direcionar) **exigem prontidão** — com o atalho
+  "qualificar e [converter/direcionar]" num passo.
+- **Propostas:** reescrever **já com ciclo de vida completo** (enviar/aprovar/aceitar/recusar + carimbos).
+- **Ordem P1:** os 3 cortes seguros na ordem indicada (logs → dados → rodapé) — **FEITO** (staging).
+
+## Decisões ainda abertas (travam o auto-avanço)
 
 1. **Limiar de qualificação:** que sinais + cortes o `avaliarQualificacao` usa? (ex.: interesse preenchido
    + valor > X + score ≥ Y). É regra de negócio, não técnica.
