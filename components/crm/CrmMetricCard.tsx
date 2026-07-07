@@ -58,7 +58,7 @@ export function CrmMetricCard({
   );
 
   const baseClass =
-    `group w-full rounded-2xl border border-[#2b3544] bg-gradient-to-b from-[#0f1d16] to-[#0f1520] p-4 text-left shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow] hover:border-[#c9a24a44] hover:shadow-[0_12px_32px_rgba(0,0,0,0.32)] ${className}`;
+    `group w-full rounded-2xl border border-[#1d3a2c] bg-gradient-to-b from-[#0f1d16] to-[#0f1520] p-4 text-left shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow] hover:border-[#c9a24a44] hover:shadow-[0_12px_32px_rgba(0,0,0,0.32)] ${className}`;
 
   const style = { borderLeft: `3px solid ${cor}` };
 

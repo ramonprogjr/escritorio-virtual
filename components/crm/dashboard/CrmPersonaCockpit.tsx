@@ -76,7 +76,7 @@ export function CrmPersonaCockpit() {
       <div className="min-h-screen bg-[#0a140f] px-4 py-5 sm:px-6 sm:py-6">
         <div className="mx-auto w-full max-w-[1400px] animate-pulse space-y-4">
           <div className="h-6 w-40 rounded bg-[#16271e]" />
-          <div className="h-24 rounded-2xl bg-[#121926]" />
+          <div className="h-24 rounded-2xl bg-[#0f1d16]" />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <div className="h-24 rounded-2xl bg-[#0f1d16]" />
             <div className="h-24 rounded-2xl bg-[#0f1d16]" />
@@ -164,7 +164,7 @@ export function CrmPersonaCockpit() {
 function OQuePrecisa({ acoes }: { acoes: PersonaCockpitPayload["acoes"] }) {
   if (acoes.length === 0) {
     return (
-      <section className="flex items-center gap-3 rounded-2xl border border-[#23863655] bg-gradient-to-r from-[#003b2622] to-[#121926] px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+      <section className="flex items-center gap-3 rounded-2xl border border-[#23863655] bg-gradient-to-r from-[#003b2622] to-[#0f1d16] px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#23863633]">
           <CheckCircle2 className="h-5 w-5 text-[#3fb950]" />
         </span>
@@ -199,7 +199,7 @@ function OQuePrecisa({ acoes }: { acoes: PersonaCockpitPayload["acoes"] }) {
             <li key={item.id}>
               <Link
                 href={item.href}
-                className="flex min-h-12 items-center gap-3 rounded-xl border border-[#2b3544] bg-[#0a140f]/80 px-3 py-2.5 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#c9a24a66]"
+                className="flex min-h-12 items-center gap-3 rounded-xl border border-[#1d3a2c] bg-[#0a140f]/80 px-3 py-2.5 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#c9a24a66]"
                 style={{ borderLeftColor: item.cor, borderLeftWidth: 3 }}
               >
                 <span

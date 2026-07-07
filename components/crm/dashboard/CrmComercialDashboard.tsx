@@ -13,6 +13,7 @@ import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { useAgentes } from "@/hooks/useAgentes";
 import { useCrmDashboard } from "@/hooks/useCrmDashboard";
+import { ehRegistroDeTeste } from "@/lib/crm/dashboard-aggregate";
 
 /**
  * Cockpit da persona COMERCIAL / HUB — o dashboard de funil comercial histórico, preservado
@@ -27,6 +28,7 @@ export function CrmComercialDashboard() {
   const isMobile = narrow !== false;
   const dash = useCrmDashboard();
   const { agentes, loading: loadingAgentes } = useAgentes();
+  const agentesVisiveis = agentes.filter((a) => !ehRegistroDeTeste(a.nome));
   const m = dash;
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function CrmComercialDashboard() {
     >
       <div className="mx-auto w-full max-w-[1400px] space-y-6">
         {isMobile && (
-          <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#2b3544] bg-[#121926] px-3.5 py-3">
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] px-3.5 py-3">
             <h1 className="text-lg font-bold tracking-tight text-[#e6edf3]">Dashboard</h1>
             <div className="flex items-center gap-1.5">
               <Link
@@ -132,7 +134,7 @@ export function CrmComercialDashboard() {
             pipeline vive só no Funil comercial (fonte única). O redesign traz Dinheiro do Hub +
             Operação por exceção no lugar. */}
 
-        <CrmEquipeResumo agentes={agentes} ciclos={dash.ciclos} loading={loadingAgentes || dash.loading} />
+        <CrmEquipeResumo agentes={agentesVisiveis} ciclos={dash.ciclos} loading={loadingAgentes || dash.loading} />
       </div>
     </div>
   );

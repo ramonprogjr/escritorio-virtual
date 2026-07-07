@@ -140,7 +140,7 @@ export function CrmOQuePrecisaDeVoce({
 
   if (carregando) {
     return (
-      <section className="mb-6 animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-5">
+      <section className="mb-6 animate-pulse rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-5">
         <div className="h-4 w-44 rounded bg-[#16271e]" />
         <div className="mt-4 space-y-2.5">
           <div className="h-14 rounded-xl bg-[#16271e]" />
@@ -154,7 +154,7 @@ export function CrmOQuePrecisaDeVoce({
 
   if (itens.length === 0) {
     return (
-      <section className="mb-6 flex items-center gap-3 rounded-2xl border border-[#23863655] bg-gradient-to-r from-[#003b2622] to-[#121926] px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+      <section className="mb-6 flex items-center gap-3 rounded-2xl border border-[#23863655] bg-gradient-to-r from-[#003b2622] to-[#0f1d16] px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#23863633]">
           <CheckCircle2 className="h-5 w-5 text-[#3fb950]" />
         </span>
@@ -186,7 +186,7 @@ export function CrmOQuePrecisaDeVoce({
           <li key={item.id}>
             <Link
               href={item.href}
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-[#2b3544] bg-[#0a140f]/80 px-3 py-2.5 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#c9a24a66]"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-[#1d3a2c] bg-[#0a140f]/80 px-3 py-2.5 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#c9a24a66]"
               style={{ borderLeftColor: item.cor, borderLeftWidth: 3 }}
             >
               <span
@@ -233,7 +233,7 @@ export function CrmOQuePrecisaDeVoce({
                   <button
                     type="button"
                     onClick={() => router.push(`/crm/leads/${l.id}`)}
-                    className="flex w-full items-center justify-between gap-2 rounded-xl border border-transparent px-2.5 py-2 text-left transition-colors hover:border-[#2b3544] hover:bg-[#0f1520]"
+                    className="flex w-full items-center justify-between gap-2 rounded-xl border border-transparent px-2.5 py-2 text-left transition-colors hover:border-[#1d3a2c] hover:bg-[#0f1520]"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[#e6edf3]">

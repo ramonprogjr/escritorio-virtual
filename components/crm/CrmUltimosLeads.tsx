@@ -29,7 +29,7 @@ export function CrmUltimosLeads({
 }) {
   if (loading) {
     return (
-      <div className="h-full animate-pulse rounded-2xl border border-[#2b3544] bg-[#121926] p-4">
+      <div className="h-full animate-pulse rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4">
         <div className="mb-3 h-4 w-40 rounded bg-[#16271e]" />
         {[1, 2, 3].map((i) => (
           <div key={i} className="mb-2 h-10 rounded-xl bg-[#16271e]" />
@@ -39,7 +39,7 @@ export function CrmUltimosLeads({
   }
 
   return (
-    <section className="h-full rounded-2xl border border-[#2b3544] bg-[#121926] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+    <section className="h-full rounded-2xl border border-[#1d3a2c] bg-[#0f1d16] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="m-0 text-sm font-bold tracking-tight text-[#e6edf3]">Últimos movimentos</h2>
         <Link
@@ -57,7 +57,7 @@ export function CrmUltimosLeads({
             <li key={l.id}>
               <Link
                 href={`/crm/leads/${l.id}`}
-                className="flex items-center justify-between gap-2 rounded-xl border border-transparent px-2.5 py-2 transition-colors hover:border-[#2b3544] hover:bg-[#0f1520]"
+                className="flex items-center justify-between gap-2 rounded-xl border border-transparent px-2.5 py-2 transition-colors hover:border-[#1d3a2c] hover:bg-[#0f1520]"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[#e6edf3]">
