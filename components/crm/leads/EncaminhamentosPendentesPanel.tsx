@@ -17,9 +17,14 @@ type EncaminhamentoPendente = {
 
 type Props = {
   onChanged?: () => void;
+  /** Quando true, o painel continua buscando e reportando a contagem, mas NÃO renderiza
+   *  a lista (vira um chip controlado pelo pai). */
+  collapsed?: boolean;
+  /** Reporta quantos encaminhamentos estão pendentes (p/ o chip "IA · N"). */
+  onCount?: (n: number) => void;
 };
 
-export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
+export function EncaminhamentosPendentesPanel({ onChanged, collapsed = false, onCount }: Props) {
   const [rows, setRows] = useState<EncaminhamentoPendente[]>([]);
   const [loading, setLoading] = useState(true);
   const [processando, setProcessando] = useState<string | null>(null);
@@ -51,6 +56,10 @@ export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    onCount?.(rows.length);
+  }, [rows, onCount]);
 
   async function aprovar(id: string) {
     setProcessando(id);
@@ -96,6 +105,9 @@ export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
       setProcessando(null);
     }
   }
+
+  // Modo chip: só conta (via onCount no efeito acima), o pai desenha o gatilho.
+  if (collapsed) return null;
 
   if (loading) {
     return <p className="text-sm text-[#8b949e]">Carregando sugestões de encaminhamento…</p>;
