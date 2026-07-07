@@ -121,21 +121,19 @@ export function CrmComercialDashboard() {
           indisponivel={!!dash.erro && !dash.carregado}
         />
 
-        {/* Funil do Hub — a leitura ESTRATÉGICA da rede (não o funil de vendas do tenant).
-            Fatiável por Mercado e por Origem. Ver docs/AUDITORIA-DASHBOARD-CEO.md + mesa Fable. */}
+        {/* ANDARES DE DECISÃO (auditoria dashboard): AÇÃO primeiro. Logo após o hero de leads,
+            "O que travou" (operação por exceção) — o que exige você agora. */}
+        <CrmOperacaoExcecao />
+
+        {/* ESTRATÉGIA: Funil do Hub — leitura da REDE (não o funil de vendas do tenant),
+            fatiável por Mercado e Origem. Dinheiro do Hub (MRR/comissão da rede) acende na altitude 1. */}
         <CrmFunilDoHub />
 
+        {/* CONTEXTO: últimos movimentos + equipe */}
         <div className="grid gap-6 xl:grid-cols-2">
           <CrmUltimosLeads leads={dash.leadsRecentes} loading={dash.loading} />
-          <CrmOperacaoExcecao />
+          <CrmEquipeResumo agentes={agentesVisiveis} ciclos={dash.ciclos} loading={loadingAgentes || dash.loading} />
         </div>
-
-        {/* "Visão comercial" (6 cards de vaidade + Pipeline R$ duplicado) REMOVIDA — auditoria da
-            dashboard (docs/AUDITORIA-DASHBOARD-CEO.md): número puro parado é banido da home; o
-            pipeline vive só no Funil comercial (fonte única). O redesign traz Dinheiro do Hub +
-            Operação por exceção no lugar. */}
-
-        <CrmEquipeResumo agentes={agentesVisiveis} ciclos={dash.ciclos} loading={loadingAgentes || dash.loading} />
       </div>
     </div>
   );
