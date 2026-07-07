@@ -5,7 +5,6 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Phone, Share2, Briefcase, StickyNote, XCircle, Ban, Bot, User } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
-import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { estagioParaColunaKanban } from "@/lib/crm/estagio-map";
@@ -173,6 +172,39 @@ function leadMetaObj(lead: Lead): Record<string, unknown> {
   return m && typeof m === "object" && !Array.isArray(m) ? (m as Record<string, unknown>) : {};
 }
 
+/** Chip compacto de KPI na barra de comando. Com onClick, vira filtro rápido. */
+function KpiChip({
+  label,
+  value,
+  cor,
+  active,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  cor: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  const base = `flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors ${
+    active ? "border-[#c9a24a] bg-[#c9a24a14]" : "border-[#1d3a2c] bg-[#0f1d16]"
+  }`;
+  const inner = (
+    <>
+      <span className="font-medium text-[#8b949e]">{label}</span>
+      <span className="font-black tabular-nums" style={{ color: cor }}>{value}</span>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} aria-pressed={active} className={`${base} min-h-8 cursor-pointer hover:border-[#c9a24a55]`}>
+        {inner}
+      </button>
+    );
+  }
+  return <span className={base}>{inner}</span>;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LeadsPage() {
@@ -208,6 +240,9 @@ export default function LeadsPage() {
   const [pipelineId, setPipelineId] = useState<string | null>(null);
   const [estagiosKanban, setEstagiosKanban] = useState<EstagioUi[]>(ESTAGIOS_FALLBACK);
   const [sucessoLead, setSucessoLead] = useState<string | null>(null);
+  const [iaAberto, setIaAberto] = useState(false);
+  const [iaCount, setIaCount] = useState(0);
+  const [filtroRapido, setFiltroRapido] = useState<"" | "sem_resposta" | "em_risco">("");
 
   const carregarPipeline = useCallback(async () => {
     try {
@@ -475,13 +510,23 @@ export default function LeadsPage() {
     return true;
   });
 
+  // Filtro rápido dos chips de KPI (Sem resposta / Em risco) — aplicado a TODAS as visões.
+  const filtradosView = filtroRapido
+    ? filtrados.filter((l) => {
+        const idade = Date.now() - new Date(l.atualizado_em).getTime();
+        return filtroRapido === "sem_resposta"
+          ? idade > 86_400_000
+          : idade > 3_600_000 && l.valor_estimado > 0;
+      })
+    : filtrados;
+
   // Caixa de Oportunidades — faixas de urgência (o que precisa de mim agora)
   const caixaLanes = useMemo(() => {
     const exclui = new Set(["ganho", "perdido", "spam_invalido", "convertido_negocio"]);
     const agora: Lead[] = [];
     const hojeLeads: Lead[] = [];
     const aguardando: Lead[] = [];
-    for (const l of filtrados) {
+    for (const l of filtradosView) {
       if (exclui.has(l.estagio)) continue;
       if (l.estagio === "encaminhado") {
         aguardando.push(l);
@@ -494,7 +539,7 @@ export default function LeadsPage() {
     agora.sort((a, b) => new Date(a.atualizado_em).getTime() - new Date(b.atualizado_em).getTime());
     hojeLeads.sort((a, b) => new Date(b.atualizado_em).getTime() - new Date(a.atualizado_em).getTime());
     return { agora, hoje: hojeLeads, aguardando };
-  }, [filtrados]);
+  }, [filtradosView]);
 
   const hoje = new Date().toDateString();
   // Etapas que saíram da fila ATIVA do dono: fechadas OU já encaminhadas ao parceiro
@@ -507,147 +552,23 @@ export default function LeadsPage() {
   const emRisco = ativosNaFila.filter(l => Date.now() - new Date(l.atualizado_em).getTime() > 3_600_000).reduce((s, l) => s + l.valor_estimado, 0);
   const pipeline = ativosNaFila.reduce((s, l) => s + l.valor_estimado, 0);
 
-  const botaoNovoLead = useMemo(
-    () => (
-      <button
-        type="button"
-        onClick={() => setLeadRapidoOpen(true)}
-        className="min-h-11 shrink-0 rounded-lg px-4 py-2 text-sm font-bold min-[480px]:min-h-10"
-        style={{ background: "#003b26", color: "#c9a24a", border: "none", cursor: "pointer" }}
-      >
-        + Novo lead
-      </button>
-    ),
-    []
-  );
-
   useEffect(() => {
     if (isMobile) {
       setSlot(null);
       return;
     }
+    // Controles agora vivem na barra de comando in-page (desktop e mobile) — o header
+    // universal só carrega o subtítulo/breadcrumb. Fim das "2 buscas" e das faixas fixas.
     setSlot({
       path: pathname,
       subtitle: `${limparNomePipeline(pipelineAtivo?.nome) || "Pipeline de Leads"} · ${leadsDoPipeline.length} leads`,
-      actions: (
-        <>
-          {botaoNovoLead}
-          <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5 min-[480px]:w-auto">
-            <button
-              type="button"
-              onClick={() => setView("caixa")}
-              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-            >
-              Caixa
-            </button>
-            <button
-              type="button"
-              onClick={() => setView("kanban")}
-              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-            >
-              Kanban
-            </button>
-            <button
-              type="button"
-              onClick={() => setView("lista")}
-              className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-            >
-              Lista
-            </button>
-          </div>
-          <input
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            placeholder="Buscar lead..."
-            className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
-          />
-          <select
-            value={filtroEstagio}
-            onChange={e => setFiltroEstagio(e.target.value)}
-            className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
-          >
-            <option value="">Todos os estágios</option>
-            {estagiosKanban.map(e => (
-              <option key={e.id} value={e.id}>
-                {e.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => setPipelineConfigOpen(true)}
-            className="min-h-11 shrink-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
-            title="Configurar pipeline"
-          >
-            Pipeline
-          </button>
-        </>
-      ),
     });
     return () => setSlot(null);
-  }, [pathname, setSlot, pipelineAtivo, leadsDoPipeline.length, view, busca, filtroEstagio, isMobile, botaoNovoLead, estagiosKanban]);
+  }, [pathname, setSlot, pipelineAtivo, leadsDoPipeline.length, isMobile]);
 
-  const headerControls = (
-    <>
-      {botaoNovoLead}
-      <div className="inline-flex w-full rounded-lg bg-[#16271e] p-0.5 min-[480px]:w-auto">
-        <button
-          type="button"
-          onClick={() => setView("caixa")}
-          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "caixa" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-        >
-          Caixa
-        </button>
-        <button
-          type="button"
-          onClick={() => setView("kanban")}
-          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "kanban" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-        >
-          Kanban
-        </button>
-        <button
-          type="button"
-          onClick={() => setView("lista")}
-          className={`min-h-11 flex-1 touch-manipulation rounded-md px-3 py-2 text-xs font-bold transition-colors min-[480px]:min-h-10 min-[480px]:flex-none min-[480px]:py-1.5 ${view === "lista" ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
-        >
-          Lista
-        </button>
-      </div>
-      <input
-        value={busca}
-        onChange={e => setBusca(e.target.value)}
-        placeholder="Buscar lead..."
-        className="w-full min-h-11 min-w-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] min-[480px]:min-h-10 min-[480px]:w-44"
-      />
-      <select
-        value={filtroEstagio}
-        onChange={e => setFiltroEstagio(e.target.value)}
-        className="w-full min-h-11 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-sm text-[#e6edf3] outline-none min-[480px]:min-h-10 min-[480px]:w-[11.5rem]"
-      >
-        <option value="">Todos os estágios</option>
-        {estagiosKanban.map(e => (
-          <option key={e.id} value={e.id}>
-            {e.label}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        onClick={() => setPipelineConfigOpen(true)}
-        className="min-h-11 shrink-0 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 py-2 text-xs font-bold text-[#8b949e] hover:text-[#e6edf3] min-[480px]:min-h-10"
-      >
-        Pipeline
-      </button>
-    </>
-  );
-
-  const pipelineTabs = pipelines.length > 0 ? (
-    <PipelineTabsBar
-      pipelines={pipelines}
-      activePipelineId={pipelineId}
-      onSelect={setPipelineId}
-    />
-  ) : null;
+  const leadsHojeCount = leadsDoPipeline.filter(
+    (l) => new Date(l.criado_em).toDateString() === hoje
+  ).length;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0a140f]">
@@ -669,36 +590,120 @@ export default function LeadsPage() {
         </div>
       )}
 
-      <div className="mx-4 mt-3">
-        <EncaminhamentosPendentesPanel onChanged={() => void carregar()} />
+      {/* ─── BARRA DE COMANDO única (enxuta, sticky) — colapsa as 4 faixas antigas ─── */}
+      <div className="z-10 shrink-0 border-b border-[#1d3a2c] bg-[#0f1d16]">
+        {isMobile && (
+          <div className="px-3 pt-2">
+            <h1 className="text-base font-bold text-[#e6edf3]">
+              {limparNomePipeline(pipelineAtivo?.nome) || "Leads"}
+              <span className="ml-2 text-[11px] font-normal text-[#8b949e]">
+                {leadsDoPipeline.length} · tempo real
+              </span>
+            </h1>
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-2 px-3 py-2 sm:px-4">
+          {pipelines.length > 1 && (
+            <select
+              value={pipelineId ?? ""}
+              onChange={(e) => setPipelineId(e.target.value || null)}
+              className="min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2.5 text-sm font-semibold text-[#e6edf3] outline-none focus:border-[#c9a24a]"
+              title="Mercado / pipeline"
+            >
+              {pipelines.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {limparNomePipeline(p.nome) || p.nome}
+                </option>
+              ))}
+            </select>
+          )}
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar lead…"
+            className="min-h-10 min-w-0 flex-1 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-3 text-sm text-[#e6edf3] outline-none placeholder:text-[#6e7681] focus:border-[#c9a24a] sm:flex-none sm:w-52"
+          />
+          <select
+            value={filtroEstagio}
+            onChange={(e) => setFiltroEstagio(e.target.value)}
+            className="min-h-10 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2.5 text-sm text-[#e6edf3] outline-none focus:border-[#c9a24a]"
+          >
+            <option value="">Todos os estágios</option>
+            {estagiosKanban.map((e) => (
+              <option key={e.id} value={e.id}>{e.label}</option>
+            ))}
+          </select>
+          <div className="inline-flex rounded-lg bg-[#16271e] p-0.5">
+            {(["caixa", "kanban", "lista"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`min-h-9 touch-manipulation rounded-md px-3 text-xs font-bold capitalize transition-colors ${view === v ? "bg-[#1d3a2c] text-white" : "text-[#8b949e] hover:text-[#e6edf3]"}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          {iaCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setIaAberto((v) => !v)}
+              aria-expanded={iaAberto}
+              className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-bold transition-colors ${iaAberto ? "border-[#c9a24a] bg-[#c9a24a1f] text-[#c9a24a]" : "border-[#c9a24a55] text-[#c9a24a] hover:bg-[#c9a24a12]"}`}
+            >
+              IA · {iaCount} {iaAberto ? "▴" : "▾"}
+            </button>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPipelineConfigOpen(true)}
+              className="min-h-9 rounded-lg border border-[#1d3a2c] bg-[#16271e] px-2.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
+              title="Configurar pipeline"
+            >
+              Pipeline
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeadRapidoOpen(true)}
+              className="min-h-9 shrink-0 rounded-lg px-3 text-sm font-bold"
+              style={{ background: "#003b26", color: "#c9a24a" }}
+            >
+              + Novo
+            </button>
+          </div>
+        </div>
+
+        {/* KPIs como chips (roláveis); Sem resposta / Em risco viram filtro */}
+        <div className="flex items-center gap-1.5 overflow-x-auto px-3 pb-2 scrollbar-none sm:px-4">
+          <KpiChip label="Hoje" value={String(leadsHojeCount)} cor="#c9a24a" />
+          <KpiChip
+            label="Sem resposta"
+            value={String(semResposta)}
+            cor={semResposta > 0 ? "#EF4444" : "#6B7280"}
+            active={filtroRapido === "sem_resposta"}
+            onClick={() => setFiltroRapido((f) => (f === "sem_resposta" ? "" : "sem_resposta"))}
+          />
+          <KpiChip
+            label="Em risco"
+            value={emRisco > 0 ? moeda(emRisco) : "—"}
+            cor={emRisco > 0 ? "#EAB308" : "#6B7280"}
+            active={filtroRapido === "em_risco"}
+            onClick={() => setFiltroRapido((f) => (f === "em_risco" ? "" : "em_risco"))}
+          />
+          <KpiChip label="Encaminhados" value={String(encaminhados)} cor={encaminhados > 0 ? "#c9a24a" : "#6B7280"} />
+          <KpiChip label="Pipeline" value={moeda(pipeline)} cor="#22C55E" />
+        </div>
       </div>
 
-      {pipelineTabs}
-
-      {isMobile && (
-        <div className="relative z-10 shrink-0 space-y-2 border-b border-[#1d3a2c] bg-[#0f1d16] px-3 py-3">
-          <div>
-            <h1 className="text-base font-bold text-[#e6edf3]">{limparNomePipeline(pipelineAtivo?.nome) || "Leads"}</h1>
-            <p className="text-[11px] text-[#8b949e]">{leadsDoPipeline.length} leads · tempo real</p>
-          </div>
-          <div className="flex flex-col gap-2">{headerControls}</div>
-        </div>
-      )}
-
-      {/* ─── METRICS ─── */}
-      <div className="grid grid-cols-2 gap-px sm:grid-cols-5 flex-shrink-0 bg-[#1d3a2c]">
-        {[
-          { label: "Leads Hoje", value: String(leadsDoPipeline.filter(l => new Date(l.criado_em).toDateString() === hoje).length), cor: "#c9a24a" },
-          { label: "Sem Resposta +24h", value: String(semResposta), cor: semResposta > 0 ? "#EF4444" : "#22C55E" },
-          { label: "Em Risco +1h", value: emRisco > 0 ? moeda(emRisco) : "—", cor: emRisco > 0 ? "#EAB308" : "#6B7280" },
-          { label: "Encaminhados", value: String(encaminhados), cor: encaminhados > 0 ? "#c9a24a" : "#6B7280" },
-          { label: "Pipeline Total", value: moeda(pipeline), cor: "#22C55E" },
-        ].map(m => (
-          <div key={m.label} className="bg-[#0f1d16] px-3 py-2.5 sm:px-5">
-            <p className="mb-0.5 text-xs text-[#8b949e]">{m.label}</p>
-            <p className="text-base font-black sm:text-lg" style={{ color: m.cor }}>{m.value}</p>
-          </div>
-        ))}
+      {/* Encaminhamentos IA — o chip acima abre/fecha; sempre montado p/ contar */}
+      <div className={iaAberto ? "shrink-0 px-3 pb-1 pt-2 sm:px-4" : ""}>
+        <EncaminhamentosPendentesPanel
+          collapsed={!iaAberto}
+          onCount={setIaCount}
+          onChanged={() => void carregar()}
+        />
       </div>
 
       {/* ─── MAIN ─── */}
@@ -806,7 +811,7 @@ export default function LeadsPage() {
                                 href={`https://wa.me/55${tel}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-[#25D366]/15 py-1.5 text-xs font-bold text-[#25D366] transition-colors hover:bg-[#25D366]/25"
+                                className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg bg-[#25D366]/15 py-1.5 text-xs font-bold text-[#25D366] transition-colors hover:bg-[#25D366]/25"
                               >
                                 Responder
                               </a>
@@ -815,14 +820,14 @@ export default function LeadsPage() {
                               type="button"
                               onClick={() => void converterNegocio(lead)}
                               disabled={convertendoIds.has(lead.id)}
-                              className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] py-1.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 disabled:opacity-40"
+                              className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] py-1.5 text-xs font-bold text-[#c9a24a] transition-colors hover:border-[#c9a24a]/50 disabled:opacity-40"
                             >
                               {convertendoIds.has(lead.id) ? "Criando…" : "Negócio"}
                             </button>
                             <button
                               type="button"
                               onClick={() => router.push(`/crm/leads/${lead.id}`)}
-                              className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] px-2.5 py-1.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
+                              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-[#1d3a2c] px-2.5 py-1.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
                             >
                               Ficha
                             </button>
@@ -864,7 +869,7 @@ export default function LeadsPage() {
             className={`flex h-full overflow-x-auto ${isMobile ? "snap-x snap-mandatory scroll-pl-3 gap-2.5 px-3 py-3 scrollbar-none" : "gap-3 p-4"}`}
           >
             {estagiosKanban.map(est => {
-              const col = filtrados.filter((l) => estagioParaColunaKanban(l.estagio) === est.id);
+              const col = filtradosView.filter((l) => estagioParaColunaKanban(l.estagio) === est.id);
               const total = col.reduce((s, l) => s + l.valor_estimado, 0);
               return (
                 <div
@@ -921,7 +926,7 @@ export default function LeadsPage() {
           <div className="h-full overflow-y-auto">
             {isMobile ? (
               <ul className="space-y-2 p-3 pb-24">
-                {filtrados.map(lead => {
+                {filtradosView.map(lead => {
                   const est = estagiosKanban.find((e) => e.id === estagioParaColunaKanban(lead.estagio));
                   return (
                     <li key={lead.id}>
@@ -961,7 +966,7 @@ export default function LeadsPage() {
                     </li>
                   );
                 })}
-                {filtrados.length === 0 && (
+                {filtradosView.length === 0 && (
                   <p className="py-12 text-center text-sm text-[#8b949e]">Nenhum lead encontrado</p>
                 )}
               </ul>
@@ -975,7 +980,7 @@ export default function LeadsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtrados.map(lead => {
+                {filtradosView.map(lead => {
                   const est = estagiosKanban.find((e) => e.id === estagioParaColunaKanban(lead.estagio));
                   return (
                     <tr key={lead.id} onClick={() => router.push(`/crm/leads/${lead.id}`)}
@@ -1011,7 +1016,7 @@ export default function LeadsPage() {
                     </tr>
                   );
                 })}
-                {filtrados.length === 0 && (
+                {filtradosView.length === 0 && (
                   <tr><td colSpan={8} className="px-4 py-12 text-center text-[#8b949e] text-sm">Nenhum lead encontrado</td></tr>
                 )}
               </tbody>
