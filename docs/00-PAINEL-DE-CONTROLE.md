@@ -14,19 +14,21 @@ disfarçado**. Fase atual: **des-fragmentar a fundação** antes de avançar em 
 
 ---
 
-## 📚 Documentos canônicos (a fonte da verdade HOJE)
+## 📚 Os 5 documentos VIVOS (seguimos SÓ estes)
 
-| Doc | O que é | Quando ler |
-|---|---|---|
-| **[00-PAINEL-DE-CONTROLE.md](00-PAINEL-DE-CONTROLE.md)** | Este painel — o mapa de tudo | Sempre primeiro |
-| **[MODELO-DE-NEGOCIO-E-FLUXOS-COMPLETO.md](MODELO-DE-NEGOCIO-E-FLUXOS-COMPLETO.md)** | Doc-mãe: 19 seções ancoradas no código (8.217 linhas) — o estado completo do Hub | Entender o negócio a fundo |
-| **[MODELO-DE-NEGOCIO-E-FLUXOS.md](MODELO-DE-NEGOCIO-E-FLUXOS.md)** | A LENTE (1 página): o modelo em resumo | Referência rápida |
-| **[ANALISE-CEO-E-PLANO-DE-UNIFICACAO.md](ANALISE-CEO-E-PLANO-DE-UNIFICACAO.md)** | Análise CEO + plano faseado 0→6 | Decidir o que fazer |
-| **Auditorias CEO** ([Dashboard](AUDITORIA-DASHBOARD-CEO.md) · [Pipeline Leads](AUDITORIA-PIPELINE-LEADS-CEO.md) · [Ciclo Lead](AUDITORIA-CICLO-LEAD-v1.md) · [Cadastros ProMax](AUDITORIA-CADASTROS-UIUX-PROMAX.md)) | Os laudos das telas já refeitas | Referência |
-| Memória do CEO (`.claude/.../memory/`) | Decisões travadas (clawback, linhagem, etc.) | Contexto vivo |
+| # | Doc | Finalidade | Quando ler |
+|---|---|---|---|
+| **00** | **[00-PAINEL-DE-CONTROLE.md](00-PAINEL-DE-CONTROLE.md)** | Estado & decisões — o diário | Sempre primeiro |
+| **01** | **[01-NEGOCIO-E-ESTRATEGIA.md](01-NEGOCIO-E-ESTRATEGIA.md)** | Negócio: modelo, verticais, value-chain, monetização | O porquê / quê |
+| **02** | **[02-PRODUTO-TELAS-E-UX.md](02-PRODUTO-TELAS-E-UX.md)** | Produto: telas, fluxos, UX, design system | O que o usuário usa |
+| **03** | **[03-ARQUITETURA-DADOS-E-SEGURANCA.md](03-ARQUITETURA-DADOS-E-SEGURANCA.md)** | Técnico: dados `hub_*`, RBAC, segurança, altitudes, invariantes | O como |
+| **04** | **[04-ROADMAP-E-PLANO.md](04-ROADMAP-E-PLANO.md)** | Roadmap: fases + backlog de WIs + sprints | O quando / ordem |
 
-> **Tudo o mais em `docs/` (100+ arquivos: designs E0–E7/A0–A2, planos antigos, sidequests) = HISTÓRICO / referência.**
-> Nada se perde — mas não é a fonte atual. Quando um doc antigo conflitar com os canônicos acima, **os canônicos ganham.**
+**Referência profunda (salva para análise eventual — NÃO seguida no dia a dia):**
+[MODELO-…-COMPLETO](MODELO-DE-NEGOCIO-E-FLUXOS-COMPLETO.md) (doc-mãe, 8k linhas) · [CADERNO-ENGENHARIA](CADERNO-ENGENHARIA-AUDITORIA.md) (backlog técnico WI detalhado, base do 04) · [ANALISE-CEO](ANALISE-CEO-E-PLANO-DE-UNIFICACAO.md) · Auditorias CEO ([Dashboard](AUDITORIA-DASHBOARD-CEO.md)·[Pipeline](AUDITORIA-PIPELINE-LEADS-CEO.md)·[Ciclo Lead](AUDITORIA-CICLO-LEAD-v1.md)·[Cadastros](AUDITORIA-CADASTROS-UIUX-PROMAX.md)) · Memória do CEO (`.claude/.../memory/`).
+
+> **Os outros 110+ docs em `docs/` = HISTÓRICO / arquivo.** Nada se perde — mas não é a fonte atual.
+> Quando um doc antigo conflitar com os 5 acima, **os 5 ganham.** Os 5 são atualizados a cada marco.
 
 ---
 
