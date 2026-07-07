@@ -35,10 +35,12 @@ export async function POST(request: NextRequest, { params }: Params) {
   if (notaErr) return NextResponse.json({ error: notaErr.message }, { status: 500 });
 
   // Espelho na timeline (hub_atividades) — KPI-ready; falha aqui não derruba a nota.
+  // F4 (roleplay): a ficha lê o espelho, então guardamos o texto COMPLETO (descricao é text,
+  // sem limite) — antes truncava em 80 chars e a nota longa sumia da tela ("nada se perde").
   const { error: atvErr } = await supabase.from("hub_atividades").insert({
     lead_id: id,
     tipo: "nota",
-    descricao: descricao.slice(0, 80),
+    descricao: descricao.slice(0, 2000),
     feito_por: "humano",
     feito_por_tipo: "humano",
     tenant_id: tenantId,

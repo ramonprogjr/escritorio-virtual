@@ -498,7 +498,9 @@ export default function LeadFichaPage() {
   // (status_change/proposta/conversão) só para gestor, atrás de um toggle. AUDITORIA-CICLO-LEAD-v1.md.
   const naturezaAtividade = (at: Record<string, unknown>): "nota" | "ia" | "log" => {
     if ((at.tipo as string) === "nota") return "nota";
-    if ((at.feito_por_tipo as string) === "ia") return "ia";
+    // F7 (roleplay): ação da IA é sempre visível na Conversa ("o sistema mostra o que fez") — inclui
+    // handoff automático que grava tipo='ia_acao' mas feito_por_tipo='humano' (antes caía em log-admin).
+    if ((at.feito_por_tipo as string) === "ia" || (at.tipo as string) === "ia_acao") return "ia";
     return "log";
   };
   const conversa = atividades.filter((a) => naturezaAtividade(a) !== "log");
