@@ -7,7 +7,7 @@ import { BarChart3, ClipboardList, UserPlus } from "lucide-react";
 import { CrmOQuePrecisaDeVoce } from "@/components/crm/CrmOQuePrecisaDeVoce";
 import { CrmEquipeResumo } from "@/components/crm/CrmEquipeResumo";
 import { CrmOperacaoResumo } from "@/components/crm/CrmOperacaoResumo";
-import { CrmPipelineResumo } from "@/components/crm/CrmPipelineResumo";
+import { CrmFunilDoHub } from "@/components/crm/CrmFunilDoHub";
 import { CrmUltimosLeads } from "@/components/crm/CrmUltimosLeads";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
@@ -121,8 +121,9 @@ export function CrmComercialDashboard() {
           indisponivel={!!dash.erro && !dash.carregado}
         />
 
-        {/* Visão geral da operação */}
-        <CrmPipelineResumo />
+        {/* Funil do Hub — a leitura ESTRATÉGICA da rede (não o funil de vendas do tenant).
+            Fatiável por Mercado e por Origem. Ver docs/AUDITORIA-DASHBOARD-CEO.md + mesa Fable. */}
+        <CrmFunilDoHub />
 
         <div className="grid gap-6 xl:grid-cols-2">
           <CrmUltimosLeads leads={dash.leadsRecentes} loading={dash.loading} />
