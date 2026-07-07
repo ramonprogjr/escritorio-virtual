@@ -38,7 +38,18 @@ export async function PUT(request: NextRequest) {
 
   const body = (await request.json().catch(() => ({}))) as Partial<IaConfigRow>;
   const patch: Partial<IaConfigRow> = {};
-  if (Number.isFinite(Number(body.markup))) patch.markup = Number(body.markup);
+  if (Number.isFinite(Number(body.markup))) {
+    const mk = Number(body.markup);
+    // MET-01: markup < 1 = vender IA abaixo do custo (furo direto na margem). Fail-closed.
+    // (O CHECK equivalente no banco — ALTER ... CHECK (markup >= 1) — vai na janela do dono.)
+    if (mk < 1) {
+      return NextResponse.json(
+        { error: "Markup deve ser ≥ 1 — nunca vender IA abaixo do custo." },
+        { status: 400 }
+      );
+    }
+    patch.markup = mk;
+  }
   if (Number.isFinite(Number(body.fx_usd_brl))) patch.fx_usd_brl = Number(body.fx_usd_brl);
   if (Number.isFinite(Number(body.valor_credito_brl))) patch.valor_credito_brl = Number(body.valor_credito_brl);
   if (typeof body.nome_moeda === "string" && body.nome_moeda.trim()) patch.nome_moeda = body.nome_moeda.trim();
