@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, ClipboardList, UserPlus } from "lucide-react";
 import { CrmOQuePrecisaDeVoce } from "@/components/crm/CrmOQuePrecisaDeVoce";
 import { CrmEquipeResumo } from "@/components/crm/CrmEquipeResumo";
-import { CrmMetricCard, CrmSectionTitle } from "@/components/crm/CrmMetricCard";
 import { CrmOperacaoResumo } from "@/components/crm/CrmOperacaoResumo";
 import { CrmPipelineResumo } from "@/components/crm/CrmPipelineResumo";
 import { CrmUltimosLeads } from "@/components/crm/CrmUltimosLeads";
@@ -14,7 +13,6 @@ import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { useAgentes } from "@/hooks/useAgentes";
 import { useCrmDashboard } from "@/hooks/useCrmDashboard";
-import { moedaPipeline } from "@/lib/crm/pipeline-funil";
 
 /**
  * Cockpit da persona COMERCIAL / HUB — o dashboard de funil comercial histórico, preservado
@@ -67,55 +65,6 @@ export function CrmComercialDashboard() {
     });
     return () => setSlot(null);
   }, [pathname, setSlot, router, isMobile]);
-
-  const receita =
-    m.receitaPotencial > 0 ? moedaPipeline(m.receitaPotencial) : "R$0";
-
-  // Visão comercial enxuta — KPIs essenciais num só grid (sem duplicar o painel acionável)
-  const visaoComercial = [
-    {
-      label: "Receita potencial",
-      valor: receita,
-      sub: "pipeline em aberto",
-      cor: "#c9a24a",
-      rota: "/crm/leads",
-    },
-    {
-      label: "Taxa qualificação",
-      valor: `${m.taxaQualificacao}%`,
-      sub: "do total de leads",
-      cor: "#34d399",
-      rota: "/crm/leads",
-    },
-    {
-      label: "Taxa encaminhamento",
-      valor: `${m.taxaEncaminhamento}%`,
-      sub: "leads encaminhados",
-      cor: "#f59e0b",
-      rota: "/crm/distribuicao",
-    },
-    {
-      label: "Parceiros ativos",
-      valor: m.parceirosAtivos,
-      sub: "homologados",
-      cor: "#4db3c4",
-      rota: "/crm/parceiros",
-    },
-    {
-      label: "Encaminhamentos hoje",
-      valor: m.encaminhamentosHoje,
-      sub: "rede de parceiros",
-      cor: "#b58a63",
-      rota: "/crm/distribuicao",
-    },
-    {
-      label: "Agentes cadastrados",
-      valor: m.agentesAtivos,
-      sub: "no hub — IA liga com a chave",
-      cor: "#4db3c4",
-      rota: "/crm/agentes",
-    },
-  ];
 
   return (
     <div
@@ -178,22 +127,10 @@ export function CrmComercialDashboard() {
           <CrmOperacaoResumo operacao={dash.operacao} loading={dash.loading} />
         </div>
 
-        <div>
-          <CrmSectionTitle>Visão comercial</CrmSectionTitle>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            {visaoComercial.map((c) => (
-              <CrmMetricCard
-                key={c.label}
-                label={c.label}
-                valor={c.valor}
-                sub={c.sub}
-                cor={c.cor}
-                loading={m.loading}
-                onClick={() => router.push(c.rota)}
-              />
-            ))}
-          </div>
-        </div>
+        {/* "Visão comercial" (6 cards de vaidade + Pipeline R$ duplicado) REMOVIDA — auditoria da
+            dashboard (docs/AUDITORIA-DASHBOARD-CEO.md): número puro parado é banido da home; o
+            pipeline vive só no Funil comercial (fonte única). O redesign traz Dinheiro do Hub +
+            Operação por exceção no lugar. */}
 
         <CrmEquipeResumo agentes={agentes} ciclos={dash.ciclos} loading={loadingAgentes || dash.loading} />
       </div>
