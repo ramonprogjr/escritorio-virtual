@@ -9,7 +9,7 @@ import { PipelineConfigSideover } from "@/components/crm/leads/PipelineConfigSid
 import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
 import { NegocioKanbanCard } from "@/components/crm/negocios/NegocioKanbanCard";
 import { toast } from "@/components/crm/toast";
-import { labelMercadoPrefixo } from "@/lib/crm/negocio-cadastro";
+import { labelMercadoPrefixo, labelEtapaNegocio } from "@/lib/crm/negocio-cadastro";
 import { ESTAGIOS_FALLBACK_UI, limparNomePipeline } from "@/lib/crm/pipeline-defaults";
 
 const LIMIT = 20;
@@ -42,6 +42,7 @@ type EtapaUi = { id: string; label: string; color: string };
 
 const ETAPA_COR: Record<string, string> = {
   novo: "#6b7280",
+  novo_negocio: "#6b7280",
   qualificando: "#2f9e8f",
   qualificado: "#e0b86a",
   proposta: "#eab308",
@@ -679,7 +680,7 @@ export default function NegociosPage() {
                             className="rounded-full px-2 py-1 text-xs font-bold"
                             style={{ backgroundColor: etapaCor + "20", color: etapaCor }}
                           >
-                            {etapasKanban.find((e) => e.id === negocio.etapa)?.label ?? negocio.etapa}
+                            {etapasKanban.find((e) => e.id === negocio.etapa)?.label ?? labelEtapaNegocio(negocio.etapa)}
                           </span>
                         </td>
                         <td className="px-4 py-3">

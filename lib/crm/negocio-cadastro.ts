@@ -36,6 +36,28 @@ export const NEGOCIO_ETAPAS = [
 
 export type NegocioEtapa = (typeof NEGOCIO_ETAPAS)[number];
 
+/**
+ * Rótulo amigável por etapa do NEGÓCIO — inclui "novo_negocio" (o slug que a conversão grava, válido
+ * em pipelines.ts) que caía cru na lista quando o kanban usava o fallback de estágios de LEAD.
+ * Fonte única p/ lista/kanban/detalhe não discordarem. AUDITORIA-CICLO-LEAD-v1.md (Negócios).
+ */
+export const NEGOCIO_ETAPA_LABEL: Record<string, string> = {
+  novo: "Novo",
+  novo_negocio: "Novo negócio",
+  qualificando: "Qualificando",
+  qualificado: "Qualificado",
+  proposta: "Proposta",
+  negociando: "Negociando",
+  fechamento: "Fechamento",
+  ganho: "Ganho",
+  perdido: "Perdido",
+};
+
+export function labelEtapaNegocio(etapa: string | null | undefined): string {
+  const s = (etapa || "").toLowerCase();
+  return NEGOCIO_ETAPA_LABEL[s] ?? (etapa || "—");
+}
+
 export const NEGOCIO_STATUS = [
   "aberto",
   "em_negociacao",
