@@ -53,6 +53,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     valor: Number.isFinite(valor) ? valor : 0,
     escopo: body.escopo ? String(body.escopo) : null,
     prazo_dias: body.prazo_dias != null ? Number(body.prazo_dias) : null,
+    validade_dias: body.validade_dias != null ? Number(body.validade_dias) : 7,
     servico_id: body.servico_id || null,
     status: body.status || "rascunho",
     tenant_id: tenantId,

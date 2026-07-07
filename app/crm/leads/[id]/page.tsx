@@ -937,7 +937,11 @@ export default function LeadFichaPage() {
           {aba === "propostas" && (
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6" style={{ backgroundColor: BG_DEEP }}>
               <div className="mx-auto max-w-lg">
-                <LeadPropostasPanel leadId={id} />
+                <LeadPropostasPanel
+                  leadId={id}
+                  interessePadrao={lead.interesse_principal as string | null}
+                  valorPadrao={lead.valor_estimado as number | null}
+                />
               </div>
             </div>
           )}
