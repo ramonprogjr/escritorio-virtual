@@ -165,6 +165,7 @@ export default function CadastroPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [conviteWizardOpen, setConviteWizardOpen] = useState(false);
   const [tipoWizard, setTipoWizard] = useState<"PF" | "PJ">("PF");
+  const [novoMenu, setNovoMenu] = useState(false);
   const [confirmExclusao, setConfirmExclusao] = useState<{
     titulo: string;
     mensagem: string;
@@ -406,86 +407,59 @@ export default function CadastroPage() {
       ? "Buscar razão social, CNPJ ou email…"
       : "Buscar nome, CPF/CNPJ, email ou telefone…";
 
-  const headerActions = useMemo(
-    () => (
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setConviteWizardOpen(true)}
-          style={{
-            background: "#003b26",
-            color: "#c9a24a",
-            border: "none",
-            borderRadius: 8,
-            padding: "10px 20px",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          + Convidar
-        </button>
-        <a
-          href="/crm/especialistas"
-          title="Cadastrar mão de obra / especialistas (sem acesso ao sistema)"
-          style={{
-            background: "transparent",
-            color: "#8b949e",
-            border: "1px solid #1d3a2c",
-            borderRadius: 8,
-            padding: "10px 16px",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-          }}
-        >
+  // Hierarquia dos botões (auditoria ProMax): navegação terciária (ghost) à esquerda · Convidar
+  // secundário (outline) · Novo cadastro PRIMÁRIO (sólido dourado) com criação DETERMINÍSTICA
+  // Pessoa/Empresa (antes adivinhava PF/PJ pelo filtro e sempre abria PF). AUDITORIA-CADASTROS-UIUX-PROMAX.md.
+  const headerActions = useMemo(() => {
+    const navGhost: React.CSSProperties = {
+      background: "transparent", color: "#8b949e", border: "none", borderRadius: 8,
+      padding: "8px 10px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+      textDecoration: "none", display: "inline-flex", alignItems: "center",
+    };
+    const outlineBtn: React.CSSProperties = {
+      background: "transparent", color: "#c9a24a", border: "1px solid #1d3a2c", borderRadius: 8,
+      padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+    };
+    const primaryBtn: React.CSSProperties = {
+      background: "#c9a24a", color: "#003b26", border: "none", borderRadius: 8,
+      padding: "9px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer",
+      display: "inline-flex", alignItems: "center", gap: 6,
+    };
+    const menuItem: React.CSSProperties = {
+      display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none",
+      color: "#e6edf3", borderRadius: 8, padding: "10px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+    };
+    const abrirCadastro = (tipo: "PF" | "PJ") => { setTipoWizard(tipo); setWizardOpen(true); setNovoMenu(false); };
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <a href="/crm/especialistas" title="Cadastrar mão de obra / especialistas (sem acesso ao sistema)" style={navGhost}>
           Mão de obra
         </a>
-        <a
-          href="/crm/pessoas/duplicatas"
-          title="Revisar e mesclar contatos duplicados (mesmo CPF/telefone)"
-          style={{
-            background: "transparent",
-            color: "#8b949e",
-            border: "1px solid #1d3a2c",
-            borderRadius: 8,
-            padding: "10px 16px",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-          }}
-        >
+        <a href="/crm/pessoas/duplicatas" title="Revisar e mesclar contatos duplicados (mesmo CPF/telefone)" style={navGhost}>
           Duplicatas
         </a>
-        <button
-          type="button"
-          onClick={() => {
-            setTipoWizard(filtroRegisto === "empresas" || filtroTipo === "PJ" ? "PJ" : "PF");
-            setWizardOpen(true);
-          }}
-          style={{
-            background: "#003b26",
-            color: "#c9a24a",
-            border: "none",
-            borderRadius: 8,
-            padding: "10px 20px",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          + Novo cadastro
+        <span aria-hidden style={{ width: 1, height: 22, background: "#1d3a2c", margin: "0 6px" }} />
+        <button type="button" onClick={() => setConviteWizardOpen(true)} style={outlineBtn}>
+          + Convidar
         </button>
+        <div style={{ position: "relative" }}>
+          <button type="button" onClick={() => setNovoMenu((v) => !v)} aria-haspopup="menu" aria-expanded={novoMenu} style={primaryBtn}>
+            + Novo cadastro <span aria-hidden style={{ fontSize: 10 }}>▾</span>
+          </button>
+          {novoMenu && (
+            <>
+              <button type="button" aria-hidden tabIndex={-1} onClick={() => setNovoMenu(false)}
+                style={{ position: "fixed", inset: 0, zIndex: 40, background: "transparent", border: "none", cursor: "default" }} />
+              <div role="menu" style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 50, background: "#0f1d16", border: "1px solid #1d3a2c", borderRadius: 10, padding: 6, minWidth: 180, boxShadow: "0 12px 40px rgba(0,0,0,0.45)" }}>
+                <button type="button" role="menuitem" onClick={() => abrirCadastro("PF")} style={menuItem}>Pessoa (PF)</button>
+                <button type="button" role="menuitem" onClick={() => abrirCadastro("PJ")} style={menuItem}>Empresa (PJ)</button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    ),
-    [filtroRegisto, filtroTipo]
-  );
+    );
+  }, [novoMenu]);
 
   useCrmHeaderSlotConfig({
     path: pathname,

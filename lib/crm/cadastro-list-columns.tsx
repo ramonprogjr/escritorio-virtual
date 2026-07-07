@@ -102,6 +102,9 @@ const COLUNAS_PESSOA_LISTA: CadastroListaColumn<PessoaListaRow>[] = [
       label: "Código",
       minWidth: 128,
       mono: true,
+      // Código de IDENTIDADE (PS…) nasce OCULTO — regra do dono "identidade esconde, chama pelo
+      // nome" (o mobile já omitia; o desktop não herdava). Opt-in no menu de colunas p/ auditoria.
+      defaultOff: true,
       render: (p) => cell(p.codigo, true),
     },
     {
@@ -126,6 +129,9 @@ const COLUNAS_PESSOA_LISTA: CadastroListaColumn<PessoaListaRow>[] = [
       id: "telefone",
       label: "Telefone",
       minWidth: 200,
+      // Telefone já aparece como subtítulo sob o Nome — a coluna dedicada duplicava (200px). Nasce
+      // oculta (opt-in), sem perder o dado (que segue clicável junto ao nome). Auditoria ProMax.
+      defaultOff: true,
       render: (p) => <CrmTelefoneCell telefone={String(p.telefone ?? "")} />,
     },
     {
@@ -246,6 +252,8 @@ const COLUNAS_EMPRESA_LISTA: CadastroListaColumn<EmpresaListaRow>[] = [
       label: "Código",
       minWidth: 120,
       mono: true,
+      // Código de identidade oculto por padrão (regra do dono) — opt-in no menu de colunas.
+      defaultOff: true,
       render: (e) => cell(e.codigo, true),
     },
     {
