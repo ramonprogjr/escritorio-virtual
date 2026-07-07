@@ -1,6 +1,33 @@
 import { MOTIVOS_PERDA, type FunilLeadSlug } from "@/lib/crm/pipelines";
 import { crmFeatureFlags } from "@/lib/crm/feature-flags";
 
+export type ResultadoQualificacao = { pronto: boolean; motivo: string; faltam: string[] };
+
+/**
+ * PRONTIDÃO do lead para direcionar — decisão do dono (06/jul): "pronto" quando tem INTERESSE
+ * definido E VALOR estimado (os dois sinais de negócio). É sinal DERIVADO, não etapa do funil —
+ * a IA usa isto para auto-sugerir o direcionamento; a ficha mostra o chip. AUDITORIA-CICLO-LEAD-v1.md.
+ */
+export function avaliarQualificacao(sinais: {
+  interesse_principal?: string | null;
+  valor_estimado?: number | null;
+}): ResultadoQualificacao {
+  const temInteresse =
+    typeof sinais.interesse_principal === "string" && sinais.interesse_principal.trim().length > 0;
+  const temValor = typeof sinais.valor_estimado === "number" && sinais.valor_estimado > 0;
+  const faltam: string[] = [];
+  if (!temInteresse) faltam.push("interesse");
+  if (!temValor) faltam.push("valor");
+  const pronto = temInteresse && temValor;
+  return {
+    pronto,
+    faltam,
+    motivo: pronto
+      ? "Interesse definido e valor estimado — pronto para direcionar."
+      : `Falta ${faltam.join(" e ")} para o lead ficar pronto.`,
+  };
+}
+
 export function validarMudancaEstagioLead(params: {
   estagio_funil?: string | null;
   estagio?: string | null;

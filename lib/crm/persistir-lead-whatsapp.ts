@@ -3,6 +3,7 @@ import { buildHubLeadsCrmPatch } from "@/lib/hub/hub-leads-crm-atualizar";
 import { nomeLeadEhPlaceholder, pushNameParaNomeExibicao } from "@/lib/crm/sincronizar-contato-whatsapp";
 import { extrairESalvarMemoriasLead } from "@/lib/ia/memoria-lead";
 import { cutoffSessaoConversaMs } from "@/lib/ia/sessao-conversa-ttl";
+import { avaliarQualificacao } from "@/lib/crm/lead-rules";
 
 function parseValorBrl(texto: string): number | undefined {
   const t = texto.replace(/\s/g, "");
@@ -189,6 +190,38 @@ export async function persistirDadosLeadWhatsapp(
       feito_por_tipo: "ia",
       metadata: { origem: "persistir_dados_lead_whatsapp", campos },
     });
+  }
+
+  // Auto-avanço (decisão do dono 06/jul): quando o lead fica PRONTO (interesse + valor), a IA
+  // sugere o direcionamento SOZINHA e AVISA. Idempotente — o motor tem guarda de duplicidade
+  // ("Já existe encaminhamento pendente"), então só cria uma vez. AUDITORIA-CICLO-LEAD-v1.md.
+  const interesseEff =
+    (typeof built.patch.interesse_principal === "string"
+      ? built.patch.interesse_principal
+      : (leadAtual.interesse_principal as string | null)) ?? null;
+  const valorEff =
+    (typeof built.patch.valor_estimado === "number"
+      ? built.patch.valor_estimado
+      : (leadAtual.valor_estimado as number | null)) ?? null;
+  if (avaliarQualificacao({ interesse_principal: interesseEff, valor_estimado: valorEff }).pronto) {
+    try {
+      const { sugerirEncaminhamentoAutomatico } = await import(
+        "@/lib/crm/sugerir-encaminhamento-auto"
+      );
+      const sug = await sugerirEncaminhamentoAutomatico(supabase, leadId, { responsavel: "sistema_ia" });
+      if (sug.ok) {
+        await supabase.from("hub_atividades").insert({
+          lead_id: leadId,
+          tipo: "ia_acao",
+          descricao: `Lead ficou pronto (interesse + valor) — a IA sugeriu direcionar para ${sug.principal.nome}. Aguardando sua validação.`,
+          feito_por: agenteSlug,
+          feito_por_tipo: "ia",
+          metadata: { origem: "auto_qualificacao", encaminhamento_id: sug.encaminhamento_id },
+        });
+      }
+    } catch (e) {
+      console.warn("[persistir-lead] auto-sugestão de direcionamento falhou (segue):", e);
+    }
   }
 
   return { ok: true, campos };

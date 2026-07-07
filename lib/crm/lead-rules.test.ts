@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { validarMudancaEstagioLead } from "./lead-rules";
+import { validarMudancaEstagioLead, avaliarQualificacao } from "./lead-rules";
 
 const FLAG = "CRM_PROXIMA_ACAO_OBRIGATORIA";
 
@@ -48,5 +48,31 @@ describe("validarMudancaEstagioLead — próxima ação obrigatória (flag)", ()
 
   it("com flag OFF (default), não exige próxima ação", () => {
     expect(validarMudancaEstagioLead({ estagio_funil: "em_atendimento" }).ok).toBe(true);
+  });
+});
+
+describe("avaliarQualificacao — pronto = interesse + valor (decisão do dono)", () => {
+  it("pronto quando tem interesse E valor", () => {
+    const r = avaliarQualificacao({ interesse_principal: "reforma cozinha", valor_estimado: 38000 });
+    expect(r.pronto).toBe(true);
+    expect(r.faltam).toEqual([]);
+  });
+
+  it("não pronto sem valor (falta valor)", () => {
+    const r = avaliarQualificacao({ interesse_principal: "reforma", valor_estimado: 0 });
+    expect(r.pronto).toBe(false);
+    expect(r.faltam).toContain("valor");
+  });
+
+  it("não pronto sem interesse (falta interesse)", () => {
+    const r = avaliarQualificacao({ interesse_principal: "  ", valor_estimado: 10000 });
+    expect(r.pronto).toBe(false);
+    expect(r.faltam).toContain("interesse");
+  });
+
+  it("não pronto vazio (falta os dois)", () => {
+    const r = avaliarQualificacao({ interesse_principal: null, valor_estimado: null });
+    expect(r.pronto).toBe(false);
+    expect(r.faltam).toEqual(["interesse", "valor"]);
   });
 });
