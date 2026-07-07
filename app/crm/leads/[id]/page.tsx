@@ -538,7 +538,7 @@ export default function LeadFichaPage() {
     },
     { label: "Campanha", value: (lead.campanha as string) || "—" },
     { label: "Mercado (metadata)", value: mercadoMeta || "—" },
-    { label: "Interesse", value: (lead.interesse_principal as string) || "—" },
+    { label: "Interesse", value: (lead.interesse_principal as string) || "—", field: "interesse_principal", editType: "text", rawValue: (lead.interesse_principal as string) || "" },
     {
       label: "Cidade / UF",
       value:

@@ -49,6 +49,7 @@ export function DirecionarLeadDrawer({
   const [recoloc, setRecoloc] = useState<string | null>(null);
   const [recolocando, setRecolocando] = useState(false);
   const [naoQualificado, setNaoQualificado] = useState(false);
+  const [naoPronto, setNaoPronto] = useState(false);
   const [qualificando, setQualificando] = useState(false);
   const [liberando, setLiberando] = useState(false);
   const [enviandoDestino, setEnviandoDestino] = useState(false);
@@ -57,6 +58,7 @@ export function DirecionarLeadDrawer({
     setErro("");
     setDesligado(false);
     setNaoQualificado(false);
+    setNaoPronto(false);
     setEnviadoNome(null);
     setRecoloc(null);
     setCandidatos([]);
@@ -78,7 +80,10 @@ export function DirecionarLeadDrawer({
       if (!res.ok || !json.ok) {
         const msg = (json.error || "").toLowerCase();
         if (msg.includes("autom")) setDesligado(true);
-        if (msg.includes("qualificad")) setNaoQualificado(true);
+        // "pronto"/"interesse" = falta DADO (não resolvível por 1 clique) → aviso, sem botão.
+        // "qualificad" (e não é falta de dado) = falta ESTÁGIO → oferece "Qualificar e direcionar".
+        if (msg.includes("pronto") || msg.includes("interesse")) setNaoPronto(true);
+        else if (msg.includes("qualificad")) setNaoQualificado(true);
         setErro(json.error || "Não foi possível recomendar fornecedores.");
         setCandidatos(json.candidatos ?? []);
         return;
@@ -275,6 +280,27 @@ export function DirecionarLeadDrawer({
                 Fechar
               </button>
             </div>
+          </div>
+        ) : naoPronto ? (
+          <div style={{ padding: "8px 4px" }}>
+            <p style={{ margin: "0 0 12px", fontSize: 13.5, color: "#e6edf3", lineHeight: 1.5 }}>
+              {erro || "Este lead ainda não está pronto para direcionar — falta interesse e/ou valor."}
+            </p>
+            <p style={{ margin: "0 0 16px", fontSize: 12.5, color: "#8b949e", lineHeight: 1.5 }}>
+              Preencha <strong style={{ color: "#c9a24a" }}>interesse</strong> e{" "}
+              <strong style={{ color: "#c9a24a" }}>valor</strong> na aba <strong>Dados</strong> da ficha. Quando o
+              lead ficar pronto, a IA já sugere o direcionamento sozinha.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                width: "100%", padding: "13px 18px", borderRadius: 11, border: "none",
+                background: "#c9a24a", color: "#003b26", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
+              }}
+            >
+              Entendi
+            </button>
           </div>
         ) : naoQualificado && onQualificar ? (
           <div style={{ padding: "8px 4px" }}>

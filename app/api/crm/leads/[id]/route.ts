@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
-import { buildLeadEstagioPatch } from "@/lib/crm/estagio-map";
-import { validarMudancaEstagioLead } from "@/lib/crm/lead-rules";
+import { buildLeadEstagioPatch, legacyToFunil } from "@/lib/crm/estagio-map";
+import { validarMudancaEstagioLead, avaliarQualificacao } from "@/lib/crm/lead-rules";
 import { crmConfigError, crmDb } from "@/lib/crm/supabase-server";
 import { requireCrmSessao } from "@/lib/crm/crm-api-auth";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
@@ -9,7 +9,7 @@ import { registrarEvento } from "@/lib/crm/registrar-evento";
 type Params = { params: Promise<{ id: string }> };
 
 const LEAD_SELECT =
-  "id, nome, telefone, email, origem, campanha, estagio, estagio_funil, score, valor_estimado, agente_responsavel, humano_responsavel, proxima_acao, data_proxima_acao, motivo_perda, tags, metadata, pessoa_id, tenant_id, ultimo_contato, criado_em, atualizado_em";
+  "id, nome, telefone, email, origem, campanha, estagio, estagio_funil, score, valor_estimado, interesse_principal, agente_responsavel, humano_responsavel, proxima_acao, data_proxima_acao, motivo_perda, tags, metadata, pessoa_id, tenant_id, ultimo_contato, criado_em, atualizado_em";
 
 export async function GET(_request: NextRequest, { params }: Params) {
   const g = await requireCrmSessao(_request);
@@ -141,6 +141,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     "pessoa_id",
     "metadata",
     "tipo_interesse",
+    "interesse_principal",
     "cidade",
     "bairro",
     "canal_origem",
@@ -196,6 +197,52 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       payload: { de: estagioAnterior || null, para: estagioNovo, motivo_perda: merged.motivo_perda ?? null },
       tenant_id: tenantId,
     });
+  }
+
+  // F3 — auto-avanço no caminho MANUAL (decisão do dono: IA move sozinha e avisa). Se a edição
+  // manual tocou interesse/valor e o lead FICOU PRONTO, espelha o caminho WhatsApp: move p/
+  // qualificando (se abaixo) + auto-sugere direcionamento + registra evento IA na Conversa.
+  // Idempotente (guard "já existe encaminhamento"); best-effort — nunca bloqueia o PATCH.
+  // AUDITORIA-CICLO-LEAD-v1.md (roleplay: "o caminho manual é mudo").
+  const tocouProntidao = "interesse_principal" in body || "valor_estimado" in body;
+  if (
+    tocouProntidao &&
+    avaliarQualificacao({
+      interesse_principal: data.interesse_principal as string | null,
+      valor_estimado: data.valor_estimado as number | null,
+    }).pronto
+  ) {
+    try {
+      const funilAtual = legacyToFunil(estagioNovo);
+      if (["novo", "em_atendimento", "aguardando_resposta"].includes(funilAtual)) {
+        await supabase.from("hub_leads_crm").update(buildLeadEstagioPatch("qualificando")).eq("id", id);
+        await supabase.from("hub_atividades").insert({
+          lead_id: id,
+          tipo: "ia_acao",
+          descricao: "Lead ficou pronto (interesse + valor) — movido para Qualificando.",
+          feito_por: "sistema",
+          feito_por_tipo: "ia",
+          tenant_id: tenantId,
+        });
+      }
+      const { sugerirEncaminhamentoAutomatico } = await import("@/lib/crm/sugerir-encaminhamento-auto");
+      const sug = await sugerirEncaminhamentoAutomatico(supabase, id, {
+        tenant_id: tenantId,
+        responsavel: "sistema_ia",
+      });
+      if (sug.ok) {
+        await supabase.from("hub_atividades").insert({
+          lead_id: id,
+          tipo: "ia_acao",
+          descricao: `Lead pronto — a IA sugeriu direcionar para ${sug.principal.nome}. Aguardando sua validação.`,
+          feito_por: "sistema",
+          feito_por_tipo: "ia",
+          tenant_id: tenantId,
+        });
+      }
+    } catch (e) {
+      console.warn("[lead PATCH] auto-avanço manual falhou (segue):", e);
+    }
   }
 
   return NextResponse.json({ data });

@@ -3,6 +3,7 @@ import { crmFeatureFlags } from "@/lib/crm/feature-flags";
 import { listarCandidatosParceiro, type CandidatoParceiro } from "@/lib/crm/distribuir-lead";
 import { defaultTenantId } from "@/lib/tenant-default";
 import { legacyToFunil } from "@/lib/crm/estagio-map";
+import { avaliarQualificacao } from "@/lib/crm/lead-rules";
 
 export type SugestaoEncaminhamentoResult =
   | {
@@ -37,7 +38,7 @@ export async function sugerirEncaminhamentoAutomatico(
 
   const { data: lead, error: leadErr } = await supabase
     .from("hub_leads_crm")
-    .select("id, nome, telefone, estagio, metadata, pessoa_id, tenant_id")
+    .select("id, nome, telefone, estagio, metadata, pessoa_id, tenant_id, interesse_principal, valor_estimado")
     .eq("id", leadId)
     .maybeSingle();
 
@@ -45,10 +46,21 @@ export async function sugerirEncaminhamentoAutomatico(
     return { ok: false, error: leadErr?.message || "Lead não encontrado." };
   }
 
-  // Gate no VOCABULÁRIO DO FUNIL visível (o que o write-path realmente grava). O legado gravava
-  // "qualificado", mas a ficha normaliza tudo por legacyToFunil e "qualificado" colapsa em
-  // "qualificando" — comparar contra o literal deixava o gate INALCANÇÁVEL pela tela (loop do
-  // "Direcionar"). legacyToFunil aceita tanto o slug do funil quanto o legado, então ambos passam.
+  // Gate 1 — PRONTIDÃO (decisão do dono: direcionar EXIGE interesse + valor). A mensagem NÃO contém
+  // "qualificad" de propósito: o drawer só oferece "Qualificar e direcionar" quando o problema é de
+  // ESTÁGIO (gate 2). Falta de dado não é resolvível por 1 clique — manda preencher a aba Dados.
+  if (!avaliarQualificacao({
+    interesse_principal: lead.interesse_principal as string | null,
+    valor_estimado: lead.valor_estimado as number | null,
+  }).pronto) {
+    return { ok: false, error: "Lead ainda não está pronto para direcionar — falta interesse e/ou valor. Preencha na aba Dados." };
+  }
+
+  // Gate 2 — ESTÁGIO no vocabulário do funil visível (o que o write-path realmente grava). O legado
+  // gravava "qualificado", mas a ficha normaliza por legacyToFunil e "qualificado" colapsa em
+  // "qualificando" — comparar contra o literal deixava o gate INALCANÇÁVEL pela tela (loop do P0).
+  // legacyToFunil aceita tanto o slug do funil quanto o legado. Só chega aqui quem já está PRONTO;
+  // "Qualificar e direcionar" (move p/ qualificando) então funciona sem loop.
   const estagio = legacyToFunil(String(lead.estagio ?? ""));
   if (estagio !== "qualificando") {
     return { ok: false, error: "Lead não está qualificado." };
