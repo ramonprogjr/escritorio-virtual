@@ -5,6 +5,8 @@ import {
 } from "@/lib/crm/pessoa-empresa-vinculo";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
 import { crmDb as db } from "@/lib/crm/supabase-server";
+import { gerarCodigoEmpresa } from "@/lib/crm/empresa-cadastro";
+import { gerarCodigoPessoa } from "@/lib/crm/pessoa-cadastro";
 
 export async function POST(request: NextRequest) {
   const g = await requireCrmComercial(request);
@@ -13,6 +15,9 @@ export async function POST(request: NextRequest) {
   let body: {
     pessoa_id?: string;
     empresa_id?: string;
+    /** Criar-e-vincular: nome p/ criar um RASCUNHO quando o alvo ainda não existe. */
+    criar_pessoa_nome?: string;
+    criar_empresa_nome?: string;
     cargo?: string;
     principal?: boolean;
   };
@@ -22,23 +27,62 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  if (!body.pessoa_id?.trim() || !body.empresa_id?.trim()) {
-    return NextResponse.json({ error: "pessoa_id e empresa_id são obrigatórios." }, { status: 400 });
+  const supabase = db();
+  const tenantId = g.ctx.tenantId;
+  const now = new Date().toISOString();
+
+  // CRIAR-E-VINCULAR (Click-and-Go / "nada se perde"): se o alvo ainda não existe (cadastrando a
+  // pessoa antes da empresa, ou a empresa antes da pessoa), cria um RASCUNHO só com o nome — CNPJ/
+  // documento e demais dados vêm depois — e vincula, para o cadastro fechar NA SESSÃO.
+  let empresaId = body.empresa_id?.trim() || "";
+  let pessoaId = body.pessoa_id?.trim() || "";
+  let criouEmpresa = false;
+  let criouPessoa = false;
+
+  if (!empresaId && body.criar_empresa_nome?.trim()) {
+    const codigo = await gerarCodigoEmpresa(supabase);
+    const { data, error } = await supabase
+      .from("hub_empresas")
+      .insert({ codigo, razao_social: body.criar_empresa_nome.trim().slice(0, 200), ativo: true, tenant_id: tenantId, criado_em: now, atualizado_em: now })
+      .select("id")
+      .single();
+    if (error || !data) return NextResponse.json({ error: error?.message || "Falha ao criar a empresa." }, { status: 500 });
+    empresaId = String(data.id);
+    criouEmpresa = true;
   }
 
-  const result = await criarVinculoPessoaEmpresa(db(), {
-    pessoa_id: body.pessoa_id.trim(),
-    empresa_id: body.empresa_id.trim(),
+  if (!pessoaId && body.criar_pessoa_nome?.trim()) {
+    const codigo = await gerarCodigoPessoa(supabase);
+    const { data, error } = await supabase
+      .from("hub_pessoas")
+      .insert({ codigo, nome: body.criar_pessoa_nome.trim().slice(0, 200), tenant_id: tenantId })
+      .select("id")
+      .single();
+    if (error || !data) return NextResponse.json({ error: error?.message || "Falha ao criar a pessoa." }, { status: 500 });
+    pessoaId = String(data.id);
+    criouPessoa = true;
+  }
+
+  if (!pessoaId || !empresaId) {
+    return NextResponse.json({ error: "Informe a pessoa e a empresa (ou um nome para criar)." }, { status: 400 });
+  }
+
+  const result = await criarVinculoPessoaEmpresa(supabase, {
+    pessoa_id: pessoaId,
+    empresa_id: empresaId,
     cargo: body.cargo,
     principal: body.principal,
-    tenant_id: g.ctx.tenantId,
+    tenant_id: tenantId,
   });
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, id: result.id }, { status: 201 });
+  return NextResponse.json(
+    { ok: true, id: result.id, empresa_id: empresaId, pessoa_id: pessoaId, criou_empresa: criouEmpresa, criou_pessoa: criouPessoa },
+    { status: 201 }
+  );
 }
 
 export async function DELETE(request: NextRequest) {

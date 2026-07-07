@@ -136,14 +136,21 @@ export function CadastroVinculosPessoaEmpresa({
     return () => clearTimeout(t);
   }, [busca, adicionando, entityType]);
 
-  async function adicionarVinculo(targetId: string) {
+  async function adicionarVinculo(opts: { targetId?: string; criarNome?: string }) {
     setSalvando(true);
     setErro("");
     try {
-      const body =
-        entityType === "pessoa"
-          ? { pessoa_id: entityId, empresa_id: targetId, cargo, principal }
-          : { pessoa_id: targetId, empresa_id: entityId, cargo, principal };
+      // Existente → manda o id. Novo → manda o nome p/ criar o rascunho + vincular na hora.
+      const body: Record<string, unknown> = { cargo, principal };
+      if (entityType === "pessoa") {
+        body.pessoa_id = entityId;
+        if (opts.targetId) body.empresa_id = opts.targetId;
+        else body.criar_empresa_nome = opts.criarNome;
+      } else {
+        body.empresa_id = entityId;
+        if (opts.targetId) body.pessoa_id = opts.targetId;
+        else body.criar_pessoa_nome = opts.criarNome;
+      }
       const res = await fetch("/api/crm/vinculos/pessoa-empresa", {
         method: "POST",
         credentials: "include",
@@ -371,7 +378,7 @@ export function CadastroVinculosPessoaEmpresa({
                   <button
                     type="button"
                     disabled={salvando}
-                    onClick={() => void adicionarVinculo(r.id)}
+                    onClick={() => void adicionarVinculo({ targetId: r.id })}
                     style={{
                       width: "100%",
                       textAlign: "left",
@@ -389,6 +396,34 @@ export function CadastroVinculosPessoaEmpresa({
                 </li>
               ))}
             </ul>
+          ) : null}
+          {/* Criar-e-vincular na hora (Click-and-Go): se ainda não existe, cria um rascunho só com
+              o nome + vincula, p/ o cadastro fechar na sessão. "Nada se perde". */}
+          {busca.trim().length >= 2 && !buscando ? (
+            <button
+              type="button"
+              disabled={salvando}
+              onClick={() => void adicionarVinculo({ criarNome: busca.trim() })}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: "9px 10px",
+                borderRadius: 8,
+                border: "1px dashed #c9a24a66",
+                background: "rgba(201,162,74,0.06)",
+                color: "#c9a24a",
+                cursor: salvando ? "default" : "pointer",
+                fontSize: 13,
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                opacity: salvando ? 0.6 : 1,
+              }}
+            >
+              <Plus size={14} />
+              {salvando ? "Criando…" : `Criar “${busca.trim()}” ${entityType === "pessoa" ? "como nova empresa" : "como nova pessoa"} e vincular`}
+            </button>
           ) : null}
           <button
             type="button"
