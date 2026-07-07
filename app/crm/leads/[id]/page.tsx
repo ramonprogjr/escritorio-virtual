@@ -214,8 +214,9 @@ export default function LeadFichaPage() {
   const [ultimaFila, setUltimaFila] = useState<UltimaFilaMini | null>(null);
   const [atividades, setAtividades] = useState<Record<string, unknown>[]>([]);
   const [memorias, setMemorias] = useState<Record<string, unknown>[]>([]);
-  const [aba, setAba] = useState<"atividades" | "memorias" | "propostas" | "dados">("atividades");
+  const [aba, setAba] = useState<"atividades" | "propostas" | "dados">("atividades");
   const [mostrarSistema, setMostrarSistema] = useState(false);
+  const [mostrarMemorias, setMostrarMemorias] = useState(false);
   const [memoriasErro, setMemoriasErro] = useState<string | null>(null);
   const [perdaAberta, setPerdaAberta] = useState(false);
   const [motivoPerda, setMotivoPerda] = useState("");
@@ -754,7 +755,6 @@ export default function LeadFichaPage() {
           equalColumns
           tabs={[
             { id: "atividades", label: `Conversa (${conversa.length})`, icon: MessageSquare },
-            { id: "memorias", label: `Memórias IA (${chipsMemoria.length})`, icon: Brain },
             { id: "propostas", label: "Propostas", icon: FileText },
             { id: "dados", label: "Dados", icon: IdCard },
           ]}
@@ -800,17 +800,56 @@ export default function LeadFichaPage() {
                   {salvandoNota ? "…" : "Adicionar"}
                 </button>
               </div>
-              {ehGestor && logsSistema.length > 0 ? (
-                <div className="mx-auto mb-4 flex max-w-2xl justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setMostrarSistema((v) => !v)}
-                    className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors hover:text-gray-200"
-                    style={{ borderColor: BORDER_SUBTLE, color: "#8b949e", backgroundColor: "rgba(15,22,32,0.6)" }}
-                  >
-                    <History className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-                    {mostrarSistema ? "Ocultar histórico do sistema" : `Histórico do sistema (${logsSistema.length})`}
-                  </button>
+              {chipsMemoria.length > 0 || (ehGestor && logsSistema.length > 0) ? (
+                <div className="mx-auto mb-3 flex max-w-2xl flex-wrap items-center justify-between gap-2">
+                  {chipsMemoria.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setMostrarMemorias((v) => !v)}
+                      className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors hover:brightness-125"
+                      style={{ borderColor: "rgba(201,162,74,0.35)", color: "#c9a24a", backgroundColor: "rgba(201,162,74,0.08)" }}
+                    >
+                      <Brain className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                      {mostrarMemorias ? "Ocultar memórias da IA" : `Memórias da IA (${chipsMemoria.length})`}
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  {ehGestor && logsSistema.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setMostrarSistema((v) => !v)}
+                      className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors hover:text-gray-200"
+                      style={{ borderColor: BORDER_SUBTLE, color: "#8b949e", backgroundColor: "rgba(15,22,32,0.6)" }}
+                    >
+                      <History className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                      {mostrarSistema ? "Ocultar histórico do sistema" : `Histórico do sistema (${logsSistema.length})`}
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+              {mostrarMemorias && chipsMemoria.length > 0 ? (
+                <div className="mx-auto mb-4 flex max-w-2xl flex-col gap-2">
+                  {memoriasErro ? (
+                    <div className="rounded-lg border border-amber-900/60 bg-amber-950/40 px-3 py-2 text-xs text-amber-100">
+                      Erro ao ler memórias: {memoriasErro}
+                    </div>
+                  ) : null}
+                  {chipsMemoria.map((c) => (
+                    <div
+                      key={c.key}
+                      className="rounded-lg border px-3 py-2.5"
+                      style={{ borderColor: BORDER_SUBTLE, backgroundColor: "rgba(10, 16, 24, 0.88)" }}
+                    >
+                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-[#c9a24a]">
+                          {c.titulo}
+                        </span>
+                        <span className="text-[10px] text-[#5c6570]">{c.rodape}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-200">{c.corpo}</p>
+                    </div>
+                  ))}
                 </div>
               ) : null}
               {atividadesVisiveis.length === 0 ? (
@@ -890,64 +929,6 @@ export default function LeadFichaPage() {
                       );
                     })}
                   </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {aba === "memorias" && (
-            <div
-              className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6"
-              style={{ backgroundColor: BG_DEEP }}
-            >
-              <div
-                className="mb-4 max-w-2xl rounded-lg border px-3 py-2.5 text-xs leading-relaxed"
-                style={{
-                  borderColor: BORDER_SUBTLE,
-                  backgroundColor: "rgba(10, 16, 24, 0.9)",
-                  color: "#8b949e",
-                }}
-              >
-                <p className="font-medium text-gray-300">Memórias da IA</p>
-                <p className="mt-1.5">
-                  Aqui aparecem as memórias que a IA guardou sobre este lead durante os atendimentos
-                  (preferências, contexto, combinados). Se a lista estiver vazia, ainda não há memórias
-                  registradas para este contato.
-                </p>
-              </div>
-
-              {memoriasErro && (
-                <div
-                  className="mb-4 max-w-2xl rounded-lg border border-amber-900/60 bg-amber-950/40 px-3 py-2 text-xs text-amber-100"
-                >
-                  Erro ao ler memórias: {memoriasErro}
-                </div>
-              )}
-
-              {chipsMemoria.length === 0 && !memoriasErro ? (
-                <p className="pt-4 text-center text-xs" style={{ color: "#5c6570" }}>
-                  Nenhum conteúdo de memória para exibir (0 linhas ou formato não mapeado).
-                </p>
-              ) : (
-                <div className="mx-auto flex max-w-2xl flex-col gap-2">
-                  {chipsMemoria.map((c) => (
-                    <div
-                      key={c.key}
-                      className="rounded-lg border px-3 py-2.5"
-                      style={{
-                        borderColor: BORDER_SUBTLE,
-                        backgroundColor: "rgba(10, 16, 24, 0.88)",
-                      }}
-                    >
-                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-[#c9a24a]">
-                          {c.titulo}
-                        </span>
-                        <span className="text-[10px] text-[#5c6570]">{c.rodape}</span>
-                      </div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-200">{c.corpo}</p>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
