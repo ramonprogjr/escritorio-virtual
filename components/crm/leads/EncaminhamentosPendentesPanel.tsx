@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 type EncaminhamentoPendente = {
@@ -118,11 +119,26 @@ export function EncaminhamentosPendentesPanel({ onChanged }: Props) {
             className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#1d3a2c] bg-[#0f1d16] px-3 py-2"
           >
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white">
+              <Link
+                href={`/crm/leads/${r.lead_id}`}
+                className="text-sm font-semibold text-white underline-offset-2 transition-colors hover:text-[#c9a24a] hover:underline"
+                title="Abrir o cliente"
+              >
                 {r.lead_nome}
-              </p>
+              </Link>
               <p className="text-xs text-[#8b949e]">
-                {r.segmento ?? "—"} → {r.parceiro_sugerido ?? "Parceiro sugerido"}
+                {r.segmento ?? "—"} →{" "}
+                {r.parceiro_id ? (
+                  <Link
+                    href={`/crm/parceiros/${r.parceiro_id}`}
+                    className="font-semibold underline-offset-2 transition-colors hover:text-[#c9a24a] hover:underline"
+                    title="Abrir o cadastro do parceiro"
+                  >
+                    {r.parceiro_sugerido ?? "Parceiro sugerido"}
+                  </Link>
+                ) : (
+                  <span>{r.parceiro_sugerido ?? "Parceiro sugerido"}</span>
+                )}
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
