@@ -4,9 +4,9 @@
 // A IA só observa, analisa e sugere
 // Toda alteração exige aprovação explícita do humano
 // ============================================================
-import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { criarAprovacao } from "./aprovacoes";
+import { completarChatPreferindoMistral } from "./llm-completion";
 
 function supabase() {
   // fail-closed: sem fallback para a anon key — client de service_role nunca deve
@@ -16,8 +16,16 @@ function supabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key);
 }
 
-function anthropic() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+// IA-02: sem provider hardcoded. Roteia Mistral↔Anthropic↔Groq com fallback (llm-completion),
+// então /api/ml/* degrada (não 500) quando ANTHROPIC_API_KEY está ausente.
+async function completarML(prompt: string, maxTokens: number, fallback: string): Promise<string> {
+  const r = await completarChatPreferindoMistral({
+    systemPrompt: "",
+    mensagens: [{ role: "user", content: prompt }],
+    modeloFromDb: "claude-haiku-4-5",
+    maxTokens,
+  });
+  return r.ok ? r.texto : fallback;
 }
 
 // ── CICLO PRINCIPAL DE ML ─────────────────────────────────────
@@ -358,7 +366,6 @@ async function salvarEstadoAnterior(slug: string, tipo: string, dadosAntes: Reco
 // Claude avalia resultados — apenas analisa, não altera nada
 async function avaliarHistoricos(): Promise<number> {
   const db = supabase();
-  const client = anthropic();
 
   const { data: historicos } = await db
     .from("hub_ml_historico")
@@ -390,13 +397,7 @@ Retorne JSON:
 IMPORTANTE: Apenas avalie. Não sugira novas alterações aqui.`;
 
     try {
-      const resposta = await client.messages.create({
-        model: "claude-haiku-4-5",
-        max_tokens: 512,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const texto = resposta.content[0].type === "text" ? resposta.content[0].text : "{}";
+      const texto = await completarML(prompt, 512, "{}");
       const avaliacao = JSON.parse(texto.replace(/```json|```/g, "").trim());
 
       await db.from("hub_ml_historico").update({
@@ -554,7 +555,6 @@ export async function medirKPIs(agenteSlug: string): Promise<void> {
 // Supervisores analisam e reportam — apenas sugerem, não agem
 export async function cobrarSubordinados(supervisorSlug: string): Promise<void> {
   const db = supabase();
-  const client = anthropic();
 
   const { data: responsabilidades } = await db
     .from("hub_responsabilidades")
@@ -614,13 +614,7 @@ IMPORTANTE: Você apenas reporta e sugere. Não tome nenhuma ação.
 Retorne APENAS o JSON.`;
 
     try {
-      const resposta = await client.messages.create({
-        model: "claude-haiku-4-5",
-        max_tokens: 512,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const texto = resposta.content[0].type === "text" ? resposta.content[0].text : "{}";
+      const texto = await completarML(prompt, 512, "{}");
       const relatorio = JSON.parse(texto.replace(/```json|```/g, "").trim());
 
       if (relatorio.urgencia === "critica" || relatorio.urgencia === "alta") {
@@ -696,7 +690,6 @@ async function analisarComClaude(slug: string, nome: string, dados: Record<strin
   tipo: string; descricao: string; dadosObservados: Record<string, unknown>;
   amostras: number; periodoInicio: string; periodoFim: string; confianca: number; agenteSlug: string;
 }>> {
-  const client = anthropic();
   const agora = new Date().toISOString();
   const h72 = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
 
@@ -721,12 +714,7 @@ REGRAS: Mínimo 10 amostras. Confiança mínima 0.5. Você APENAS OBSERVA.
 Retorne APENAS o JSON.`;
 
   try {
-    const resposta = await client.messages.create({
-      model: "claude-haiku-4-5",
-      max_tokens: 2048,
-      messages: [{ role: "user", content: prompt }],
-    });
-    const texto = resposta.content[0].type === "text" ? resposta.content[0].text : "[]";
+    const texto = await completarML(prompt, 2048, "[]");
     const obs = JSON.parse(texto.replace(/```json|```/g, "").trim());
     return Array.isArray(obs) ? obs.map((o: Record<string, unknown>) => ({ ...o, agenteSlug: slug }) as {
       tipo: string; descricao: string; dadosObservados: Record<string, unknown>;
@@ -742,8 +730,6 @@ async function gerarSugestaoComClaude(
   observacao: Record<string, unknown>,
   dados: Record<string, unknown>
 ): Promise<Record<string, unknown> | null> {
-  const client = anthropic();
-
   const prompt = `Você é o sistema de ML do Escritório Virtual Obra10+.
 Com base nesta observação, gere uma SUGESTÃO para análise humana.
 
@@ -772,12 +758,7 @@ Gere JSON:
 Esta é apenas uma SUGESTÃO para o humano avaliar. Retorne APENAS o JSON.`;
 
   try {
-    const resposta = await client.messages.create({
-      model: "claude-haiku-4-5",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
-    });
-    const texto = resposta.content[0].type === "text" ? resposta.content[0].text : "";
+    const texto = await completarML(prompt, 1024, "");
     return JSON.parse(texto.replace(/```json|```/g, "").trim());
   } catch {
     return null;
