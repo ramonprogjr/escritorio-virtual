@@ -76,9 +76,11 @@ export async function derivarEntregaDoNegocio(
 
   const ehAuto = opts?.origem === "automatica";
   const sufixoOrigem = ehAuto ? " (automático ao fechar)" : "";
-  // hub_atividades.tipo e feito_por_tipo têm CHECK constraint: usar valores permitidos
-  // (status_change / ia|humano) — senão o insert do log quebra silenciosamente.
-  await supabase.from("hub_atividades").insert({
+  // hub_atividades.tipo e feito_por_tipo têm CHECK em PRODUÇÃO (a migração não reproduz o
+  // constraint — ver memory schema-nao-reproduzivel): usar SÓ valores permitidos
+  // (status_change / ia|humano). EST-03: mudar esses valores exige estender o CHECK do banco
+  // JUNTO e o allowlist de `derivar-entrega.test.ts` (o CI trava se a esteira sair do enum).
+  const { error: ativErr } = await supabase.from("hub_atividades").insert({
     negocio_id: negocioId,
     lead_id: negocio.lead_id ?? null,
     tipo: "status_change",
@@ -87,6 +89,11 @@ export async function derivarEntregaDoNegocio(
     feito_por_tipo: ehAuto ? "ia" : "humano",
     tenant_id: tenantId,
   });
+  // Best-effort: a entrega JÁ foi criada. Se o CHECK rejeitar, NÃO engolir em silêncio — logar
+  // (a esteira segue; o log dá o alarme que faltava, sem derrubar produção).
+  if (ativErr) {
+    console.error(`[derivar-entrega] atividade não gravada (CHECK hub_atividades?): ${ativErr.message}`);
+  }
 
   await registrarLogCrm(supabase, {
     entidade: "negocio",
