@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, type ReactNode } from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { CrmCheckbox } from "@/components/crm/CrmCheckbox";
 import type { CadastroListaColumn } from "@/lib/crm/cadastro-list-columns";
 
@@ -39,7 +39,6 @@ type RowProps<T extends { id: string }> = {
   nameW: number;
   hasActions: boolean;
   onRowClick?: (row: T) => void;
-  onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onToggleRow: (id: string) => void;
@@ -54,7 +53,6 @@ function CadastroListaTableRowInner<T extends { id: string }>({
   nameW,
   hasActions,
   onRowClick,
-  onView,
   onEdit,
   onDelete,
   onToggleRow,
@@ -110,17 +108,6 @@ function CadastroListaTableRowInner<T extends { id: string }>({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="inline-flex items-center gap-1">
-            {onView && (
-              <button
-                type="button"
-                onClick={() => onView(row)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#1d3a2c] text-[#8b949e] transition-colors hover:bg-[#16271e] hover:text-white"
-                aria-label="Ver detalhes"
-                title="Ver detalhes"
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-            )}
             {onEdit && (
               <button
                 type="button"
@@ -160,7 +147,6 @@ function CadastroListaTableInner<T extends { id: string }>({
   onToggleAll,
   primaryColumn,
   onRowClick,
-  onView,
   onEdit,
   onDelete,
   emptyMessage,
@@ -170,7 +156,7 @@ function CadastroListaTableInner<T extends { id: string }>({
   const nameW = nameColWidth;
   const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
   const someSelected = rows.some((r) => selectedIds.has(r.id));
-  const hasActions = Boolean(onView || onEdit || onDelete);
+  const hasActions = Boolean(onEdit || onDelete);
 
   if (rows.length === 0 && emptyMessage) {
     return (
@@ -260,7 +246,6 @@ function CadastroListaTableInner<T extends { id: string }>({
                 nameW={nameW}
                 hasActions={hasActions}
                 onRowClick={onRowClick}
-                onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggleRow={onToggleRow}
