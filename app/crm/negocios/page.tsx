@@ -10,7 +10,7 @@ import { PipelineTabsBar } from "@/components/crm/pipelines/PipelineTabsBar";
 import { NegocioKanbanCard } from "@/components/crm/negocios/NegocioKanbanCard";
 import { toast } from "@/components/crm/toast";
 import { labelMercadoPrefixo, labelEtapaNegocio } from "@/lib/crm/negocio-cadastro";
-import { ESTAGIOS_FALLBACK_UI, limparNomePipeline } from "@/lib/crm/pipeline-defaults";
+import { limparNomePipeline } from "@/lib/crm/pipeline-defaults";
 
 const LIMIT = 20;
 
@@ -60,11 +60,19 @@ const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }>
   cancelado: { label: "Cancelado", color: "#8b949e", bg: "#8b949e22" },
 };
 
-const ETAPAS_FALLBACK: EtapaUi[] = ESTAGIOS_FALLBACK_UI.map((e) => ({
-  id: e.id,
-  label: e.label,
-  color: e.color,
-}));
+// Fallback do kanban de NEGÓCIOS (quando o pipeline do tenant não traz estágios): usa os estágios
+// de NEGÓCIO — incluindo "novo_negocio", o slug que a conversão grava. Antes caía nos estágios de
+// LEAD (ESTAGIOS_FALLBACK_UI), então o negócio recém-convertido não achava coluna. Negócios P2.
+const ETAPAS_FALLBACK: EtapaUi[] = [
+  "novo_negocio",
+  "qualificando",
+  "qualificado",
+  "proposta",
+  "negociando",
+  "fechamento",
+  "ganho",
+  "perdido",
+].map((slug) => ({ id: slug, label: labelEtapaNegocio(slug), color: ETAPA_COR[slug] ?? "#6b7280" }));
 
 function moeda(v: number | null) {
   if (v == null || v <= 0) return "—";

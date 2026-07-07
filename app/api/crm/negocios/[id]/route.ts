@@ -42,10 +42,25 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Negócio não encontrado" }, { status: 404 });
   }
 
+  // Backlink lead→negócio: hub_negocios.lead_id fica NULL (a FK aponta p/ a tabela legada
+  // hub_leads); o elo real do lead moderno vive em hub_negocio_vinculos (papel='lead_origem').
+  // Resolve o lead de origem daí p/ o backlink não sumir. AUDITORIA-CICLO-LEAD-v1.md (Negócios).
+  let leadOrigemId = negocio.lead_id != null ? String(negocio.lead_id) : null;
+  if (!leadOrigemId) {
+    const { data: vinc } = await supabase
+      .from("hub_negocio_vinculos")
+      .select("entidade_id")
+      .eq("negocio_id", id)
+      .eq("entidade_tipo", "lead")
+      .eq("papel", "lead_origem")
+      .maybeSingle();
+    leadOrigemId = vinc?.entidade_id != null ? String(vinc.entidade_id) : null;
+  }
+
   const [{ data: atividades }, { data: lead }, { data: pessoa }, { data: propostas }] = await Promise.all([
     supabase.from("hub_atividades").select("*").eq("negocio_id", id).order("criado_em", { ascending: false }).limit(50),
-    negocio.lead_id
-      ? supabase.from("hub_leads_crm").select("id, nome, telefone, estagio").eq("id", negocio.lead_id).maybeSingle()
+    leadOrigemId
+      ? supabase.from("hub_leads_crm").select("id, nome, telefone, estagio").eq("id", leadOrigemId).maybeSingle()
       : Promise.resolve({ data: null }),
     negocio.pessoa_id
       ? supabase.from("hub_pessoas").select("id, codigo, nome, email, telefone").eq("id", negocio.pessoa_id).maybeSingle()
