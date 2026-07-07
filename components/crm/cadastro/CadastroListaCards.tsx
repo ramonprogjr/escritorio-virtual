@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, type ReactNode } from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { CrmCheckbox } from "@/components/crm/CrmCheckbox";
 
 /**
@@ -42,11 +42,10 @@ function CadastroListaCardsInner<T extends { id: string }>({
   badge,
   footer,
   onRowClick,
-  onView,
   onEdit,
   onDelete,
 }: Props<T>) {
-  const hasActions = Boolean(onView || onEdit || onDelete);
+  const hasActions = Boolean(onEdit || onDelete);
 
   return (
     <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-4">
@@ -92,16 +91,6 @@ function CadastroListaCardsInner<T extends { id: string }>({
 
             {hasActions && (
               <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-[#16271e] pt-2.5">
-                {onView && (
-                  <button
-                    type="button"
-                    onClick={() => onView(row)}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#1d3a2c] px-3 text-xs font-semibold text-[#8b949e] transition-colors hover:bg-[#16271e] hover:text-white"
-                    aria-label="Ver detalhes"
-                  >
-                    <Eye className="h-4 w-4" /> Ver
-                  </button>
-                )}
                 {onEdit && (
                   <button
                     type="button"
