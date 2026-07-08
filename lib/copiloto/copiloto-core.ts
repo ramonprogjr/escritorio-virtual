@@ -189,6 +189,8 @@ Se o comando for IR / ABRIR / MOSTRAR / VER uma tela, devolve acao="navegar" e e
 - /crm/financeiro (a pagar/receber) · /crm/atendimento (inbox/conversas/WhatsApp) · /crm/aprovacoes · /crm/relatorios
 - /crm/analytics (métricas) · /crm/especialistas (mão de obra)
 Ex.: "abre os leads sem atendimento" → {"acao":"navegar","navegar_para":"/crm/leads","descricao_humana":"Abrindo os Leads"}.
+ABRIR A FICHA DE UM LEAD (não a lista): se o comando for para abrir/ver UM lead — "abre o lead do Fabio", "abre um lead", "abre esse lead", "ver a ficha do lead" — devolve acao="navegar" e "alvo_lead" com o NOME (ou telefone) citado; se NÃO citar um específico, use "alvo_lead":"ultimo". (O servidor resolve o nome → a ficha /crm/leads/<id>.) Só use navegar_para="/crm/leads" quando pedirem a LISTA/CAIXA de leads ("abre os leads", "a caixa de leads", "a lista de leads").
+Ex.: "abre o lead do Fabio" → {"acao":"navegar","alvo_lead":"Fabio","descricao_humana":"Abrindo o lead do Fabio"}.
 IMPORTANTE: "COMPRAS" é AMBÍGUO neste sistema (compra de produto, dentro de projeto, de Tijolos/moedas, de serviço, de imóvel, "iFood"…). NÃO navegue por "compras" — se pedirem compras, responde acao="nao_entendi" pedindo para especificar (ex.: "compra de material da obra?").`;
 
 export function construirPromptCopiloto(ctx: { rota: string; temLead: boolean }): string {
@@ -207,7 +209,8 @@ Contexto atual: rota="${ctx.rota}"${ctx.temLead ? " (há um lead aberto nesta te
 Devolve APENAS um objeto JSON (sem markdown), com:
 {
  "acao": "navegar" | "ler" | "escrever" | "nao_entendi",
- "navegar_para": "<rota /crm/... quando acao=navegar; senão vazio>",
+ "navegar_para": "<rota /crm/... quando acao=navegar p/ uma TELA; senão vazio>",
+ "alvo_lead": "<nome ou telefone do lead — só quando for ABRIR A FICHA DE UM LEAD; use 'ultimo' se não citar um específico>",
  "ferramenta": "<uma das ferramentas acima, ou vazio se nao_entendi>",
  "params": { ... },
  "descricao_humana": "frase curta em pt-BR; se for escrever, descreve CLARAMENTE o que vai mudar (ex.: 'Vou marcar o lead como qualificado e anotar que ele pediu orçamento')",

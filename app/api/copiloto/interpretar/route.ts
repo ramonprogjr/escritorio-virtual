@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { completarChatPreferindoMistral } from "@/lib/ia/llm-completion";
 import { registrarConsumoIA, saldoCreditos } from "@/lib/ia/metering";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
+import { crmDb } from "@/lib/crm/supabase-server";
 import {
   COPILOTO_FERRAMENTAS_ESCRITA_FASE3,
   CopilotoSegredoAusenteError,
@@ -12,6 +13,45 @@ import {
   nivelDaFerramenta,
   rotaNavegavelValida,
 } from "@/lib/copiloto/copiloto-core";
+
+/** Resolve um lead por NOME (ou telefone, ou "ultimo") → id, tenant-scoped. Para "abre o lead do X". */
+async function resolverLeadPorReferencia(tenantId: string, ref: string): Promise<string | null> {
+  const r = (ref || "").trim();
+  if (!r) return null;
+  const db = crmDb();
+  if (r.toLowerCase() === "ultimo") {
+    const { data } = await db
+      .from("hub_leads_crm")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .order("criado_em", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data?.id ? String(data.id) : null;
+  }
+  const { data: porNome } = await db
+    .from("hub_leads_crm")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .ilike("nome", `%${r}%`)
+    .order("criado_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (porNome?.id) return String(porNome.id);
+  const digits = r.replace(/\D/g, "");
+  if (digits.length >= 4) {
+    const { data: porTel } = await db
+      .from("hub_leads_crm")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .ilike("telefone", `%${digits.slice(-4)}%`)
+      .order("criado_em", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (porTel?.id) return String(porTel.id);
+  }
+  return null;
+}
 
 /**
  * POST { texto, contexto:{ rota, leadId? } }
@@ -94,8 +134,31 @@ export async function POST(request: NextRequest) {
   const confianca = typeof obj.confianca === "number" ? obj.confianca : null;
 
   // NAVEGAR: a IA leva o dono à tela. Seguro (não altera dados) → sem HMAC, sem confirmação.
-  // Só rotas da allowlist (rotaNavegavelValida bloqueia URL fora de /crm/*).
   if (acao === "navegar") {
+    // Abrir a FICHA de um lead ("abre o lead do Fabio"): resolve nome/telefone → /crm/leads/<id>.
+    const alvoLead = typeof obj.alvo_lead === "string" ? obj.alvo_lead.trim() : "";
+    if (alvoLead) {
+      const leadId = await resolverLeadPorReferencia(auth.tenantId, alvoLead);
+      if (leadId) {
+        return NextResponse.json({
+          acao: "navegar",
+          navegar_para: `/crm/leads/${leadId}`,
+          descricao: descricao || "Abrindo o lead",
+          modelo: r.modeloLog,
+        });
+      }
+      // não achei o lead → abre a LISTA (com aviso, salvo o genérico "ultimo").
+      return NextResponse.json({
+        acao: "navegar",
+        navegar_para: "/crm/leads",
+        descricao:
+          alvoLead.toLowerCase() === "ultimo"
+            ? "Abrindo os Leads"
+            : `Não achei o lead "${alvoLead}" — abrindo a lista de leads`,
+        modelo: r.modeloLog,
+      });
+    }
+    // Navegar para uma TELA (allowlist; rotaNavegavelValida bloqueia URL fora de /crm/*).
     const alvo = typeof obj.navegar_para === "string" ? rotaNavegavelValida(obj.navegar_para) : null;
     if (alvo) {
       return NextResponse.json({
