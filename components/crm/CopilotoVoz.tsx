@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Mic, Square, X, Loader2, Sparkles, Check, ChevronDown, AlertTriangle, Pencil, Send } from "lucide-react";
 import { useCopilotoVoz } from "@/hooks/useCopilotoVoz";
 
@@ -224,6 +224,7 @@ function ResultadoHumanizado({ resultado, verJson, onToggleJson, mensagem }: Res
 /** Copiloto de Voz Global — FAB verde arrastável + painel de escuta/transcrição/resposta. */
 export function CopilotoVoz() {
   const pathname = usePathname() || "/crm";
+  const router = useRouter();
   const {
     estado,
     modo,
@@ -233,6 +234,8 @@ export function CopilotoVoz() {
     resultado,
     mensagem,
     resposta,
+    navegarPara,
+    consumirNavegacao,
     modeloUsado,
     acaoPendente,
     toggle,
@@ -241,6 +244,16 @@ export function CopilotoVoz() {
     confirmarAcao,
     cancelarAcao,
   } = useCopilotoVoz({ contexto: { rota: pathname, leadId: leadIdDaRota(pathname) } });
+
+  // A IA "anda" pelo sistema: quando ela propõe uma rota (acao="navegar"), leva o dono
+  // até a tela e fecha o painel. cancelar() reseta o estado (o push já foi disparado).
+  useEffect(() => {
+    if (!navegarPara) return;
+    const destino = navegarPara;
+    consumirNavegacao();
+    cancelar();
+    router.push(destino);
+  }, [navegarPara, consumirNavegacao, cancelar, router]);
 
   const [verJson, setVerJson] = useState(false);
   const [verResultadoJson, setVerResultadoJson] = useState(false);
