@@ -44,6 +44,30 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  /**
+   * Cache HTTP — CORREÇÃO CRÍTICA de deploy. O sistema nasceu no Vercel (regras no
+   * vercel.json), mas migrou para o Render, que IGNORA o vercel.json. Sem headers() aqui,
+   * o Next servia o HTML com o default `s-maxage=1 ano` → o CDN guardava o HTML velho (que
+   * aponta para chunks JS velhos) e NENHUM deploy novo chegava ao usuário. Portamos as regras:
+   *  - HTML/páginas/API: no-store (sempre revalida → todo deploy chega na hora).
+   *  - /_next/static (chunks com hash imutável): cache eterno (seguro, o nome muda por deploy).
+   */
+  async headers() {
+    return [
+      {
+        source: "/((?!_next/static|_next/image|sprites|avatars|icon|manifest\\.json).*)",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
+        ],
+      },
+      {
+        source: "/_next/static/(.*)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
