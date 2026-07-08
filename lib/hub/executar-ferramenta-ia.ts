@@ -13,6 +13,7 @@ import {
   validarLeadTelefoneSessao,
 } from "@/lib/crm/isolamento-conversa-lead";
 import { iaCriarCadastroCrm } from "@/lib/crm/ia-criar-cadastro";
+import { criarEncaminhamentoPendente } from "@/lib/crm/encaminhamento-criar";
 import { sugerirMenuTypeUazapi } from "@/lib/playbook/menu-type-uazapi";
 import { executarFerramentaObra } from "@/lib/hub/executar-ferramenta-obra";
 import { executarFerramentaObraItem } from "@/lib/hub/executar-ferramenta-obra-itens";
@@ -583,6 +584,41 @@ async function executarFerramentaHubBuiltin(
     case "arq_registrar_aprovacao":
     case "arq_gerar_obra":
       return executarFerramentaArq(toolName, args, ctx, supabase);
+
+    // ── Comercial: DIRECIONAR/encaminhar o lead a parceiro/especialista (a ação-mãe do funil).
+    //    Nasce PENDENTE (proposta) — a VOZ NUNCA aprova nem envia ao parceiro. status/flags são
+    //    FORÇADOS aqui e IGNORAM qualquer status vindo dos params da IA (nunca 'aprovado_envio'/
+    //    'enviado'): defense-in-depth do skeptic. O envio real vive no endpoint /aprovar (2ª chave
+    //    humana na tela). Reusa o guard de posse por tenant da lib compartilhada (mesmo IDOR-guard). ──
+    case "hub_lead_encaminhar": {
+      const tenantEnc = (ctx.tenantId && ctx.tenantId.trim()) || defaultTenantId();
+      const r = await criarEncaminhamentoPendente(supabase, tenantEnc, {
+        lead_id: ctx.leadId,
+        negocio_id: typeof args.negocio_id === "string" ? args.negocio_id : null,
+        destinatario_pessoa_id:
+          typeof args.destinatario_pessoa_id === "string" ? args.destinatario_pessoa_id : null,
+        destinatario_empresa_id:
+          typeof args.destinatario_empresa_id === "string" ? args.destinatario_empresa_id : null,
+        segmento: typeof args.segmento === "string" ? args.segmento : null,
+        criterio_selecao:
+          typeof args.criterio_selecao === "string"
+            ? args.criterio_selecao
+            : typeof args.motivo === "string"
+              ? args.motivo
+              : null,
+        // FORÇADOS — a IA NÃO controla status nem flags de aprovação/envio:
+        status: "sugerido_ia",
+        sugerido_ia: true,
+        validado_humano: false,
+      });
+      if (!r.ok) return JSON.stringify({ erro: "encaminhamento_falhou", detalhe: r.error });
+      return JSON.stringify({
+        ok: true,
+        action_taken: "Lead direcionado (proposta pendente — aprove o envio ao parceiro na tela)",
+        encaminhamento_id: r.data.id,
+        status: "sugerido_ia",
+      });
+    }
 
     default:
       return JSON.stringify({ erro: "ferramenta_builtin_desconhecida", nome: toolName });

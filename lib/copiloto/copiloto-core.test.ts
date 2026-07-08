@@ -48,10 +48,12 @@ describe("copiloto-core — gate de nível de acesso", () => {
 });
 
 describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
-  it("allowlist de escrita = 2 de lead + 2 de obra (E0) + 2 de item (E2) + 2 de bloqueio (E3) + 1 de SC (E5) + 1 de pagamento (E6) + 3 de arquitetura (A0) + 2 de aprovação (A1) + 1 de gerar obra (A2)", () => {
+  it("allowlist de escrita = 3 de lead (nota+atualizar+encaminhar) + 2 de obra (E0) + 2 de item (E2) + 2 de bloqueio (E3) + 1 de SC (E5) + 1 de pagamento (E6) + 3 de arquitetura (A0) + 2 de aprovação (A1) + 1 de gerar obra (A2)", () => {
     expect(COPILOTO_FERRAMENTAS_ESCRITA_FASE3).toEqual([
       "hub_registar_nota_lead",
       "hub_atualizar_lead",
+      // Comercial — direcionar/encaminhar o lead a parceiro (proposta pendente; a voz nunca aprova o envio)
+      "hub_lead_encaminhar",
       // E0 — escrita de obra/EAP (operam sobre obra_id, não sobre lead aberto)
       "hub_obra_criar",
       "hub_obra_eap_montar",
@@ -75,6 +77,16 @@ describe("copiloto-core — ferramentaExecutavel (Fase 3)", () => {
       // A2 — elo Gerar Obra (opera sobre projeto_id, não sobre lead)
       "arq_gerar_obra",
     ]);
+  });
+
+  it("encaminhar lead (Comercial) é executável, é escrita e é LEAD-BOUND (não dispensa lead aberto)", () => {
+    expect(ferramentaExecutavel("hub_lead_encaminhar")).toBe(true);
+    expect(nivelDaFerramenta("hub_lead_encaminhar")).toBe("escrita");
+    // Fica FORA de SEM_LEAD → exige lead aberto + o leadId entra na assinatura HMAC (nunca cai no lead errado).
+    expect(escritaSemLead("hub_lead_encaminhar")).toBe(false);
+    // A voz NUNCA aprova/envia ao parceiro nem toca dinheiro: essas tools seguem bloqueadas.
+    expect(ferramentaExecutavel("hub_obra_pagamento_aprovar")).toBe(false);
+    expect(ferramentaExecutavel("hub_obra_escrow_liberar")).toBe(false);
   });
 
   it("escrita de bloqueio (E3) é executável e dispensa lead aberto", () => {
