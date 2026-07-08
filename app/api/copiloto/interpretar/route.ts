@@ -10,6 +10,7 @@ import {
   dentroDoRateLimit,
   extrairJsonObjeto,
   nivelDaFerramenta,
+  rotaNavegavelValida,
 } from "@/lib/copiloto/copiloto-core";
 
 /**
@@ -91,6 +92,21 @@ export async function POST(request: NextRequest) {
     : {};
   const descricao = typeof obj.descricao_humana === "string" ? obj.descricao_humana : "";
   const confianca = typeof obj.confianca === "number" ? obj.confianca : null;
+
+  // NAVEGAR: a IA leva o dono à tela. Seguro (não altera dados) → sem HMAC, sem confirmação.
+  // Só rotas da allowlist (rotaNavegavelValida bloqueia URL fora de /crm/*).
+  if (acao === "navegar") {
+    const alvo = typeof obj.navegar_para === "string" ? rotaNavegavelValida(obj.navegar_para) : null;
+    if (alvo) {
+      return NextResponse.json({
+        acao: "navegar",
+        navegar_para: alvo,
+        descricao: descricao || "Abrindo a tela",
+        modelo: r.modeloLog,
+      });
+    }
+    // rota inválida/fora da allowlist → cai no fluxo normal (vira "nao_entendi" abaixo).
+  }
 
   const ehLeitura = acao === "ler" && nivelDaFerramenta(ferramenta) === "leitura";
   const ehEscritaPermitida =

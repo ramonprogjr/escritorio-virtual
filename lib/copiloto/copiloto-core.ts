@@ -91,6 +91,35 @@ export function escritaSemLead(tool: string): boolean {
 }
 
 /**
+ * NAVEGAÇÃO (acao="navegar"): telas para as quais o copiloto pode LEVAR o dono.
+ * Allowlist estrita — a IA nunca navega para fora daqui (bloqueia URL arbitrária).
+ * Navegar não altera dados → é seguro e auto-executa (como leitura), sem HMAC/confirmação.
+ */
+export const COPILOTO_ROTAS_NAVEGAVEIS: readonly string[] = [
+  "/crm",
+  "/crm/leads",
+  "/crm/negocios",
+  "/crm/cadastro",
+  "/crm/obras",
+  "/crm/arquitetura",
+  "/crm/financeiro",
+  "/crm/atendimento",
+  "/crm/aprovacoes",
+  "/crm/relatorios",
+  "/crm/analytics",
+  "/crm/especialistas",
+];
+
+/** Valida a rota proposta pela IA contra a allowlist; devolve a rota (ou null se fora dela). */
+export function rotaNavegavelValida(rota: string): string | null {
+  const r = (rota || "").trim();
+  if (!r.startsWith("/crm")) return null;
+  const base = r.split("?")[0];
+  const ok = COPILOTO_ROTAS_NAVEGAVEIS.some((x) => base === x || base.startsWith(`${x}/`));
+  return ok ? r : null;
+}
+
+/**
  * Uma ferramenta é executável pelo copiloto se for de LEITURA (auto-exec) OU
  * se estiver na allowlist de escrita da Fase 3 (só após confirmação humana).
  * Gate por construção: o que não passa por aqui é 403 no /executar.
@@ -148,6 +177,16 @@ const FERRAMENTAS_ARQ_DOC = `Ferramentas de ARQUITETURA/PROJETO (use quando a te
 - arq_registrar_aprovacao (ESCRITA): lança a resposta do cliente sobre um entregável aguardando. Params: { "projeto_id": "<id>", "fase_id": "<id>", "decisao": "aprovado|rejeitado", "motivo_rejeicao"?: "<obrigatório se rejeitado>" }. Use para "o cliente aprovou o anteprojeto", "o cliente reprovou o estudo, quer mudar a fachada". Rejeitar SEM motivo não é permitido — pergunte o motivo. Em descricao_humana: "Vou registrar que o cliente <aprovou|reprovou> <entregável>".
 - arq_gerar_obra (ESCRITA): gera a OBRA de engenharia a partir de um projeto ENTREGUE/APROVADO (herda título, cliente, área, negócio + monta a EAP). Params: { "projeto_id": "<id do projeto da tela>", "titulo"?: "<nome do projeto, se não tiver o id>", "tipo_obra"?: "construcao|reforma|servico|…", "nome_obra"?: "<se diferente>" }. Use para "gera a obra do Casa Lago", "manda esse projeto pra engenharia". Se o projeto JÁ tem obra, o sistema avisa (não duplica); se não estiver entregue/aprovado, o sistema avisa. Em descricao_humana: "Vou gerar a obra do projeto <titulo>".`;
 
+/** NAVEGAÇÃO — leva o dono à tela certa (nunca altera dados). Allowlist de telas EXISTENTES. */
+const NAVEGACAO_DOC = `NAVEGAÇÃO (acao="navegar" — leva o dono até a tela certa; NÃO altera dados):
+Se o comando for IR / ABRIR / MOSTRAR / VER uma tela, devolve acao="navegar" e em "navegar_para" UMA destas rotas:
+- /crm (dashboard/início) · /crm/leads (leads; inclui "sem atendimento/sem resposta") · /crm/negocios (negócios/oportunidades/pipeline)
+- /crm/cadastro (pessoas/empresas/contatos/clientes) · /crm/obras (obras/engenharia) · /crm/arquitetura (projetos)
+- /crm/financeiro (a pagar/receber) · /crm/atendimento (inbox/conversas/WhatsApp) · /crm/aprovacoes · /crm/relatorios
+- /crm/analytics (métricas) · /crm/especialistas (mão de obra)
+Ex.: "abre os leads sem atendimento" → {"acao":"navegar","navegar_para":"/crm/leads","descricao_humana":"Abrindo os Leads"}.
+IMPORTANTE: "COMPRAS" é AMBÍGUO neste sistema (compra de produto, dentro de projeto, de Tijolos/moedas, de serviço, de imóvel, "iFood"…). NÃO navegue por "compras" — se pedirem compras, responde acao="nao_entendi" pedindo para especificar (ex.: "compra de material da obra?").`;
+
 export function construirPromptCopiloto(ctx: { rota: string; temLead: boolean }): string {
   const rotaObra = /\/(obras|engenharia)/i.test(ctx.rota || "");
   const rotaArq = /\/arquitetura/i.test(ctx.rota || "");
@@ -157,18 +196,22 @@ ${FERRAMENTAS_LEITURA_DOC}
 
 ${FERRAMENTAS_ESCRITA_DOC}
 ${rotaObra ? `\n${FERRAMENTAS_OBRA_DOC}\n` : ""}${rotaArq ? `\n${FERRAMENTAS_ARQ_DOC}\n` : ""}
+${NAVEGACAO_DOC}
+
 Contexto atual: rota="${ctx.rota}"${ctx.temLead ? " (há um lead aberto nesta tela — use {} ou opere sobre ele)" : " (sem lead aberto — escrita sobre lead não é possível sem lead aberto)"}.
 
 Devolve APENAS um objeto JSON (sem markdown), com:
 {
- "acao": "ler" | "escrever" | "nao_entendi",
+ "acao": "navegar" | "ler" | "escrever" | "nao_entendi",
+ "navegar_para": "<rota /crm/... quando acao=navegar; senão vazio>",
  "ferramenta": "<uma das ferramentas acima, ou vazio se nao_entendi>",
  "params": { ... },
  "descricao_humana": "frase curta em pt-BR; se for escrever, descreve CLARAMENTE o que vai mudar (ex.: 'Vou marcar o lead como qualificado e anotar que ele pediu orçamento')",
  "confianca": 0.0..1.0
 }
 Regras:
-- LEITURA → acao="ler".
+- IR / ABRIR / MOSTRAR / VER uma tela → acao="navegar" com "navegar_para" (uma das rotas listadas). NÃO navegue por "compras" (ambíguo).
+- LEITURA (consultar dados/números) → acao="ler".
 - ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP, marcar avanço de item, mudar andamento de item, registrar bloqueio, resolver bloqueio, criar SC de compra, preparar pagamento" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa, enviar entregável para aprovação, registrar resposta do cliente, gerar obra do projeto" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
 - Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP / marcar avanço de item / mudar andamento de item / registrar bloqueio / resolver bloqueio / criar SC / preparar pagamento NÃO exigem lead aberto (usam o obra_id da tela). Se faltar o item ou o valor, pergunte UMA coisa (acao=\"nao_entendi\"), não invente. NUNCA escreva a Situação (é automática). Criar SC nasce em RASCUNHO — você NUNCA aprova a compra. Preparar pagamento NÃO aprova nem libera o escrow — a aprovação dupla (arquitetura + Hub) é decisão humana na tela (NUNCA por voz)." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa / enviar para aprovação / registrar resposta / gerar obra NÃO exigem lead aberto. Para mover/programa/aprovação/gerar obra use o projeto_id da tela. Gerar obra só funciona se o projeto estiver entregue/aprovado e ainda não tiver obra — o sistema avisa nos dois casos (não force). Registrar reprovação SEM motivo não é permitido — pergunte o motivo. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
 - Qualquer outra ação (criar cadastro, enviar WhatsApp, apagar) → acao="nao_entendi" dizendo que ainda não está disponível por voz.`;

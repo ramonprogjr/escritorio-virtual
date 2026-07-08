@@ -57,6 +57,8 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
   const [mensagem, setMensagem] = useState("");
   // Resposta ESCRITA da IA (linguagem natural) — a "IA viva": fala o que achou, não despeja JSON.
   const [resposta, setResposta] = useState("");
+  // Rota que a IA quer ABRIR (acao="navegar"). O componente consome e faz router.push.
+  const [navegarPara, setNavegarPara] = useState("");
   const [modeloUsado, setModeloUsado] = useState("");
   const [acaoPendente, setAcaoPendente] = useState<AcaoPendente | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
@@ -133,6 +135,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       setEstado("processing");
       setMensagem("");
       setResposta("");
+      setNavegarPara("");
       setResultado(null);
       setAcaoPendente(null);
       try {
@@ -150,6 +153,15 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
         if (typeof di.modelo === "string") setModeloUsado(di.modelo);
 
         const descricao = typeof di.descricao === "string" ? di.descricao : "";
+
+        // NAVEGAR: a IA leva o dono à tela (seguro, auto-executa como leitura). O componente
+        // consome `navegarPara` e faz o router.push — a IA "anda" pelo sistema.
+        if (di.acao === "navegar" && typeof di.navegar_para === "string" && di.navegar_para.trim()) {
+          setMensagem(descricao || "Abrindo…");
+          setNavegarPara(di.navegar_para.trim());
+          setEstado("done");
+          return;
+        }
 
         // ESCRITA: NÃO executa. Guarda a proposta e pede confirmação humana.
         if (di.acao === "escrever" && di.nivelAcesso === "escrita") {
@@ -256,6 +268,9 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     setMensagem("Tudo bem, não alterei nada.");
     setEstado("done");
   }, []);
+
+  // O componente chama isto DEPOIS de fazer o router.push (evita navegar em loop).
+  const consumirNavegacao = useCallback(() => setNavegarPara(""), []);
 
   const pararStream = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -458,6 +473,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     setResultado(null);
     setMensagem("");
     setResposta("");
+    setNavegarPara("");
     setAcaoPendente(null);
   }, []);
 
@@ -496,6 +512,8 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     resultado,
     mensagem,
     resposta,
+    navegarPara,
+    consumirNavegacao,
     modeloUsado,
     suporteVoz,
     acaoPendente,
