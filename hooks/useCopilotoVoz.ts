@@ -55,6 +55,8 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
   const [transcricaoLive, setTranscricaoLive] = useState("");
   const [resultado, setResultado] = useState<unknown>(null);
   const [mensagem, setMensagem] = useState("");
+  // Resposta ESCRITA da IA (linguagem natural) — a "IA viva": fala o que achou, não despeja JSON.
+  const [resposta, setResposta] = useState("");
   const [modeloUsado, setModeloUsado] = useState("");
   const [acaoPendente, setAcaoPendente] = useState<AcaoPendente | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
@@ -87,6 +89,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       confirmacaoId: string;
       ts: number;
       descricao?: string;
+      pergunta?: string;
     }) => {
       setEstado("processing");
       try {
@@ -98,6 +101,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
             params: p.params,
             confirmacaoId: p.confirmacaoId,
             ts: p.ts,
+            pergunta: p.pergunta ?? "",
             contexto: ctxRef.current,
           }),
         });
@@ -107,6 +111,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
           setEstado("erro");
           return;
         }
+        setResposta(typeof de.resposta === "string" ? de.resposta : "");
         setMensagem(p.descricao ?? "");
         setResultado(de.resultado ?? null);
         setEstado("done");
@@ -127,6 +132,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
       }
       setEstado("processing");
       setMensagem("");
+      setResposta("");
       setResultado(null);
       setAcaoPendente(null);
       try {
@@ -189,6 +195,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
           confirmacaoId: String(di.confirmacaoId ?? ""),
           ts: typeof di.ts === "number" ? di.ts : NaN,
           descricao,
+          pergunta: cmd,
         });
       } catch (e) {
         setMensagem(e instanceof Error ? e.message : "Falha de rede.");
@@ -245,6 +252,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
   // Cancela a escrita pendente sem executar nada.
   const cancelarAcao = useCallback(() => {
     setAcaoPendente(null);
+    setResposta("");
     setMensagem("Tudo bem, não alterei nada.");
     setEstado("done");
   }, []);
@@ -449,6 +457,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     setTranscricaoLive("");
     setResultado(null);
     setMensagem("");
+    setResposta("");
     setAcaoPendente(null);
   }, []);
 
@@ -486,6 +495,7 @@ export function useCopilotoVoz(opts: { contexto: CopilotoContexto }) {
     transcricaoLive,
     resultado,
     mensagem,
+    resposta,
     modeloUsado,
     suporteVoz,
     acaoPendente,

@@ -232,6 +232,7 @@ export function CopilotoVoz() {
     transcricaoLive,
     resultado,
     mensagem,
+    resposta,
     modeloUsado,
     acaoPendente,
     toggle,
@@ -627,7 +628,21 @@ export function CopilotoVoz() {
           </div>
 
           {/* Zona 3 — resposta/resultado */}
-          {mensagem && (
+          {/* Resposta ESCRITA da IA (linguagem natural) — a estrela: a IA "fala" o que achou. */}
+          {resposta && estado === "done" && (
+            <div style={{
+              display: "flex", gap: 9, alignItems: "flex-start",
+              background: "linear-gradient(180deg, #0f2419, #0b1a12)",
+              border: "1px solid #1d5c3c", borderRadius: 14, padding: "13px 14px",
+            }}>
+              <Sparkles size={16} color="#3fb950" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden />
+              <p style={{ margin: 0, color: "#e6edf3", fontSize: 14.5, lineHeight: 1.55, fontWeight: 500 }}>
+                {resposta}
+              </p>
+            </div>
+          )}
+          {/* Pré-resposta ("Vou verificar…") ou erro — só quando NÃO há resposta escrita. */}
+          {mensagem && !(resposta && estado === "done") && (
             <p style={{ margin: 0, color: estado === "erro" ? "#f85149" : "#cdd9d2", fontSize: 13, lineHeight: 1.55 }}>
               {mensagem}
             </p>
