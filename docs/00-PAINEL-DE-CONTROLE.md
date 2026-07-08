@@ -71,29 +71,34 @@ Legenda: ✅ feito · 🔄 em curso · ⏳ próximo · 🔒 depende do dono
 
 **Config do dono ainda aberta:** UAZAPI (WhatsApp) · HaveIBeenPwned · preços SaaS · rotação de segredos (chave do dev demitido) · contas Apple/Google (lojas) · janela altitude 1.
 
-### 🔄 FASE 0 — Estancar o irreversível (EU-code + janela do dono)
-- ✅ **Código desbloqueado no ar:** MET-01 (markup≥1, app **e** banco) · IA-02 (`ml.ts` roteia com fallback) · EST-03 (CHECK `hub_atividades` blindado + teste 6 mercados) · FIN-03 (aviso `valor_fechado` NULL).
-- ✅ **RAS-* aplicados via MCP (07/jul noite):** RAS-01 linhagem (backfill + gatilho `trg_hub_negocios_linhagem` — 0 negócios sem raiz) · RAS-02 (UNIQUE código **já existia**) · RAS-03 (`ator_id`/`ator_codigo` **já existiam**; falta só popular no app — P1).
-- **Fase 0 essencialmente FECHADA.** Critério: nenhum negócio novo nasce sem raiz ✅; markup <1 rejeitado (app+banco) ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
+> **Numeração canônica das fases = [04-ROADMAP](04-ROADMAP-E-PLANO.md).** Este painel espelha o ESTADO; o Roadmap manda na ordem. (Reconciliado 08/jul — antes os dois docs divergiam na numeração.)
 
-### 🔒 FASE 1 — Linhagem (JANELA do dono) — *o único irreversível*
-- Migração aditiva `negocio_pai_id`/`negocio_raiz_id` + backfill + wiring em `derivar-negocio`.
-- **Decidido:** fechar antes de qualquer dado de rede. **Depende de:** janela de migração.
+### ✅ FASE 0 — Estancar o irreversível (código + linhagem) — FECHADA
+- **Código no ar:** MET-01 (markup≥1, app **e** banco) · IA-02 (`ml.ts` fallback) · EST-03 (CHECK `hub_atividades` blindado) · FIN-03 (aviso `valor_fechado` NULL).
+- **Linhagem via MCP (07/jul):** RAS-01 ✅ (gatilho `trg_hub_negocios_linhagem` — 0/16 sem raiz) · RAS-02 ✅ (UNIQUE código já existia) · RAS-03 🟡 (colunas `ator_*` existem; falta **popular no app** — P1, code-only).
+- **Resta (P1, sem janela):** app escrever `negocio_pai_id` na derivação (cross-sell) — hoje ~7 negócios entraram sem pai (o gatilho preenche a raiz, não o pai).
 
-### 🔒 FASE 2 — IA (chave Mistral)
-- Cadastro por voz/colar · busca conversacional · briefing do dia · copiloto · dedup proativa.
+### 🔄 FASE 1 — IA no ciclo do lead **("o 2")** — ~90%, resta OPS + 1 E2E
+- Engine cabeada ponta-a-ponta: WhatsApp → engine → **Mistral-first** (fallback). **Mistral VIVA** (07/jul).
+- **Pronto =** "lead WhatsApp → qualificado por IA → confirmado em 1 toque".
+- **Resta (NÃO é build):** confirmar envs no Render (`/api/health`) + **1 E2E ao vivo com o dono**. Gap de código conhecido: o "1 toque" fecha automático só pelo playbook **Maria**; no engine genérico exige `interesse`+`valor` — blindar p/ o E2E cair no caminho que fecha.
 
-### ⏳ FASE 3 — Hardening multitenant (EU-code)
-- Deduplicar as 82 rotas · papel de plataforma vivo · guard SELECT-only · auditoria em `hub_eventos`. *Pré-2º-tenant.*
+### 🔒 FASE 2 — Janela grande (obra + dinheiro real) — precisa da SUA janela
+- FND-01 (baseline migration: schema reprodutível, **incorpora a linhagem aplicada à mão**) · OBR-01 (camada AEC E0–E7/A0–A1) · OBR-02 (RPC medição append-only) · FIN-01 (motor de comissões em prod).
+- **FIN-02 (escrow) ✅ JÁ FEITO** e verificado no banco (rpc sem GREATEST + guards + DEMO R$15k desfeito) — **saiu desta fase**.
+- **Exige:** 1 janela Supabase (aditiva/reversível, backup antes) + você validar 1 pagamento real pela dupla-chave.
 
-### 🔒 FASE 4 — Altitude 1 + Dinheiro do Hub (JANELA altitude 1)
-- Hub lê a rede (RLS Faixa B real) · drill-in "entrar no CRM do tenant" (read-only + auditoria) · bloco Dinheiro do Hub.
+### ⏳ FASE 3 — Operar sem planilha (código)
+- LEAD-02 (vocabulário de estágio) · EST-01 (funis por mercado) · EST-02 (entrega IMB/FOR/PRO) · LEAD-01 (SLA+cron) · RAS-04/05 · EVT-01 (analytics+UTM+CAC) · FND-02 (centralizar `crmDb`). **Critério-mãe do MVP:** próximo cliente roda sem planilha.
 
-### 🔒 FASE 5 — Rede viva
-- Comissão da rede realizada · **clawback ativo** (hold + estorno + régua) · escrow ligado (dupla-chave).
+### 🔒 FASE 4 — Cobrar (billing)
+- MET-02 (consumo IA atômico) · MET-03 (carteira + top-up PIX) · MET-04 (régua 7/3/1 + `IA_HARD_CAP`) · MET-05 (billing SaaS/MRR). Depende de **decisão de preços**.
 
-### 🔒 FASE 6 — Portal + Cobrança SaaS
-- Portal do Cliente (os 5 medos) · planos SaaS/billing (após decisão de preços) · carteira Tijolos cobrando.
+### 🔒 FASE 5 — Endurecer p/ a rede
+- TEN-01..04 · RBAC-01..05 · LGPD-01. **Gate do 2º tenant:** nenhum tenant lê outro.
+
+### 🔒 Depois — Fase 6 (piloto de rede) · Fase 7 (Altitude 1 + Portal) · Fase 8 (escala)
+- Altitude 1 = Hub lê a rede (RLS Faixa B real) + Dinheiro do Hub · Portal do Cliente (os 5 medos) · clawback ativo (hold+estorno+régua).
 
 ---
 
@@ -101,14 +106,16 @@ Legenda: ✅ feito · 🔄 em curso · ⏳ próximo · 🔒 depende do dono
 
 | Item | Destrava | Tipo |
 |---|---|---|
-| **Chave Mistral** | Fase 2 (IA-first) | Chave |
-| **Janela altitude 1** (RLS Faixa B *real*) | Fase 4 (Dinheiro do Hub) | Janela Supabase |
-| **Migração da linhagem** | Fase 1 (fundação irreversível) | Janela Supabase |
-| **Decisão de preços SaaS** (planos) | Fase 6 (cobrança) | Decisão |
-| **Política de hold do clawback** (dias de retenção) | Fase 5 (liberação segura) | Decisão |
-| UAZAPI · HaveIBeenPwned · Deploy Hook | WhatsApp · segurança · deploy | Config |
+| **1 E2E ao vivo do WhatsApp** (você manda a msg) | **Fase 1 (IA) — fecha "o 2"** | 5 min |
+| **Janela grande de migração** (FND-01+OBR-01+OBR-02) | Fase 2 (obra + comissões em prod) | Janela Supabase |
+| **Validar 1 pagamento real** pela dupla-chave | Fase 2 (prova FIN-02 E2E) | 5 min |
+| **Decisão de preços SaaS** (planos) | Fase 4 (cobrança) | Decisão |
+| **Política de hold do clawback** (dias) | Fase 5 (liberação segura) | Decisão |
+| **Janela altitude 1** (RLS Faixa B *real*) | Fase 7 (Dinheiro do Hub) | Janela Supabase |
+| UAZAPI · HaveIBeenPwned · rotação de segredos · contas Apple/Google | WhatsApp · segurança · deploy · lojas | Config |
 
-**Decisões já travadas (07/jul):** ✅ clawback = cobrar sempre + mitigações · ✅ fechar a linhagem antes de dado de rede.
+**Já destravado:** ✅ Chave Mistral posta (IA viva) · ✅ migração da linhagem aplicada (RAS-01).
+**Decisões travadas (07/jul):** ✅ clawback = cobrar sempre + mitigações · ✅ fechar a linhagem antes de dado de rede.
 
 ---
 

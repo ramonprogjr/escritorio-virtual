@@ -19,15 +19,18 @@ e reversível; migração em prod só na **janela do dono**; screenshot antes/de
 ## Onde estamos
 
 **Núcleo comercial ~90% · visão completa ~30–40%.** Altitude 2 (dentro do tenant) construída; Altitude 1 (Hub
-acima da rede) desenhada. IA/Mistral desligada ~60 dias. Motor de comissões construído+testado, mas **gated**
-(tabelas vazias). Escrow/AEC file-only. **Sprint 07/jul shipado:** Leads rebuild · Funil do Hub · O que travou ·
-Dashboard andares · Cadastros (filtros + Ver).
+acima da rede) desenhada. **IA/Mistral RELIGADA 07/jul** (engine cabeada ponta-a-ponta; resta 1 E2E ao vivo). Motor
+de comissões construído+testado, mas **gated** (tabelas vazias). AEC file-only; **escrow corrigido (FIN-02,
+verificado no banco)**. **Sprint 07/jul shipado:** Leads rebuild · Funil do Hub · O que travou · Dashboard andares ·
+Cadastros (filtros + Ver).
 
 **✅ Fase 0 — código desbloqueado SHIPADO (07/jul):** os 4 WIs code-only da Sprint 1 estão em produção (gate
 tsc+vitest+build verde a cada um): **MET-01** (`6a67b2e`, markup <1 → 400) · **IA-02** (`89a9fae`, `ml.ts`
 roteia pelo wrapper com fallback — não quebra sem Anthropic) · **EST-03** (`5471526`, CHECK de `hub_atividades`
 blindado + teste dos 6 mercados; 829 testes) · **FIN-03** (`ff6a24e`, aviso proativo de `valor_fechado` NULL no
-ganho + botão travado). **Resta na Fase 0:** RAS-01/02/03 — só na **janela do dono**.
+ganho + botão travado). **Fase 0 — linhagem aplicada via MCP (07/jul):** RAS-01 ✅ (gatilho, 0/16 sem raiz) · RAS-02
+✅ (já existia) · RAS-03 🟡 (colunas `ator_*` existem; falta popular no app — P1). Resta também escrever
+`negocio_pai_id` no app na derivação (P1, code-only).
 
 **Decisões travadas 07/jul:** ✅ clawback = **cobrar sempre** + mitigações (hold + estorno + régua) · ✅ **fechar
 a linhagem** (`negocio_pai_id`/`raiz_id`) antes de dado de rede.
@@ -70,11 +73,11 @@ Prioridade: **P0** = irreversível/bloqueia dinheiro · **P1** = MVP/receita · 
 | IA-02 | `ml.ts` sem modelo hardcoded (fallback) | 0 | P1 | P | — |
 | FIN-03 | Guard UI `valor_fechado` NULL no ganho | 0 | P1 | P | — |
 | EST-03 | Blindar CHECK `hub_atividades` (quebra silenciosa) | 0 | P1 | P | — |
-| IA-01 | Ligar Mistral + validar engine | 1 | P1 | P* | MET-01, IA-02, **credencial** |
+| IA-01 🔄 | Ligar Mistral + validar engine — **Mistral viva + engine cabeada; resta ops + 1 E2E** | 1 | P1 | P* | MET-01✅ IA-02✅ cred✅ |
 | FND-01 | Baseline migration (schema reconstruível) | 2 | P1 | G | — |
 | OBR-01 | Aplicar camada AEC (E0–E7/A0–A1) na janela | 2 | P1 | G | FND-01 |
 | OBR-02 | Medição append-only atômica (RPC) | 2 | P1 | M | OBR-01 |
-| **FIN-02** | **Fix escrow** (custódia fantasma) + aplicar E6 | 2 | **P0** | M | OBR-01 |
+| ~~FIN-02~~ ✅ | Fix escrow (custódia fantasma) — **FEITO 07/jul, verificado no banco** (rpc sem GREATEST + guards; DEMO desfeito). ⚠️ NÃO re-aplicar E6 | 2 | P0 | M | — |
 | FIN-01 | Motor de comissões em produção | 2 | P1 | M | TEN-03(vínculos), FND-01 |
 | LEAD-02 | Consolidar vocabulário de estágio (risco loop P0) | 3 | P1 | M | — |
 | EST-01 | Funis próprios por mercado (config, não re-arq) | 3 | P1 | M | LEAD-02 |
@@ -108,14 +111,14 @@ Prioridade: **P0** = irreversível/bloqueia dinheiro · **P1** = MVP/receita · 
 
 ## Sprints (do CADERNO §15)
 
-**Sprint 1 — Fase 0 (estancar o irreversível):** ✅ MET-01 · ✅ IA-02 · ✅ FIN-03 · ✅ EST-03 (code-only, no ar) ·
-⬜ RAS-01 · ⬜ RAS-02 · ⬜ RAS-03 (janela do dono).
-*Pronto:* nenhum negócio novo sem raiz; markup <1 rejeitado ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
+**Sprint 1 — Fase 0 (estancar o irreversível): FECHADA.** ✅ MET-01 · ✅ IA-02 · ✅ FIN-03 · ✅ EST-03 · ✅ RAS-01
+(via MCP) · ✅ RAS-02 (já existia) · 🟡 RAS-03 (colunas existem; falta popular ator no app — P1, sem janela).
+*Pronto:* nenhum negócio novo sem raiz ✅; markup <1 rejeitado ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
 
-**Sprint 2 — Fase 1 (IA):** IA-01 (assim que Mistral + billing forem liberados pelo dono).
+**Sprint 2 — Fase 1 (IA) = "o 2":** IA-01 — **Mistral já viva + engine cabeada**; resta ops (envs no Render `/api/health`) + **1 E2E ao vivo** + blindar o "1 toque" no engine genérico.
 *Pronto:* lead WhatsApp → qualificado por IA → confirmado em 1 toque.
 
-**Sprint 3–4 — Fase 2 (janela grande):** FND-01 · OBR-01 · OBR-02 · FIN-02 · FIN-01 · TEN-03(só `hub_negocio_vinculos`).
+**Sprint 3–4 — Fase 2 (janela grande):** FND-01 · OBR-01 · OBR-02 · FIN-01 · TEN-03(só `hub_negocio_vinculos`). *(FIN-02 ✅ já feito 07/jul — saiu.)*
 *Pronto:* obra real com EAP+medição+escrow dupla-chave; comissão PREVISTA→PAGA; schema reconstruível.
 
 **Sprint 5–7 — Fase 3 (operar sem planilha):** LEAD-02 · EST-01 · EST-02 · LEAD-01 · RAS-04 · RAS-05 · EVT-01 · FND-02.
