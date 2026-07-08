@@ -3,6 +3,55 @@ import { createClient } from "@supabase/supabase-js";
 import { executarFerramentaHub } from "@/lib/hub/executar-ferramenta-ia";
 import { autenticarCopiloto } from "@/lib/copiloto/copiloto-auth";
 import { isMissingPgColumn } from "@/lib/tenant-default";
+import { completarChatPreferindoMistral } from "@/lib/ia/llm-completion";
+import { registrarConsumoIA } from "@/lib/ia/metering";
+
+/**
+ * Resposta ESCRITA (IA-first "viva"): depois da ferramenta de LEITURA rodar, a IA lê o dado
+ * cru e responde em 1–2 frases naturais — em vez de despejar JSON. Best-effort: se a IA não
+ * responder, o cliente cai na tabela de dados (nada quebra). Só para leitura (escrita = "Feito").
+ */
+async function responderEmLinguagemNatural(
+  pergunta: string,
+  ferramenta: string,
+  resultado: unknown,
+  tenantId: string,
+  userId: string | null
+): Promise<string | null> {
+  try {
+    const r = await completarChatPreferindoMistral({
+      systemPrompt:
+        "Você é o copiloto do Obra10+. Responda em português do Brasil, 1 a 2 frases curtas, " +
+        "diretas e úteis, dizendo o que o dado significa para o usuário. Cite os números relevantes. " +
+        "NUNCA invente dados que não estejam no resultado. Não use JSON nem markdown.",
+      mensagens: [
+        {
+          role: "user",
+          content:
+            `Pergunta do usuário: ${pergunta || "(consulta)"}\n` +
+            `Ferramenta: ${ferramenta}\n` +
+            `Resultado (JSON): ${JSON.stringify(resultado).slice(0, 2000)}`,
+        },
+      ],
+      modeloFromDb: "mistral",
+      maxTokens: 180,
+    });
+    if (!r.ok || !r.texto.trim()) return null;
+    void registrarConsumoIA({
+      tenantId,
+      usuarioId: userId,
+      origem: "copiloto_resposta",
+      modelo: r.modeloLog,
+      tokensEntrada: r.tokensEntrada,
+      tokensSaida: r.tokensSaida,
+      refTipo: "copiloto",
+      refId: ferramenta,
+    });
+    return r.texto.trim();
+  } catch {
+    return null;
+  }
+}
 import {
   COPILOTO_AGENTE_SLUG,
   CopilotoSegredoAusenteError,
@@ -77,6 +126,7 @@ export async function POST(request: NextRequest) {
     params?: unknown;
     confirmacaoId?: unknown;
     ts?: unknown;
+    pergunta?: unknown;
     contexto?: { leadId?: unknown };
   };
   try {
@@ -95,6 +145,7 @@ export async function POST(request: NextRequest) {
 
   const leadId =
     typeof body.contexto?.leadId === "string" ? body.contexto.leadId.trim() : "";
+  const pergunta = typeof body.pergunta === "string" ? body.pergunta.trim() : "";
 
   // 1) Integridade: a proposta tem de ter sido assinada por nós, estar no prazo E
   //    ter sido feita para ESTE lead. O leadId entra na assinatura — se o dono falou
@@ -169,5 +220,10 @@ export async function POST(request: NextRequest) {
     /* resultado textual simples */
   }
 
-  return NextResponse.json({ ok: true, ferramenta, resultado });
+  // IA-first "viva": para LEITURA, a IA responde em linguagem natural (escrita já mostra "Feito").
+  const resposta = ehEscrita
+    ? null
+    : await responderEmLinguagemNatural(pergunta, ferramenta, resultado, auth.tenantId, auth.userId);
+
+  return NextResponse.json({ ok: true, ferramenta, resultado, resposta });
 }
