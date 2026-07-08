@@ -53,7 +53,8 @@ Legenda: ✅ feito · 🔄 em curso · ⏳ próximo · 🔒 depende do dono
 ### 🧾 PENDÊNCIAS ABERTAS — pontas soltas capturadas (07/jul noite; "não deixar nada solto")
 
 **IA-first / Copiloto — a "IA viva" (trilha do plano, NÃO side-quest):**
-- ⬜ **Copiloto AGIR/RESOLVER** (increment 3): hoje ele **fala** (resposta escrita) e **navega** até a tela, mas "não resolve" — expandir a allowlist de escrita + ligar as ferramentas para ele **FAZER** (criar lead, direcionar, atualizar), sempre com confirmação humana.
+- ✅ **Copiloto AGIR/RESOLVER (increment 3)** — tool de voz `hub_lead_encaminhar` no ar (`b77285e`): a IA **DIRECIONA o lead** a parceiro/especialista (a ação-mãe do funil). Mesa Fable + verificação adversarial (dinheiro E compras = seguro). SEGURO: cria PROPOSTA pendente (`status=sugerido_ia` forçado), **não envia** ao parceiro (2ª chave humana na tela). **Verificado E2E ao vivo** (LLM classificou → tool executou → todos os invariantes OK). Flag default=true, sem dono.
+- ⬜ **Mais ações + conectar aos AGENTES (IA-15):** próximas ações do copiloto (criar lead? próxima ação?) + injetar a IA nas telas-âncora (negócio/lead/atendimento) e no Agent Builder.
 - ⬜ **Conectar a IA aos AGENTES do sistema** + a tudo que depende de IA (visão do dono). Mapeia à **IA-15** (IA nas telas-âncora: negócio/lead/atendimento) + Agent Builder. É a trilha IA-first do plano.
 
 **Produtos / COMPRAS — ⚠️ taxonomia (decisão do dono):**
