@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registrarLogCrm } from "@/lib/crm/audit-log";
 import { crmFeatureFlags } from "@/lib/crm/feature-flags";
 import { requireCrmComercial } from "@/lib/crm/crm-api-auth";
+import { criarEncaminhamentoPendente } from "@/lib/crm/encaminhamento-criar";
 
 const STATUS_VALIDOS = [
   "sugerido_ia",
@@ -57,23 +58,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "status inválido" }, { status: 400 });
   }
 
-  const supabase = db();
-
-  // Guard de posse: o lead_id informado precisa pertencer ao tenant do caller
-  // (mass-assignment/IDOR — sem isto, dava para encaminhar leads de outro tenant).
-  const { data: lead, error: leadErr } = await supabase
-    .from("hub_leads_crm")
-    .select("id, tenant_id")
-    .eq("id", lead_id)
-    .maybeSingle();
-  if (leadErr) return NextResponse.json({ error: leadErr.message }, { status: 500 });
-  if (!lead || (lead.tenant_id && lead.tenant_id !== g.ctx.tenantId)) {
-    return NextResponse.json({ error: "Lead não encontrado." }, { status: 404 });
-  }
-
-  const now = new Date().toISOString();
-  const row = {
-    tenant_id: g.ctx.tenantId,
+  // Create + guard de posse (IDOR) extraídos p/ lib compartilhada (reusada pela tool de voz).
+  const r = await criarEncaminhamentoPendente(db(), g.ctx.tenantId, {
     lead_id,
     negocio_id: (body.negocio_id as string) || null,
     destinatario_pessoa_id: (body.destinatario_pessoa_id as string) || null,
@@ -84,31 +70,10 @@ export async function POST(request: NextRequest) {
     validado_humano: Boolean(body.validado_humano),
     status,
     criterio_selecao: (body.criterio_selecao as string) || null,
-    encaminhado_em: body.encaminhado_em ?? now,
-    enviado_em: status === "enviado" ? now : null,
-  };
-
-  const { data, error } = await supabase.from("hub_encaminhamentos").insert(row).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  await supabase
-    .from("hub_leads_crm")
-    .update({
-      estagio_funil: "encaminhado",
-      estagio: "encaminhado",
-      atualizado_em: now,
-    })
-    .eq("id", lead_id);
-
-  await registrarLogCrm(supabase, {
-    entidade: "encaminhamento",
-    entidade_id: data.id,
-    acao: "encaminhamento_criado",
-    valor_novo: status,
-    metadata: { lead_id },
+    encaminhado_em: typeof body.encaminhado_em === "string" ? body.encaminhado_em : undefined,
   });
-
-  return NextResponse.json(data, { status: 201 });
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+  return NextResponse.json(r.data, { status: 201 });
 }
 
 export async function PATCH(request: NextRequest) {

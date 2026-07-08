@@ -16,6 +16,7 @@ export type HubAgenteFerramentaId =
   | "hub_registar_nota_lead"
   | "hub_whatsapp_menu"
   | "hub_atualizar_lead"
+  | "hub_lead_encaminhar"
   | "hub_crm_criar_cadastro"
   // ── E0: Engenharia/Obra (não dependem de canal WhatsApp) ──
   | "hub_obra_listar"
@@ -295,6 +296,42 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
           },
         },
         required: ["texto"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_lead_encaminhar",
+    categoria: "registos",
+    titulo: "Encaminhar / direcionar o lead a um parceiro",
+    descricao:
+      "Direciona o LEAD atual a um parceiro/especialista/fornecedor no Comercial. Cria uma PROPOSTA de encaminhamento PENDENTE — NÃO envia ao parceiro (o envio é aprovado por um humano na tela). Não confundir com comprar/cotar material de obra (isso é SC de obra).",
+    recomendadoWhatsApp: false,
+    mistralFunction: {
+      name: "hub_lead_encaminhar",
+      description:
+        "Encaminha (direciona) o lead ATUAL a um parceiro/especialista. Cria uma proposta PENDENTE — você NUNCA aprova nem envia ao parceiro (isso é clique humano na tela). NÃO é compra/cotação de material (SC de obra). Opere só com um lead aberto.",
+      parameters: {
+        type: "object",
+        properties: {
+          destinatario_empresa_id: {
+            type: "string",
+            description: "ID da empresa/fornecedor de destino, se souber.",
+          },
+          destinatario_pessoa_id: {
+            type: "string",
+            description: "ID da pessoa/especialista de destino, se souber.",
+          },
+          segmento: {
+            type: "string",
+            description: "Segmento/mercado do destino, para roteamento (ex.: arquitetura, engenharia).",
+          },
+          criterio_selecao: {
+            type: "string",
+            description: "Motivo/critério do encaminhamento (texto curto).",
+          },
+        },
+        required: [],
         additionalProperties: false,
       },
     },
@@ -1109,6 +1146,7 @@ export function mergeUsoFerramentasComPadrao(
     hub_registar_nota_lead: false,
     hub_whatsapp_menu: false,
     hub_atualizar_lead: false,
+    hub_lead_encaminhar: false,
     hub_crm_criar_cadastro: false,
     hub_obra_listar: false,
     hub_obra_resumo: false,
@@ -1178,6 +1216,7 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_registar_nota_lead: "escrita",
   hub_whatsapp_menu: "escrita",
   hub_atualizar_lead: "escrita",
+  hub_lead_encaminhar: "escrita",
   hub_crm_criar_cadastro: "escrita",
   hub_obra_listar: "leitura",
   hub_obra_resumo: "leitura",

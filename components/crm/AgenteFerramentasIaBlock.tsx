@@ -53,6 +53,7 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_registar_nota_lead: StickyNote,
   hub_whatsapp_menu: ListOrdered,
   hub_atualizar_lead: UserPen,
+  hub_lead_encaminhar: Send,
   hub_crm_criar_cadastro: UserRound,
   hub_obra_listar: ListOrdered,
   hub_obra_resumo: HardHat,

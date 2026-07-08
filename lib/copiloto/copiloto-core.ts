@@ -37,6 +37,9 @@ export function nivelDaFerramenta(tool: string): HubFerramentaNivelAcesso | null
 export const COPILOTO_FERRAMENTAS_ESCRITA_FASE3: HubAgenteFerramentaId[] = [
   "hub_registar_nota_lead",
   "hub_atualizar_lead",
+  // Comercial — DIRECIONAR o lead a parceiro/especialista (a ação-mãe). Cria proposta PENDENTE;
+  // a voz NUNCA aprova o envio (fica FORA de ...SEM_LEAD → exige lead aberto + leadId no HMAC).
+  "hub_lead_encaminhar",
   // E0 — escrita de obra/EAP (operam sobre obra_id nos params, não sobre lead aberto).
   "hub_obra_criar",
   "hub_obra_eap_montar",
@@ -142,6 +145,7 @@ const FERRAMENTAS_LEITURA_DOC = `Ferramentas de LEITURA (acao="ler" — nunca al
  */
 const FERRAMENTAS_ESCRITA_DOC = `Ferramentas de ESCRITA (acao="escrever" — ALTERAM dados; exigem que o dono confirme depois):
 - hub_registar_nota_lead: adiciona uma NOTA na linha do tempo do lead atual. Params: { "texto": "<a nota, em pt-BR>" }.
+- hub_lead_encaminhar: DIRECIONA o lead ATUAL a um parceiro/especialista (a ação-mãe do funil). Cria uma PROPOSTA pendente — você NUNCA aprova nem envia ao parceiro (o envio é clique humano na tela). Params: { "destinatario_empresa_id"?: "<id>", "destinatario_pessoa_id"?: "<id>", "segmento"?: "<mercado do destino>", "criterio_selecao"?: "<motivo>" }. Em descricao_humana: "Vou direcionar este lead para <parceiro> — você confirma o envio na tela".
 - hub_atualizar_lead: atualiza campos do lead ATUAL. Envie só os campos a mudar. Params possíveis:
     { "estagio": "novo|em_atendimento|aguardando_resposta|qualificando|encaminhado|qualificado|proposta|negociando|fechamento",
       "score": 0..100, "valor_estimado": <número>, "nome": "<texto>", "email": "<texto>",
@@ -213,6 +217,8 @@ Regras:
 - IR / ABRIR / MOSTRAR / VER uma tela → acao="navegar" com "navegar_para" (uma das rotas listadas). NÃO navegue por "compras" (ambíguo).
 - LEITURA (consultar dados/números) → acao="ler".
 - ESCRITA (registar nota, atualizar lead${rotaObra ? ", criar obra, montar EAP, marcar avanço de item, mudar andamento de item, registrar bloqueio, resolver bloqueio, criar SC de compra, preparar pagamento" : ""}${rotaArq ? ", criar projeto, mover estágio, montar programa, enviar entregável para aprovação, registrar resposta do cliente, gerar obra do projeto" : ""}) → acao="escrever"; em descricao_humana explica o efeito em pt-BR simples.
+- DIRECIONAR/ENCAMINHAR o lead a parceiro/especialista → acao="escrever" com hub_lead_encaminhar (cria PROPOSTA pendente; você NUNCA aprova nem envia ao parceiro — isso é clique humano na tela).
+- ⚠️ "FORNECEDOR" é AMBÍGUO: encaminhar/direcionar lead a parceiro/especialista/fornecedor = mover o LEAD no Comercial (hub_lead_encaminhar). NÃO confunda com COMPRAR/PEDIR/COTAR material DO fornecedor, que é SC de OBRA (hub_obra_sc_criar) e exige obra aberta. Se o comando citar "fornecedor" sem contexto claro de lead OU obra, responde acao="nao_entendi" pedindo para especificar.
 - Escrita SOBRE LEAD exige lead aberto; se não houver, responde acao="nao_entendi" pedindo para abrir o lead.${rotaObra ? "\n- Criar obra / montar EAP / marcar avanço de item / mudar andamento de item / registrar bloqueio / resolver bloqueio / criar SC / preparar pagamento NÃO exigem lead aberto (usam o obra_id da tela). Se faltar o item ou o valor, pergunte UMA coisa (acao=\"nao_entendi\"), não invente. NUNCA escreva a Situação (é automática). Criar SC nasce em RASCUNHO — você NUNCA aprova a compra. Preparar pagamento NÃO aprova nem libera o escrow — a aprovação dupla (arquitetura + Hub) é decisão humana na tela (NUNCA por voz)." : ""}${rotaArq ? "\n- Criar projeto / mover estágio / montar programa / enviar para aprovação / registrar resposta / gerar obra NÃO exigem lead aberto. Para mover/programa/aprovação/gerar obra use o projeto_id da tela. Gerar obra só funciona se o projeto estiver entregue/aprovado e ainda não tiver obra — o sistema avisa nos dois casos (não force). Registrar reprovação SEM motivo não é permitido — pergunte o motivo. Se faltar dado essencial, pergunte UMA coisa (acao=\"nao_entendi\"), não invente." : ""}
 - Qualquer outra ação (criar cadastro, enviar WhatsApp, apagar) → acao="nao_entendi" dizendo que ainda não está disponível por voz.`;
 }
