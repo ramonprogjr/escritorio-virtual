@@ -8,9 +8,12 @@
 
 ## 📍 Onde estamos (em 3 linhas)
 
-**~40% da visão / ~70% de um MVP seguro single-tenant.** O núcleo (CRM, motor de leads, negócios/obras, motor de
-comissões testado) está de pé e **honesto por arquitetura**, mas o sistema ainda é **fragmentado e single-tenant
-disfarçado**. Fase atual: **des-fragmentar a fundação** antes de avançar em features novas.
+**~45% da visão / MVP seguro single-tenant de pé — agora com a IA VIVA e o dinheiro honesto.** O núcleo (CRM, motor
+de leads, negócios/obras, motor de comissões testado) está de pé. Nesta sessão (07/jul) três coisas mudaram de estado:
+o **dinheiro ficou honesto** (FIN-02 custódia fantasma corrigida + DEMO R$15k desfeito), a **IA ficou viva** (copiloto
+fala + navega + abre a ficha do lead + direciona lead a parceiro) e o **deploy destravou** (cache CDN Vercel→Render que
+prendia todo deploy no CDN). Ainda é **single-tenant** e restam **decisões do dono** (taxonomia de COMPRAS, reconciliar
+masterplan × banco real). Fase atual: **ligar a IA no que já existe** (IA-15) — não construir do zero.
 
 ---
 
