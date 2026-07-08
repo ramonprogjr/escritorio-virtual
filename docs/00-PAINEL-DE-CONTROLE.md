@@ -48,11 +48,29 @@ Legenda: ✅ feito · 🔄 em curso · ⏳ próximo · 🔒 depende do dono
 | Cadastros — **filtros colapsáveis no desktop** + **"Ver" redundante removido** | `dd6b1da` · `7109304` |
 | Doc-mãe completo + Análise CEO + decisões (clawback/linhagem) | `21daff6` · `8724ded` |
 | **Fase 0 código (Sprint 1):** MET-01 markup≥1 · IA-02 ml.ts fallback · EST-03 CHECK+teste 6 mercados · FIN-03 aviso valor_fechado | `6a67b2e` · `89a9fae` · `5471526` · `ff6a24e` |
+| **Sessão NOITE (07/jul) — Supabase via MCP direto:** RAS-01 linhagem aplicada+verificada (0 órfãos + gatilho) · MET-01 CHECK no banco · **FIN-02 escrow corrigido + DEMO R$15k desfeito** · **Mistral IA-01 VIVA** · **Copiloto de voz ligado** (HMAC + Tijolos) · **Copiloto: resposta escrita + navegação** · Backup GitHub 3h · **Auditoria de realidade** | `d2e60bf`·`262ce9c`·`9672ed6`·`0c7158b`·`dc95ae3`·`c5457d9` |
+
+### 🧾 PENDÊNCIAS ABERTAS — pontas soltas capturadas (07/jul noite; "não deixar nada solto")
+
+**IA-first / Copiloto — a "IA viva" (trilha do plano, NÃO side-quest):**
+- ⬜ **Copiloto AGIR/RESOLVER** (increment 3): hoje ele **fala** (resposta escrita) e **navega** até a tela, mas "não resolve" — expandir a allowlist de escrita + ligar as ferramentas para ele **FAZER** (criar lead, direcionar, atualizar), sempre com confirmação humana.
+- ⬜ **Conectar a IA aos AGENTES do sistema** + a tudo que depende de IA (visão do dono). Mapeia à **IA-15** (IA nas telas-âncora: negócio/lead/atendimento) + Agent Builder. É a trilha IA-first do plano.
+
+**Produtos / COMPRAS — ⚠️ taxonomia (decisão do dono):**
+- 🔒 **"Compras" é POLISSÊMICO:** compra de produto · dentro de projeto · Tijolos/moedas · dentro de serviço · compra-de-projeto no CRM · imóvel · "iFood" de produtos · dentro de produtos · e mais. **NÃO construir nem atribuir compra sem a definição da taxonomia pelo dono.** `hub_produtos` não existe; `hub_catalogo` (47 itens) é só master de dropdowns.
+
+**Comissões:**
+- ⬜ Motor **está ligado** (UI `NegocioFinanceiroRedeSection` + API `financeiro-rede` + 3 RPCs) mas **0 uso** — falta uma **apuração real** (demo E2E) pra provar ponta-a-ponta.
+
+**Reconciliação do plano (dívida DECISÃO-35):**
+- ⬜ **Masterplan × banco REAL:** a auditoria por MCP mostrou o banco **muito à frente do plano** (AEC/escrow/comissões/`hub_acoes_ia`/`hub_error_logs`/`hub_proximas_acoes`/`hub_contas_*` já existem). Reconciliar o masterplan com a realidade. Laudo: `docs/AUDITORIA-REALIDADE-BANCO-07JUL.md`.
+
+**Config do dono ainda aberta:** UAZAPI (WhatsApp) · HaveIBeenPwned · preços SaaS · rotação de segredos (chave do dev demitido) · contas Apple/Google (lojas) · janela altitude 1.
 
 ### 🔄 FASE 0 — Estancar o irreversível (EU-code + janela do dono)
-- ✅ **Código desbloqueado no ar:** MET-01 (markup≥1) · IA-02 (`ml.ts` roteia com fallback, não quebra sem Anthropic) · EST-03 (CHECK `hub_atividades` blindado + teste dos 6 mercados) · FIN-03 (aviso `valor_fechado` NULL no ganho).
-- 🔒 **Falta a janela do dono:** RAS-01 (linhagem `negocio_pai_id`/`raiz_id` ⚠️irreversível) · RAS-02 (UNIQUE código + auto-código) · RAS-03 (`hub_eventos.ator_id`).
-- **Critério de pronto:** nenhum negócio novo nasce sem raiz; markup <1 rejeitado ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
+- ✅ **Código desbloqueado no ar:** MET-01 (markup≥1, app **e** banco) · IA-02 (`ml.ts` roteia com fallback) · EST-03 (CHECK `hub_atividades` blindado + teste 6 mercados) · FIN-03 (aviso `valor_fechado` NULL).
+- ✅ **RAS-* aplicados via MCP (07/jul noite):** RAS-01 linhagem (backfill + gatilho `trg_hub_negocios_linhagem` — 0 negócios sem raiz) · RAS-02 (UNIQUE código **já existia**) · RAS-03 (`ator_id`/`ator_codigo` **já existiam**; falta só popular no app — P1).
+- **Fase 0 essencialmente FECHADA.** Critério: nenhum negócio novo nasce sem raiz ✅; markup <1 rejeitado (app+banco) ✅; `/api/ml/*` não quebra ✅; ganho sem valor avisa ✅.
 
 ### 🔒 FASE 1 — Linhagem (JANELA do dono) — *o único irreversível*
 - Migração aditiva `negocio_pai_id`/`negocio_raiz_id` + backfill + wiring em `derivar-negocio`.
