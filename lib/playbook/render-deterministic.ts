@@ -16,6 +16,20 @@ function yamlEscape(s: string): string {
 }
 
 /**
+ * SEGURANÇA: o playbook.md vai para o bucket de playbooks — NÃO pode conter segredos. Redige
+ * qualquer campo cujo NOME cheira a credencial (token/secret/senha/api_key…), em especial
+ * uazapi_instance_token, que antes vazava em claro no dump de auditoria da identidade.
+ */
+const SECRET_KEY_RE = /(token|secret|senha|password|api[_-]?key|apikey|webhook_secret|service_role)/i;
+export function redactSecretsShallow(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj || {})) {
+    out[k] = SECRET_KEY_RE.test(k) && v != null && v !== "" ? "[REDIGIDO]" : v;
+  }
+  return out;
+}
+
+/**
  * O mesmo encadeamento que `construirPrompt` usa em produção (sem mercado, memórias de lead nem etapa de fluxo).
  * Serve como documento único estilo «system prompt» para operadores e integrações Agno.
  */
@@ -251,7 +265,7 @@ export function renderDeterministicPlaybookMd(
   lines.push("## Identidade (`hub_agente_identidade`) — auditoria JSON");
   lines.push("");
   lines.push("```json");
-  lines.push(JSON.stringify(id, null, 2));
+  lines.push(JSON.stringify(redactSecretsShallow(id as unknown as Record<string, unknown>), null, 2));
   lines.push("```");
   lines.push("");
 

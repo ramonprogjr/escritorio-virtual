@@ -387,6 +387,44 @@ async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogg
     return;
   }
 
+  // ÁUDIO: a Mari só precisa ENTENDER (resposta segue em texto). Transcreve aqui (worker, fora do
+  // hot path do webhook) via webhook-payload → UAZAPI → Mistral voxtral, com fallback educado.
+  // Nunca lança: se tudo falhar, mensagemFinal vira um pedido gentil de repetir em texto.
+  if (contexto.tipoMidia === "audio") {
+    try {
+      const { enriquecerMensagemInboundAudio } = await import("@/lib/whatsapp/enriquecer-mensagem-audio");
+      const enr = await enriquecerMensagemInboundAudio({
+        inbound: {
+          telefone: contexto.telefone,
+          pushName: contexto.pushName,
+          messageId: contexto.messageId ?? "",
+          timestamp: contexto.timestamp,
+          fromMe: false,
+          isGroup: false,
+          tipoMidia: "audio",
+          texto: "",
+          mensagemFinal: contexto.mensagemFinal,
+          ...(contexto.instanceKey ? { instance: contexto.instanceKey } : {}),
+        },
+        instanceToken: contexto.waSendOpts?.instanceToken ?? null,
+      });
+      // Só substitui quando TRANSCREVEU de verdade. Em falha, mantém o placeholder "[audio recebido]"
+      // para o guard de mídia do processor mandar a mensagem educada — em vez de tratar a frase de
+      // fallback como se fosse o texto que o cliente digitou.
+      if (enr.audioTranscrito === true && enr.mensagemFinal.trim()) {
+        contexto.mensagemFinal = enr.mensagemFinal;
+        log.info("wa.worker.audio_transcrito", { job_id: job.id, fonte: enr.transcricaoFonte });
+      } else {
+        log.info("wa.worker.audio_nao_transcrito", { job_id: job.id, fonte: enr.transcricaoFonte });
+      }
+    } catch (e) {
+      log.warn("wa.worker.audio_enriquecer_falhou", {
+        job_id: job.id,
+        error: e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200),
+      });
+    }
+  }
+
   try {
     await processarMensagemInboundWhatsapp({
       supabase,
