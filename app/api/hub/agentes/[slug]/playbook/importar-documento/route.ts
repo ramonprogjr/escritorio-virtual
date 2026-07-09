@@ -47,6 +47,13 @@ export async function POST(
     return NextResponse.json({ error: "Agente não encontrado" }, { status: 404 });
   }
 
+  // Pre-check por Content-Length ANTES de bufferizar o corpo (req.formData materializa tudo em memória) —
+  // anti-DoS de memória; file.size (abaixo) fica como 2ª barreira. multipart tem overhead pequeno.
+  const cl = Number(req.headers.get("content-length"));
+  if (!Number.isFinite(cl) || cl > MAX_DOC_BYTES + 64 * 1024) {
+    return NextResponse.json({ error: "Arquivo acima de 8 MB." }, { status: 413 });
+  }
+
   let form: FormData;
   try {
     form = await req.formData();

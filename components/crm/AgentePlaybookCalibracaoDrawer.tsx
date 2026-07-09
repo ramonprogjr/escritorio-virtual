@@ -366,6 +366,14 @@ export function AgentePlaybookCalibracaoDrawer({
     // F3: PDF/DOCX → extrai o TEXTO no servidor e coloca no editor para REVISÃO (não publica; extração
     // é imperfeita). O dono revê e clica em Publicar. A guarda do Regenerar e o publicar-1-clique seguem iguais.
     if (ehDocumento) {
+      // Não destruir rascunho não publicado sem confirmar (mesma guarda do Regenerar). QA 09/jul.
+      if (dirty && !window.confirm("Você tem alterações não publicadas no editor. Substituir pelo texto do documento importado?")) {
+        setUploadStatus("idle");
+        setUploadMensagem("");
+        setUploadPct(0);
+        setArquivoNome("");
+        return;
+      }
       try {
         const form = new FormData();
         form.append("file", file);
