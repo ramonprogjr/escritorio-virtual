@@ -7,6 +7,7 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
+import { DirecionarLeadDrawer } from "@/components/crm/DirecionarLeadDrawer";
 import {
   Bot,
   Brain,
@@ -18,6 +19,7 @@ import {
   MessageSquare,
   Phone,
   Send,
+  Share2,
   User,
   UserCheck,
   X,
@@ -124,6 +126,7 @@ function AtendimentoContent() {
   const [carregandoMensagens, setCarregandoMensagens] = useState(false);
   const [sendStrip, setSendStrip] = useState<{ kind: "error" | "success" | "info"; text: string } | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [direcionarOpen, setDirecionarOpen] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const leadsCarregados = useRef(false);
   const modoScrollRef = useRef<HTMLDivElement>(null);
@@ -807,6 +810,15 @@ function AtendimentoContent() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setDirecionarOpen(true)}
+                  className="flex items-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[#c9a24a] text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium"
+                  title="Direcionar o lead a um parceiro (com card-resumo)"
+                >
+                  <Share2 size={14} strokeWidth={2} aria-hidden />
+                  Direcionar
+                </button>
+                <button
+                  type="button"
                   onClick={() => setInfoOpen(true)}
                   className="flex items-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[#c9a24a] text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium"
                 >
@@ -1273,6 +1285,19 @@ function AtendimentoContent() {
             </div>
           </aside>
         </>
+      )}
+
+      {leadSel && (
+        <DirecionarLeadDrawer
+          open={direcionarOpen}
+          leadId={leadSel.id}
+          leadNome={leadSel.nome}
+          onClose={() => setDirecionarOpen(false)}
+          onDirecionado={() => {
+            setDirecionarOpen(false);
+            void carregarLeads();
+          }}
+        />
       )}
     </div>
   );
