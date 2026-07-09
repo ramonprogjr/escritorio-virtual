@@ -195,40 +195,69 @@ export function AgentePlaybookCalibracaoDrawer({
     return () => window.clearTimeout(t);
   }, [toast]);
 
+  /** Monta o fluxo de WhatsApp no markdown automaticamente (mesmo motor do botão «Adaptar motor WA»). */
+  async function garantirFluxoWaNoMarkdown(
+    md: string
+  ): Promise<{ ok: true; markdown: string } | { ok: false; error: string }> {
+    try {
+      const res = await fetch(PLAYBOOK_EXEMPLO_MD_URL, { headers: internalApiHeaders() });
+      if (!res.ok) return { ok: false, error: `Falha ao carregar o modelo de fluxo (HTTP ${res.status}).` };
+      const template = (await res.text()).trim();
+      const out = adaptarMarkdownParaMotorWhatsapp(md, template);
+      if (!out.ok) return { ok: false, error: out.error };
+      return { ok: true, markdown: out.markdown };
+    } catch {
+      return { ok: false, error: "Falha de rede ao montar o fluxo de WhatsApp." };
+    }
+  }
+
   async function publicarMarkdown(markdownOverride?: string) {
-    const markdownToPublish =
+    let markdownToPublish =
       typeof markdownOverride === "string" ? markdownOverride : markdown;
     if (!markdownToPublish.trim() || publicando) return;
-    const statusToPublish = assessPlaybookFlowInMarkdown(markdownToPublish);
+    let statusToPublish = assessPlaybookFlowInMarkdown(markdownToPublish);
+    setPublicando(true);
+    setErro("");
+    // Publicar em 1 clique: se o fluxo de WhatsApp ainda não foi montado (falta o bloco ou não foi
+    // adaptado), o sistema monta sozinho e segue — sem exigir que o dono conheça o bloco técnico
+    // «obra10_playbook_flow» ou aperte «Adaptar motor WA» antes (laudo de edição de agente 09/jul).
+    // Fluxo com ERRO real (kind=invalid) não dá para consertar sozinho → aí sim bloqueia, em português claro.
     if (statusToPublish.kind !== "ready") {
       if (statusToPublish.kind === "invalid") {
         if (markdownOrigem === "visual") {
           void emitFlowVisualTelemetry({
             event: "playbook.flow_visual.publish_validation_invalid",
             agente_slug: agenteSlug,
-            metadata: {
-              source: "visual",
-              errors_count: statusToPublish.errors.length,
-            },
+            metadata: { source: "visual", errors_count: statusToPublish.errors.length },
           });
         }
         const detalhes = statusToPublish.errors.slice(0, 3);
         setErro(
-          `Fluxo com pendências antes da publicação:\n- ${detalhes.join("\n- ")}${
-            statusToPublish.errors.length > 3 ? `\n- ...e mais ${statusToPublish.errors.length - 3} erro(s).` : ""
-          }`
+          `O fluxo de conversa tem pontos a corrigir antes de publicar:\n- ${detalhes.join("\n- ")}${
+            statusToPublish.errors.length > 3 ? `\n- ...e mais ${statusToPublish.errors.length - 3}.` : ""
+          }\nAbra «Editar fluxo» para ajustar.`
         );
-      } else if (statusToPublish.kind === "no_flow_block") {
-        setErro("Antes de publicar, gere/edite o bloco `obra10_playbook_flow` no modo visual ou textual.");
-      } else {
-        setErro(
-          "Antes de publicar, use «Adaptar motor WA» até o banner verde confirmar o fluxo WhatsApp (obra10_playbook_flow)."
-        );
+        setPublicando(false);
+        return;
       }
-      return;
+      // no_flow_block ou não-adaptado → monta o fluxo WA automaticamente e revalida.
+      const adapt = await garantirFluxoWaNoMarkdown(markdownToPublish);
+      if (!adapt.ok) {
+        setErro(adapt.error);
+        setPublicando(false);
+        return;
+      }
+      markdownToPublish = adapt.markdown;
+      statusToPublish = assessPlaybookFlowInMarkdown(markdownToPublish);
+      if (statusToPublish.kind !== "ready") {
+        setErro(
+          "Não consegui montar o fluxo de WhatsApp automaticamente. Abra «Editar fluxo» e ajuste as perguntas antes de publicar."
+        );
+        setPublicando(false);
+        return;
+      }
+      setMarkdown(markdownToPublish);
     }
-    setPublicando(true);
-    setErro("");
     try {
       const res = await fetch(
         `/api/hub/agentes/${encodeURIComponent(agenteSlug)}/playbook/conteudo`,
@@ -269,6 +298,19 @@ export function AgentePlaybookCalibracaoDrawer({
 
   async function regenerarDoAgente() {
     if (regenerando) return;
+    // GUARDA (laudo 09/jul): "Regenerar" reescreve o playbook do zero a partir do cargo/conhecimento e
+    // PODE APAGAR o fluxo de WhatsApp já publicado — a 1 clique do Publicar, na Mari que atende AO VIVO.
+    // Se há bloco de fluxo publicado, confirmação forte + nomeia o que se perde. Sem fluxo, segue direto.
+    const temFluxoPublicado = /```[^\n]*obra10_playbook_flow/.test(markdownPublicado);
+    if (temFluxoPublicado) {
+      const ok = window.confirm(
+        "ATENÇÃO: regenerar vai reescrever este playbook do zero e PODE APAGAR o fluxo de conversa do " +
+          "WhatsApp que já está publicado (as perguntas/menus que a Mari usa hoje no atendimento).\n\n" +
+          "Isto afeta o atendimento AO VIVO. Só continue se você quer recomeçar o fluxo.\n\n" +
+          "Deseja regenerar mesmo assim?"
+      );
+      if (!ok) return;
+    }
     setRegenerando(true);
     setErro("");
     try {
