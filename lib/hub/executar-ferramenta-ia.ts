@@ -68,7 +68,7 @@ async function executarFerramentaHubBuiltin(
       const { data, error } = await supabase
         .from("hub_leads_crm")
         .select(
-          "id, nome, telefone, estagio, valor_estimado, interesse_principal, agente_responsavel, humano_responsavel, atualizado_em, metadata"
+          "id, nome, telefone, email, estagio, score, valor_estimado, interesse_principal, proxima_acao, data_proxima_acao, tags, motivo_perda, origem, ultimo_contato, agente_responsavel, humano_responsavel, atualizado_em, metadata"
         )
         .eq("id", ctx.leadId)
         .maybeSingle();
@@ -97,13 +97,13 @@ async function executarFerramentaHubBuiltin(
         typeof limRaw === "number" && Number.isFinite(limRaw)
           ? Math.min(10, Math.max(1, Math.floor(limRaw)))
           : 5;
-      const { cutoffSessaoConversaMs } = await import("@/lib/ia/sessao-conversa-ttl");
-      const cutoffIso = new Date(cutoffSessaoConversaMs()).toISOString();
+      // Memória DURÁVEL (preferências, histórico) — não filtra por TTL de sessão: preferência do cliente
+      // não expira em 12h. Antes o .gte(cutoff) devolvia [] para quem voltava depois de 1 dia e a IA
+      // afirmava "não tenho registro sobre você", contradizendo o CRM (laudo 09/jul).
       const { data, error } = await supabase
         .from("hub_memorias_lead")
         .select("chave, valor, confianca, criado_por, criado_em")
         .eq("lead_id", ctx.leadId)
-        .gte("criado_em", cutoffIso)
         .order("confianca", { ascending: false })
         .limit(lim);
       if (error) return JSON.stringify({ erro: "supabase", detalhe: error.message });
@@ -132,22 +132,35 @@ async function executarFerramentaHubBuiltin(
         });
       }
 
-      const { data: lead, error: eLead } = await supabase
+      // Match robusto a formatos: o telefone da sessão vem normalizado (13 díg. com DDI 55), mas o banco
+      // guarda 10/11/13 díg. misturados. .eq exato só achava os 13-díg → dava "não cadastrado" para leads
+      // reais (laudo 09/jul). Busca por sufixo (últimos 8 díg. = núcleo do número) e confirma com a
+      // equivalência canônica telefonesConversaEquivalentes (mesma regra do isolamento). Prefere match exato.
+      const sufixo = telefone.slice(-8);
+      const { data: leadCands, error: eLead } = await supabase
         .from("hub_leads_crm")
         .select(
           "id, nome, telefone, estagio, score, valor_estimado, agente_responsavel, humano_responsavel, atualizado_em"
         )
-        .eq("telefone", telefone)
-        .maybeSingle();
+        .like("telefone", `%${sufixo}`)
+        .limit(10);
       if (eLead) return JSON.stringify({ erro: "supabase", detalhe: eLead.message });
+      const lead =
+        (leadCands || []).find((l) => telefoneConversaId(l.telefone) === telefone) ??
+        (leadCands || []).find((l) => telefonesConversaEquivalentes(l.telefone, telefone)) ??
+        null;
       if (!lead) return JSON.stringify({ ok: true, encontrado: false, telefone });
 
-      const { data: pessoa, error: ePessoa } = await supabase
+      const { data: pessoaCands, error: ePessoa } = await supabase
         .from("hub_pessoas")
         .select("id, codigo, nome, telefone, origem, atualizado_em")
-        .eq("telefone", telefone)
-        .maybeSingle();
+        .like("telefone", `%${sufixo}`)
+        .limit(10);
       if (ePessoa) return JSON.stringify({ erro: "supabase", detalhe: ePessoa.message });
+      const pessoa =
+        (pessoaCands || []).find((p) => telefoneConversaId(p.telefone) === telefone) ??
+        (pessoaCands || []).find((p) => telefonesConversaEquivalentes(p.telefone, telefone)) ??
+        null;
 
       return JSON.stringify({
         ok: true,
@@ -197,7 +210,8 @@ async function executarFerramentaHubBuiltin(
       let semAtendimento = 0;
       let semHumano = 0;
       for (const r of rows) {
-        const est = String(r.estagio || "novo");
+        // NULL/vazio NÃO é "novo" — vira bucket próprio "sem_estagio" p/ não inflar "novo" (laudo 09/jul).
+        const est = typeof r.estagio === "string" && r.estagio.trim() ? r.estagio.trim() : "sem_estagio";
         porEstagio[est] = (porEstagio[est] || 0) + 1;
         if (!ENCERRADOS.has(est)) {
           emAberto++;
@@ -337,6 +351,22 @@ async function executarFerramentaHubBuiltin(
       }
       const titulo = typeof args.titulo === "string" ? args.titulo.trim() : "";
       if (!titulo) return JSON.stringify({ erro: "titulo_obrigatorio" });
+      // Valida a data AQUI (o Mistral costuma mandar "sexta-feira" ou ISO malformado). Antes uma data
+      // inválida virava tarefa SEM prazo em silêncio e a IA confirmava "agendei p/ sexta" — follow-up
+      // perdido (laudo 09/jul). Agora: data inválida → erro p/ o modelo corrigir; sucesso ECOA o prazo real.
+      let vencimentoIso: string | null = null;
+      if (typeof args.vencimento_em === "string" && args.vencimento_em.trim()) {
+        const t = Date.parse(args.vencimento_em.trim());
+        if (Number.isNaN(t)) {
+          return JSON.stringify({
+            erro: "vencimento_em_invalido",
+            detalhe: "Envie a data em ISO 8601, ex: 2026-07-11T09:00:00-03:00. Não use texto como 'sexta'.",
+          });
+        }
+        vencimentoIso = new Date(t).toISOString();
+      }
+      const prioridadeTarefa =
+        args.prioridade === "baixa" || args.prioridade === "alta" ? args.prioridade : "media";
       // SEGURANÇA: a tarefa é SEMPRE do lead da sessão — a entidade não vem por prompt injection.
       const { criarTarefa } = await import("@/lib/crm/registrar-tarefa");
       const rt = await criarTarefa(supabase, {
@@ -345,8 +375,8 @@ async function executarFerramentaHubBuiltin(
         entity_type: "lead",
         entity_id: ctx.leadId,
         lead_id: ctx.leadId,
-        prioridade: typeof args.prioridade === "string" ? args.prioridade : undefined,
-        vencimento_em: typeof args.vencimento_em === "string" ? args.vencimento_em : null,
+        prioridade: prioridadeTarefa,
+        vencimento_em: vencimentoIso,
         origem: "ia",
         ator: ctx.agenteSlug,
         tenant_id: (ctx.tenantId && ctx.tenantId.trim()) || defaultTenantId(),
@@ -360,7 +390,16 @@ async function executarFerramentaHubBuiltin(
         sucesso: true,
         metadata: { ferramenta: "hub_criar_tarefa", tarefa_id: rt.id },
       });
-      return JSON.stringify({ ok: true, tarefa_id: rt.id, titulo });
+      return JSON.stringify({
+        ok: true,
+        tarefa_id: rt.id,
+        titulo,
+        prioridade: prioridadeTarefa,
+        vencimento_em: vencimentoIso,
+        nota: vencimentoIso
+          ? "Confirme o prazo EXATO ao cliente (o valor em vencimento_em)."
+          : "Tarefa criada SEM prazo — não afirme uma data ao cliente.",
+      });
     }
     case "hub_crm_criar_cadastro": {
       const nome = typeof args.nome === "string" ? args.nome.trim() : "";

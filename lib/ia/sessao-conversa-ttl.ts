@@ -98,7 +98,13 @@ function limparChavesSessaoMetadata(meta: Record<string, unknown>): Record<strin
   return limparMetadataConversacional(meta);
 }
 
-/** Campos do lead que alimentam contexto da IA — limpos ao reiniciar sessão (mantém nome, telefone, estágio CRM). */
+/**
+ * Limpa SÓ o estado conversacional (turnos, fluxo, menu, etapa) do metadata ao reiniciar a sessão.
+ * NÃO toca em dado de negócio qualificado (interesse_principal, valor_estimado, proxima_acao): a IA-01
+ * grava esses campos na qualificação e eles continuam VERDADEIROS quando o cliente volta dias depois —
+ * zerá-los por silêncio de 12h destruía o lead (valor→R$0, interesse→vazio) e a IA passava a reportar
+ * "sem interesse / valor 0" para um lead que estava qualificado. Correção do laudo de precisão (09/jul).
+ */
 function patchLeadCamposSessao(
   metaBase: Record<string, unknown>
 ): Record<string, unknown> {
@@ -107,10 +113,6 @@ function patchLeadCamposSessao(
       ...limparChavesSessaoMetadata(metaBase),
       sessao_reiniciada_em: new Date().toISOString(),
     },
-    interesse_principal: null,
-    valor_estimado: 0,
-    proxima_acao: null,
-    data_proxima_acao: null,
     atualizado_em: new Date().toISOString(),
   };
 }
@@ -140,14 +142,12 @@ export async function limparSessaoConversaExpirada(
 
   if (upErr) {
     const msg = upErr.message || "";
-    if (/interesse_principal|preferencias|column/i.test(msg)) {
+    if (/preferencias|column/i.test(msg)) {
+      // Só a coluna preferencias falhou → repete o patch conversacional sem ela (nunca zera negócio).
       const { error: upMin } = await supabase
         .from("hub_leads_crm")
         .update({
           metadata: patch.metadata,
-          valor_estimado: 0,
-          proxima_acao: null,
-          data_proxima_acao: null,
           atualizado_em: patch.atualizado_em,
         })
         .eq("id", leadId);
@@ -157,9 +157,9 @@ export async function limparSessaoConversaExpirada(
     }
   }
 
-  const { error: memErr } = await supabase.from("hub_memorias_lead").delete().eq("lead_id", leadId);
-
-  if (memErr) console.warn("[SESSAO] limpar memorias:", memErr.message);
+  // Memórias do lead são DURÁVEIS (preferências, histórico) — NÃO apagar ao reiniciar sessão. O que é
+  // conversacional (turnos/fluxo/menu) já saiu do metadata acima. Apagar tudo destruía o histórico que a
+  // ferramenta hub_lead_memorias deve devolver ao cliente que volta (laudo de precisão 09/jul).
 }
 
 export async function obterUltimaAtividadeLeadMs(

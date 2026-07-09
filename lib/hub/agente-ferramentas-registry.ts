@@ -195,8 +195,9 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
         properties: {
           estagio: {
             type: "string",
-            enum: ["novo", "qualificando", "qualificado", "proposta", "negociando", "fechamento"],
-            description: "Estágio no pipeline (ganho/perdido bloqueados para a IA).",
+            enum: ["novo", "em_atendimento", "aguardando_resposta", "qualificando"],
+            description:
+              "Estágio no ciclo do lead (vocabulário VIVO do funil): novo → em_atendimento → aguardando_resposta → qualificando. Use 'qualificando' quando já tem interesse + valor. encaminhado/ganho/perdido são definidos pelo sistema/humano — não use.",
           },
           score: {
             type: "integer",
