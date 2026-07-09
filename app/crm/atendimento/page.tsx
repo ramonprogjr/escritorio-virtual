@@ -43,6 +43,8 @@ interface Lead {
   tags?: string[];
   observacoes?: unknown;
   metadata?: Record<string, unknown>;
+  ultima_mensagem?: { conteudo: string; direcao: string; criado_em: string } | null;
+  aguardando_desde?: string | null;
 }
 
 interface Mensagem {
@@ -210,6 +212,8 @@ function AtendimentoContent() {
         tags: Array.isArray(d.tags) ? (d.tags as string[]) : [],
         observacoes: d.observacoes,
         metadata: (d.metadata && typeof d.metadata === "object" ? d.metadata : undefined) as Record<string, unknown> | undefined,
+        ultima_mensagem: (d.ultima_mensagem as Lead["ultima_mensagem"]) ?? null,
+        aguardando_desde: (d.aguardando_desde as string) ?? null,
       })));
     } catch (e) {
       // Não deixa a tela em loading infinito se a API falhar (auth/rede).
@@ -680,6 +684,10 @@ function AtendimentoContent() {
           )}
           {leadsFiltrados.map(lead => {
             const badge = modoBadge(lead);
+            const prev = lead.ultima_mensagem;
+            const prefixo = prev ? (prev.direcao === "entrada" ? "" : lead.humano_responsavel ? "Você: " : "Mari: ") : "";
+            const horaAtiv = prev?.criado_em || lead.criado_em;
+            const esperando = !!lead.aguardando_desde;
             return (
               <button
                 key={lead.id}
@@ -691,26 +699,39 @@ function AtendimentoContent() {
                     : "hover:bg-white/[0.04]"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-0.5">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className={`w-2 h-2 flex-shrink-0 rounded-full ring-1 ring-white/10 ${STATUS_COR[lead.estagio] || "bg-gray-500"}`} />
-                    <span className="text-zinc-100 text-xs font-semibold truncate">{lead.nome}</span>
+                    <span className="text-zinc-100 text-sm font-semibold truncate">{lead.nome}</span>
                   </div>
-                  <span className="text-zinc-400 text-xs flex-shrink-0 ml-1 tabular-nums">{rel(lead.criado_em)}</span>
+                  <span className="text-zinc-400 text-[11px] flex-shrink-0 ml-1 tabular-nums">{rel(horaAtiv)}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 text-xs uppercase tracking-wide truncate mr-2">
-                    {ORIGEM_LABEL[lead.origem] || lead.origem}
-                    {lead.ultimo_contato ? ` · ${rel(lead.ultimo_contato)}` : ""}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-zinc-400 text-xs truncate">
+                    {prev ? (
+                      <>
+                        {prefixo && <span className="text-zinc-500">{prefixo}</span>}
+                        {prev.conteudo || "—"}
+                      </>
+                    ) : (
+                      <span className="uppercase tracking-wide">{ORIGEM_LABEL[lead.origem] || lead.origem}</span>
+                    )}
                   </span>
-                  {badge && (
+                  {esperando ? (
+                    <span
+                      className="flex-shrink-0 text-[10px] font-bold rounded px-1.5 py-0.5"
+                      style={{ color: "#c9a24a", background: "#c9a24a1f", border: "1px solid #c9a24a45" }}
+                    >
+                      aguardando {rel(lead.aguardando_desde!)}
+                    </span>
+                  ) : badge ? (
                     <span
                       className="flex-shrink-0 text-[10px] font-semibold rounded px-1.5 py-0.5"
                       style={{ color: badge.color, background: `${badge.color}18`, border: `1px solid ${badge.color}35` }}
                     >
                       {badge.label}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </button>
             );
