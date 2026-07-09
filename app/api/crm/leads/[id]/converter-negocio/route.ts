@@ -38,6 +38,20 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
   }
 
+  // Idempotência: se o lead já tem um negócio ABERTO, devolve o existente em vez de criar outro
+  // (bug dos 3 "Negócio — TESTE ARIANE" duplicados: cada clique gerava um novo).
+  const { data: negocioExistente } = await supabase
+    .from("hub_negocios")
+    .select("*")
+    .eq("lead_id", lead_id)
+    .eq("tenant_id", tenantId)
+    .eq("status", "aberto")
+    .limit(1)
+    .maybeSingle();
+  if (negocioExistente?.id) {
+    return NextResponse.json({ data: negocioExistente, idempotente: true }, { status: 200 });
+  }
+
   let body: Record<string, unknown> = {};
   try {
     body = await request.json().catch(() => ({}));
@@ -114,10 +128,10 @@ export async function POST(request: NextRequest, { params }: Params) {
     tipo: legacyNegocioTipoFromMercado(prefixo_mercado),
     prefixo_mercado,
     mercado_slug: mercadoSlug,
-    // hub_negocios.lead_id tem FK para a tabela legada hub_leads; o lead moderno vive em
-    // hub_leads_crm. Deixamos null aqui — o vínculo lead↔negócio é gravado via hub_vinculos
-    // (criarVinculosNegocioFromLead, abaixo), que usa o lead_id real.
-    lead_id: null,
+    // hub_negocios.lead_id → a FK aponta para hub_leads_crm (verificado no banco). Grava o lead REAL
+    // para destravar o KPI de conversão (contava lead_id NOT NULL → sempre zero) e a idempotência.
+    // O vínculo rico continua em hub_negocio_vinculos (criarVinculosNegocioFromLead, abaixo).
+    lead_id,
     pessoa_id: lead.pessoa_id,
     empresa_id: empresaId,
     valor_estimado: lead.valor_estimado ?? 0,
@@ -166,14 +180,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     tenant_id: tenantId,
   });
 
-  await supabase
+  // Antes este update incluía negocio_id (coluna INEXISTENTE em hub_leads_crm) → o PostgREST
+  // rejeitava o update INTEIRO e o estágio nunca virava convertido_negocio. Removido; erro conferido.
+  const { error: updLeadErr } = await supabase
     .from("hub_leads_crm")
     .update({
       ...buildLeadEstagioPatch("convertido_negocio"),
-      negocio_id: negocio.id,
       atualizado_em: new Date().toISOString(),
     })
     .eq("id", lead_id);
+  if (updLeadErr) {
+    console.warn("[converter-negocio] estágio do lead não atualizou:", updLeadErr.message);
+  }
 
   return NextResponse.json({ data: negocio }, { status: 201 });
 }
