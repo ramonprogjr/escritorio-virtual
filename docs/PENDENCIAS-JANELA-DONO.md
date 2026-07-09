@@ -23,7 +23,7 @@ Legenda: 🟢 pronto p/ aplicar (código feito, só apertar o botão) · 🟡 pr
 
 | Item | O que fazer | Destrava | Status |
 |---|---|---|---|
-| **Registros × Logs × Permissões** | Aplicar `supabase/migrations/20260710120000_registros_categoria_imutabilidade.sql` (colunas + triggers de classificação/imutabilidade). **Smoke test na hora** (inserir 1 linha → ganha categoria, não rejeita; 0 NULL). Depois eu ligo o filtro de leitura + permissões + relatório do owner (F3-F6 do plano). | Comentários/atividades aparecem; logs ocultos+imutáveis; autor/owner editam | 🟢 (código pronto) |
+| ~~Registros × Logs × Permissões~~ | ✅ **APLICADA + VERIFICADA (09/jul via MCP)**: colunas + 4 triggers ATIVOS; backfill 52 principal + 3 comentário, 0 NULL; INSERT classifica sem rejeitar (Mari intocada); DELETE bloqueado; log imutável. Falta só EU ligar filtro/permissões/relatório (F3-F6, código — não depende de você). | Comentários/atividades aparecem; logs ocultos+imutáveis | ✅ FEITO |
 | **FND-01 — baseline migration** | Schema reprodutível do zero (incorpora a linhagem aplicada à mão) | Fase 2 (obra + dinheiro real); repo reconstrói o banco | 🔴 |
 | **OBR-01 / OBR-02** | Camada AEC (E0–E7/A0–A1) + RPC de medição append-only | Fase 2 (gestão de obra) | 🔴 |
 | **FIN-01** | Motor de comissões em prod | Fase 2 (dinheiro da rede) | 🔴 |
