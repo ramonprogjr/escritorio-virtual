@@ -2,9 +2,15 @@ import { inflateRawSync } from "zlib";
 
 type ZipEntry = { name: string; data: Buffer };
 
+// Anti deflate-bomb: deflate atinge ~1000:1; um ZIP de 8 MB forjado poderia inflar GBs e derrubar a
+// instância (síncrono). Teto por entrada + teto acumulado por documento; ao exceder, para a iteração.
+const MAX_INFLATE_ENTRADA = 32 * 1024 * 1024;
+const MAX_INFLATE_TOTAL = 64 * 1024 * 1024;
+
 /** Lê entradas ZIP locais (Office Open XML: docx, xlsx, pptx, odt). */
 export function* iterZipEntries(buffer: Buffer): Generator<ZipEntry> {
   let offset = 0;
+  let totalInflado = 0;
   while (offset + 30 < buffer.length) {
     if (buffer.readUInt32LE(offset) !== 0x04034b50) {
       offset += 1;
@@ -30,12 +36,15 @@ export function* iterZipEntries(buffer: Buffer): Generator<ZipEntry> {
       raw = compData;
     } else if (compression === 8) {
       try {
-        raw = inflateRawSync(compData);
+        raw = inflateRawSync(compData, { maxOutputLength: MAX_INFLATE_ENTRADA });
       } catch {
+        // ERR_BUFFER_TOO_LARGE (bomba) ou dado corrompido → ignora a entrada.
         raw = null;
       }
     }
     if (raw && raw.length > 0) {
+      totalInflado += raw.length;
+      if (totalInflado > MAX_INFLATE_TOTAL) return; // anti deflate-bomb: aborta o documento inteiro
       yield { name, data: raw };
     }
   }

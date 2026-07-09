@@ -26,11 +26,18 @@ export type PlaybookAnaliseResultado = {
   origem: "mistral" | "fallback";
 };
 
-export const PLAYBOOK_ACCEPT_ATTR = ".md,.txt,text/markdown,text/plain";
+export const PLAYBOOK_ACCEPT_ATTR =
+  ".md,.txt,.pdf,.docx,text/markdown,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 type Props = {
   inputId: string;
   modoPreCriacao?: boolean;
+  /** Formatos aceitos no input (default = drawer, com .pdf/.docx). Wizard passa só .md/.txt. */
+  acceptAttr?: string;
+  /** Texto dos formatos p/ rótulo/aria (ex.: ".md, .txt, .pdf ou .docx"). */
+  formatosTexto?: string;
+  /** Frase de limite de tamanho (varia por consumidor: drawer 1/8 MB, wizard 2 MB). */
+  limiteHint?: string;
   uploadStatus: PlaybookUploadStatus;
   uploadMensagem: string;
   uploadPct: number;
@@ -57,6 +64,9 @@ function corNota(nota: number): string {
 export function PlaybookUploadAnalisePanel({
   inputId,
   modoPreCriacao = false,
+  acceptAttr = PLAYBOOK_ACCEPT_ATTR,
+  formatosTexto = ".md, .txt, .pdf ou .docx",
+  limiteHint = "Tamanho máximo: 1 MB (.md/.txt) ou 8 MB (.pdf/.docx).",
   uploadStatus,
   uploadMensagem,
   uploadPct,
@@ -87,7 +97,7 @@ export function PlaybookUploadAnalisePanel({
       <div
         role="button"
         tabIndex={0}
-        aria-label="Área de upload do playbook. Arraste e solte arquivo .md ou .txt."
+        aria-label={`Área de upload do playbook. Arraste e solte arquivo ${formatosTexto}.`}
         onDragEnter={(e) => {
           e.preventDefault();
           if (!enviando) onHoverChange(true);
@@ -110,6 +120,7 @@ export function PlaybookUploadAnalisePanel({
         onKeyDown={(e) => {
           if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
+          if (enviando) return; // mesma guarda do onDrop (evita abrir 2º seletor durante o upload)
           const input = document.getElementById(inputId);
           if (input instanceof HTMLInputElement) input.click();
         }}
@@ -125,7 +136,7 @@ export function PlaybookUploadAnalisePanel({
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <p style={{ color: "#e6edf3", fontSize: 13, margin: 0, fontWeight: 700 }}>
-            {modoPreCriacao ? "Arraste o playbook aqui" : "Upload do playbook (.md ou .txt)"}
+            {modoPreCriacao ? "Arraste o playbook aqui" : `Upload da instrução (${formatosTexto})`}
           </p>
           <span
             style={{
@@ -149,7 +160,7 @@ export function PlaybookUploadAnalisePanel({
           </span>
         </div>
         <p style={{ color: "#8b949e", fontSize: 12, margin: "8px 0 0", lineHeight: 1.55 }}>
-          Arraste e solte o arquivo nesta área ou use o botão para selecionar. Tamanho máximo: 2 MB.
+          Arraste e solte o arquivo nesta área ou use o botão para selecionar. {limiteHint}
         </p>
         <p style={{ color: "#8b949e", fontSize: 12, margin: "10px 0 0", lineHeight: 1.55 }}>
           Sem modelo?{" "}
@@ -227,7 +238,7 @@ export function PlaybookUploadAnalisePanel({
         <input
           id={inputId}
           type="file"
-          accept={PLAYBOOK_ACCEPT_ATTR}
+          accept={acceptAttr}
           style={{ display: "none" }}
           onChange={(e) => {
             const file = e.currentTarget.files?.[0] ?? null;
