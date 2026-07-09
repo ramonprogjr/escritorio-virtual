@@ -28,6 +28,8 @@ type EventoRede = {
   ator: string | null;
   payload: Record<string, unknown> | null;
   ts: string;
+  lead_id?: string | null;
+  negocio_id?: string | null;
 };
 
 type Metricas = {
@@ -79,7 +81,52 @@ function descreverEvento(e: EventoRede): string {
   if (e.event_type === "fornecedor_cobrado") {
     return `Cobrança enviada a ${p.parceiro_nome ?? "fornecedor"}${p.motivo ? ` · ${p.motivo}` : ""}`;
   }
+  // Os mais COMUNS em produção — antes caíam no fallback sem nome (linha morta):
+  if (e.event_type === "estagio_alterado" || e.event_type === "status_change") {
+    const nome = p.lead_nome ?? p.nome;
+    const de = p.estagio_anterior ?? p.de;
+    const para = p.estagio_novo ?? p.para;
+    return `Estágio${nome ? ` de ${nome}` : ""}${de && para ? `: ${de} → ${para}` : " alterado"}`;
+  }
+  if (e.event_type === "lead_criado" || e.event_type === "lead_novo") {
+    const nome = p.nome ?? p.lead_nome;
+    return `Novo lead${nome ? `: ${nome}` : ""}${p.origem ? ` · ${p.origem}` : ""}`;
+  }
+  if (e.event_type === "tarefa_criada") {
+    return `Tarefa criada${p.titulo ? `: ${p.titulo}` : ""}`;
+  }
   return e.event_type.replace(/_/g, " ");
+}
+
+/** Hora relativa curta (agora/min/h/data) — o feed antes buscava ts e nunca mostrava. */
+function tempoRelativo(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "";
+  const min = Math.floor((Date.now() - t) / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h`;
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+/** Rótulo do dia para agrupar o feed (Hoje / Ontem / data). */
+function rotuloDia(iso: string): string {
+  const d = new Date(iso);
+  const h0 = new Date().setHours(0, 0, 0, 0);
+  const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const dias = Math.round((h0 - d0) / 86_400_000);
+  if (dias <= 0) return "Hoje";
+  if (dias === 1) return "Ontem";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+}
+
+/** Cor do ponto por família de evento. */
+function corEvento(t: string): string {
+  if (t.includes("bloqueio") || t.includes("recus") || t.includes("perdido")) return "#f85149";
+  if (t.includes("distribu") || t.includes("recoloc") || t.includes("cobrad")) return "#c9a24a";
+  if (t.includes("liberad") || t.includes("entrega") || t.includes("ganho")) return "#34d399";
+  return "#6e7681";
 }
 
 const ORIGENS = ["", "whatsapp", "meta", "google", "indicacao", "manual", "super_cadastro"];
@@ -92,6 +139,8 @@ const label = (s: string | null) => (s && s.trim() ? s : "qualquer");
 export default function DistribuicaoPage() {
   const [lista, setLista] = useState<Regra[]>([]);
   const [eventos, setEventos] = useState<EventoRede[]>([]);
+  const [limiteFeed, setLimiteFeed] = useState(30);
+  const [filtroFeed, setFiltroFeed] = useState<"todos" | "distribuicao" | "alertas">("todos");
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [acaoForn, setAcaoForn] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<
@@ -123,15 +172,12 @@ export default function DistribuicaoPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const [resRegras, resEv, resMet] = await Promise.all([
+      const [resRegras, resMet] = await Promise.all([
         fetch("/api/crm/distribuicao/regras", { headers: internalApiHeaders() }),
-        fetch("/api/crm/eventos?limite=20", { headers: internalApiHeaders() }),
         fetch("/api/crm/distribuicao/metricas", { headers: internalApiHeaders() }),
       ]);
       const json = (await resRegras.json().catch(() => ({}))) as { data?: Regra[] };
       if (resRegras.ok) setLista(json.data ?? []);
-      const jEv = (await resEv.json().catch(() => ({}))) as { data?: EventoRede[] };
-      if (resEv.ok) setEventos(jEv.data ?? []);
       const jMet = (await resMet.json().catch(() => ({}))) as Metricas | { error: string };
       if (resMet.ok && "geral" in jMet) setMetricas(jMet);
     } finally {
@@ -140,6 +186,17 @@ export default function DistribuicaoPage() {
   }, []);
 
   useEffect(() => { void carregar(); }, [carregar]);
+
+  // Feed "Atividade da rede" — carrega separado, com "ver mais" (limiteFeed) para escalar sem
+  // recarregar a tela toda; a API aceita até 100 por vez.
+  useEffect(() => {
+    let ativo = true;
+    fetch(`/api/crm/eventos?limite=${limiteFeed}`, { headers: internalApiHeaders() })
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((j) => { if (ativo) setEventos(((j?.data ?? []) as EventoRede[])); })
+      .catch(() => {});
+    return () => { ativo = false; };
+  }, [limiteFeed]);
 
   useEffect(() => {
     void (async () => {
@@ -386,37 +443,108 @@ export default function DistribuicaoPage() {
         </div>
       )}
 
-      {/* Atividade da rede — gestão completa do Hub (lê hub_eventos) */}
+      {/* Atividade da rede — feed escalável (lê hub_eventos): filtro + agrupado por dia + hora +
+          clicável + altura fixa com rolagem + "ver mais". Aguenta 50+ leads/dia sem virar parede. */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: "1px solid #1d3a2c", background: "#0a140f" }}>
-        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#c9a24a" }}>
-          Atividade da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· controle total do Hub</span>
-        </p>
-        {eventos.length === 0 ? (
-          <p style={{ margin: 0, color: "#8b949e", fontSize: 13 }}>
-            Sem eventos ainda. Distribua um lead ou feche um negócio para ver a rede em movimento.
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#c9a24a", flex: "1 1 auto" }}>
+            Atividade da rede <span style={{ color: "#6e7681", fontWeight: 400 }}>· o que aconteceu</span>
           </p>
-        ) : (
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-            {eventos.map((e) => (
-              <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
-                <span
-                  aria-hidden
-                  style={{
-                    width: 8, height: 8, borderRadius: 999, flexShrink: 0,
-                    background:
-                      e.event_type === "gate_pendencia_bloqueio"
-                        ? "#f85149"
-                        : e.event_type === "lead_distribuido"
-                          ? "#c9a24a"
-                          : "#34d399",
-                  }}
-                />
-                <span style={{ flex: 1, color: "#e6edf3" }}>{descreverEvento(e)}</span>
-                <span style={{ fontSize: 11, color: "#6e7681", flexShrink: 0 }}>{e.ator ?? ""}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+          {(
+            [
+              ["todos", "Tudo"],
+              ["distribuicao", "Distribuição"],
+              ["alertas", "Alertas"],
+            ] as const
+          ).map(([v, lbl]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setFiltroFeed(v)}
+              style={{
+                padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                border: "1px solid " + (filtroFeed === v ? "#c9a24a" : "#1d3a2c"),
+                background: filtroFeed === v ? "#c9a24a22" : "transparent",
+                color: filtroFeed === v ? "#c9a24a" : "#8b949e",
+              }}
+            >
+              {lbl}
+            </button>
+          ))}
+        </div>
+        {(() => {
+          const filt = eventos.filter((e) => {
+            if (filtroFeed === "distribuicao") return /distribu|recoloc|recus|sem_proximo/.test(e.event_type);
+            if (filtroFeed === "alertas") return /bloqueio|recus|perdido|cobrad/.test(e.event_type);
+            return true;
+          });
+          if (filt.length === 0) {
+            return (
+              <p style={{ margin: 0, color: "#8b949e", fontSize: 13 }}>
+                Sem eventos neste filtro. Distribua um lead ou feche um negócio para ver a rede em movimento.
+              </p>
+            );
+          }
+          const grupos: { dia: string; itens: EventoRede[] }[] = [];
+          for (const e of filt) {
+            const dia = rotuloDia(e.ts);
+            const g = grupos.find((x) => x.dia === dia);
+            if (g) g.itens.push(e);
+            else grupos.push({ dia, itens: [e] });
+          }
+          return (
+            <>
+              <div style={{ maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
+                {grupos.map((grp) => (
+                  <div key={grp.dia} style={{ marginBottom: 10 }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#6e7681" }}>
+                      {grp.dia}
+                    </p>
+                    <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                      {grp.itens.map((e) => {
+                        const href = e.lead_id ? `/crm/leads/${e.lead_id}` : e.negocio_id ? `/crm/negocios/${e.negocio_id}` : null;
+                        const linha = (
+                          <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12.5, width: "100%" }}>
+                            <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: corEvento(e.event_type) }} />
+                            <span style={{ flex: 1, color: "#e6edf3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {descreverEvento(e)}
+                            </span>
+                            <span style={{ fontSize: 10.5, color: "#6e7681", flexShrink: 0 }}>{tempoRelativo(e.ts)}</span>
+                          </span>
+                        );
+                        return (
+                          <li key={e.id}>
+                            {href ? (
+                              <a
+                                href={href}
+                                style={{ display: "block", textDecoration: "none", borderRadius: 8, padding: "3px 4px" }}
+                                onMouseEnter={(ev) => (ev.currentTarget.style.background = "#16271e")}
+                                onMouseLeave={(ev) => (ev.currentTarget.style.background = "transparent")}
+                              >
+                                {linha}
+                              </a>
+                            ) : (
+                              <div style={{ padding: "3px 4px" }}>{linha}</div>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              {eventos.length >= limiteFeed && limiteFeed < 100 && (
+                <button
+                  type="button"
+                  onClick={() => setLimiteFeed((n) => Math.min(100, n + 30))}
+                  style={{ marginTop: 8, width: "100%", padding: "7px 12px", borderRadius: 8, border: "1px solid #1d3a2c", background: "#16271e", color: "#8b949e", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Ver mais
+                </button>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* Regras de roteamento (config avançada) */}
