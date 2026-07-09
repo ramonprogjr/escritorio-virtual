@@ -16,6 +16,7 @@ import {
   type CadastroFichaTabId,
 } from "@/components/crm/cadastro/CadastroFichaTabs";
 import { CadastroFichaRelacionados } from "@/components/crm/cadastro/CadastroFichaRelacionados";
+import { EntidadeTimeline } from "@/components/crm/EntidadeTimeline";
 import { CadastroVinculosPessoaEmpresa } from "@/components/crm/cadastro/CadastroVinculosPessoaEmpresa";
 import Link from "next/link";
 
@@ -311,7 +312,11 @@ export default function PessoaDetalhePage() {
       </div>
 
       <div style={{ padding: "12px 24px 32px", maxWidth: 960 }}>
-        <CadastroFichaTabs active={tab} onChange={setTab}>
+        <CadastroFichaTabs
+          active={tab}
+          onChange={setTab}
+          tabs={["resumo", "dados", "vinculos", "relacionados", "registros"]}
+        >
           {tab === "resumo" && (
             <div
               style={{
@@ -379,6 +384,7 @@ export default function PessoaDetalhePage() {
               variant="page"
             />
           )}
+          {tab === "registros" && <EntidadeTimeline entityType="pessoa" entityId={id} />}
         </CadastroFichaTabs>
       </div>
     </div>
