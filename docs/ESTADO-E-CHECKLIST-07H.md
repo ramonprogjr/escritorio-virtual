@@ -56,11 +56,11 @@ Só depois de tudo acima OK, ligamos o webhook na UAZAPI. A partir daí a Mari a
 
 ---
 
-## 4. Direcionar lead ao arquiteto (já funciona — falta você cadastrar)
+## 4. Direcionar lead ao arquiteto (FUNCIONA ponta-a-ponta ✅)
 
-O motor de direcionamento automático **existe e está ligado**. Quando um lead qualifica (tem interesse + valor), o sistema sugere **5 escritórios** e você confirma. O parceiro recebe no WhatsApp o **card-resumo** (nome, pedido resumido pela IA, última fala, link pra abrir o WhatsApp do cliente, link pra orçar).
+O motor de direcionamento automático **existe, está ligado e TEM destino**: conferi o banco — há **9 parceiros cadastrados, 5 em Arquitetura** (1 está bloqueado por pendência). Quando um lead qualifica (interesse + valor), o sistema sugere **até 5 escritórios** e você confirma num toque. O parceiro recebe no WhatsApp o **card-resumo** (nome, pedido resumido pela IA, última fala, link pra abrir o WhatsApp do cliente, link pra orçar) — e você vê um **preview do card no drawer** antes de enviar.
 
-**Falta só:** cadastrar os escritórios de arquitetura como **parceiros homologados** (mercado = Arquitetura) no CRM. Sem parceiros cadastrados, o sistema diz "nenhum parceiro disponível". Me diga se quer que eu prepare a tela/fluxo de cadastro em massa deles.
+Fluxo completo já pronto: lead chega → Mari atende → qualifica → você direciona (5 sugestões) → arquiteto recebe o card. **Nada a cadastrar** para começar. (Se quiser adicionar mais escritórios depois, é só cadastrá-los como parceiros mercado = Arquitetura.)
 
 ---
 
