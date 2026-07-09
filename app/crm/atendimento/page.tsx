@@ -8,9 +8,11 @@ import { supabase } from "@/lib/supabase/client";
 import { useCrmHeaderSlot } from "@/components/crm/CrmHeaderContext";
 import { useNarrowViewport } from "@/hooks/useNarrowViewport";
 import { DirecionarLeadDrawer } from "@/components/crm/DirecionarLeadDrawer";
+import { CriarTarefaModal } from "@/components/crm/CriarTarefaModal";
 import {
   Bot,
   Brain,
+  ClipboardList,
   ChevronLeft,
   ChevronRight,
   Contact,
@@ -127,6 +129,7 @@ function AtendimentoContent() {
   const [sendStrip, setSendStrip] = useState<{ kind: "error" | "success" | "info"; text: string } | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [direcionarOpen, setDirecionarOpen] = useState(false);
+  const [tarefaOpen, setTarefaOpen] = useState(false);
   const [sugerindo, setSugerindo] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const leadsCarregados = useRef(false);
@@ -847,6 +850,15 @@ function AtendimentoContent() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setTarefaOpen(true)}
+                  className="flex items-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[#c9a24a] text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium"
+                  title="Criar uma tarefa/follow-up para este lead"
+                >
+                  <ClipboardList size={14} strokeWidth={2} aria-hidden />
+                  Tarefa
+                </button>
+                <button
+                  type="button"
                   onClick={() => setInfoOpen(true)}
                   className="flex items-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[#c9a24a] text-[11px] px-3 py-1.5 rounded-lg transition-colors font-medium"
                 >
@@ -1335,6 +1347,15 @@ function AtendimentoContent() {
             setDirecionarOpen(false);
             void carregarLeads();
           }}
+        />
+      )}
+
+      {leadSel && (
+        <CriarTarefaModal
+          open={tarefaOpen}
+          leadId={leadSel.id}
+          leadNome={leadSel.nome}
+          onClose={() => setTarefaOpen(false)}
         />
       )}
     </div>
