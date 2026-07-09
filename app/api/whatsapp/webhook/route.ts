@@ -447,6 +447,76 @@ export async function POST(request: NextRequest) {
         return trace.json({ status: "ignored", reason: "invalid_phone" }, 200, "invalid_phone");
       }
 
+      // Comando /pausa | /retoma pelo celular do dono (ANTES do handoff). Pausa por TELEFONE — funciona mesmo sem lead no CRM.
+      // "/pausa" sozinho pausa o número do chat atual; "/pausa 11 98888-7777" pausa o número citado. /retoma desfaz e devolve à IA.
+      const { parseComandoPausa, pausarTelefone, retomarTelefone } = await import("@/lib/whatsapp/pausa-atendimento");
+      const comando = parseComandoPausa(outbound.mensagemFinal || "", telefoneLead);
+      if (comando) {
+        const acao = comando.acao;
+        const alvo = comando.alvo;
+        const alvoMasc = `***${alvo.slice(-4)}`;
+        let ok = false;
+        let erro: string | null = null;
+
+        if (acao === "pausa") {
+          const r = await pausarTelefone(supabase, { telefone: alvo, fonte: "comando", motivo: "comando_celular", criadoPor: "wendel" });
+          ok = r.ok;
+          erro = r.ok ? null : r.error ?? "falha ao pausar";
+          if (r.ok) {
+            try {
+              const { cancelarJobsIaPendentesTelefone } = await import("@/lib/whatsapp/human-handoff-from-device");
+              await cancelarJobsIaPendentesTelefone(supabase, alvo);
+            } catch {
+              /* best-effort: cancelar jobs pendentes não é crítico */
+            }
+          }
+        } else {
+          const r = await retomarTelefone(supabase, { telefone: alvo });
+          ok = r.ok;
+          erro = r.ok ? null : r.error ?? "falha ao retomar";
+          if (r.ok) {
+            // Devolve à IA: limpa humano_responsavel por EQUIVALÊNCIA de sufixo-11 (não só igualdade
+            // exata do telefone) — cobre lead cadastrado noutro formato (laudo Fable, Médio 8).
+            try {
+              const { telefonesConversaEquivalentes } = await import("@/lib/crm/isolamento-conversa-lead");
+              const { data: leadsCand } = await supabase
+                .from("hub_leads_crm")
+                .select("id, telefone")
+                .not("humano_responsavel", "is", null)
+                .limit(300);
+              const ids = (Array.isArray(leadsCand) ? leadsCand : [])
+                .filter((l) => telefonesConversaEquivalentes(String((l as { telefone?: string }).telefone ?? ""), alvo))
+                .map((l) => (l as { id: string }).id);
+              if (ids.length) await supabase.from("hub_leads_crm").update({ humano_responsavel: null }).in("id", ids);
+            } catch {
+              /* best-effort */
+            }
+          }
+        }
+
+        // Feedback DURÁVEL ao dono no painel. Não mandamos WhatsApp de confirmação: no fromMe o
+        // "telefone" é o OUTRO lado do chat (pode ser um cliente) — risco de mensagem indevida.
+        // Em falha o alerta é CRÍTICO para o dono não achar que pausou sem ter pausado (laudo, Alto 4).
+        try {
+          await supabase.from("hub_alertas").insert({
+            tipo: ok ? "info" : "critico",
+            agente_slug: "atendimento_pausa",
+            titulo: ok
+              ? `IA ${acao === "pausa" ? "pausada" : "retomada"} para ${alvoMasc}`
+              : `FALHA no comando /${acao} (${alvoMasc})`,
+            mensagem: ok
+              ? `Comando /${acao} pelo celular aplicado (${alvoMasc}).`
+              : `Comando /${acao} pelo celular FALHOU (${alvoMasc}): ${erro}. A IA pode continuar ${acao === "pausa" ? "respondendo" : "pausada"} — verifique.`,
+            dados: { acao, alvo_masc: alvoMasc, ok, erro },
+          });
+        } catch {
+          /* best-effort: alerta não pode derrubar o webhook */
+        }
+
+        log.info("wa.webhook.comando_pausa", { acao, alvo_masc: alvoMasc, ok, erro });
+        return trace.json({ status: "comando_pausa", acao, alvo_masc: alvoMasc, ok }, 200, "comando_pausa");
+      }
+
       const handoff = await ativarAtendimentoHumanoPorMensagemDoCelular(supabase, {
         telefone: telefoneLead,
         mensagem: outbound.mensagemFinal,

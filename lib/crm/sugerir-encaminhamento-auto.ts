@@ -4,6 +4,7 @@ import { listarCandidatosParceiro, type CandidatoParceiro } from "@/lib/crm/dist
 import { defaultTenantId } from "@/lib/tenant-default";
 import { legacyToFunil } from "@/lib/crm/estagio-map";
 import { avaliarQualificacao } from "@/lib/crm/lead-rules";
+import { montarCardResumoLead } from "@/lib/crm/gerar-card-lead";
 
 export type SugestaoEncaminhamentoResult =
   | {
@@ -115,6 +116,16 @@ export async function sugerirEncaminhamentoAutomatico(
 
   const principal = candidatos[0];
   const now = new Date().toISOString();
+
+  // Card-resumo (§5, estilo Kommo): gera uma vez aqui e cacheia no criterio_selecao —
+  // o envio ao parceiro (enviarLeadAoParceiro) reaproveita sem re-chamar a IA. Nunca bloqueia.
+  let cardResumo: Awaited<ReturnType<typeof montarCardResumoLead>> = null;
+  try {
+    cardResumo = await montarCardResumoLead(supabase, leadId);
+  } catch (e) {
+    console.warn("[distribuicao] card-resumo na sugestão falhou (segue sem):", e);
+  }
+
   const payloadCriterio = JSON.stringify({
     parceiro_id: principal.parceiro_id,
     parceiro_nome: principal.nome,
@@ -122,6 +133,7 @@ export async function sugerirEncaminhamentoAutomatico(
     score: principal.score,
     motivo: principal.motivo,
     candidatos,
+    card_resumo: cardResumo,
   });
 
   const { data: enc, error: encErr } = await supabase

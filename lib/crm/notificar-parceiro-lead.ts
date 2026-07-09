@@ -3,6 +3,20 @@ import { persistirParceiroNoLead } from "@/lib/crm/lead-parceiro-metadata";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { uazapiSendText } from "@/lib/whatsapp/uazapi-send";
 import { defaultTenantId } from "@/lib/tenant-default";
+import { montarCardResumoLead, formatarCardWhatsApp, type CardResumoLead } from "@/lib/crm/gerar-card-lead";
+
+/** Valida o card-resumo cacheado em criterio_selecao.card_resumo. */
+function asCardResumo(v: unknown): CardResumoLead | null {
+  if (
+    v &&
+    typeof v === "object" &&
+    !Array.isArray(v) &&
+    typeof (v as { pedido_resumo?: unknown }).pedido_resumo === "string"
+  ) {
+    return v as CardResumoLead;
+  }
+  return null;
+}
 
 export type EnviarLeadParceiroResult =
   | { ok: true; telefone: string }
@@ -96,22 +110,29 @@ export async function enviarLeadAoParceiro(
     lead.metadata && typeof lead.metadata === "object" && !Array.isArray(lead.metadata)
       ? (lead.metadata as Record<string, unknown>)
       : {};
-  const mercadosRaw = leadMeta.mercados;
-  const mercadoPrimeiro = Array.isArray(mercadosRaw) ? mercadosRaw[0] : undefined;
-  const mercado = String(leadMeta.mercado_principal ?? mercadoPrimeiro ?? "—");
-  const codigo = lead.codigo ? ` (${lead.codigo})` : "";
-  const portalUrl = `${appUrl()}/parceiro/dashboard`;
 
-  const texto = [
-    `🔔 *Novo lead para você!*`,
-    ``,
-    `*Nome:* ${lead.nome}${codigo}`,
-    `*Telefone:* ${lead.telefone || "—"}`,
-    `*Mercado:* ${mercado}`,
-    ``,
-    `Acesse o portal para aceitar ou recusar:`,
-    portalUrl,
-  ].join("\n");
+  // Card-resumo (§5, estilo Kommo): reaproveita o cache gerado no sugerir-encaminhamento; gera na
+  // hora se faltar (cobre o caminho manual do DirecionarLeadDrawer). O card SEMPRE sai — se por
+  // algum motivo falhar, cai no texto simples abaixo. Nunca bloqueia a atribuição do lead.
+  let card: CardResumoLead | null = asCardResumo(criterio.card_resumo);
+  if (!card) {
+    try {
+      card = await montarCardResumoLead(supabase, leadId);
+    } catch (e) {
+      console.warn("[distribuicao] montar card-resumo falhou (segue texto simples):", e);
+    }
+  }
+  const texto = card
+    ? formatarCardWhatsApp(card, { encaminhamentoId, appUrl: appUrl() })
+    : [
+        `🔔 *Novo lead para você!*`,
+        ``,
+        `*Nome:* ${lead.nome}${lead.codigo ? ` (${lead.codigo})` : ""}`,
+        `*Telefone:* ${lead.telefone || "—"}`,
+        ``,
+        `Acesse o portal para aceitar ou recusar:`,
+        `${appUrl()}/parceiro/dashboard`,
+      ].join("\n");
 
   if (process.env.WHATSAPP_DRY_RUN === "1") {
     console.info("[distribuicao] DRY RUN parceiro:", parceiro.telefone, texto.slice(0, 80));
