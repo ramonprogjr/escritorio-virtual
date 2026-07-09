@@ -34,5 +34,6 @@ export async function POST(request: NextRequest) {
     encaminhamento_id: result.encaminhamento_id,
     principal: result.principal,
     candidatos: result.candidatos,
+    card_resumo: result.card_resumo ?? null,
   });
 }

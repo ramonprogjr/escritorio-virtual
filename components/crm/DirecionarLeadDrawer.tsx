@@ -7,6 +7,7 @@ import { toast } from "@/components/crm/toast";
 import { DirecionarLeadCard, type CandidatoCard } from "@/components/crm/DirecionarLeadCard";
 import { abrirCopilotoVoz, type DestinoManual } from "@/lib/crm/direcionamento-ui";
 import { carregarDestinosManual, gravarDestinoManual } from "@/lib/crm/encaminhamento-manual";
+import type { CardResumoLead } from "@/lib/crm/gerar-card-lead";
 
 type Candidato = CandidatoCard & { telefone?: string | null };
 
@@ -44,6 +45,7 @@ export function DirecionarLeadDrawer({
   const [desligado, setDesligado] = useState(false);
   const [encId, setEncId] = useState<string | null>(null);
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
+  const [cardResumo, setCardResumo] = useState<CardResumoLead | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [enviadoNome, setEnviadoNome] = useState<string | null>(null);
   const [recoloc, setRecoloc] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export function DirecionarLeadDrawer({
     setRecoloc(null);
     setCandidatos([]);
     setEncId(null);
+    setCardResumo(null);
     setCarregando(true);
     try {
       const res = await fetch("/api/crm/distribuicao/sugerir", {
@@ -75,6 +78,7 @@ export function DirecionarLeadDrawer({
         ok?: boolean;
         encaminhamento_id?: string;
         candidatos?: Candidato[];
+        card_resumo?: CardResumoLead | null;
         error?: string;
       };
       if (!res.ok || !json.ok) {
@@ -90,6 +94,7 @@ export function DirecionarLeadDrawer({
       }
       setEncId(json.encaminhamento_id ?? null);
       setCandidatos(json.candidatos ?? []);
+      setCardResumo(json.card_resumo ?? null);
     } catch {
       setErro("Erro de rede ao buscar fornecedores.");
     } finally {
@@ -327,6 +332,45 @@ export function DirecionarLeadDrawer({
           <>
             {erro && candidatos.length > 0 && (
               <p style={{ color: "#f85149", fontSize: 12, margin: "0 0 10px" }}>{erro}</p>
+            )}
+            {cardResumo && candidatos.length > 0 && (
+              <div
+                style={{
+                  marginBottom: 14,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "#07110c",
+                  border: "1px solid #1d3a2c",
+                }}
+              >
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: 11,
+                    letterSpacing: 0.4,
+                    textTransform: "uppercase",
+                    color: "#8b949e",
+                    fontWeight: 700,
+                  }}
+                >
+                  📋 O parceiro vai receber
+                </p>
+                <p style={{ margin: "0 0 6px", fontSize: 13.5, color: "#e6edf3", lineHeight: 1.5 }}>
+                  {cardResumo.pedido_resumo}
+                </p>
+                {(() => {
+                  const ultima = [...cardResumo.ultimas_falas].reverse().find((f) => f.de === "cliente");
+                  return ultima ? (
+                    <p style={{ margin: "0 0 4px", fontSize: 12.5, color: "#c9a24a", fontStyle: "italic" }}>
+                      💬 &ldquo;{ultima.texto}&rdquo;
+                    </p>
+                  ) : null;
+                })()}
+                <p style={{ margin: "6px 0 0", fontSize: 11, color: "#6b7681" }}>
+                  {cardResumo.fonte_resumo === "ia" ? "Resumo gerado pela IA" : "Resumo automático"} · enviado no
+                  WhatsApp do parceiro
+                </p>
+              </div>
             )}
             <DirecionarLeadCard
               lead={{ nome: leadNome ?? "Lead" }}

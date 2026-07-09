@@ -88,6 +88,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     score: proximo.score,
     motivo: proximo.motivo,
     candidatos,
+    // Preserva o card-resumo (é do LEAD, não do parceiro) — o próximo candidato reaproveita
+    // sem re-chamar a Mistral a cada recusa (QA A1: custo + latência do botão "Recolocando…").
+    card_resumo: criterio.card_resumo ?? null,
   });
 
   const { data: novo, error: novoErr } = await supabase

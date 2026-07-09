@@ -136,7 +136,7 @@ export type FlowEnginePersistPatch = {
  */
 export const FLOW_SPLIT_BUBBLE_DELAY_MS = 800;
 
-function resolveSplitBubbleDelayMs(): number {
+export function resolveSplitBubbleDelayMs(): number {
   const raw = process.env.FLOW_SPLIT_BUBBLE_DELAY_MS;
   if (raw !== undefined && raw !== "") {
     const parsed = Number(raw);
@@ -151,6 +151,18 @@ export function splitTextIntoBubbles(text: string): string[] {
     .split(/\n{2,}/)
     .map((part) => part.trim())
     .filter(Boolean);
+}
+
+/**
+ * Quebra um texto em no máximo `max` bolhas: 1 parágrafo → [texto cru] (idêntico ao envio único);
+ * até `max` → cada parágrafo; acima → as (max-1) primeiras + o resto concatenado na última.
+ * Pura e testável (usada no envio da resposta LLM do processor).
+ */
+export function dividirEmBolhasComLimite(texto: string, max = 5): string[] {
+  const partes = splitTextIntoBubbles(texto);
+  if (partes.length <= 1) return [texto];
+  if (partes.length <= max) return partes;
+  return [...partes.slice(0, max - 1), partes.slice(max - 1).join("\n\n")];
 }
 
 export type FlowEngineAdapter = {
