@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mistralChatCompletion } from "@/lib/ia/mistral-chat";
+import { mistralDefaultModelId } from "@/lib/ia/hub-model-defaults";
 
 /**
  * "Mari sugere": lê a conversa do lead (os 2 ledgers) e propõe a PRÓXIMA resposta ao operador humano
@@ -54,7 +55,7 @@ export async function sugerirRespostaAtendimento(
     "Responda SÓ com a mensagem sugerida, sem aspas e sem rótulo.";
 
   const r = await mistralChatCompletion({
-    model: "mistral-small-latest",
+    model: mistralDefaultModelId(),
     system,
     messages: historico,
     temperature: 0.5,

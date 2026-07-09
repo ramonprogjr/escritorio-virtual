@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mistralChatCompletion } from "@/lib/ia/mistral-chat";
+import { mistralDefaultModelId } from "@/lib/ia/hub-model-defaults";
 import { telefoneConversaId } from "@/lib/crm/isolamento-conversa-lead";
 
 /**
@@ -94,7 +95,7 @@ async function resumirPedidoIA(
 
   const r = await Promise.race([
     mistralChatCompletion({
-      model: "mistral-small-latest",
+      model: mistralDefaultModelId(),
       system,
       messages: [{ role: "user", content: `${dica}\n\nFalas do cliente:\n${conversa}` }],
       temperature: 0.2,
