@@ -159,12 +159,18 @@ function AtendimentoContent() {
   }, [mensagens]);
 
   // ── Deep link: ?lead=<id> ────────────────────────────────────────────────
+  // BUG corrigido: o effect roda a cada poll de 30s (dep `leads`); antes re-selecionava o lead da
+  // URL toda vez → zerava o rascunho digitado. Agora só seleciona quando o ?lead= REALMENTE muda.
+  const ultimoDeepLink = useRef<string | null>(null);
   useEffect(() => {
     if (!leadsCarregados.current || leads.length === 0) return;
     const leadId = searchParams.get("lead");
-    if (leadId) {
+    if (leadId && leadId !== ultimoDeepLink.current) {
       const found = leads.find(l => l.id === leadId);
-      if (found) selecionarLead(found);
+      if (found) {
+        selecionarLead(found);
+        ultimoDeepLink.current = leadId;
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, leads]);
