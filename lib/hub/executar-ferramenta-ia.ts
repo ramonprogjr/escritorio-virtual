@@ -299,6 +299,40 @@ async function executarFerramentaHubBuiltin(
         ),
       });
     }
+    case "hub_criar_tarefa": {
+      if (ctx.modoOperacao !== "canal_whatsapp") {
+        return JSON.stringify({
+          erro: "ferramenta_apenas_modo_atendimento_canal_whatsapp",
+          modo_actual: ctx.modoOperacao ?? null,
+        });
+      }
+      const titulo = typeof args.titulo === "string" ? args.titulo.trim() : "";
+      if (!titulo) return JSON.stringify({ erro: "titulo_obrigatorio" });
+      // SEGURANÇA: a tarefa é SEMPRE do lead da sessão — a entidade não vem por prompt injection.
+      const { criarTarefa } = await import("@/lib/crm/registrar-tarefa");
+      const rt = await criarTarefa(supabase, {
+        titulo,
+        descricao: typeof args.descricao === "string" ? args.descricao : null,
+        entity_type: "lead",
+        entity_id: ctx.leadId,
+        lead_id: ctx.leadId,
+        prioridade: typeof args.prioridade === "string" ? args.prioridade : undefined,
+        vencimento_em: typeof args.vencimento_em === "string" ? args.vencimento_em : null,
+        origem: "ia",
+        ator: ctx.agenteSlug,
+        tenant_id: (ctx.tenantId && ctx.tenantId.trim()) || defaultTenantId(),
+      });
+      if (!rt.ok) return JSON.stringify({ erro: "falha_criar_tarefa", detalhe: rt.error });
+      await supabase.from("hub_acoes_ia").insert({
+        agente_slug: ctx.agenteSlug,
+        tipo: "tarefa_criada",
+        descricao: `Tarefa criada: ${titulo}`,
+        lead_id: ctx.leadId,
+        sucesso: true,
+        metadata: { ferramenta: "hub_criar_tarefa", tarefa_id: rt.id },
+      });
+      return JSON.stringify({ ok: true, tarefa_id: rt.id, titulo });
+    }
     case "hub_crm_criar_cadastro": {
       const nome = typeof args.nome === "string" ? args.nome.trim() : "";
       const telefoneArg = typeof args.telefone === "string" ? args.telefone.trim() : "";

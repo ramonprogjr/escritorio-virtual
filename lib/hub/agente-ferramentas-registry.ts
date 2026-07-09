@@ -18,6 +18,7 @@ export type HubAgenteFerramentaId =
   | "hub_atualizar_lead"
   | "hub_lead_encaminhar"
   | "hub_crm_criar_cadastro"
+  | "hub_criar_tarefa"
   // ── E0: Engenharia/Obra (não dependem de canal WhatsApp) ──
   | "hub_obra_listar"
   | "hub_obra_resumo"
@@ -243,6 +244,30 @@ export const HUB_AGENTE_FERRAMENTAS_CATALOGO: readonly HubAgenteFerramentaCatalo
             description: "Preferências (merge JSON), ex.: horario manhã.",
           },
         },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    id: "hub_criar_tarefa",
+    categoria: "registos",
+    titulo: "Criar tarefa / follow-up",
+    descricao:
+      "Cria uma tarefa VISÍVEL (follow-up, ação combinada) para o lead desta conversa, com prazo opcional. Aparece na tela de tarefas do time.",
+    recomendadoWhatsApp: true,
+    mistralFunction: {
+      name: "hub_criar_tarefa",
+      description:
+        "Cria uma TAREFA/ação de acompanhamento para o lead desta conversa (ex.: «ligar amanhã», «enviar proposta até sexta», «confirmar a visita»). A tarefa fica visível na tela de tarefas do time e pode ter prazo. Use quando combinar um próximo passo com o cliente ou quando algo precisar de ação humana depois. Não peça telefone — o lead já é o desta conversa.",
+      parameters: {
+        type: "object",
+        properties: {
+          titulo: { type: "string", description: "O que precisa ser feito, curto (ex.: Ligar para confirmar a visita)." },
+          descricao: { type: "string", description: "Detalhe opcional." },
+          prioridade: { type: "string", enum: ["baixa", "media", "alta"], description: "Prioridade (default media)." },
+          vencimento_em: { type: "string", description: "Prazo em ISO com fuso (ex.: 2026-07-10T09:00:00-03:00)." },
+        },
+        required: ["titulo"],
         additionalProperties: false,
       },
     },
@@ -1148,6 +1173,7 @@ export function mergeUsoFerramentasComPadrao(
     hub_atualizar_lead: false,
     hub_lead_encaminhar: false,
     hub_crm_criar_cadastro: false,
+    hub_criar_tarefa: false,
     hub_obra_listar: false,
     hub_obra_resumo: false,
     hub_obra_hoje: false,
@@ -1192,6 +1218,7 @@ export function mergeUsoFerramentasWhatsappCanal(
     if (coalesceFerramentaBool(uso.hub_lead_resumo) !== false) base.hub_lead_resumo = true;
     if (coalesceFerramentaBool(uso.hub_whatsapp_menu) !== false) base.hub_whatsapp_menu = true;
     if (coalesceFerramentaBool(uso.hub_registar_nota_lead) !== false) base.hub_registar_nota_lead = true;
+    if (coalesceFerramentaBool(uso.hub_criar_tarefa) !== false) base.hub_criar_tarefa = true;
   }
   return base;
 }
@@ -1218,6 +1245,7 @@ export const HUB_FERRAMENTA_ACESSO: Record<HubAgenteFerramentaId, HubFerramentaN
   hub_atualizar_lead: "escrita",
   hub_lead_encaminhar: "escrita",
   hub_crm_criar_cadastro: "escrita",
+  hub_criar_tarefa: "escrita",
   hub_obra_listar: "leitura",
   hub_obra_resumo: "leitura",
   hub_obra_hoje: "leitura",

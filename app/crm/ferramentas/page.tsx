@@ -62,6 +62,7 @@ const ICONE_FERRAMENTA: Record<HubAgenteFerramentaId, LucideIcon> = {
   hub_atualizar_lead: UserPen,
   hub_lead_encaminhar: Send,
   hub_crm_criar_cadastro: UserRound,
+  hub_criar_tarefa: ClipboardPenLine,
   hub_obra_listar: ListOrdered,
   hub_obra_resumo: HardHat,
   hub_obra_hoje: ClipboardPenLine,
