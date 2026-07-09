@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* DESIGN SYSTEM (Tailwind v4): mapeia os tokens --obra-* para utilities (bg-obra-dark,
+   text-obra-dourado, border-obra-borda, rounded-obra-md…). Antes os tokens eram letra morta
+   (~90% do CRM usava hex cru). Aditivo: os var(--obra-*) do :root continuam valendo; isto só
+   LIBERA as utilities para o código novo nascer no padrão. Valores idênticos aos do :root. */
+@theme {
+  --color-obra-dark: #0a140f;
+  --color-obra-dark-2: #0f1d16;
+  --color-obra-dark-3: #16271e;
+  --color-obra-dark-4: #1d3a2c;
+  --color-obra-verde: #003b26;
+  --color-obra-verde-light: #005c3d;
+  --color-obra-dourado: #c9a24a;
+  --color-obra-dourado-light: #e0b86a;
+  --color-obra-creme: #f7f4ec;
+  --color-obra-vermelho: #b3261e;
+  --color-obra-vermelho-light: #dc2626;
+  --color-obra-sucesso: #3fb950;
+  --color-obra-alerta: #f59e0b;
+  --color-obra-texto: #e6edf3;
+  --color-obra-texto-2: #8b949e;
+  --color-obra-texto-3: #484f58;
+  --color-obra-borda: #1d3a2c;
+  --color-obra-borda-2: #16271e;
+  --radius-obra-sm: 8px;
+  --radius-obra-md: 12px;
+  --radius-obra-lg: 16px;
+}
+
 /* FONTES da marca — variáveis usadas pelo body/Tailwind. As fontes são carregadas
    via <link> em app/layout.tsx (runtime, o navegador baixa do Google), NÃO no build.
    Isso impede que o build do Render quebre ao tentar baixar as fontes. */
