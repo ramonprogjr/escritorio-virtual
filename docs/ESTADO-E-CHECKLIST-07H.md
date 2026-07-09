@@ -72,6 +72,13 @@ Fluxo completo já pronto: lead chega → Mari atende → qualifica → você di
 
 ---
 
+## 5.1 Propostas rápidas pra você aprovar (2 min)
+
+Não fiz sozinho porque uma depende dos seus serviços vivos e a outra é a "voz" da Mari (decisão sua):
+
+1. **Ligar transcrição de áudio** (recomendo). Código pronto; plano verificado em `docs/FASE2-AUDIO-WIREUP.md`. ~20 min juntos de manhã (preciso confirmar o endpoint de mídia da sua UAZAPI + o modelo de voz na conta Mistral). Enquanto não liga, a Mari pede o texto educadamente.
+2. **Mari em mensagens curtas** (opcional). Já construí a quebra em "bolhas"; para ela brilhar, ajusto o prompt da Mari para responder em frases curtas separadas — fica mais humano, menos "textão". É mudar a voz dela, então só faço com seu OK.
+
 ## 6. Onde está tudo (pra referência)
 
 - Projeto/decisões: `docs/DESIGN-ATENDIMENTO-DEFINITIVO.md` (blueprint) e `docs/PLANO-GOLIVE-MARI-ATENDIMENTO.md`.
