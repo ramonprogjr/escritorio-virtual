@@ -772,16 +772,59 @@ export async function POST(request: NextRequest) {
   }
 
   if (ciclosVincular.length > 0) {
-    const { error: vErr } = await supabase
+    // SEGURANÇA (QA 09/jul): re-apontar um ciclo é um WRITE cru por id com service_role. Um gestor de OUTRO
+    // tenant que conheça UUIDs de ciclos alheios sequestraria a automação da vítima. Só permitir ciclos
+    // ÓRFÃOS (sem agente) ou de agentes do MESMO tenant. hub_ciclos_ia não tem tenant_id → resolver via
+    // agente_slug → hub_agente_identidade.tenant_id.
+    const { data: ciclosRows } = await supabase
       .from("hub_ciclos_ia")
-      .update({ agente_slug: created.agente_slug })
+      .select("id, agente_slug")
       .in("id", ciclosVincular);
-    if (vErr) {
-      ciclo_erro = ciclo_erro ? `${ciclo_erro}; ${vErr.message}` : vErr.message;
-      console.error("[crm] falha ao vincular ciclos ao agente:", created.agente_slug, vErr.message);
-    } else {
-      const msg = `${ciclosVincular.length} ciclo(s) em hub_ciclos_ia passaram a usar o slug deste agente.`;
-      ciclo_aviso = ciclo_aviso ? `${ciclo_aviso} ${msg}` : msg;
+    const slugsCiclos = Array.from(
+      new Set(
+        (ciclosRows ?? [])
+          .map((c) => String((c as Record<string, unknown>).agente_slug ?? ""))
+          .filter(Boolean)
+      )
+    );
+    const slugTenant = new Map<string, string | null>();
+    if (slugsCiclos.length > 0) {
+      const { data: agsCiclos } = await supabase
+        .from("hub_agente_identidade")
+        .select("agente_slug, tenant_id")
+        .in("agente_slug", slugsCiclos);
+      for (const a of agsCiclos ?? []) {
+        const r = a as Record<string, unknown>;
+        slugTenant.set(String(r.agente_slug), (r.tenant_id as string) ?? null);
+      }
+    }
+    const idsPermitidos = (ciclosRows ?? [])
+      .filter((c) => {
+        const slug = String((c as Record<string, unknown>).agente_slug ?? "");
+        if (!slug) return true; // ciclo órfão
+        const t = slugTenant.get(slug);
+        return t == null || String(t) === tenantId; // legado sem tenant OU do próprio tenant
+      })
+      .map((c) => String((c as Record<string, unknown>).id));
+    const nRejeitados = ciclosVincular.length - idsPermitidos.length;
+
+    if (idsPermitidos.length > 0) {
+      const { error: vErr } = await supabase
+        .from("hub_ciclos_ia")
+        .update({ agente_slug: created.agente_slug })
+        .in("id", idsPermitidos);
+      if (vErr) {
+        ciclo_erro = ciclo_erro ? `${ciclo_erro}; ${vErr.message}` : vErr.message;
+        console.error("[crm] falha ao vincular ciclos ao agente:", created.agente_slug, vErr.message);
+      } else {
+        const msg = `${idsPermitidos.length} ciclo(s) em hub_ciclos_ia passaram a usar o slug deste agente.`;
+        ciclo_aviso = ciclo_aviso ? `${ciclo_aviso} ${msg}` : msg;
+      }
+    }
+    if (nRejeitados > 0) {
+      const msg = `${nRejeitados} ciclo(s) ignorado(s) por não pertencerem a este tenant.`;
+      ciclo_erro = ciclo_erro ? `${ciclo_erro}; ${msg}` : msg;
+      console.warn("[crm] ciclos rejeitados por tenant ao vincular:", created.agente_slug, nRejeitados);
     }
   }
 
