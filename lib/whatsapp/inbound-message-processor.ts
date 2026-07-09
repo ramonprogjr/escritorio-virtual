@@ -3,6 +3,7 @@ import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import { respostaIaJaEnviadaRecente } from "@/lib/whatsapp/anti-duplicata-resposta";
 import { whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
 import { verificarPausaAtendimento } from "@/lib/whatsapp/pausa-atendimento";
+import { dividirEmBolhasComLimite, resolveSplitBubbleDelayMs } from "@/lib/playbook/flow-engine";
 
 type LoggerLike = {
   info: (event: string, fields?: Record<string, unknown>) => void;
@@ -542,7 +543,22 @@ export async function processarMensagemInboundWhatsapp(params: {
           telefone: trace.maskTelefone(params.telefone),
         });
       } else {
-      const sendOut = await enviarMensagemWhatsApp(params.telefone, resultado.resposta, params.waSendOpts);
+      // Quebra a resposta em bolhas por linha em branco (\n\n), humanizando o ritmo — mesma regra
+      // do flow-engine. 1 parágrafo → 1 bolha (byte-idêntico ao envio anterior); cap de 5.
+      const bolhas = dividirEmBolhasComLimite(resultado.resposta, 5);
+      const bubbleDelayMs = resolveSplitBubbleDelayMs();
+      let ultimoSend: Awaited<ReturnType<typeof enviarMensagemWhatsApp>> | null = null;
+      let primeiraFalha: Awaited<ReturnType<typeof enviarMensagemWhatsApp>> | null = null;
+      for (let i = 0; i < bolhas.length; i += 1) {
+        if (i > 0) await new Promise((r) => setTimeout(r, bubbleDelayMs));
+        const send = await enviarMensagemWhatsApp(params.telefone, bolhas[i], params.waSendOpts);
+        ultimoSend = send;
+        if (!send.ok && !primeiraFalha) primeiraFalha = send;
+      }
+      // Loga o PRIMEIRO erro (não o resultado da última bolha) — senão bolha 2 falhar + bolha 5 ok
+      // mascararia como send_status 200 (QA B3).
+      const sendOut =
+        primeiraFalha ?? ultimoSend ?? { ok: false, provider: undefined, status: undefined, error: "sem_envio", body: null };
       const sendBodyPreview =
         sendOut.body && typeof sendOut.body === "object"
           ? JSON.stringify(sendOut.body).slice(0, 240)
@@ -550,10 +566,11 @@ export async function processarMensagemInboundWhatsapp(params: {
             ? sendOut.body.slice(0, 240)
             : null;
       log.info("wa.processor.send_text", {
-        ok: sendOut.ok,
+        ok: !primeiraFalha,
         provider: sendOut.provider,
         send_status: sendOut.status,
-        send_error: sendOut.ok ? null : sendOut.error,
+        send_error: primeiraFalha ? sendOut.error ?? "bolha_falhou" : null,
+        bolhas: bolhas.length,
         send_body_preview: sendBodyPreview,
         telefone: trace.maskTelefone(params.telefone),
       });

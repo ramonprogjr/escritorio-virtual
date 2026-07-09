@@ -4,7 +4,7 @@ import { listarCandidatosParceiro, type CandidatoParceiro } from "@/lib/crm/dist
 import { defaultTenantId } from "@/lib/tenant-default";
 import { legacyToFunil } from "@/lib/crm/estagio-map";
 import { avaliarQualificacao } from "@/lib/crm/lead-rules";
-import { montarCardResumoLead } from "@/lib/crm/gerar-card-lead";
+import { montarCardResumoLead, type CardResumoLead } from "@/lib/crm/gerar-card-lead";
 
 export type SugestaoEncaminhamentoResult =
   | {
@@ -12,6 +12,7 @@ export type SugestaoEncaminhamentoResult =
       encaminhamento_id: string;
       candidatos: CandidatoParceiro[];
       principal: CandidatoParceiro;
+      card_resumo: CardResumoLead | null;
     }
   | { ok: false; error: string; candidatos?: CandidatoParceiro[] };
 
@@ -45,6 +46,11 @@ export async function sugerirEncaminhamentoAutomatico(
 
   if (leadErr || !lead) {
     return { ok: false, error: leadErr?.message || "Lead não encontrado." };
+  }
+
+  // Ownership: não sugerir/expor o lead (conversa+telefone+email vão no card) de OUTRO tenant (QA B5).
+  if (opts?.tenant_id && lead.tenant_id && String(lead.tenant_id) !== opts.tenant_id) {
+    return { ok: false, error: "Lead não encontrado." };
   }
 
   // Gate 1 — PRONTIDÃO (decisão do dono: direcionar EXIGE interesse + valor). A mensagem NÃO contém
@@ -168,6 +174,7 @@ export async function sugerirEncaminhamentoAutomatico(
     encaminhamento_id: String(enc.id),
     candidatos,
     principal,
+    card_resumo: cardResumo,
   };
 }
 

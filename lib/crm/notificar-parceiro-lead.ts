@@ -2,16 +2,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { persistirParceiroNoLead } from "@/lib/crm/lead-parceiro-metadata";
 import { registrarEvento } from "@/lib/crm/registrar-evento";
 import { uazapiSendText } from "@/lib/whatsapp/uazapi-send";
-import { defaultTenantId } from "@/lib/tenant-default";
 import { montarCardResumoLead, formatarCardWhatsApp, type CardResumoLead } from "@/lib/crm/gerar-card-lead";
 
-/** Valida o card-resumo cacheado em criterio_selecao.card_resumo. */
+/** Valida o card-resumo cacheado em criterio_selecao.card_resumo (arrays inclusos — QA B1). */
 function asCardResumo(v: unknown): CardResumoLead | null {
   if (
     v &&
     typeof v === "object" &&
     !Array.isArray(v) &&
-    typeof (v as { pedido_resumo?: unknown }).pedido_resumo === "string"
+    typeof (v as { pedido_resumo?: unknown }).pedido_resumo === "string" &&
+    Array.isArray((v as { pontos?: unknown }).pontos) &&
+    Array.isArray((v as { ultimas_falas?: unknown }).ultimas_falas)
   ) {
     return v as CardResumoLead;
   }
