@@ -153,6 +153,7 @@ export async function sugerirEncaminhamentoAutomatico(
       status: "aguardando_validacao",
       criterio_selecao: payloadCriterio,
       encaminhado_para: principal.nome,
+      parceiro_id: principal.parceiro_id,
       encaminhado_em: now,
       tenant_id: tenantId,
     })
