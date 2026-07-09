@@ -53,9 +53,8 @@ export default function NovoAgenteIaPage() {
     }
     setGerando(true);
     setErro("");
-    setBlueprint(null);
-    setCargoDesc(null);
-    setAvisos([]);
+    // NÃO apaga a proposta atual antes da resposta: se a regeneração falhar (429/402/rede), o dono
+    // não perde o blueprint que estava revisando (QA 09/jul). Só substitui no sucesso.
     try {
       const res = await fetch("/api/hub/agentes/blueprint-por-ia", {
         method: "POST",
@@ -76,9 +75,13 @@ export default function NovoAgenteIaPage() {
             ? "Muitas gerações seguidas — aguarde um minuto."
             : res.status === 402 || j.error === "sem_creditos"
               ? "Seus créditos de IA acabaram. Recarregue para continuar."
-              : j.error === "descricao_curta"
-                ? "Descreva um pouco mais o que o agente deve fazer."
-                : "Não consegui gerar agora. Tente de novo em instantes."
+              : res.status === 401 || res.status === 403
+                ? "Você não tem permissão para criar agentes — peça ao dono da conta."
+                : res.status === 503
+                  ? "A IA não está configurada neste ambiente."
+                  : j.error === "descricao_curta"
+                    ? "Descreva um pouco mais o que o agente deve fazer."
+                    : "Não consegui gerar agora. Tente de novo em instantes."
         );
         return;
       }
@@ -127,7 +130,9 @@ export default function NovoAgenteIaPage() {
         hubCicloEstrategia: "padrao",
         hubCiclosVincularIds: [],
         modoOperacao: modoHub,
-        modoExecucao: "manual",
+        // 'agenda' (paridade com o wizard): interno nasce com ciclo programado PAUSADO (inerte até refinar);
+        // 'manual' não existe no servidor e gravava metadata incoerente (QA 09/jul).
+        modoExecucao: "agenda",
         agendaIntervalMin: 60,
       });
       const payload = {
@@ -151,13 +156,14 @@ export default function NovoAgenteIaPage() {
         } else {
           setErro(j.error || "Não foi possível criar o agente.");
         }
+        setCriando(false);
         return;
       }
-      // Aterrissa na ficha para refinar/publicar (nada é publicado automaticamente).
+      // Sucesso: NÃO reabilita o botão — mantém em loading até a navegação trocar de tela (senão um 2º
+      // clique durante o carregamento da ficha cria um agente DUPLICADO; o servidor só sufixa o slug). QA 09/jul.
       router.push(`/crm/agentes/${encodeURIComponent(j.agente_slug)}`);
     } catch {
       setErro("Erro de rede ao criar o agente.");
-    } finally {
       setCriando(false);
     }
   }
@@ -182,6 +188,7 @@ export default function NovoAgenteIaPage() {
         value={descricao}
         onChange={(e) => setDescricao(e.target.value)}
         disabled={gerando || criando}
+        aria-label="Descreva o que o agente deve fazer"
         rows={4}
         placeholder="Ex.: um atendimento no WhatsApp que qualifica quem quer reformar, pergunta orçamento e prazo, e encaminha para um parceiro."
         className="w-full resize-y rounded-xl border border-obra-borda bg-obra-dark px-4 py-3 text-sm text-obra-texto outline-none placeholder:text-obra-texto-3 focus:border-obra-dourado disabled:opacity-60"
@@ -266,7 +273,11 @@ export default function NovoAgenteIaPage() {
             </BlocoLista>
           )}
 
-          <div className="mt-5 flex items-center justify-between gap-3">
+          <p className="mt-4 rounded-lg border border-obra-borda bg-obra-dark px-3 py-2 text-[11px] text-obra-texto-3">
+            Também será aplicado: {blueprint.modo_operacao === "canal_whatsapp" ? "regras de atendimento seguro no WhatsApp · " : ""}
+            horário 08h–22h (seg–sex) · modelo econômico. Tudo ajustável na ficha.
+          </p>
+          <div className="mt-4 flex items-center justify-between gap-3">
             <p className="m-0 text-[11px] text-obra-texto-3">Você poderá refinar tudo na ficha antes de publicar.</p>
             <CrmButton loading={criando} disabled={gerando} onClick={() => void criar()} leftIcon={<Bot size={15} />}>Criar agente</CrmButton>
           </div>

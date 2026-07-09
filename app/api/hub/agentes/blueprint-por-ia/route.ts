@@ -1,5 +1,5 @@
 import { crmDb as db } from "@/lib/crm/supabase-server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { requireCrmGestor } from "@/lib/crm/crm-api-auth";
 import { requireIaRateLimit } from "@/lib/ia/rate-limit-ia";
 import { registrarConsumoIA, assertSaldoAntesDoLLM } from "@/lib/ia/metering";
@@ -49,15 +49,18 @@ export async function POST(req: NextRequest) {
   const r = await gerarBlueprintAgente({ descricao: descricao.slice(0, 4000), cargos });
 
   if (r.ok) {
-    void registrarConsumoIA({
-      tenantId: g.ctx.tenantId,
-      usuarioId: g.ctx.userId ?? null,
-      origem: "blueprint_agente_ia",
-      modelo: r.modelo,
-      tokensEntrada: r.inputTokens,
-      tokensSaida: r.outputTokens,
-      refTipo: "agente_blueprint",
-    });
+    // after(): garante a gravação do débito mesmo em runtime serverless (void poderia ser cortado).
+    after(() =>
+      registrarConsumoIA({
+        tenantId: g.ctx.tenantId,
+        usuarioId: g.ctx.userId ?? null,
+        origem: "blueprint_agente_ia",
+        modelo: r.modelo,
+        tokensEntrada: r.inputTokens,
+        tokensSaida: r.outputTokens,
+        refTipo: "agente_blueprint",
+      })
+    );
     // Título humano do cargo (esconder o código; regra da casa "chama pelo nome").
     const cargoDesc = r.blueprint.cargo_slug
       ? cargos.find((c) => c.slug === r.blueprint.cargo_slug)?.desc || null
