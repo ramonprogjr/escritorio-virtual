@@ -1970,6 +1970,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
                   <PlaybookUploadAnalisePanel
                     inputId={PLAYBOOK_INPUT_PRE}
                     modoPreCriacao
+                    acceptAttr=".md,.txt,text/markdown,text/plain"
+                    formatosTexto=".md ou .txt"
+                    limiteHint="Tamanho máximo: 2 MB."
                     uploadStatus={playbookUploadStatus}
                     uploadMensagem={playbookUploadMensagem}
                     uploadPct={playbookUploadPct}
@@ -3619,6 +3622,9 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
 
               <PlaybookUploadAnalisePanel
                 inputId={PLAYBOOK_INPUT_POS}
+                acceptAttr=".md,.txt,text/markdown,text/plain"
+                formatosTexto=".md ou .txt"
+                limiteHint="Tamanho máximo: 2 MB."
                 uploadStatus={playbookUploadStatus}
                 uploadMensagem={playbookUploadMensagem}
                 uploadPct={playbookUploadPct}

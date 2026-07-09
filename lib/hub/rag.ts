@@ -194,13 +194,15 @@ function extractPdfTextBasic(buffer: Buffer): string {
     }
   };
 
+  // Anti deflate-bomb: teto de saída na inflação; se estourar (bomba/corrompido), cai no stream cru (limitado).
+  const maxInflate = { maxOutputLength: 32 * 1024 * 1024 };
   for (const stream of streams) {
     let decoded: Buffer | null = null;
     try {
-      decoded = inflateSync(stream);
+      decoded = inflateSync(stream, maxInflate);
     } catch {
       try {
-        decoded = inflateRawSync(stream);
+        decoded = inflateRawSync(stream, maxInflate);
       } catch {
         decoded = stream;
       }

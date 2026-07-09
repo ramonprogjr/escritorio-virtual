@@ -8,7 +8,6 @@ import {
   PlaybookUploadAnalisePanel,
   type PlaybookAnaliseResultado,
   type PlaybookUploadStatus,
-  PLAYBOOK_ACCEPT_ATTR,
 } from "@/components/crm/PlaybookUploadAnalisePanel";
 import { AgenteBuilderIaPanel } from "@/components/crm/AgenteBuilderIaPanel";
 import { PlaybookFlowStatusBanner } from "@/components/crm/PlaybookFlowStatusBanner";
@@ -341,25 +340,59 @@ export function AgentePlaybookCalibracaoDrawer({
   }
 
   async function enviarUpload(file: File) {
+    if (uploadStatus === "enviando") return; // guarda de reentrância (evita 2 uploads interleiando o estado)
     const nomeLower = file.name.toLowerCase();
-    const extOk = nomeLower.endsWith(".md") || nomeLower.endsWith(".txt");
-    if (!extOk) {
+    const ehTextoPlano = nomeLower.endsWith(".md") || nomeLower.endsWith(".txt");
+    const ehDocumento = nomeLower.endsWith(".pdf") || nomeLower.endsWith(".docx");
+    if (!ehTextoPlano && !ehDocumento) {
       setUploadStatus("erro");
-      setUploadMensagem("Formato inválido. Envie .md ou .txt.");
+      setUploadMensagem("Formato inválido. Envie .md, .txt, .pdf ou .docx.");
       return;
     }
-    if (file.size > MAX_PLAYBOOK_UPLOAD_BYTES) {
+    const limiteBytes = ehDocumento ? 8 * 1024 * 1024 : MAX_PLAYBOOK_UPLOAD_BYTES;
+    if (file.size > limiteBytes) {
       setUploadStatus("erro");
-      setUploadMensagem("Arquivo acima do limite de 1 MB.");
+      setUploadMensagem(ehDocumento ? "Arquivo acima de 8 MB." : "Arquivo acima do limite de 1 MB.");
       return;
     }
 
     setArquivoNome(file.name);
     setUploadStatus("enviando");
-    setUploadMensagem("A enviar...");
+    setUploadMensagem(ehDocumento ? "A ler o documento…" : "A enviar...");
     setUploadPct(20);
     setAnaliseResultado(null);
     setAnaliseErro("");
+
+    // F3: PDF/DOCX → extrai o TEXTO no servidor e coloca no editor para REVISÃO (não publica; extração
+    // é imperfeita). O dono revê e clica em Publicar. A guarda do Regenerar e o publicar-1-clique seguem iguais.
+    if (ehDocumento) {
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch(
+          `/api/hub/agentes/${encodeURIComponent(agenteSlug)}/playbook/importar-documento`,
+          { method: "POST", headers: internalApiHeaders(), body: form }
+        );
+        const payload = (await res.json().catch(() => ({}))) as { texto?: string; error?: string };
+        if (!res.ok || !payload.texto) {
+          setUploadStatus("erro");
+          setUploadMensagem(extractApiError(payload as Record<string, unknown>, "Não consegui ler o documento."));
+          setUploadPct(0);
+          return;
+        }
+        setMarkdown(String(payload.texto));
+        setMarkdownOrigem("texto");
+        setUploadPct(100);
+        setUploadStatus("sucesso");
+        setUploadMensagem("Texto extraído do documento — revise abaixo e clique em Publicar.");
+        setToast("Documento importado para o editor. Revise antes de publicar.");
+      } catch {
+        setUploadStatus("erro");
+        setUploadMensagem("Falha de rede ao importar o documento.");
+        setUploadPct(0);
+      }
+      return;
+    }
 
     try {
       const texto = (await file.text()).trim();
@@ -712,17 +745,17 @@ export function AgentePlaybookCalibracaoDrawer({
               <button
                 type="button"
                 onClick={() => void publicarMarkdown()}
-                disabled={!dirty || !temConteudo || publicando || flowStatus.kind !== "ready"}
+                disabled={!dirty || !temConteudo || publicando || flowStatus.kind === "invalid"}
                 style={{
                   ...btnToolbarPublish,
                   boxShadow: "inset 1px 0 0 rgba(201, 162, 74, 0.45)",
                   opacity:
-                    !dirty || !temConteudo || publicando || flowStatus.kind !== "ready" ? 0.5 : 1,
+                    !dirty || !temConteudo || publicando || flowStatus.kind === "invalid" ? 0.5 : 1,
                 }}
                 title={
-                  flowStatus.kind !== "ready"
-                    ? "Use «Adaptar motor WA» até o banner verde antes de publicar"
-                    : "Grava o rascunho no bucket e substitui playbook.md"
+                  flowStatus.kind === "invalid"
+                    ? "Corrija os erros do fluxo antes de publicar (ver o banner)"
+                    : "Publica — monta o fluxo de WhatsApp automaticamente se faltar"
                 }
               >
                 <Save size={14} /> {publicando ? "A publicar…" : "Publicar alterações"}
@@ -851,18 +884,8 @@ export function AgentePlaybookCalibracaoDrawer({
                 />
               )}
 
-              <input
-                id={PLAYBOOK_INPUT_CALIB}
-                type="file"
-                accept={PLAYBOOK_ACCEPT_ATTR}
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void enviarUpload(f);
-                  e.target.value = "";
-                }}
-              />
-
+              {/* Input próprio removido (QA 09/jul): id duplicado com o input do PlaybookUploadAnalisePanel
+                  abaixo (mesmo id/accept/onFileSelect) — HTML inválido. O panel renderiza o único input. */}
               <PlaybookUploadAnalisePanel
                 inputId={PLAYBOOK_INPUT_CALIB}
                 uploadStatus={uploadHover ? "hover" : uploadStatus}
