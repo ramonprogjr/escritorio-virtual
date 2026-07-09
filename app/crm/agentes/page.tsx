@@ -672,6 +672,25 @@ function AgentesView() {
           </button>
           <button
             type="button"
+            onClick={() => router.push("/crm/agentes/novo-ia")}
+            style={{
+              background: "linear-gradient(180deg, #c9a24a 0%, #a8842f 100%)",
+              color: "#0a140f",
+              border: "none",
+              padding: "12px 20px",
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            title="Descreva o agente e a IA monta a configuração"
+          >
+            ✨ Criar com IA
+          </button>
+          <button
+            type="button"
             onClick={() => setDrawerNovoOpen(true)}
             style={{
               background: "linear-gradient(180deg, #065535 0%, #003b26 100%)",

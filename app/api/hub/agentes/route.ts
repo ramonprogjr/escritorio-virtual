@@ -694,7 +694,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Não vazar detalhe cru de schema/constraint ao cliente (QA 09/jul); loga no servidor.
+    console.error("[hub/agentes POST] insert:", error.message);
+    return NextResponse.json({ error: "erro_criacao_agente" }, { status: 500 });
   }
 
   const created = data as { agente_slug: string };
