@@ -44,6 +44,7 @@ import {
   ragExtensaoAceita,
 } from "@/lib/hub/rag-formatos";
 import { AREAS_ATUACAO } from "@/lib/crm/areas-atuacao";
+import { montarPayloadCriacaoAgente } from "@/lib/crm/montar-payload-criacao-agente";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -1244,49 +1245,25 @@ export function AgenteNovoWizard({ variant, onClose, onCreated }: AgenteNovoWiza
       const conhecimentoSecoes: Record<string, string> = {};
       if (secaoTarefasMd) conhecimentoSecoes.atendimento = secaoTarefasMd;
 
-      const payload: Record<string, unknown> = {
+      // F5: montagem do payload extraída para lib pura (habilita F6 criar-com-IA); paridade garantida por teste.
+      const payload = montarPayloadCriacaoAgente({
         nome,
-        prefixo_mercado: mercados.join(","),
+        mercados,
         personalidade: gerarPersonalidade(comportamentoIdx, condutaIdx),
-        system_prompt_base: "",
-        conhecimento_secoes: conhecimentoSecoes,
-        bio: null,
-        horario_inicio: "08:00",
-        horario_fim: "22:00",
-        motor_ferramentas_habilitado: motorFerramentasHub,
-        mistral_agent_sync_habilitado: mistralProvisionar,
-        uso_ferramentas_ia: usoFerramentasIa,
-        modelo_preferencia: modeloPreferencia,
-      };
-      if (somentePlaybook) {
-        payload.playbook_only = true;
-      } else if (cargoSelecionado) {
-        payload.cargo_slug = cargoSelecionado.slug;
-      }
-
-      // Setor derivado do cargo (Fase 4) persistido em hub_agente_identidade.setor_ia.
-      // Modo só-playbook não tem cargo → omite (null), o servidor lida com isso.
-      payload.setor_ia = setorAgente ?? null;
-
-      if (hubCicloEstrategia === "somente_vincular") {
-        payload.omit_hub_ciclo_padrao = true;
-        payload.ciclos_vincular_ids = hubCiclosVincularIds;
-        payload.modo_operacao = modoOperacao;
-        payload.ciclo_execucao =
-          modoOperacao === "canal_whatsapp" ? "interacao" : modoExecucao;
-        if (modoExecucao === "agenda" && modoOperacao !== "canal_whatsapp") {
-          payload.ciclo_intervalo_minutos = agendaIntervalMin;
-        }
-      } else {
-        payload.modo_operacao = modoOperacao;
-        payload.ciclo_execucao =
-          modoOperacao === "canal_whatsapp" ? "interacao" : modoExecucao;
-        payload.ciclo_intervalo_minutos =
-          modoExecucao === "agenda" ? agendaIntervalMin : undefined;
-        if (hubCiclosVincularIds.length > 0) {
-          payload.ciclos_vincular_ids = hubCiclosVincularIds;
-        }
-      }
+        conhecimentoSecoes,
+        motorFerramentasHub,
+        mistralProvisionar,
+        usoFerramentasIa,
+        modeloPreferencia,
+        somentePlaybook,
+        cargoSlug: cargoSelecionado?.slug ?? null,
+        setorAgente,
+        hubCicloEstrategia,
+        hubCiclosVincularIds,
+        modoOperacao,
+        modoExecucao,
+        agendaIntervalMin,
+      });
       const res = await fetch("/api/hub/agentes", {
         method: "POST",
         headers: { ...internalApiHeaders(), "Content-Type": "application/json" },
