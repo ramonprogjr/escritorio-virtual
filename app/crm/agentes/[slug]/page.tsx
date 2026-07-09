@@ -6,6 +6,7 @@ import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
 import { AgenteEstadoVivoCard } from "@/components/crm/AgenteEstadoVivoCard";
 import { SecaoFluxoConversa } from "@/components/crm/agente-secoes/SecaoFluxoConversa";
+import { SecaoAcompanhamento } from "@/components/crm/agente-secoes/SecaoAcompanhamento";
 import { AgenteSugestoesMelhoriaCard } from "@/components/crm/AgenteSugestoesMelhoriaCard";
 import { AgentePlaybookCalibracaoDrawer } from "@/components/crm/AgentePlaybookCalibracaoDrawer";
 import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
@@ -1131,6 +1132,9 @@ export default function AgentePage() {
 
         {/* IA VIVA — a IA prevê e sugere melhorias deste agente (on-demand) */}
         <AgenteSugestoesMelhoriaCard slug={slug} />
+
+        {/* Acompanhamento — deep-links p/ Follow-up e Ciclos (fecha o buraco de navegação da ficha) */}
+        <SecaoAcompanhamento slug={slug} />
 
         {/* BLOCO: Configurações fixas */}
         {(!isMobile || abaMobile === "config") && (
