@@ -6,6 +6,7 @@ import { Phone, MessageCircle, ExternalLink, Check, RefreshCw } from "lucide-rea
 import { supabase } from "@/lib/supabase/client";
 import { CrmStickyPageHeader } from "@/components/crm/CrmStickyPageHeader";
 import { patchLeadCrm } from "@/lib/crm/patch-lead-client";
+import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,20 @@ type AcaoLead = {
 };
 
 type Faixa = "atrasadas" | "hoje" | "proximas";
+
+/** Tarefa real (hub_tarefas_comerciais) — criada pela IA (hub_criar_tarefa) ou manualmente. */
+type Tarefa = {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  prioridade: string;
+  origem: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  lead_id: string | null;
+  negocio_id: string | null;
+  vencimento_em: string | null;
+};
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -85,10 +100,49 @@ export default function ProximasAcoesPage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
   const [concluindo, setConcluindo] = useState<string | null>(null);
+  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [concluindoTarefa, setConcluindoTarefa] = useState<string | null>(null);
+
+  const carregarTarefas = useCallback(async () => {
+    // Tarefas reais têm RLS trancada — o browser não lê direto; busca via API (service-role + tenant).
+    try {
+      const res = await fetch("/api/crm/tarefas", { credentials: "include", headers: internalApiHeaders() });
+      const j = res.ok ? await res.json() : { data: [] };
+      setTarefas(Array.isArray(j?.data) ? (j.data as Tarefa[]) : []);
+    } catch {
+      setTarefas([]);
+    }
+  }, []);
+
+  const concluirTarefa = useCallback(
+    async (id: string) => {
+      setConcluindoTarefa(id);
+      const anterior = tarefas;
+      setTarefas((prev) => prev.filter((t) => t.id !== id)); // otimista
+      try {
+        const res = await fetch("/api/crm/tarefas", {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+          body: JSON.stringify({ id, acao: "concluir" }),
+        });
+        if (!res.ok) {
+          setTarefas(anterior);
+          setErro("Não foi possível concluir a tarefa.");
+          window.setTimeout(() => setErro(""), 5000);
+        }
+      } catch {
+        setTarefas(anterior);
+      }
+      setConcluindoTarefa(null);
+    },
+    [tarefas]
+  );
 
   const carregar = useCallback(async () => {
     setLoading(true);
     setErro("");
+    void carregarTarefas();
     try {
       const { data, error } = await supabase
         .from("vw_hub_leads_crm_enriquecido")
@@ -125,7 +179,7 @@ export default function ProximasAcoesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [carregarTarefas]);
 
   useEffect(() => {
     void carregar();
@@ -184,7 +238,7 @@ export default function ProximasAcoesPage() {
   }, [acoes]);
 
   const total = acoes.length;
-  const vazio = !loading && !erro && total === 0;
+  const vazio = !loading && !erro && total === 0 && tarefas.length === 0;
 
   return (
     <div style={{ minHeight: "100%", background: "#0a140f", color: "#e6edf3" }}>
@@ -211,6 +265,78 @@ export default function ProximasAcoesPage() {
           >
             {erro}
           </div>
+        )}
+
+        {tarefas.length > 0 && (
+          <section className="mb-6">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full" style={{ background: "#c9a24a" }} aria-hidden />
+              <h2 className="text-sm font-bold text-[#e6edf3]">Tarefas</h2>
+              <span className="text-xs text-[#8b949e]">criadas pela IA ou por você</span>
+              <span
+                className="ml-auto rounded-full px-2 py-0.5 text-xs font-bold"
+                style={{ background: "#c9a24a22", color: "#c9a24a" }}
+              >
+                {tarefas.length}
+              </span>
+            </div>
+            <ul className="space-y-2.5">
+              {tarefas.map((t) => {
+                const href = t.lead_id
+                  ? `/crm/leads/${t.lead_id}`
+                  : t.negocio_id
+                    ? `/crm/negocios/${t.negocio_id}`
+                    : null;
+                return (
+                  <li key={t.id}>
+                    <div
+                      className="flex flex-col rounded-xl border border-[#1d3a2c] bg-[#0f1d16] p-3.5"
+                      style={{ borderLeftWidth: 3, borderLeftColor: "#c9a24a" }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="min-w-0 flex-1 text-sm font-bold text-[#e6edf3]">{t.titulo}</span>
+                        {t.vencimento_em && (
+                          <span
+                            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                            style={{ background: "#c9a24a22", color: "#c9a24a" }}
+                          >
+                            {quando(t.vencimento_em)}
+                          </span>
+                        )}
+                      </div>
+                      {t.descricao && (
+                        <p className="mt-1.5 text-[13px] leading-snug text-[#c9d4cd]">{t.descricao}</p>
+                      )}
+                      <p className="mt-1 text-[11px]" style={{ color: t.origem === "ia" ? "#7dd3c8" : "#3fb950" }}>
+                        {t.origem === "ia" ? "IA" : "Você"}
+                        {t.entity_type ? ` · ${t.entity_type}` : ""}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {href && (
+                          <Link
+                            href={href}
+                            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[#1d3a2c] px-2.5 py-1.5 text-xs font-bold text-[#8b949e] transition-colors hover:text-[#e6edf3]"
+                          >
+                            <ExternalLink size={13} strokeWidth={2.2} aria-hidden />
+                            Abrir
+                          </Link>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => void concluirTarefa(t.id)}
+                          disabled={concluindoTarefa === t.id}
+                          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[#2f9e8f]/40 bg-[#2f9e8f]/12 px-2.5 py-1.5 text-xs font-bold text-[#2f9e8f] transition-colors hover:bg-[#2f9e8f]/22 disabled:opacity-40"
+                        >
+                          <Check size={13} strokeWidth={2.6} aria-hidden />
+                          {concluindoTarefa === t.id ? "…" : "Feito"}
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         )}
 
         {loading ? (
