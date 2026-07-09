@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultTenantId, isMissingPgColumn } from "@/lib/tenant-default";
 import { respostaIaJaEnviadaRecente } from "@/lib/whatsapp/anti-duplicata-resposta";
 import { whatsappSendText } from "@/lib/whatsapp/whatsapp-send";
+import { verificarPausaAtendimento } from "@/lib/whatsapp/pausa-atendimento";
 
 type LoggerLike = {
   info: (event: string, fields?: Record<string, unknown>) => void;
@@ -133,6 +134,8 @@ export async function processarMensagemInboundWhatsapp(params: {
   tipoMidia: string;
   menuChoiceId?: string | null;
   waSendOpts?: { instanceToken?: string | null };
+  leadCriadoEm?: string | null;
+  leadMetadata?: Record<string, unknown> | null;
 }) {
   const { supabase, trace } = params;
   const log = trace.log;
@@ -150,6 +153,42 @@ export async function processarMensagemInboundWhatsapp(params: {
     typeof lead.agente_responsavel === "string" && lead.agente_responsavel.trim()
       ? lead.agente_responsavel.trim()
       : "sdr";
+
+  // Persiste a mensagem do lead na fila ANTES de qualquer gate (humano/pausa) — a CONTENT do que o
+  // cliente escreveu NUNCA se perde no CRM, mesmo pausado (laudo Fable, Alto 5). Os gates abaixo só
+  // decidem se a IA RESPONDE; o registro do recebido é incondicional. (Idempotência: em retry de erro
+  // transitório o processor re-roda e pode duplicar a linha — comportamento pré-existente, raro.)
+  {
+    const slugEntrada =
+      typeof agente?.agente_slug === "string" && agente.agente_slug.trim()
+        ? agente.agente_slug.trim()
+        : agenteResponsavelLead;
+    try {
+      const filaEntrada: Record<string, unknown> = {
+        lead_id: lead.id,
+        agente_id: slugEntrada,
+        remetente_numero: params.telefone,
+        canal: "whatsapp",
+        direcao: "entrada",
+        conteudo: params.mensagemFinal,
+        status: "processado",
+        tenant_id: defaultTenantId(),
+        metadata: {
+          feito_por: "inbound",
+          message_id: params.messageId ?? null,
+          push_name: params.pushName || null,
+          tipo_midia: params.tipoMidia,
+        },
+      };
+      let ins = await supabase.from("hub_fila_mensagens").insert(filaEntrada);
+      if (ins.error && isMissingPgColumn(ins.error, "tenant_id")) {
+        const { tenant_id: _t, ...semTenant } = filaEntrada;
+        ins = await supabase.from("hub_fila_mensagens").insert(semTenant);
+      }
+    } catch (e) {
+      console.warn("[WHATSAPP][PROCESSOR] salvar entrada fila (pré-gate):", e);
+    }
+  }
 
   if (humanoResponsavelAtivo) {
     log.info("wa.processor.ia_skipped", {
@@ -169,6 +208,37 @@ export async function processarMensagemInboundWhatsapp(params: {
       });
     } catch (e) {
       console.error("[WHATSAPP][PROCESSOR] Erro ao registrar atividade (humano responsável):", e);
+    }
+    return;
+  }
+
+  // GATE DE PAUSA — etiqueta "pausa" (sync) / comando /pausa / botão do agente / trava temporal pós go-live.
+  // Silêncio TOTAL ao cliente (é o caso "não fale com esse contato"); a mensagem recebida É registrada.
+  const pausa = await verificarPausaAtendimento(supabase, {
+    telefone: params.telefone,
+    agenteSlug: typeof agente?.agente_slug === "string" ? agente.agente_slug : null,
+    leadCriadoEm: params.leadCriadoEm ?? null,
+    leadMetadata: params.leadMetadata ?? null,
+  });
+  if (pausa.pausada) {
+    log.info("wa.processor.ia_skipped", {
+      reason: "pausa_atendimento",
+      motivo: pausa.motivo,
+      fonte: pausa.fonte,
+      lead_id: lead.id,
+      agente_slug: typeof agente?.agente_slug === "string" ? agente.agente_slug : undefined,
+    });
+    try {
+      await supabase.from("hub_atividades").insert({
+        lead_id: lead.id,
+        tipo: "mensagem",
+        descricao: `Mensagem recebida — atendimento PAUSADO (${pausa.fonte ?? "?"}/${pausa.motivo ?? "?"}) — IA não acionada.`,
+        feito_por: "sistema",
+        feito_por_tipo: "ia",
+        metadata: { telefone: params.telefone, pausa_fonte: pausa.fonte, pausa_motivo: pausa.motivo, skip_ia: true },
+      });
+    } catch (e) {
+      console.error("[WHATSAPP][PROCESSOR] Erro ao registrar atividade (pausa):", e);
     }
     return;
   }
@@ -193,32 +263,40 @@ export async function processarMensagemInboundWhatsapp(params: {
   const iaStarted = Date.now();
   log.info("wa.processor.ia_start", { agente_slug: agenteSlug, lead_id: lead.id });
 
-  // Persiste a mensagem do lead na fila para que o chat do CRM a exiba
-  // (feito antes de qualquer fluxo — playbook, menu ou LLM)
-  try {
-    const filaEntrada: Record<string, unknown> = {
-      lead_id: lead.id,
-      agente_id: agenteSlug,
-      remetente_numero: params.telefone,
-      canal: "whatsapp",
-      direcao: "entrada",
-      conteudo: params.mensagemFinal,
-      status: "processado",
-      tenant_id: defaultTenantId(),
-      metadata: {
-        feito_por: "inbound",
-        message_id: params.messageId ?? null,
-        push_name: params.pushName || null,
-        tipo_midia: params.tipoMidia,
-      },
-    };
-    let ins = await supabase.from("hub_fila_mensagens").insert(filaEntrada);
-    if (ins.error && isMissingPgColumn(ins.error, "tenant_id")) {
-      const { tenant_id: _t, ...semTenant } = filaEntrada;
-      ins = await supabase.from("hub_fila_mensagens").insert(semTenant);
+  // (A entrada do cliente já foi persistida em hub_fila_mensagens ANTES dos gates — ver bloco no topo.)
+
+  // Guard de mídia (fase 0): áudio/foto/doc/vídeo SEM legenda recebem resposta educada e NÃO vão pro LLM
+  // — evita a Mari responder ao placeholder "[audio recebido]"/"[imagem recebido]" fora de contexto.
+  // (transcrição de áudio e visão de foto entram no bloco B; este guard as substitui quando prontas.)
+  {
+    const tm = (params.tipoMidia || "").toLowerCase();
+    const ehMidia = tm !== "" && !["texto", "text", "conversation", "chat"].includes(tm);
+    const conteudoBruto = /^\s*\[[^\]]*recebido\]\s*$/i.test(params.mensagemFinal || "");
+    if (ehMidia && conteudoBruto) {
+      const respostaGuard =
+        tm === "audio" || tm === "ptt"
+          ? "Recebi seu áudio 🙌 Enquanto processo, me conta em uma frase o que você precisa?"
+          : "Recebi seu arquivo 🙌 Já vou olhar — me conta em uma frase o que você precisa?";
+      try {
+        await enviarMensagemWhatsApp(params.telefone, respostaGuard, { instanceToken: params.waSendOpts?.instanceToken });
+      } catch (e) {
+        console.warn("[WHATSAPP][PROCESSOR] guard mídia envio:", e);
+      }
+      try {
+        await supabase.from("hub_atividades").insert({
+          lead_id: lead.id,
+          tipo: "mensagem",
+          descricao: `Cliente enviou ${tm} — mídia ainda não interpretada (visão/transcrição pendente). Resposta educada enviada.`,
+          feito_por: "sistema",
+          feito_por_tipo: "ia",
+          metadata: { telefone: params.telefone, tipo_midia: tm, midia_nao_processada: true },
+        });
+      } catch (e) {
+        console.warn("[WHATSAPP][PROCESSOR] guard mídia atividade:", e);
+      }
+      log.info("wa.processor.midia_guard", { tipo_midia: tm, lead_id: lead.id });
+      return;
     }
-  } catch (e) {
-    console.warn("[WHATSAPP][PROCESSOR] salvar entrada fila:", e);
   }
 
   let menuEnviadoDeterministico = false;

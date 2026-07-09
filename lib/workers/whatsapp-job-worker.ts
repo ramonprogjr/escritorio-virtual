@@ -341,10 +341,12 @@ async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogg
 
   // Re-busca campos sensíveis do lead direto do banco — o payload pode estar
   // desatualizado (ex.: humano_responsavel definido depois que o job foi enfileirado).
+  let leadCriadoEm: string | null = null;
+  let leadMetadata: Record<string, unknown> | null = null;
   {
     const { data: leadRow } = await supabase
       .from("hub_leads_crm")
-      .select("pessoa_id, humano_responsavel, agente_responsavel")
+      .select("pessoa_id, humano_responsavel, agente_responsavel, criado_em, metadata")
       .eq("id", contexto.lead.id)
       .maybeSingle();
     if (leadRow) {
@@ -359,6 +361,12 @@ async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogg
       if (typeof leadRow.agente_responsavel === "string" && leadRow.agente_responsavel.trim()) {
         contexto.lead.agente_responsavel = leadRow.agente_responsavel.trim();
       }
+      // pausa: trava temporal usa quando o lead nasceu + override ia_liberada no metadata
+      leadCriadoEm = typeof leadRow.criado_em === "string" ? leadRow.criado_em : null;
+      leadMetadata =
+        leadRow.metadata && typeof leadRow.metadata === "object" && !Array.isArray(leadRow.metadata)
+          ? (leadRow.metadata as Record<string, unknown>)
+          : null;
     }
   }
 
@@ -399,6 +407,8 @@ async function processJob(supabase: SupabaseClient, job: HubMsgJob, log: HubLogg
       isNovo: contexto.isNovo,
       tipoMidia: contexto.tipoMidia,
       waSendOpts: contexto.waSendOpts,
+      leadCriadoEm,
+      leadMetadata,
     });
 
     await updateJobStatus(supabase, job, {
@@ -486,6 +496,9 @@ async function processBatch(
   await Promise.all(workers);
 }
 
+let ultimoSyncEtiquetasPausaMs = 0;
+const SYNC_ETIQUETAS_PAUSA_THROTTLE_MS = 3 * 60 * 1000;
+
 /** Um ciclo: claim + processa lote (usado pelo cron HTTP e pelo worker contínuo). */
 export async function runWhatsappWorkerTick(): Promise<{
   claimed: number;
@@ -505,6 +518,19 @@ export async function runWhatsappWorkerTick(): Promise<{
 
   try {
     await recuperarJobsProcessingExpirados(supabase);
+    // Auto-sync da etiqueta "pausa" (throttle 3min, fire-and-forget) — mantém a deny-list em dia sem consultar a UAZAPI no hot path do lead.
+    if (Date.now() - ultimoSyncEtiquetasPausaMs > SYNC_ETIQUETAS_PAUSA_THROTTLE_MS) {
+      ultimoSyncEtiquetasPausaMs = Date.now();
+      void (async () => {
+        try {
+          const { resolverTokenInstanciaAtiva, sincronizarEtiquetaPausa } = await import("@/lib/whatsapp/sync-etiquetas-pausa");
+          const tok = await resolverTokenInstanciaAtiva(supabase);
+          if (tok) await sincronizarEtiquetaPausa(supabase, { instanceToken: tok.token });
+        } catch {
+          /* fail-safe: nunca derruba o tick */
+        }
+      })();
+    }
     const jobs = await claimBatch(supabase, id, batchSize);
     if (jobs.length > 0) {
       log.info("wa.worker.claimed_batch", { size: jobs.length });
