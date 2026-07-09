@@ -127,6 +127,7 @@ function AtendimentoContent() {
   const [sendStrip, setSendStrip] = useState<{ kind: "error" | "success" | "info"; text: string } | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [direcionarOpen, setDirecionarOpen] = useState(false);
+  const [sugerindo, setSugerindo] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const leadsCarregados = useRef(false);
   const modoScrollRef = useRef<HTMLDivElement>(null);
@@ -375,6 +376,33 @@ function AtendimentoContent() {
   }
 
   // ── Enviar mensagem via API ───────────────────────────────────────────────
+  async function sugerirResposta() {
+    if (!leadSel || sugerindo) return;
+    setSugerindo(true);
+    try {
+      const res = await fetch("/api/crm/atendimento/sugerir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...internalApiHeaders() },
+        body: JSON.stringify({ lead_id: leadSel.id }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; sugestao?: string; error?: string };
+      if (res.ok && j.ok && j.sugestao) {
+        setTexto(j.sugestao);
+      } else {
+        setSendStrip({
+          kind: "error",
+          text: j.error === "sem_conversa" ? "Ainda não há conversa para a Mari sugerir." : "Não consegui sugerir agora.",
+        });
+        window.setTimeout(() => setSendStrip(null), 4000);
+      }
+    } catch {
+      setSendStrip({ kind: "error", text: "Erro de rede ao sugerir." });
+      window.setTimeout(() => setSendStrip(null), 4000);
+    } finally {
+      setSugerindo(false);
+    }
+  }
+
   async function enviarMensagem() {
     if (!leadSel || !texto.trim() || enviando) return;
     setEnviando(true);
@@ -1063,6 +1091,16 @@ function AtendimentoContent() {
               )}
               {podeEscrever ? (
                 <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
+                  <button
+                    type="button"
+                    onClick={() => void sugerirResposta()}
+                    disabled={sugerindo}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[#c9a24a]/45 bg-[#c9a24a]/12 px-3 py-1 text-[11px] font-bold text-[#e0b86a] transition-colors hover:bg-[#c9a24a]/20 disabled:opacity-50"
+                    title="A IA sugere a próxima resposta com base na conversa"
+                  >
+                    <Bot size={13} strokeWidth={2.2} aria-hidden />
+                    {sugerindo ? "Pensando…" : "Mari sugere"}
+                  </button>
                   {[
                     "Olá! Tudo bem? Como posso ajudar?",
                     "Pode me passar mais detalhes, por favor?",
