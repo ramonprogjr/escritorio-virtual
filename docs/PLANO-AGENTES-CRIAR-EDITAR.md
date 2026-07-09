@@ -26,6 +26,8 @@ invisível) · N conversas ativas; interno = Ativo · Modelo · Ferramentas · C
 **SEGURANÇA** — nenhuma mudança da IA se aplica sem **diff antes→depois + confirmação + desfazer** (badge AO VIVO);
 instrução/fluxo ganham **rascunho→prévia (simulador tap-a-tap)→publicar (diff humano)→reverter** na fase de janela.
 
+## Estado (09/jul) — ✅ NO AR: F1 (farol), F2 (fluxo 1-clique), IA-viva sugere melhorias, F3 (PDF/DOCX→instrução), Acompanhamento, F5 (payload lib), **F6 (CRIAR COM IA — o diamante)**. Cada um com QA Fable-max (F3 e F6: 3 passagens). ⏳ Restam **F4** (seções por tipo) e **F7** (passo-0 humano). Segurança: furo cross-tenant de ciclos no create route FECHADO.
+
 ## As 10 fases (impacto alto + risco baixo primeiro)
 
 | # | Fase | Esf | Impacto | Risco | O quê (resumo) |
