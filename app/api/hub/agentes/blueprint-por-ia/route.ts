@@ -58,7 +58,11 @@ export async function POST(req: NextRequest) {
       tokensSaida: r.outputTokens,
       refTipo: "agente_blueprint",
     });
-    return NextResponse.json({ ok: true, blueprint: r.blueprint, avisos: r.avisos });
+    // Título humano do cargo (esconder o código; regra da casa "chama pelo nome").
+    const cargoDesc = r.blueprint.cargo_slug
+      ? cargos.find((c) => c.slug === r.blueprint.cargo_slug)?.desc || null
+      : null;
+    return NextResponse.json({ ok: true, blueprint: r.blueprint, avisos: r.avisos, cargo_desc: cargoDesc });
   }
 
   if (r.error === "descricao_vazia") {

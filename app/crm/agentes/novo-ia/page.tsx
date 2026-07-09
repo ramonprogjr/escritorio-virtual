@@ -7,6 +7,10 @@ import { Sparkles, ArrowLeft, Bot, Wrench, MessageSquare, AlertTriangle, CheckCi
 import { CrmButton } from "@/components/crm/CrmButton";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { montarPayloadCriacaoAgente } from "@/lib/crm/montar-payload-criacao-agente";
+import { HUB_AGENTE_FERRAMENTAS_CATALOGO } from "@/lib/hub/agente-ferramentas-registry";
+
+/** id da ferramenta → título humano (esconder o código; regra da casa "chama pelo nome"). */
+const FERRAMENTA_TITULO = new Map(HUB_AGENTE_FERRAMENTAS_CATALOGO.map((f) => [f.id as string, f.titulo]));
 
 /**
  * F6 — "criar agente com IA" (o diamante). O dono descreve; a IA devolve um blueprint validado contra os
@@ -38,6 +42,7 @@ export default function NovoAgenteIaPage() {
   const [criando, setCriando] = useState(false);
   const [erro, setErro] = useState("");
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
+  const [cargoDesc, setCargoDesc] = useState<string | null>(null);
   const [avisos, setAvisos] = useState<string[]>([]);
 
   async function gerar() {
@@ -49,6 +54,7 @@ export default function NovoAgenteIaPage() {
     setGerando(true);
     setErro("");
     setBlueprint(null);
+    setCargoDesc(null);
     setAvisos([]);
     try {
       const res = await fetch("/api/hub/agentes/blueprint-por-ia", {
@@ -57,18 +63,27 @@ export default function NovoAgenteIaPage() {
         headers: { "Content-Type": "application/json", ...internalApiHeaders() },
         body: JSON.stringify({ descricao: d }),
       });
-      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; blueprint?: Blueprint; avisos?: string[]; error?: string };
+      const j = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        blueprint?: Blueprint;
+        avisos?: string[];
+        cargo_desc?: string | null;
+        error?: string;
+      };
       if (!res.ok || !j.ok || !j.blueprint) {
         setErro(
           res.status === 429
             ? "Muitas gerações seguidas — aguarde um minuto."
-            : j.error === "descricao_curta"
-              ? "Descreva um pouco mais o que o agente deve fazer."
-              : "Não consegui gerar agora. Tente de novo em instantes."
+            : res.status === 402 || j.error === "sem_creditos"
+              ? "Seus créditos de IA acabaram. Recarregue para continuar."
+              : j.error === "descricao_curta"
+                ? "Descreva um pouco mais o que o agente deve fazer."
+                : "Não consegui gerar agora. Tente de novo em instantes."
         );
         return;
       }
       setBlueprint(j.blueprint);
+      setCargoDesc(j.cargo_desc ?? null);
       setAvisos(Array.isArray(j.avisos) ? j.avisos : []);
     } catch {
       setErro("Erro de rede ao gerar.");
@@ -82,12 +97,25 @@ export default function NovoAgenteIaPage() {
     setCriando(true);
     setErro("");
     try {
+      // QA 09/jul: traduzir o vocabulário do blueprint para o do hub e não perder nada do que o dono revisou.
+      // (1) modo: o hub usa 'jobs_internos', não 'interno'. (2) conhecimento: seção válida do catálogo.
+      // (3) perguntas: entram NO prompt (o override do system_prompt_base pula o template do cargo).
+      const modoHub = blueprint.modo_operacao === "canal_whatsapp" ? "canal_whatsapp" : "jobs_internos";
+      const perguntasMd = blueprint.perguntas.length
+        ? "\n\n## Perguntas essenciais\n" + blueprint.perguntas.map((p, i) => `${i + 1}. ${p}`).join("\n")
+        : "";
+      const guardrailWa =
+        modoHub === "canal_whatsapp"
+          ? "\n\n## Regras de atendimento externo\n- Nunca revele o nome do cargo/função interna ao cliente.\n- Faça as perguntas de forma natural, uma de cada vez."
+          : "";
+      const instrucao = `${blueprint.prompt || ""}${perguntasMd}${guardrailWa}`.trim();
+
       const payloadBase = montarPayloadCriacaoAgente({
         nome: blueprint.nome,
         mercados: [],
-        personalidade: blueprint.tom || "",
+        personalidade: blueprint.tom ? `## Tom e estilo de comunicação\n\n${blueprint.tom}` : "",
         conhecimentoSecoes: blueprint.conhecimento.length
-          ? { geral: blueprint.conhecimento.map((c) => `- ${c}`).join("\n") }
+          ? { empresa: blueprint.conhecimento.map((c) => `- ${c}`).join("\n") }
           : {},
         motorFerramentasHub: blueprint.ferramentas.length > 0,
         mistralProvisionar: false,
@@ -98,12 +126,15 @@ export default function NovoAgenteIaPage() {
         setorAgente: null,
         hubCicloEstrategia: "padrao",
         hubCiclosVincularIds: [],
-        modoOperacao: blueprint.modo_operacao,
+        modoOperacao: modoHub,
         modoExecucao: "manual",
         agendaIntervalMin: 60,
       });
-      // O blueprint traz a instrução: sobrepõe o system_prompt_base vazio do wizard.
-      const payload = { ...payloadBase, system_prompt_base: blueprint.prompt || "" };
+      const payload = {
+        ...payloadBase,
+        system_prompt_base: instrucao,
+        ...(blueprint.tom ? { tom_voz: blueprint.tom } : {}),
+      };
 
       const res = await fetch("/api/hub/agentes", {
         method: "POST",
@@ -113,7 +144,13 @@ export default function NovoAgenteIaPage() {
       });
       const j = (await res.json().catch(() => ({}))) as { agente_slug?: string; error?: string };
       if (!res.ok || !j.agente_slug) {
-        setErro(j.error || "Não foi possível criar o agente.");
+        // 400 = validação (mensagem em pt); 5xx = erro cru do banco → não exibir, só logar.
+        if (res.status >= 500) {
+          console.error("[novo-ia criar]", j.error);
+          setErro("Não foi possível criar o agente agora. Tente novamente.");
+        } else {
+          setErro(j.error || "Não foi possível criar o agente.");
+        }
         return;
       }
       // Aterrissa na ficha para refinar/publicar (nada é publicado automaticamente).
@@ -144,17 +181,19 @@ export default function NovoAgenteIaPage() {
       <textarea
         value={descricao}
         onChange={(e) => setDescricao(e.target.value)}
+        disabled={gerando || criando}
         rows={4}
         placeholder="Ex.: um atendimento no WhatsApp que qualifica quem quer reformar, pergunta orçamento e prazo, e encaminha para um parceiro."
-        className="w-full resize-y rounded-xl border border-obra-borda bg-obra-dark px-4 py-3 text-sm text-obra-texto outline-none placeholder:text-obra-texto-3 focus:border-obra-dourado"
+        className="w-full resize-y rounded-xl border border-obra-borda bg-obra-dark px-4 py-3 text-sm text-obra-texto outline-none placeholder:text-obra-texto-3 focus:border-obra-dourado disabled:opacity-60"
       />
       <div className="mt-2 flex flex-wrap gap-1.5">
         {EXEMPLOS.map((ex) => (
           <button
             key={ex}
             type="button"
+            disabled={gerando || criando}
             onClick={() => setDescricao(ex)}
-            className="rounded-full border border-obra-borda bg-obra-dark-2 px-2.5 py-1 text-[11px] text-obra-texto-2 hover:border-obra-dourado hover:text-obra-texto"
+            className="rounded-full border border-obra-borda bg-obra-dark-2 px-2.5 py-1 text-[11px] text-obra-texto-2 hover:border-obra-dourado hover:text-obra-texto disabled:opacity-50"
           >
             {ex.length > 48 ? ex.slice(0, 47) + "…" : ex}
           </button>
@@ -168,7 +207,7 @@ export default function NovoAgenteIaPage() {
       )}
 
       <div className="mt-3 flex justify-end">
-        <CrmButton loading={gerando} disabled={descricao.trim().length < 8} onClick={() => void gerar()} leftIcon={<Sparkles size={15} />}>
+        <CrmButton loading={gerando} disabled={gerando || criando || descricao.trim().length < 8} onClick={() => void gerar()} leftIcon={<Sparkles size={15} />}>
           {blueprint ? "Gerar de novo" : "Gerar com IA"}
         </CrmButton>
       </div>
@@ -192,7 +231,7 @@ export default function NovoAgenteIaPage() {
           <dl className="m-0 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Campo rotulo="Nome">{blueprint.nome}</Campo>
             <Campo rotulo="Tipo">{blueprint.modo_operacao === "canal_whatsapp" ? "Atendimento (WhatsApp)" : "Interno (copiloto)"}</Campo>
-            <Campo rotulo="Cargo">{blueprint.cargo_slug ?? "Sem cargo (só playbook)"}</Campo>
+            <Campo rotulo="Cargo">{cargoDesc || (blueprint.cargo_slug ? blueprint.cargo_slug.replace(/_/g, " ") : "Sem cargo (só playbook)")}</Campo>
             <Campo rotulo="Tom">{blueprint.tom || "—"}</Campo>
           </dl>
 
@@ -205,7 +244,9 @@ export default function NovoAgenteIaPage() {
             <BlocoLista titulo={`Ferramentas (${blueprint.ferramentas.length})`} icone={<Wrench size={14} />}>
               <div className="flex flex-wrap gap-1.5">
                 {blueprint.ferramentas.map((f) => (
-                  <span key={f} className="rounded-full bg-obra-dourado/15 px-2 py-0.5 text-[11px] font-medium text-obra-dourado">{f}</span>
+                  <span key={f} title={f} className="rounded-full bg-obra-dourado/15 px-2 py-0.5 text-[11px] font-medium text-obra-dourado">
+                    {FERRAMENTA_TITULO.get(f) ?? f}
+                  </span>
                 ))}
               </div>
             </BlocoLista>
@@ -227,7 +268,7 @@ export default function NovoAgenteIaPage() {
 
           <div className="mt-5 flex items-center justify-between gap-3">
             <p className="m-0 text-[11px] text-obra-texto-3">Você poderá refinar tudo na ficha antes de publicar.</p>
-            <CrmButton loading={criando} onClick={() => void criar()} leftIcon={<Bot size={15} />}>Criar agente</CrmButton>
+            <CrmButton loading={criando} disabled={gerando} onClick={() => void criar()} leftIcon={<Bot size={15} />}>Criar agente</CrmButton>
           </div>
         </section>
       )}
