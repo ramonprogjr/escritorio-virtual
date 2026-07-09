@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Archive, ArrowLeft, BookOpen, Sparkles, Trash2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
+import { AgenteEstadoVivoCard } from "@/components/crm/AgenteEstadoVivoCard";
 import { AgentePlaybookCalibracaoDrawer } from "@/components/crm/AgentePlaybookCalibracaoDrawer";
 import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
 import { AgenteUazapiBlock, type AgenteUazapiSnapshot } from "@/components/crm/AgenteUazapiBlock";
@@ -1110,6 +1111,9 @@ export default function AgentePage() {
             })}
           </div>
         ) : null}
+
+        {/* F1 — Farol do estado REAL do agente (verdade visível; read-only, fail-open) */}
+        <AgenteEstadoVivoCard slug={slug} />
 
         {/* BLOCO: Configurações fixas */}
         {(!isMobile || abaMobile === "config") && (
