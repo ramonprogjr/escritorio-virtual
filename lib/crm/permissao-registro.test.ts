@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { podeAlterarRegistro, autorRealDoComentario, autorNomeRegistro } from "./permissao-registro";
+import { podeAlterarRegistro, autorRealDoComentario, autorNomeRegistro, ehUuid } from "./permissao-registro";
+
+const UUID_COLEGA = "3f8a9b12-1c2d-4e5f-8a9b-0c1d2e3f4a5b";
 
 const OWNER = { userId: "u-owner", isOwner: true };
 const AUTOR = { userId: "u-1", isOwner: false };
@@ -38,5 +40,22 @@ describe("permissão de registros — matriz do dono", () => {
     expect(autorNomeRegistro("u-1", "humano", "u-1")).toBe("Você");
     expect(autorNomeRegistro("humano", "humano", "u-9")).toBe("Equipe");
     expect(autorNomeRegistro("Ana Silva", "humano", "u-9")).toBe("Ana Silva");
+  });
+
+  it("autorNomeRegistro: NUNCA vaza o UUID cru de um colega (fix A2)", () => {
+    // Sem nome resolvido → cai para 'Equipe', jamais o UUID.
+    expect(autorNomeRegistro(UUID_COLEGA, "humano", "u-9")).toBe("Equipe");
+    // Com nome resolvido (lookup no servidor) → mostra o nome real.
+    expect(autorNomeRegistro(UUID_COLEGA, "humano", "u-9", "Bruno Costa")).toBe("Bruno Costa");
+    // O próprio autor continua "Você" mesmo com nome resolvido.
+    expect(autorNomeRegistro(UUID_COLEGA, "humano", UUID_COLEGA, "Bruno Costa")).toBe("Você");
+  });
+
+  it("ehUuid: distingue UUID de nome legível e sentinela", () => {
+    expect(ehUuid(UUID_COLEGA)).toBe(true);
+    expect(ehUuid("Ana Silva")).toBe(false);
+    expect(ehUuid("humano")).toBe(false);
+    expect(ehUuid("")).toBe(false);
+    expect(ehUuid(null)).toBe(false);
   });
 });
