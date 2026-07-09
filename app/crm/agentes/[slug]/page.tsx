@@ -5,6 +5,7 @@ import { Archive, ArrowLeft, BookOpen, Sparkles, Trash2 } from "lucide-react";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { AgenteBriefingDrawer } from "@/components/crm/AgenteBriefingChatPanel";
 import { AgenteEstadoVivoCard } from "@/components/crm/AgenteEstadoVivoCard";
+import { SecaoFluxoConversa } from "@/components/crm/agente-secoes/SecaoFluxoConversa";
 import { AgentePlaybookCalibracaoDrawer } from "@/components/crm/AgentePlaybookCalibracaoDrawer";
 import { AgenteFerramentasIaBlock, type CatalogoFerramentaCustomLite } from "@/components/crm/AgenteFerramentasIaBlock";
 import { AgenteUazapiBlock, type AgenteUazapiSnapshot } from "@/components/crm/AgenteUazapiBlock";
@@ -271,6 +272,8 @@ export default function AgentePage() {
   const [erro, setErro] = useState("");
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [calibracaoOpen, setCalibracaoOpen] = useState(false);
+  // F2: quando true, o drawer de calibração abre já com o editor visual de fluxo (card "Editar fluxo").
+  const [calibracaoAutoFluxo, setCalibracaoAutoFluxo] = useState(false);
   const [showLimparMemorias, setShowLimparMemorias] = useState(false);
   const [limpandoMemorias, setLimpandoMemorias] = useState(false);
   const [contagemMemorias, setContagemMemorias] = useState<{
@@ -1030,7 +1033,7 @@ export default function AgentePage() {
               <HeaderActionButton
                 icon={<BookOpen size={15} />}
                 label="Playbook — Calibração"
-                onClick={() => setCalibracaoOpen(true)}
+                onClick={() => { setCalibracaoAutoFluxo(false); setCalibracaoOpen(true); }}
                 variant="ai"
                 position="middle"
               />
@@ -1114,6 +1117,16 @@ export default function AgentePage() {
 
         {/* F1 — Farol do estado REAL do agente (verdade visível; read-only, fail-open) */}
         <AgenteEstadoVivoCard slug={slug} />
+
+        {/* F2 — Fluxo da conversa como card de 1ª classe (só atendimento): editar em ≤2 cliques */}
+        {agente.modo_operacao === "canal_whatsapp" && (
+          <SecaoFluxoConversa
+            onEditarFluxo={() => {
+              setCalibracaoAutoFluxo(true);
+              setCalibracaoOpen(true);
+            }}
+          />
+        )}
 
         {/* BLOCO: Configurações fixas */}
         {(!isMobile || abaMobile === "config") && (
@@ -1667,7 +1680,7 @@ export default function AgentePage() {
             </button>
             <button
               type="button"
-              onClick={() => setCalibracaoOpen(true)}
+              onClick={() => { setCalibracaoAutoFluxo(false); setCalibracaoOpen(true); }}
               style={{
                 display: "flex", alignItems: "center", gap: 8, justifyContent: "center",
                 padding: "11px 14px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
@@ -1712,9 +1725,11 @@ export default function AgentePage() {
         open={calibracaoOpen}
         onClose={() => {
           setCalibracaoOpen(false);
+          setCalibracaoAutoFluxo(false);
         }}
         agenteSlug={slug}
         agenteNome={agente.nome}
+        autoAbrirFluxoVisual={calibracaoAutoFluxo}
       />
     </div>
   );

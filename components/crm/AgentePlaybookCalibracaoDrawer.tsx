@@ -46,6 +46,8 @@ export type AgentePlaybookCalibracaoDrawerProps = {
   onClose: () => void;
   agenteSlug: string;
   agenteNome: string;
+  /** F2: abrir já com o editor visual de fluxo (card "Editar fluxo" na ficha → ≤2 cliques). */
+  autoAbrirFluxoVisual?: boolean;
 };
 
 function formatBytes(n: number): string {
@@ -59,6 +61,7 @@ export function AgentePlaybookCalibracaoDrawer({
   onClose,
   agenteSlug,
   agenteNome,
+  autoAbrirFluxoVisual = false,
 }: AgentePlaybookCalibracaoDrawerProps) {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
@@ -182,8 +185,12 @@ export function AgentePlaybookCalibracaoDrawer({
     setUploadMensagem("");
     setVisualSideoverOpen(false);
     setMarkdownOrigem(null);
-    void carregarConteudo();
-  }, [open, agenteSlug, carregarConteudo]);
+    // F2: se veio do card "Editar fluxo", abre o editor visual assim que o markdown carregar (≤2 cliques
+    // da ficha até editar) — reaproveita toda a plumbing de carga/publicação do drawer, sem duplicar nada.
+    void carregarConteudo().then(() => {
+      if (autoAbrirFluxoVisual && visualBuilderEnabled) setVisualSideoverOpen(true);
+    });
+  }, [open, agenteSlug, carregarConteudo, autoAbrirFluxoVisual, visualBuilderEnabled]);
 
   useEffect(() => {
     chatFimRef.current?.scrollIntoView({ behavior: "smooth" });
