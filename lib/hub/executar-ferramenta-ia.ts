@@ -161,10 +161,15 @@ async function executarFerramentaHubBuiltin(
       const tenant = (ctx.tenantId && ctx.tenantId.trim()) || defaultTenantId();
       const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
 
-      const { count: leadsTenant, error: e1 } = await supabase
+      // Antes só devolvia o TOTAL → a IA rotulava o total como "sem atendimento" (errado). Agora mede
+      // de verdade: quebra por estágio + em aberto + SEM ATENDIMENTO (em aberto, sem humano responsável
+      // e sem próxima ação). Volume atual é pequeno; agregação em JS (limite 5000). Para escala grande,
+      // migrar para GROUP BY/RPC.
+      const { data: leadsRows, error: e1 } = await supabase
         .from("hub_leads_crm")
-        .select("*", { count: "exact", head: true })
-        .eq("tenant_id", tenant);
+        .select("estagio, humano_responsavel, proxima_acao")
+        .eq("tenant_id", tenant)
+        .limit(5000);
 
       const { count: acoes7d, error: e2 } = await supabase
         .from("hub_acoes_ia")
@@ -185,12 +190,36 @@ async function executarFerramentaHubBuiltin(
         });
       }
 
+      const ENCERRADOS = new Set(["ganho", "perdido", "convertido_negocio", "spam_invalido", "fechado", "descartado"]);
+      const rows = (leadsRows || []) as Array<{ estagio?: string | null; humano_responsavel?: string | null; proxima_acao?: string | null }>;
+      const porEstagio: Record<string, number> = {};
+      let emAberto = 0;
+      let semAtendimento = 0;
+      let semHumano = 0;
+      for (const r of rows) {
+        const est = String(r.estagio || "novo");
+        porEstagio[est] = (porEstagio[est] || 0) + 1;
+        if (!ENCERRADOS.has(est)) {
+          emAberto++;
+          const temHumano = typeof r.humano_responsavel === "string" && r.humano_responsavel.trim().length > 0;
+          const temAcao = typeof r.proxima_acao === "string" && r.proxima_acao.trim().length > 0;
+          if (!temHumano) semHumano++;
+          if (!temHumano && !temAcao) semAtendimento++;
+        }
+      }
+
       return JSON.stringify({
         tenant_id: tenant,
-        leads_total_no_tenant: leadsTenant ?? 0,
+        leads_total_no_tenant: rows.length,
+        leads_em_aberto: emAberto,
+        leads_sem_atendimento: semAtendimento,
+        leads_sem_responsavel_humano: semHumano,
+        leads_por_estagio: porEstagio,
         acoes_ia_ultimos_7d_este_agente: acoes7d ?? 0,
         pedidos_inferencia_hub_ultimos_7d_este_agente: prompts7d ?? 0,
-        nota: "Contagens agregadas; não substitui relatório financeiro nem detalhe por lead.",
+        nota:
+          "leads_sem_atendimento = em aberto, sem humano responsável e sem próxima ação. leads_em_aberto = não encerrados. " +
+          "Use leads_por_estagio para detalhar. Responda com o número EXATO do campo certo; não use o total como se fosse 'sem atendimento'. Não substitui relatório financeiro.",
       });
     }
     case "hub_relatorio_html_simples": {
