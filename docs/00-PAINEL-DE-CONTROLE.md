@@ -134,6 +134,8 @@ Legenda: ✅ feito · 🔄 em curso · ⏳ próximo · 🔒 depende do dono
 
 ## 🔑 O que depende de VOCÊ (destrava fases inteiras)
 
+> **Lista ÚNICA e completa (Render · Supabase · decisões · E2E · fim): [PENDENCIAS-JANELA-DONO.md](PENDENCIAS-JANELA-DONO.md)** — feita p/ executar tudo "de uma vez" numa janela sua. A tabela abaixo é só o resumo das que destravam fases.
+
 | Item | Destrava | Tipo |
 |---|---|---|
 | **1 E2E ao vivo do WhatsApp** (você manda a msg) | **Fase 1 (IA) — fecha "o 2"** | 5 min |
