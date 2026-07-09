@@ -104,6 +104,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       status: "aprovado_envio",
       criterio_selecao: novoCriterio,
       encaminhado_para: proximo.nome,
+      parceiro_id: proximo.parceiro_id,
       tenant_id: enc.tenant_id,
     })
     .select("id")
