@@ -2,18 +2,48 @@
 
 > O **lugar único** para não se perder. São 115+ documentos em `docs/` (muito é histórico) — este painel
 > aponta só o que é **canônico hoje**, o **estado real**, o **roadmap/cronograma vivo** e **o que depende de você**.
-> Atualizado: **07/jul/2026**. Mantido vivo a cada marco.
+> Atualizado: **09/jul/2026**. Mantido vivo a cada marco.
 
 ---
 
 ## 📍 Onde estamos (em 3 linhas)
 
-**~45% da visão / MVP seguro single-tenant de pé — agora com a IA VIVA e o dinheiro honesto.** O núcleo (CRM, motor
-de leads, negócios/obras, motor de comissões testado) está de pé. Nesta sessão (07/jul) três coisas mudaram de estado:
-o **dinheiro ficou honesto** (FIN-02 custódia fantasma corrigida + DEMO R$15k desfeito), a **IA ficou viva** (copiloto
-fala + navega + abre a ficha do lead + direciona lead a parceiro) e o **deploy destravou** (cache CDN Vercel→Render que
-prendia todo deploy no CDN). Ainda é **single-tenant** e restam **decisões do dono** (taxonomia de COMPRAS, reconciliar
-masterplan × banco real). Fase atual: **ligar a IA no que já existe** (IA-15) — não construir do zero.
+**~45% da visão / MVP seguro single-tenant de pé — com a IA VIVA e o dinheiro honesto.** O núcleo (CRM, motor de leads,
+negócios/obras, motor de comissões testado) está de pé; a **IA está VIVA** (copiloto fala + navega + abre a ficha + direciona
+lead) e o **dinheiro ficou honesto** (FIN-02 + DEMO R$15k desfeito). **Fase atual = CONCATENAR A IA em todo o sistema**
+(a espinha IA-first / "diamante" = IA-15), com **disciplina cirúrgica** (mexer no item = só nele). Nesta leva (09/jul):
+endurecemos a **precisão das ferramentas da IA** (7 bugs — inclui a corrupção de dado no reset de sessão que zerava
+valor/interesse do lead), demos **segurança + publicar-1-clique** na edição de agente, e reativamos **timeline + nota
+manual** em toda ficha. **Em curso:** redesenho de **criar/editar TODOS os agentes** e o modelo **registros×logs×permissões**
+(2 planos cirúrgicos faseados — ver a seção A ESPINHA abaixo). Ainda **single-tenant**; restam decisões do dono
+(taxonomia de COMPRAS, reconciliar masterplan × banco real).
+
+---
+
+## 🤖 A ESPINHA — concatenar a IA em todo o sistema (09/jul) + como NÃO travar um código no outro
+
+> Norte (o "diamante"): a IA precisa **transitar, usar, medir e acessar TODO o sistema**, com segurança máxima e provider
+> trocável (**Mistral hoje → Anthropic depois**). Isto é a **IA-15** do roadmap — a espinha, não um side-quest.
+
+**Onde a IA já alcança (concatenação real, no ar):**
+- **Copiloto de voz global** (fala → age): navega telas, abre a ficha do lead, **direciona o lead** (`hub_lead_encaminhar`).
+- **Ferramentas do agente** (registry): resumo/atualizar lead, métricas do escritório, criar tarefa, lookup por telefone, memórias, obra/arquitetura/financeiro. *(precisão endurecida 09/jul)*
+- **Atendimento WhatsApp**: Mari (fluxo dinâmico) + pausa/handoff + card-resumo.
+
+**O que estamos concatenando agora — 2 intervenções cirúrgicas (cada uma com plano faseado + E2E dedicado):**
+1. **Criar/editar TODOS os agentes** (atendimento foi só o exemplo) — plano **10 fases**, começa por **F1 = verdade visível**
+   (farol de estado real: o agente roda mesmo? risco ~zero, motor intocado), depois fluxo a 1 clique, **PDF/DOC→instrução**,
+   ficha **adaptada por tipo** (atendimento vs copiloto interno vs obra/arq/financeiro), e o diamante: **criar agente com IA**
+   (o dono descreve por voz/texto/PDF → a IA monta, validado no servidor). Fonte: laudo Fable-max 09/jul.
+2. **Registros × logs × permissões** — comentários + **atividades principais da IA** aparecem; **logs da IA ficam ocultos +
+   imutáveis** (ninguém apaga) + **relatório só do owner**; autor edita/apaga o dele, **só o owner** o resto. (design Fable-max)
+
+**Como NÃO travar um código no outro (disciplina, sem exceção):**
+- **Cirúrgico**: mexer no item = só nele. **Strangler seção a seção** (1 seção = 1 commit, tsc+vitest verdes) — nunca big-bang no god-file.
+- **Motor intocado**: `lib/whatsapp/*` (engine/webhook) não se toca até haver envelope null-safe com default que preserva a Mari **byte a byte**.
+- **IA nunca auto-aplica**: sempre **diff antes→depois + confirmação + desfazer** (há agente atendendo cliente AO VIVO).
+- **Migração = aditiva + janela do dono**; todo código novo roda **null-safe** com a coluna ausente.
+- **Backup**: a cada deploy empurro para os **2 GitHubs** (prod `ramonprogjr` + segurança `wendelnice-dev`). Cron de 12h fica para o fim.
 
 ---
 
