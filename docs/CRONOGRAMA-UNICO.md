@@ -131,3 +131,63 @@ Agentes F8-F10 · restos do destravamento (smoke E2E logado 1.2, 2.1b 16 clients
 3. **Estacionamento:** o que chegou durante a semana entra SÓ trocando por algo do mesmo tamanho.
 4. **Re-publicar este doc** (nº da semana corrente + o que mudou).
 **Fura-fila só 3:** produção quebrada · risco de perda de dados · obrigação legal.
+
+---
+
+## ⚠️ CAPTURA DE ESCOPO — auditoria de completude + visão (10/jul, madrugada) — ratificar ao voltar
+> Duas auditorias Fable-max (a da VISÃO e a dos 6 planos antigos) acharam **~24 escopos do dono fora de todos os baldes**.
+> Veredito completo: [VEREDITO-COMPLETUDE-VISAO.md](VEREDITO-COMPLETUDE-VISAO.md). Aqui eu **DOBREI cada um no balde certo**
+> (estacionamento + V1) para "nada se perde" virar verdade — SEM mexer nas 12 semanas. As mudanças de MVP ficam como
+> **PROPOSTAS** para o dono ratificar.
+
+### 🔴 CRÍTICO — precisa de spec + mesa (o coração encosta nele)
+- **LEVANTAMENTOS + ORÇAMENTOS** (a planilha orçamentária = escopo; memorial→planilha→proposta→contrato→cronograma;
+  **Orçamento por IA = "o moat"**). A SC de Compras já herda a unidade dessa planilha, que ninguém tem tarefa de construir.
+  → **SPEC-LEVANTAMENTOS-ORCAMENTOS (própria) + 1º item da vertical Engenharia no V1**; mesa logo após o track de Compras.
+
+### V1 (Fases 4-8) — LINHAS NOVAS NOMEADAS (adiado ≠ perdido)
+- **F5 (gate do 2º tenant) +8:** TEN-03 residual (revisar deny-all hub_pedidos_material/hub_parceiros_convites/
+  hub_profissionais + advisor always_true) · RAS-02 (auto-código por trigger + contador por-tenant — dependência de TEN-01)
+  · 2FA + auditoria por usuário · Onda C Configurações self-service (RBAC por UI) · rate-limit/dedup DISTRIBUÍDO (2 réplicas)
+  · PII no histórico do Git (dentro de LGPD-01) · anti-replay do webhook (dentro de IA-sec) · pentest externo (marco de fecho)
+  · decisão de captação pública + H-SEC-1 (junto de RBAC-01).
+- **F6 +3:** BI generativo (par do IA-03/Anthropic) · dedup por documento CPF/CNPJ + pessoa↔empresa N:N · consumo do EVT-01
+  (analytics/CAC/cron de KPIs).
+- **F7 +4:** fecho da camada de obra (Curva-S + RDO/diário + boletim com trava/retenção + EAP com aditivos) = INSUMO do
+  Portal · módulo Arquitetura além do funil (projeto→obra, aprovações, honorário, tela v2) · RAS-05 produto completo (MDO
+  fonte única) · escrow com dinheiro real (BaaS/KYC) junto do clawback.
+- **F6/F7 (decidir na re-baseline S12):** Orçamento IA v1 (memorial→planilha) — nome no mapa; a semente (taxonomia 15
+  disciplinas, presets, docs do Asana) fica no estacionamento.
+- **F8 +1 nota:** disparar JÁ os gates lentos de loja (Apple Developer/D-U-N-S/Meta/Windsor — 1 e-mail agora, semanas se
+  lembrado na F8).
+
+### ESTACIONAMENTO — nomes adicionados (a regra "nada se perde" exige o nome escrito)
+Operação de campo E8-E10 (tablet comodato/totem voz/IA-campo/Lalamove) + compliance enterprise (DR/CSP/secret manager) ·
+Serviço Universal + motor por ofício + fornecedor cross-conta (ponteiro: puxar da VISAO-MODULOS na re-baseline) · **CRM
+cross-conta parceiro↔parceiro** (negócio visível a todos, só o dono move; mesa antes do 2º tenant) · UX transversal +
+acessibilidade AA + redesenho nav mobile (barra inferior/"Pulso") · notificações por canal WhatsApp/email + preferências ·
+**mensageria entre as partes** (logada) · comissão multi-fonte (equipamentos/treinamentos) · CUB proprietário · tela estilo
+**Artifacts** (gera doc via IA, cobra spread) · editar fluxo do agente por conversa/voz · **IA concatenada além de compras**
+(registry de ferramentas em obras/medição/estoque/financeiro — não só "injetar IA nas telas") · imóvel na espinha (RAS-06) ·
+Central de Documentos · tela Produtos/estoque global · Central de Performance (forecast/ranking) · import 500 itens + score
+de cotação · fontes acessórias C5/C6/C7 · refinos de rastreabilidade (indicador visível + vínculo temporal) · trava "nunca
+assumir Hub único" (franquia) · restos do destravamento 3.2/3.3 + render tests · wizard de obra 5 passos (ratificar: superado
+pela esteira? decidir, não deixar no limbo).
+
+### MVP 12 semanas — PROPOSTAS de troca 1-por-1 (NÃO aplicadas; ratificar) — só o irrecuperável ou já-dinheiro
+- **UTM na captação** (parte pequena do EVT-01): S8-S9 por troca — dado que não se grava hoje se perde para sempre.
+- **Alocação mínima de MDO** (hub_obra_alocacoes + escrita no fluxo): S9 (família RAS-03/04) — mesma lógica do UTM.
+- **OBR-02 rpc_registrar_medicao**: vagão da JANELA da S4 (a S10 pendura dinheiro na medição).
+- **Seed ~20 itens do catálogo** hub_produtos: dentro do track de compras (S4-S5) — senão balcão/roleplay cotam sobre vazio.
+- **Config reset de senha** (SMTP/Redirect) + trocar a senha exposta no chat: gate ④ da S1 ou janela S4.
+- **Bugs de produção nomeados** (Precificação sobrescreve cobrança da rede = dinheiro; custo sem vínculo; ambiente Sala/sala):
+  triagem na 1ª revisão semanal; os que "mentem número" casam na S11.
+- **Drop das 3 RPCs de hard-delete** + 6 migrações órfãs (N1/anti-recebível-dup/quem-deu-baixa/CPF-especialista/tenant em
+  hub_leads_crm/merge): entram na RE-TRIAGEM do vagão da S4 (o texto já manda re-triar item a item).
+- **Fechos P0 de operação do CRM** (próxima-ação obrigatória via flag+API, follow-up por prazo, alerta de parado):
+  candidatos à troca 1-por-1 na S9 (família LEAD-01) — loops de hábito diário.
+
+### ⏱️ RISCO DE RITMO (as 5 auditorias em coro — não é perda, é sobrecarga)
+Semanas 8-12 carregam TODA a Fase 3 em 5 semanas sem folga; a S10 tem 4 frentes grandes; a S1 depende de 5 gates do dono na
+mesma semana. Os itens do MVP antigo que sumiram (EVT-01, RAS-05, OBR-02) são justamente os que não couberam aí. **Na
+re-baseline semanal, considerar abrir espaço** (empurrar parte da Fase 3 para o começo do V1) em vez de espremer.
