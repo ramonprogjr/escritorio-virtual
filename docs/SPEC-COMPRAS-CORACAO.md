@@ -35,11 +35,20 @@ Três buracos **já em produção**, verificados no código, corrigidos code-onl
 
 ## 2. FASE 1 — decisões do dono ANTES da janela (mudam o schema)
 
-| # | Decisão | Recomendação do CEO | Status |
+| # | Decisão | Resolução do dono | Status |
 |---|---|---|---|
-| a | Contraparte do **freelance PF** | Espelho `tipo='pf'` em `hub_fornecedores` (reusa OC, conta, teto; PIX=CPF auto-verifica) | ⏳ pendente |
-| b | **Medição** de serviço | Registrar em **unidade física** do contrato (m²), % é derivado — não a convenção qtd=100 | ⏳ pendente |
+| a | Contraparte do **freelance PF** | **Cadastro-espelho `tipo='pf'` em `hub_fornecedores`** (reusa OC, conta, teto; PIX=CPF auto-verifica) | ✅ ratificada |
+| b | **Medição** de serviço | **Quantidade física real, na UNIDADE DA PLANILHA ORÇAMENTÁRIA** (un, m linear, m², m³ — depende do escopo, não fixo em m²); a % é derivada. O item de compra **herda a unidade do orçamento** → amarra Compras ↔ Orçamento. Aprofundar levantamentos+orçamentos em frente própria. | ✅ ratificada |
 | c | **Delegação** | Regra por faixa + delegação temporária com rastro; **tetos configuráveis pelo tenant** | ✅ ratificada |
+
+> **Consequência p/ o schema (Bloco E) — item EDITÁVEL, IA-first, máximo automatizado (lei de desenho do dono):**
+> `unidade` e `tipo_item`/`modelo_precificacao` do item têm **default AUTOMÁTICO herdado da linha do orçamento**
+> (rodapé→m linear, piso→m², mão de obra→diária/hora), mas são **SEMPRE editáveis por MÚLTIPLA ESCOLHA** (lista de
+> um toque — nunca texto livre que digita errado). O item pode ser **qualquer coisa**: material, serviço, mão de
+> obra, equipamento, ferramenta, freelance. `modelo_precificacao` e `unidade` são eixos independentes — "piso 800
+> m² por medição" = modelo `medicao` + unidade `m²`. Regra: **a IA propõe tudo pronto (herdado/inferido); o humano
+> confirma num toque OU troca na lista.** Frente futura: **levantamentos + orçamentos** (a planilha orçamentária é
+> a fonte da unidade e do escopo que a SC consome).
 
 ---
 
