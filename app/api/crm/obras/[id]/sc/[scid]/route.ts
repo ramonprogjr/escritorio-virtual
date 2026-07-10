@@ -88,12 +88,21 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Nenhum item de entrega válido." }, { status: 400 });
     }
 
+    // Idempotência REAL da entrega: o cliente gera o uid UMA vez por recebimento e o reenvia no
+    // retry (rede ruim no canteiro, duplo toque). Sem uid vindo do cliente, geramos um — a chamada
+    // funciona, mas o retry não é reconhecido. O índice único (item, uid) é a trava no banco.
+    const uidBody = typeof body.entrega_uid === "string" ? body.entrega_uid.trim() : "";
+    const entregaUid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uidBody)
+      ? uidBody
+      : crypto.randomUUID();
+
     const { data: resultado, error: errRpc } = await supabase.rpc("hub_sc_registrar_entrega", {
       p_pedido_id: scId,
       p_tenant_id: g.ctx.tenantId,
       p_itens: itensJson,
       p_registrado_por: g.ctx.userId ?? "humano",
       p_obs: typeof body.obs === "string" ? body.obs.trim() || null : null,
+      p_entrega_uid: entregaUid,
     });
     if (errRpc) {
       if (ehTabelaAusente(errRpc) || /function .*does not exist/i.test(errRpc.message ?? "")) {
@@ -102,7 +111,15 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       if (/pedido_nao_encontrado/.test(errRpc.message ?? "")) {
         return NextResponse.json({ error: "SC não encontrada" }, { status: 404 });
       }
-      return NextResponse.json({ error: errRpc.message }, { status: 500 });
+      // O banco recusa entrega de compra não aprovada (o gate humano não é contornável).
+      if (/sc_nao_aprovada/.test(errRpc.message ?? "")) {
+        return NextResponse.json(
+          { error: "Esta compra ainda não foi aprovada. Aprove antes de registrar a entrega." },
+          { status: 409 }
+        );
+      }
+      console.error("[sc registrar_entrega]", errRpc.message);
+      return NextResponse.json({ error: "Não foi possível registrar a entrega." }, { status: 500 });
     }
     return NextResponse.json({ data: resultado });
   }
