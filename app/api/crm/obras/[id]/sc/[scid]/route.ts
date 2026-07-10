@@ -126,6 +126,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   // ── AÇÃO: aprovar a compra (GATE HUMANO) ──
   if (acao === "aprovar") {
+    // SEGURANÇA (FASE 0.2): só aprova de rascunho/cotando. O `.in(status)` no WHERE torna o UPDATE atômico:
+    // reabrir SC cancelada/entregue afeta 0 linhas, e dois aprovadores simultâneos → o 2º pega 0 (o 1º já moveu).
     const { data, error } = await supabase
       .from("hub_pedidos_material")
       .update({
@@ -137,6 +139,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       .eq("id", scId)
       .eq("obra_id", obraId)
       .eq("tenant_id", g.ctx.tenantId)
+      .in("status", ["rascunho", "cotando"])
       .select(SELECT_SC)
       .maybeSingle();
     if (error) {
@@ -145,18 +148,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    if (!data) return NextResponse.json({ error: "SC não encontrada" }, { status: 404 });
+    if (!data) return NextResponse.json({ error: "Esta compra não está num estado que permita aprovar (rascunho/cotando)." }, { status: 409 });
     return NextResponse.json({ data });
   }
 
   // ── AÇÃO: cancelar (soft-delete — NADA SE PERDE) ──
   if (acao === "cancelar") {
+    // SEGURANÇA (FASE 0.2): não cancela o que já foi entregue nem re-cancela — atômico pelo `.in(status)`.
     const { data, error } = await supabase
       .from("hub_pedidos_material")
       .update({ status: "cancelado", atualizado_em: new Date().toISOString() })
       .eq("id", scId)
       .eq("obra_id", obraId)
       .eq("tenant_id", g.ctx.tenantId)
+      .in("status", ["rascunho", "cotando", "aprovado", "entregue_parcial"])
       .select(SELECT_SC)
       .maybeSingle();
     if (error) {
@@ -165,7 +170,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    if (!data) return NextResponse.json({ error: "SC não encontrada" }, { status: 404 });
+    if (!data) return NextResponse.json({ error: "Esta compra não pode ser cancelada (já entregue ou já cancelada)." }, { status: 409 });
     return NextResponse.json({ data });
   }
 

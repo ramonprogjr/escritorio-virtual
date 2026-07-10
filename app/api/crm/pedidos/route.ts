@@ -41,18 +41,26 @@ export async function POST(request: NextRequest) {
   if (!descricao) return NextResponse.json({ error: "Descrição obrigatória" }, { status: 400 });
 
   const tenantId = g.ctx.tenantId;
-  const { count } = await crmDb()
-    .from("hub_pedidos_material")
-    .select("*", { count: "exact", head: true });
-  const codigo = `PED-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(4, "0")}`;
+  const supabase = crmDb();
 
-  const { data, error } = await crmDb()
+  // SEGURANÇA (FASE 0.1): esta porta NUNCA aceita status do body. Sem allowlist, um caller criava a SC já
+  // 'aprovado', PULANDO a cadeia de validação inteira — e a RPC de entrega passava a autorizar a fraude.
+  // A aprovação só existe pelo gate humano (PATCH acao='aprovar'). Aqui só nasce rascunho/cotando.
+  const statusPedido = body.status === "cotando" ? "cotando" : "rascunho";
+
+  // Código atômico POR TENANT (RPC gerar_codigo_sc) — o antigo contador COUNT(*) sem filtro de tenant
+  // vazava a contagem entre empresas E colidia códigos sob concorrência. Degrada p/ timestamp se a RPC faltar.
+  let codigo = `SC-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+  const { data: codigoRpc, error: errCodigo } = await supabase.rpc("gerar_codigo_sc", { p_tenant: tenantId });
+  if (!errCodigo && typeof codigoRpc === "string" && codigoRpc.trim()) codigo = codigoRpc.trim();
+
+  const { data, error } = await supabase
     .from("hub_pedidos_material")
     .insert({
       codigo,
       descricao,
       obra_id: body.obra_id || null,
-      status: body.status || "rascunho",
+      status: statusPedido,
       valor_estimado: body.valor_estimado != null ? Number(body.valor_estimado) : null,
       solicitado_por: body.solicitado_por || null,
       tenant_id: tenantId,

@@ -201,12 +201,10 @@ export async function aggregateDashboard(
   const metricas = await fetchCrmMetricas(supabase, tenantId, since);
 
   const [alts, leads, cics, neg, obras, pedidos] = await Promise.all([
-    supabase
-      .from("hub_alertas")
-      .select("id, titulo, tipo, criado_em")
-      .eq("lido", false)
-      .order("criado_em", { ascending: false })
-      .limit(5),
+    // SEGURANÇA (FASE 0.3): hub_alertas AINDA NÃO TEM tenant_id, e crmDb (service_role) BYPASSA RLS — ler
+    // aqui mostraria alerta de OUTRA empresa na tela mais nobre. Neutralizado até o Bloco G da janela
+    // (add tenant_id + backfill + índice) ligar os alertas de volta, já isolados por tenant.
+    Promise.resolve({ data: [] as Array<{ id: string; titulo: string; tipo: string; criado_em: string }>, error: null }),
     supabase
       .from("hub_leads_crm")
       .select("id, nome, estagio, criado_em, atualizado_em")
