@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, ArrowLeft, Bot, Wrench, MessageSquare, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { CrmButton } from "@/components/crm/CrmButton";
+import { ConfirmarAcaoIA } from "@/components/crm/ConfirmarAcaoIA";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 import { montarPayloadCriacaoAgente } from "@/lib/crm/montar-payload-criacao-agente";
 import { HUB_AGENTE_FERRAMENTAS_CATALOGO } from "@/lib/hub/agente-ferramentas-registry";
@@ -44,6 +45,8 @@ export default function NovoAgenteIaPage() {
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [cargoDesc, setCargoDesc] = useState<string | null>(null);
   const [avisos, setAvisos] = useState<string[]>([]);
+  // Ação PESADA (a IA lê a descrição inteira e monta o agente): avisa e confirma antes de consumir.
+  const [confirmando, setConfirmando] = useState(false);
 
   async function gerar() {
     const d = descricao.trim();
@@ -214,10 +217,17 @@ export default function NovoAgenteIaPage() {
       )}
 
       <div className="mt-3 flex justify-end">
-        <CrmButton loading={gerando} disabled={gerando || criando || descricao.trim().length < 8} onClick={() => void gerar()} leftIcon={<Sparkles size={15} />}>
+        <CrmButton loading={gerando} disabled={gerando || criando || descricao.trim().length < 8} onClick={() => setConfirmando(true)} leftIcon={<Sparkles size={15} />}>
           {blueprint ? "Gerar de novo" : "Gerar com IA"}
         </CrmButton>
       </div>
+
+      <ConfirmarAcaoIA
+        acaoId="blueprint_agente"
+        aberto={confirmando}
+        onCancelar={() => setConfirmando(false)}
+        onConfirmar={() => { setConfirmando(false); void gerar(); }}
+      />
 
       {blueprint && (
         <section className="mt-6 rounded-2xl border border-obra-borda bg-obra-dark-2 p-5">

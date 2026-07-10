@@ -1774,9 +1774,8 @@ function AgentesView() {
                               footer={
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 10, color: "#64748b" }}>
                                   {log.tempo_resposta_ms != null && <span>{String(log.tempo_resposta_ms)} ms</span>}
-                                  {log.tokens_input != null && <span>in {String(log.tokens_input)} tok</span>}
-                                  {log.tokens_output != null && <span>out {String(log.tokens_output)} tok</span>}
-                                  {log.custo_estimado_brl != null && <span>R$ {Number(log.custo_estimado_brl).toFixed(4)}</span>}
+                                  {/* Token e R$ NUNCA na tela: a conversão token→Tijolo→Bloco é opaca de propósito
+                                      (margem interna). O consumo vive no relatório — Carteira de Tijolos. */}
                                 </div>
                               }
                             >
