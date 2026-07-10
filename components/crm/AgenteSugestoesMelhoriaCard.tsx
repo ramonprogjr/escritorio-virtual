@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles, ArrowUpCircle } from "lucide-react";
 import { CrmButton } from "@/components/crm/CrmButton";
+import { ConfirmarAcaoIA } from "@/components/crm/ConfirmarAcaoIA";
 import { internalApiHeaders } from "@/lib/internal-api-headers";
 
 /**
@@ -22,6 +23,8 @@ export function AgenteSugestoesMelhoriaCard({ slug }: { slug: string }) {
   const [sugestoes, setSugestoes] = useState<Sugestao[] | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  // Ação PESADA (lê o agente inteiro): avisa e pede confirmação antes de consumir. Regra do dono.
+  const [confirmando, setConfirmando] = useState(false);
 
   async function analisar() {
     if (carregando) return;
@@ -70,12 +73,19 @@ export function AgenteSugestoesMelhoriaCard({ slug }: { slug: string }) {
           size="sm"
           variant={sugestoes ? "secondary" : "primary"}
           loading={carregando}
-          onClick={() => void analisar()}
+          onClick={() => setConfirmando(true)}
           leftIcon={<Sparkles size={14} />}
         >
           {sugestoes ? "Analisar de novo" : "Analisar com IA"}
         </CrmButton>
       </div>
+
+      <ConfirmarAcaoIA
+        acaoId="sugestoes_melhoria"
+        aberto={confirmando}
+        onCancelar={() => setConfirmando(false)}
+        onConfirmar={() => { setConfirmando(false); void analisar(); }}
+      />
 
       {erro && (
         <p role="alert" className="mt-3 rounded-lg border border-[#f85149]/40 bg-[#f85149]/10 px-3 py-2 text-xs font-semibold text-[#ff7b72]">

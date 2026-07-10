@@ -518,9 +518,8 @@ export function AgenteBriefingDrawer({ open, onClose, agenteSlug, agenteNome }: 
                               ? " · qualificação (sem LLM)"
                               : ""}
                             {m.metadata.fase === "ia_pos_fluxo" ? " · IA pós-qualificação" : ""}
-                            {m.metadata.fase !== "fluxo_playbook" && m.metadata.fase !== "ia_pos_fluxo"
-                              ? ` · ${String(m.metadata.tokens_input ?? "—")}/${String(m.metadata.tokens_output ?? "—")} tok · ~ R$ ${Number(m.metadata.custo_brl ?? 0).toFixed(4)}`
-                              : ""}
+                            {/* Tokens e R$ NUNCA aparecem na tela (margem interna + conversão opaca — regra
+                                da casa, igual E-A1 na Carteira). O gasto vive no relatório: /crm/creditos. */}
                           </div>
                           {(() => {
                             const fontes = fontesConhecimentoFromMetadata(m.metadata);
