@@ -16,7 +16,7 @@ import {
   montarPatchContatoWhatsapp,
   pushNameParaNomeExibicao,
 } from "@/lib/crm/sincronizar-contato-whatsapp";
-import { telefoneConversaId } from "@/lib/crm/isolamento-conversa-lead";
+import { telefoneConversaId, telefonesConversaEquivalentes } from "@/lib/crm/isolamento-conversa-lead";
 import { garantirCodigoLead, prepararRowHubLeadInsert } from "@/lib/crm/lead-cadastro";
 import { mercadoWhatsappParaPrefixo } from "@/lib/crm/lead-routing-rules";
 import { resolverDestinoLead } from "@/lib/crm/lead-routing-config";
@@ -644,8 +644,30 @@ export async function POST(request: NextRequest) {
     const intencao = identificarIntencao(mensagemFinal);
     const mercado = identificarMercado(mensagemFinal);
 
-    // Roteamento para parceiro
-    if (intencao === "parceiro") {
+    // P0-1: só desvia para o fluxo de PARCEIRO se NÃO existir lead para este número. Com um lead ativo,
+    // uma frase de parceria no meio da conversa NÃO sequestra o atendimento — a Mari continua respondendo.
+    let desviarParaParceiro = intencao === "parceiro";
+    if (desviarParaParceiro) {
+      const sufixoTel = telefone.slice(-8);
+      if (sufixoTel.length >= 8) {
+        const { data: leadsMesmoTel } = await supabase
+          .from("hub_leads_crm")
+          .select("id, telefone")
+          .like("telefone", `%${sufixoTel}`)
+          .limit(5);
+        if (
+          Array.isArray(leadsMesmoTel) &&
+          leadsMesmoTel.some((l) =>
+            telefonesConversaEquivalentes(telefone, String((l as { telefone?: string }).telefone ?? ""))
+          )
+        ) {
+          desviarParaParceiro = false; // já é um lead nosso — atende, não desvia
+        }
+      }
+    }
+
+    // Roteamento para parceiro (só primeiro contato, sem lead ativo — ver P0-1 acima)
+    if (desviarParaParceiro) {
       const telLimpo = telefone.replace(/\D/g, "");
       // Lookup ESCOPADO ao tenant (não mistura parceiros entre escritórios). Fallback
       // p/ schema legado sem a coluna tenant_id — mesmo padrão isMissingPgColumn do insert.

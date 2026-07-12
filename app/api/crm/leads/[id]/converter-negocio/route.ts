@@ -98,6 +98,19 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (pipeNeg?.id) pipelineNegId = String(pipeNeg.id);
   }
 
+  // P0-5: a 1ª etapa REAL do pipeline resolvido. O literal 'novo_negocio' não existe em pipeline nenhum
+  // → o negócio nascia invisível no kanban e o KPI somava valor que nenhuma coluna mostrava.
+  let etapaInicial = "novo_negocio";
+  if (pipelineNegId) {
+    const { data: estagios } = await supabase
+      .from("hub_pipeline_estagios")
+      .select("slug")
+      .eq("pipeline_id", pipelineNegId)
+      .order("ordem", { ascending: true })
+      .limit(1);
+    if (Array.isArray(estagios) && estagios[0]?.slug) etapaInicial = String(estagios[0].slug);
+  }
+
   let pessoaCodigo: string | null = null;
   let empresaId: string | null = null;
   let empresaCodigo: string | null = null;
@@ -136,7 +149,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     empresa_id: empresaId,
     valor_estimado: lead.valor_estimado ?? 0,
     status: "aberto",
-    etapa: "novo_negocio",
+    etapa: etapaInicial,
     pipeline_id: pipelineNegId,
     tenant_id: tenantId,
   };

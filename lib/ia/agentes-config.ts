@@ -141,12 +141,16 @@ export type PersonalidadeId = keyof typeof PERSONALIDADES;
 
 export type IntencaoId = "lead" | "parceiro" | "suporte";
 
+// P0-1: SÓ frases FORTES e inequívocas de "quero SER parceiro/indicador" — todas multi-palavra
+// (o `includes` não casa dentro de outra palavra). Removidos os termos genéricos que sequestravam
+// lead real: "parceiro"/"parceria"/"homologar"/"treinamento"/"módulo"/"portal do parceiro"/"ganhar
+// comissão" isolados faziam "vocês têm parceria com banco?" ou "reformar o módulo da cozinha" virarem
+// intenção=parceiro — a Mari ficava muda e o lead sumia. Aqui só entra quem DIZ que quer ser parceiro.
 const PALAVRAS_PARCEIRO = [
-  "quero ser parceiro", "quero ser um parceiro", "quero indicar", "quero fazer indicação",
-  "parceiro", "parceria", "homologação", "homologar", "comissão de indicação",
-  "cadastro de parceiro", "me cadastrar como", "quero me cadastrar",
-  "programa de parceiros", "indicação de clientes", "ganhar comissão",
-  "treinamento", "módulo", "portal do parceiro", "sou corretor parceiro",
+  "quero ser parceiro", "quero ser um parceiro", "quero ser seu parceiro", "ser parceiro da obra10",
+  "quero me cadastrar como parceiro", "me cadastrar como parceiro", "cadastro de parceiro",
+  "cadastrar como parceiro", "programa de parceiros", "programa de parceria",
+  "quero indicar clientes", "sou corretor parceiro", "quero ser corretor parceiro",
 ];
 
 const PALAVRAS_SUPORTE = [

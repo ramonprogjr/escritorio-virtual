@@ -507,8 +507,12 @@ export default function NegociosPage() {
               isMobile ? "snap-x snap-mandatory scroll-pl-3 gap-2.5 px-3 py-3 scrollbar-none" : "gap-3 p-4"
             }`}
           >
-            {etapasKanban.map((est) => {
-              const col = negocios.filter((n) => n.etapa === est.id);
+            {etapasKanban.map((est, idx) => {
+              // P0-5: negócio com etapa desconhecida (ex.: legado 'novo_negocio', que não existe no pipeline)
+              // cai na 1ª coluna em vez de sumir do board. A correção definitiva dos presos é a janela do dono.
+              const col = negocios.filter(
+                (n) => n.etapa === est.id || (idx === 0 && !etapasKanban.some((e) => e.id === n.etapa))
+              );
               // Soma/contagem REAIS do backend (todo o pipeline), não só os cards carregados.
               const totalCol = etapaTotais[est.id] ?? 0;
               const countCol = etapaCounts[est.id] ?? col.length;

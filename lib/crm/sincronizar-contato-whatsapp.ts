@@ -168,35 +168,44 @@ export async function reforcarCrmAposTurnoWhatsapp(
     (t) => t.nome === "hub_atualizar_lead" && t.ok
   );
 
-  const args: Record<string, unknown> = {};
   const nomeMsg = extrairNomeDaMensagemCliente(params.mensagemUsuario);
-  if (nomeMsg) args.nome = nomeMsg;
-  else if (params.pushName) {
-    const n = pushNameParaNomeExibicao(params.pushName);
-    if (n) args.nome = n;
-  }
-
   const interesse = extrairInteresseHeuristico(params.mensagemUsuario);
-  if (interesse) args.interesse_principal = interesse;
+  const pushNome = params.pushName ? pushNameParaNomeExibicao(params.pushName) : "";
 
-  if (params.telefone) {
-    const meta: Record<string, unknown> = { wa_telefone: normalizarTelefoneWhatsapp(params.telefone) };
-    if (params.pushName) {
-      const p = pushNameParaNomeExibicao(params.pushName);
-      if (p) meta.wa_push_name = p;
-    }
-    args.metadata = meta;
-  }
+  // Nada relevante para reforçar → sai (evita write só de metadata sem motivo).
+  if (!nomeMsg && !interesse && !pushNome && !params.telefone) return;
 
-  if (Object.keys(args).length === 0) return;
-  if (usouAtualizar && !nomeMsg && !interesse) return;
-
+  // P0-2: precisamos do nome E do interesse ATUAIS para NÃO sobrescrever dado bom (o buildHubLeadsCrmPatch
+  // não protege — ele grava o que vier). Sem isto, a mensagem crua ("pode me ligar às 18h") virava o
+  // interesse do lead a cada turno, e o pushName apagava o nome real.
   const { data: leadAtual } = await supabase
     .from("hub_leads_crm")
-    .select("nome, estagio, metadata")
+    .select("nome, estagio, metadata, interesse_principal")
     .eq("id", params.leadId)
     .maybeSingle();
   if (!leadAtual) return;
+
+  const nomeAtual = typeof leadAtual.nome === "string" ? leadAtual.nome.trim() : "";
+  const interesseAtual =
+    typeof leadAtual.interesse_principal === "string" ? leadAtual.interesse_principal.trim() : "";
+
+  const args: Record<string, unknown> = {};
+  // Nome dito pelo cliente ("meu nome é João") pode setar; pushName SÓ preenche vazio/placeholder.
+  if (nomeMsg) args.nome = nomeMsg;
+  else if (pushNome && (!nomeAtual || nomeLeadEhPlaceholder(nomeAtual))) args.nome = pushNome;
+
+  // Interesse heurístico (mensagem) SÓ preenche se estiver vazio — nunca sobrescreve interesse real.
+  if (interesse && !interesseAtual) args.interesse_principal = interesse;
+
+  if (params.telefone) {
+    const meta: Record<string, unknown> = { wa_telefone: normalizarTelefoneWhatsapp(params.telefone) };
+    if (pushNome) meta.wa_push_name = pushNome;
+    args.metadata = meta;
+  }
+
+  // Se a IA já atualizou o lead e não há nome/interesse NOVO para preencher, não faz write só de metadata.
+  if (usouAtualizar && args.nome === undefined && args.interesse_principal === undefined) return;
+  if (Object.keys(args).length === 0) return;
 
   const built = buildHubLeadsCrmPatch(args, leadAtual as Record<string, unknown>);
   if (!built.ok) return;

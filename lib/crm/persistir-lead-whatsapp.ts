@@ -6,12 +6,18 @@ import { cutoffSessaoConversaMs } from "@/lib/ia/sessao-conversa-ttl";
 import { avaliarQualificacao } from "@/lib/crm/lead-rules";
 
 function parseValorBrl(texto: string): number | undefined {
+  const baixo = texto.toLowerCase();
   const t = texto.replace(/\s/g, "");
   const m = t.match(/(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:[.,]\d+)?)/);
   if (!m) return undefined;
   const raw = m[1].replace(/\./g, "").replace(",", ".");
-  const n = Number.parseFloat(raw);
-  return Number.isFinite(n) && n >= 0 ? n : undefined;
+  let n = Number.parseFloat(raw);
+  if (!Number.isFinite(n) || n < 0) return undefined;
+  // P0-2: o cliente/IA falam "500 mil", "1,2 milhão", "300k" — sem o multiplicador, R$ 500 mil virava
+  // R$ 500 e o auto-direcionamento decidia com valor 1000x errado.
+  if (/milh(ão|ao|ões|oes)/.test(baixo)) n *= 1_000_000;
+  else if (/\bmil\b/.test(baixo) || /\d\s*k\b/.test(baixo)) n *= 1_000;
+  return n;
 }
 
 function extrairNomeDaMensagem(mensagem: string): string | undefined {
@@ -117,12 +123,15 @@ export async function persistirDadosLeadWhatsapp(
   }
 
   const cutoffIso = new Date(cutoffSessaoConversaMs()).toISOString();
+  // P0-2: ASCENDING (mais antigo → mais novo). memoriasParaPatchCrm sobrescreve no loop, então a ÚLTIMA
+  // memória processada vence — com ascending, a MAIS NOVA vence. Antes (descending) a antiga vencia e a
+  // correção do cliente ("na verdade 500 mil") era ignorada.
   const { data: mems } = await supabase
     .from("hub_memorias_lead")
     .select("chave, valor")
     .eq("lead_id", leadId)
     .gte("criado_em", cutoffIso)
-    .order("criado_em", { ascending: false })
+    .order("criado_em", { ascending: true })
     .limit(40);
 
   const { data: leadAtual } = await supabase

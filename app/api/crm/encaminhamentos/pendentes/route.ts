@@ -20,12 +20,16 @@ export async function GET(request: NextRequest) {
   const g = await requireCrmComercial(request);
   if ("error" in g) return g.error;
 
-  const status = new URL(request.url).searchParams.get("status") || "aguardando_validacao";
+  // P0-4: sem status explícito, lista os DOIS estados pendentes — inclui 'sugerido_ia' (o que a VOZ/copiloto
+  // cria). Antes o painel só via 'aguardando_validacao' e a sugestão por voz ficava invisível (nunca chegava
+  // ao parceiro). Com status explícito na query, respeita o pedido.
+  const statusParam = new URL(request.url).searchParams.get("status");
+  const statusFiltro = statusParam ? [statusParam] : ["aguardando_validacao", "sugerido_ia"];
 
   const { data, error } = await db()
     .from("hub_encaminhamentos")
     .select("id, lead_id, segmento, status, criterio_selecao, encaminhado_para, sugerido_ia, criado_em")
-    .eq("status", status)
+    .in("status", statusFiltro)
     .eq("tenant_id", g.ctx.tenantId)
     .order("criado_em", { ascending: false })
     .limit(50);
