@@ -1,0 +1,17 @@
+{
+  "name": "Escritório Virtual — Obra10+",
+  "install": "bash scripts/cloud-agent-install.sh",
+  "terminals": [
+    {
+      "name": "next-dev",
+      "command": "npm run dev",
+      "description": "Servidor Next.js (App Router) em http://localhost:3001. Usa TLS relaxado só neste processo (scripts/dev-insecure-tls.cjs)."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 3001
+    }
+  ]
+}
